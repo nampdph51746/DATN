@@ -3,14 +3,14 @@
 use App\Http\Controllers\Admin\AdminSeatTypeController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\CustomerController;
-use App\Http\Controllers\Admin\SeatController;
+use App\Http\Controllers\Admin\AdminSeatController;
 
 Route::get('/', function () {
     return view('welcome');
 });
 
 Route::prefix('admin')->name('admin.')->group(function () {
-    Route::resource('seats', SeatController::class);
+    Route::resource('seats', AdminSeatController::class);
 });
 
 Route::get('test-customer', [CustomerController::class, 'index'])->name('index'); 

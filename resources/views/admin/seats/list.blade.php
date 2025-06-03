@@ -99,13 +99,6 @@
                                                 <a href="{{ route('admin.seats.edit', $seat->id) }}" class="btn btn-soft-primary btn-sm">
                                                     <iconify-icon icon="solar:pen-2-broken" class="align-middle fs-18"></iconify-icon>
                                                 </a>
-                                                <!-- <form action="{{ route('admin.seats.destroy', $seat->id) }}" method="POST" style="display:inline;">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn btn-soft-danger btn-sm" onclick="return confirm('Bạn có chắc muốn xóa ghế này?')">
-                                                        <iconify-icon icon="solar:trash-bin-minimalistic-2-broken" class="align-middle fs-18"></iconify-icon>
-                                                    </button>
-                                                </form> -->
                                             </div>
                                         </td>
                                     </tr>

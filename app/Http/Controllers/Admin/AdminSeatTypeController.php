@@ -110,5 +110,7 @@ class AdminSeatTypeController extends Controller
 
         return redirect()->route('seat-type.trash')->with('success', 'Loại ghế đã được xóa vĩnh viễn.');
     }
+
+    
     
 }
