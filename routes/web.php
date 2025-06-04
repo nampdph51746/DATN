@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminRoomController;
 use App\Http\Controllers\Admin\AdminSeatTypeController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\CustomerController;
@@ -11,6 +12,7 @@ Route::get('/', function () {
 
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::resource('seats', AdminSeatController::class);
+    Route::resource('rooms', AdminRoomController::class);
 });
 
 Route::get('test-customer', [CustomerController::class, 'index'])->name('index'); 
