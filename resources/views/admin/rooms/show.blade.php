@@ -126,5 +126,53 @@
                 </div>
             </div>
         </div>
+        {{-- Thêm bảng danh sách ghế --}}
+        <div class="card mt-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Danh Sách Ghế</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-bordered mb-0">
+                        <thead>
+                            <tr>
+                                <th>Mã Ghế</th>
+                                <th>Số Ghế</th>
+                                <th>Loại Ghế</th>
+                                <th>Trạng Thái</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse ($room->seats as $seat)
+                                <tr>
+                                    <td>{{ $seat->row_char }}
+                                    </td>
+                                    <td>{{ $seat->seat_number }}</td>
+                                    <td>{{ $seat->seatType->name ?? 'N/A' }}</td>
+                                     @php
+                                            $statusColors = [
+                                                'available' => 'bg-success',
+                                                'reserved'  => 'bg-secondary',
+                                                'booked'    => 'bg-warning',
+                                            ];
+                                            $statusValue = is_object($seat->status) ? $seat->status->value : $seat->status;
+                                        @endphp
+
+                                        <td>
+                                            <span class="badge {{ $statusColors[$statusValue] ?? 'bg-danger' }}">
+                                                {{ ucfirst($statusValue) }}
+                                            </span>
+                                        </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="4" class="text-center">Không có ghế nào trong phòng này.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
 @endsection

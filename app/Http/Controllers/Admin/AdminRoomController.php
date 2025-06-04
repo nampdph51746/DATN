@@ -55,7 +55,8 @@ class AdminRoomController extends Controller
     // Xem chi tiết phòng chiếu
     public function show($id)
     {
-        $room = Room::with(['cinema', 'roomType'])->findOrFail($id);
+        $room = Room::with(['cinema', 'roomType', 'seats'])->findOrFail($id);
+
         return view('admin.rooms.show', compact('room'));
     }
 

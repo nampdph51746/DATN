@@ -95,6 +95,7 @@
                                     <select class="form-control" id="status" name="status">
                                         <option value="active" @selected($room->status == 'active')>Hoạt động</option>
                                         <option value="maintenance" @selected($room->status == 'maintenance')>Bảo trì</option>
+                                            <option value="full" @selected($room->status == 'full')>Đã đầy</option>
                                     </select>
                                     @error('status')
                                         <span class="text-danger">{{ $message }}</span>
