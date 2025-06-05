@@ -76,27 +76,17 @@
                                             </td>
                                             <td>
                                                 <div class="d-flex gap-2">
-                                                    <a href="{{ route('users.deleted-detail', $user->id) }}"
+                                                    <a href="{{ route('users.deleted.show', $user->id) }}"
                                                         class="btn btn-light btn-sm"><iconify-icon icon="solar:eye-broken"
                                                             class="align-middle fs-18"></iconify-icon>
                                                       </a>
-
-                                                @if($user->trashed())
-                                                    <form action="{{ route('users.restore', $user->id) }}" method="POST"
-                                                        style="display:inline;">
-                                                        @csrf
-                                                        <button type="submit" class="btn btn-soft-success btn-sm"
-                                                            onclick="return confirm('Restore this user?')">
-                                                            <iconify-icon icon="mdi:restore"
-                                                                class="align-middle fs-18"></iconify-icon>
-                                                        </button>
-                                                    </form>
-                                                @endif
-
-                                                    <a href="#!" class="btn btn-soft-danger btn-sm"><iconify-icon
-                                                            icon="solar:trash-bin-minimalistic-2-broken"
-                                                            class="align-middle fs-18"></iconify-icon>
-                                                    </a>
+                                                    @if($user->trashed())
+                                                        <a href="{{ route('users.restore', $user->id) }}"
+                                                        class="btn btn-soft-success btn-sm"
+                                                        onclick="return confirm('Khôi phục người dùng này?')">
+                                                            <iconify-icon icon="mdi:restore" class="align-middle fs-18"></iconify-icon>
+                                                        </a>
+                                                    @endif
                                                 </div>
                                             </td>
                                         </tr>

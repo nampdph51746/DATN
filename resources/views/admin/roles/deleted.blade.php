@@ -1,7 +1,7 @@
 @extends('layouts.admin.admin')
 
 @section('content')
-    <!-- Start Container Fluid -->
+    <!-- Bắt đầu Container Fluid -->
     <div class="container-xxl">
 
         @if(session('success'))
@@ -13,10 +13,10 @@
 
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-light-subtle d-flex justify-content-between align-items-center p-3">
-                    <h5 class="card-title mb-0">Deleted Roles</h5>
+                    <h5 class="card-title mb-0">Vai trò đã xoá</h5>
                     <form action="{{ route('roles.deleted') }}" method="GET" class="d-flex align-items-center">
                         <div class="input-group" style="max-width: 300px;">
-                            <input type="search" name="keyword" class="form-control" placeholder="Search by role name..."
+                            <input type="search" name="keyword" class="form-control" placeholder="Tìm kiếm theo tên vai trò..."
                                 autocomplete="off" value="{{ request('keyword') }}">
                             <button type="submit" class="btn btn-outline-primary">
                                 <iconify-icon icon="solar:magnifer-linear" class="align-middle"></iconify-icon>
@@ -29,11 +29,11 @@
                         <table class="table align-middle mb-0 table-hover table-centered">
                             <thead class="bg-light-subtle">
                                 <tr>
-                                    <th>Role Name</th>
-                                    <th>Role ID</th>
-                                    <th>Created at</th>
-                                    <th>Deleted at</th>
-                                    <th>Action</th>
+                                    <th>Tên vai trò</th>
+                                    <th>ID vai trò</th>
+                                    <th>Ngày tạo</th>
+                                    <th>Ngày xoá</th>
+                                    <th>Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -54,7 +54,7 @@
                                                         style="display:inline;">
                                                         @csrf
                                                         <button type="submit" class="btn btn-soft-success btn-sm"
-                                                            onclick="return confirm('Restore this role?')">
+                                                            onclick="return confirm('Bạn có chắc muốn phục hồi vai trò này không?')">
                                                             <iconify-icon icon="mdi:restore"
                                                                 class="align-middle fs-18"></iconify-icon>
                                                         </button>
@@ -66,7 +66,7 @@
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit" class="btn btn-soft-danger btn-sm"
-                                                        onclick="return confirm('Are you sure you want to permanently delete this role?')">
+                                                        onclick="return confirm('Bạn chắc chắn muốn xoá vĩnh viễn vai trò này chứ?')">
                                                         <iconify-icon icon="solar:trash-bin-minimalistic-2-broken"
                                                             class="align-middle fs-18"></iconify-icon>
                                                     </button>
@@ -78,17 +78,17 @@
                             </tbody>
                         </table>
                     </div>
-                    <!-- end table-responsive -->
+                    <!-- kết thúc bảng responsive -->
                 </div>
                 <div class="row g-0 align-items-center justify-content-between text-center text-sm-start p-3 border-top">
                     <div class="col-sm">
                         <div class="text-muted">
-                            Showing
+                            Hiển thị
                             <span class="fw-semibold">{{ $roles->firstItem() ?? 0 }}</span>
-                            to
+                            đến
                             <span class="fw-semibold">{{ $roles->lastItem() ?? 0 }}</span>
-                            of
-                            <span class="fw-semibold">{{ $roles->total() }}</span> Results
+                            trong tổng số
+                            <span class="fw-semibold">{{ $roles->total() }}</span> kết quả
                         </div>
                     </div>
                     <div class="col-sm-auto mt-3 mt-sm-0">
@@ -96,6 +96,6 @@
                     </div>
                 </div>
             </div>
-            <!-- End Container Fluid -->
+            <!-- Kết thúc Container Fluid -->
 
 @endsection

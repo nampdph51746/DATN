@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\Roles\StoreRoleRequest;
+use App\Http\Requests\Admin\Roles\UpdateRoleRequest;
 use App\Models\Role;
 use Illuminate\Http\Request;
 
@@ -14,7 +16,16 @@ class RoleController extends Controller
         $query = Role::query();
 
         if ($request->filled('keyword')) {
-            $query->where('name', 'like', '%' . $request->keyword . '%');
+            $query->where(function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->keyword . '%')
+                    ->orWhere('id', $request->keyword);
+            });
+        }
+
+        if ($request->filled('created_order')) {
+            $query->orderBy('created_at', $request->created_order);
+        } else {
+            $query->orderBy('created_at', 'desc'); // default: newest first
         }
 
         $roles = $query->orderBy('id', 'desc')->paginate(10)->withQueryString();
@@ -40,19 +51,19 @@ class RoleController extends Controller
         return view('admin.roles.edit', compact('role'));
     }
 
-    public function store(Request $request)
+    public function store(StoreRoleRequest $request)
     {
 
-        $data = $request->except('_token');
+        $data = $request->validated();
 
         Role::create($data);
 
         return redirect()->route('roles.index')->with('success', 'Role created successfully.');
     }
 
-    public function update(Request $request, Role $role)
+    public function update(UpdateRoleRequest $request, Role $role)
     {
-        $data = $request->except('_token', '_method');
+        $data = $request->validated();
 
 
         $role->update($data);
@@ -62,9 +73,14 @@ class RoleController extends Controller
 
     public function softDelete(Role $role)
     {
+        if ($role->users()->count() > 0) {
+            return redirect()->back()->with('error', 'Không thể xóa vai trò này vì đang được sử dụng bởi người dùng.');
+        }
+
         $role->delete();
         return redirect()->route('roles.index')->with('success', 'Role deleted successfully.');
     }
+
 
     public function deleted(Request $request)
     {
@@ -94,6 +110,11 @@ class RoleController extends Controller
     public function forceDelete($id)
     {
         $role = Role::withTrashed()->findOrFail($id);
+
+        if ($role->users()->exists()) {
+            return redirect()->back()->with('error', 'Không thể xóa vĩnh viễn vai trò này vì đang được sử dụng.');
+        }
+
         $role->forceDelete();
         return redirect()->route('roles.deleted')->with('success', 'Role deleted permanently.');
     }

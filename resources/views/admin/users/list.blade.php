@@ -10,22 +10,56 @@
                 <div class="card">
                     <div class="d-flex card-header justify-content-between align-items-center">
                         <div>
-                            <h4 class="card-title">All Customers List</h4>
+                            <h4 class="card-title">Danh sách tất cả khách hàng</h4>
                         </div>
-                        <div class="dropdown">
-                            <a href="#" class="dropdown-toggle btn btn-sm btn-outline-light rounded"
-                                data-bs-toggle="dropdown" aria-expanded="false">
-                                This Month
-                            </a>
-                            <div class="dropdown-menu dropdown-menu-end">
-                                <!-- item-->
-                                <a href="#!" class="dropdown-item">Download</a>
-                                <!-- item-->
-                                <a href="#!" class="dropdown-item">Export</a>
-                                <!-- item-->
-                                <a href="#!" class="dropdown-item">Import</a>
+                        <form method="GET" action="{{ route('users.index') }}" class="mb-3">
+                            <div class="row g-2 align-items-end">
+                                <div class="col-md-3">
+                                    <input type="text" name="search" class="form-control"
+                                        placeholder="Tìm kiếm theo tên hoặc email" value="{{ request('search') }}">
+                                </div>
+
+                                <div class="col-md-2">
+                                    <select name="role" class="form-select">
+                                        <option value="">Tất cả vai trò</option>
+                                        @foreach($roles as $role)
+                                            <option value="{{ $role->id }}" {{ request('role') == $role->id ? 'selected' : '' }}>
+                                                {{ $role->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div class="col-md-2">
+                                    <select name="rank" class="form-select">
+                                        <option value="">Tất cả cấp bậc</option>
+                                        @foreach($ranks as $rank)
+                                            <option value="{{ $rank->id }}" {{ request('rank') == $rank->id ? 'selected' : '' }}>
+                                                {{ $rank->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div class="col-md-2">
+                                    <select name="status" class="form-select">
+                                        <option value="">Tất cả trạng thái</option>
+                                        <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Hoạt động
+                                        </option>
+                                        <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>
+                                            Không hoạt động</option>
+                                        <option value="suspended" {{ request('status') == 'suspended' ? 'selected' : '' }}>
+                                            Tạm khóa</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-3 d-flex gap-2">
+                                    <button type="submit" class="btn btn-primary w-100">Lọc</button>
+                                    <a href="{{ route('users.index') }}" class="btn btn-secondary w-100">Đặt lại</a>
+                                </div>
                             </div>
-                        </div>
+                        </form>
+
                     </div>
                     <div>
                         <div class="table-responsive">
@@ -38,17 +72,17 @@
                                                 <label class="form-check-label" for="customCheck1"></label>
                                             </div>
                                         </th>
-                                        <th>Avatar</th>
-                                        <th>User Name</th>
-                                        <th>User ID</th>
-                                        <th>Customer Rank</th>
-                                        <th>Role</th>
+                                        <th>Ảnh đại diện</th>
+                                        <th>Tên người dùng</th>
+                                        <th>Mã người dùng</th>
+                                        <th>Cấp bậc khách hàng</th>
+                                        <th>Vai trò</th>
                                         <th>Email</th>
-                                        <th>Address</th>
-                                        <th>Date of Birth</th>
-                                        <th>Created_At</th>
-                                        <th>Status</th>
-                                        <th>Action</th>
+                                        <th>Địa chỉ</th>
+                                        <th>Ngày sinh</th>
+                                        <th>Ngày tạo</th>
+                                        <th>Trạng thái</th>
+                                        <th>Hành động</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -61,7 +95,8 @@
                                                 </div>
                                             </td>
                                             <td>
-                                                <img src="{{ Storage::url($user->avatar_url) }}" class="avatar-sm rounded-circle me-2" alt="...">
+                                                <img src="{{ Storage::url($user->avatar_url) }}"
+                                                    class="avatar-sm rounded-circle me-2" alt="Ảnh đại diện">
                                             </td>
                                             <td>{{ $user->name }}</td>
                                             <td>{{ $user->id }}</td>
@@ -76,25 +111,29 @@
                                             </td>
                                             <td>
                                                 <div class="d-flex gap-2">
-                                                    <a href="{{ route('users.show', $user->id) }}"
-                                                        class="btn btn-light btn-sm"><iconify-icon icon="solar:eye-broken"
+                                                    <a href="{{ route('users.show', $user->id) }}" class="btn btn-light btn-sm"
+                                                        title="Xem chi tiết">
+                                                        <iconify-icon icon="solar:eye-broken"
                                                             class="align-middle fs-18"></iconify-icon>
-                                                      </a>
+                                                    </a>
 
-                                                      <a href="{{ route('users.edit', $user->id) }}" class="btn btn-soft-primary btn-sm">
-                                                      <iconify-icon icon="solar:pen-2-broken" class="align-middle fs-18"></iconify-icon>
-                                                      </a>
-                                                      <form action="{{ route('users.softDelete', $user->id) }}" method="POST">
-                                                      @csrf
-                                                      @method('DELETE')
-
-                                                      <button type="submit" class="btn btn-soft-danger btn-sm"
-                                                        onclick="return confirm('Are you sure you want to deactivate this user?')">
-                                                        <iconify-icon icon="solar:trash-bin-minimalistic-2-broken"
+                                                    <a href="{{ route('users.edit', $user->id) }}"
+                                                        class="btn btn-soft-primary btn-sm" title="Chỉnh sửa">
+                                                        <iconify-icon icon="solar:pen-2-broken"
                                                             class="align-middle fs-18"></iconify-icon>
-                                                      </button>
+                                                    </a>
+                                                    {{-- <form action="{{ route('users.softDelete', $user->id) }}" method="POST"
+                                                        onsubmit="return confirm('Bạn có chắc chắn muốn vô hiệu hóa người dùng này không?')">
+                                                        @csrf
+                                                        @method('DELETE')
 
-                                                    </form>
+                                                        <button type="submit" class="btn btn-soft-danger btn-sm"
+                                                            title="Vô hiệu hóa">
+                                                            <iconify-icon icon="solar:trash-bin-minimalistic-2-broken"
+                                                                class="align-middle fs-18"></iconify-icon>
+                                                        </button>
+
+                                                    </form> --}}
                                                 </div>
                                             </td>
                                         </tr>
@@ -105,7 +144,7 @@
                         <!-- end table-responsive -->
                     </div>
                     <div class="card-footer border-top">
-                        <nav aria-label="Page navigation example">
+                        <nav aria-label="Phân trang">
                             <ul class="pagination justify-content-end mb-0">
                                 <div class="col-sm-auto mt-3 mt-sm-0">
                                     {{ $users->links('pagination::bootstrap-4') }}

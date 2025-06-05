@@ -2,6 +2,7 @@
 <html lang="en">
 
 <!-- Mirrored from techzaa.in/larkon/admin/index.html by HTTrack Website Copier/3.x [XR&CO'2014], Thu, 29 May 2025 02:25:50 GMT -->
+
 <head>
      <!-- Title Meta -->
      <meta charset="utf-8" />
@@ -12,6 +13,8 @@
      <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 
      <!-- App favicon -->
+     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
      <link rel="shortcut icon" href="{{ asset('assets/images/favicon.ico') }}">
 
      <!-- Vendor css (Require in all Page) -->
@@ -42,7 +45,8 @@
                               <!-- Menu Toggle Button -->
                               <div class="topbar-item">
                                    <button type="button" class="button-toggle-menu me-2">
-                                        <iconify-icon icon="solar:hamburger-menu-broken" class="fs-24 align-middle"></iconify-icon>
+                                        <iconify-icon icon="solar:hamburger-menu-broken"
+                                             class="fs-24 align-middle"></iconify-icon>
                                    </button>
                               </div>
 
@@ -57,24 +61,32 @@
                               <!-- Theme Color (Light/Dark) -->
                               <div class="topbar-item">
                                    <button type="button" class="topbar-button" id="light-dark-mode">
-                                        <iconify-icon icon="solar:moon-bold-duotone" class="fs-24 align-middle"></iconify-icon>
+                                        <iconify-icon icon="solar:moon-bold-duotone"
+                                             class="fs-24 align-middle"></iconify-icon>
                                    </button>
                               </div>
 
                               <!-- Notification -->
                               <div class="dropdown topbar-item">
-                                   <button type="button" class="topbar-button position-relative" id="page-header-notifications-dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                        <iconify-icon icon="solar:bell-bing-bold-duotone" class="fs-24 align-middle"></iconify-icon>
-                                        <span class="position-absolute topbar-badge fs-10 translate-middle badge bg-danger rounded-pill">3<span class="visually-hidden">unread messages</span></span>
+                                   <button type="button" class="topbar-button position-relative"
+                                        id="page-header-notifications-dropdown" data-bs-toggle="dropdown"
+                                        aria-haspopup="true" aria-expanded="false">
+                                        <iconify-icon icon="solar:bell-bing-bold-duotone"
+                                             class="fs-24 align-middle"></iconify-icon>
+                                        <span
+                                             class="position-absolute topbar-badge fs-10 translate-middle badge bg-danger rounded-pill">3<span
+                                                  class="visually-hidden">unread messages</span></span>
                                    </button>
-                                   <div class="dropdown-menu py-0 dropdown-lg dropdown-menu-end" aria-labelledby="page-header-notifications-dropdown">
+                                   <div class="dropdown-menu py-0 dropdown-lg dropdown-menu-end"
+                                        aria-labelledby="page-header-notifications-dropdown">
                                         <div class="p-3 border-top-0 border-start-0 border-end-0 border-dashed border">
                                              <div class="row align-items-center">
                                                   <div class="col">
                                                        <h6 class="m-0 fs-16 fw-semibold"> Notifications</h6>
                                                   </div>
                                                   <div class="col-auto">
-                                                       <a href="javascript: void(0);" class="text-dark text-decoration-underline">
+                                                       <a href="javascript: void(0);"
+                                                            class="text-dark text-decoration-underline">
                                                             <small>Clear All</small>
                                                        </a>
                                                   </div>
@@ -82,13 +94,18 @@
                                         </div>
                                         <div data-simplebar style="max-height: 280px;">
                                              <!-- Item -->
-                                             <a href="javascript:void(0);" class="dropdown-item py-3 border-bottom text-wrap">
+                                             <a href="javascript:void(0);"
+                                                  class="dropdown-item py-3 border-bottom text-wrap">
                                                   <div class="d-flex">
                                                        <div class="flex-shrink-0">
-                                                            <img src="{{ asset('assets/images/users/avatar-1.jpg') }}" class="img-fluid me-2 avatar-sm rounded-circle" alt="avatar-1" />
+                                                            <img src="{{ asset('assets/images/users/avatar-1.jpg') }}"
+                                                                 class="img-fluid me-2 avatar-sm rounded-circle"
+                                                                 alt="avatar-1" />
                                                        </div>
                                                        <div class="flex-grow-1">
-                                                            <p class="mb-0"><span class="fw-medium">Josephine Thompson </span>commented on admin panel <span>" Wow 😍! this admin looks good and awesome design"</span></p>
+                                                            <p class="mb-0"><span class="fw-medium">Josephine Thompson
+                                                                 </span>commented on admin panel <span>" Wow 😍! this
+                                                                      admin looks good and awesome design"</span></p>
                                                        </div>
                                                   </div>
                                              </a>
@@ -97,7 +114,8 @@
                                                   <div class="d-flex">
                                                        <div class="flex-shrink-0">
                                                             <div class="avatar-sm me-2">
-                                                                 <span class="avatar-title bg-soft-info text-info fs-20 rounded-circle">
+                                                                 <span
+                                                                      class="avatar-title bg-soft-info text-info fs-20 rounded-circle">
                                                                       D
                                                                  </span>
                                                             </div>
@@ -114,11 +132,14 @@
                                              <a href="javascript:void(0);" class="dropdown-item py-3 border-bottom">
                                                   <div class="d-flex">
                                                        <div class="flex-shrink-0">
-                                                            <img src="assets/images/users/avatar-3.jpg" class="img-fluid me-2 avatar-sm rounded-circle" alt="avatar-3" />
+                                                            <img src="assets/images/users/avatar-3.jpg"
+                                                                 class="img-fluid me-2 avatar-sm rounded-circle"
+                                                                 alt="avatar-3" />
                                                        </div>
                                                        <div class="flex-grow-1">
                                                             <p class="mb-0 fw-semibold">Jacob Gines</p>
-                                                            <p class="mb-0 text-wrap">Answered to your comment on the cash flow forecast's graph 🔔.</p>
+                                                            <p class="mb-0 text-wrap">Answered to your comment on the
+                                                                 cash flow forecast's graph 🔔.</p>
                                                        </div>
                                                   </div>
                                              </a>
@@ -127,13 +148,16 @@
                                                   <div class="d-flex">
                                                        <div class="flex-shrink-0">
                                                             <div class="avatar-sm me-2">
-                                                                 <span class="avatar-title bg-soft-warning text-warning fs-20 rounded-circle">
-                                                                      <iconify-icon icon="iconamoon:comment-dots-duotone"></iconify-icon>
+                                                                 <span
+                                                                      class="avatar-title bg-soft-warning text-warning fs-20 rounded-circle">
+                                                                      <iconify-icon
+                                                                           icon="iconamoon:comment-dots-duotone"></iconify-icon>
                                                                  </span>
                                                             </div>
                                                        </div>
                                                        <div class="flex-grow-1">
-                                                            <p class="mb-0 fw-semibold text-wrap">You have received <b>20</b> new messages in the
+                                                            <p class="mb-0 fw-semibold text-wrap">You have received
+                                                                 <b>20</b> new messages in the
                                                                  conversation</p>
                                                        </div>
                                                   </div>
@@ -142,7 +166,9 @@
                                              <a href="javascript:void(0);" class="dropdown-item py-3 border-bottom">
                                                   <div class="d-flex">
                                                        <div class="flex-shrink-0">
-                                                            <img src="{{ asset('assets/images/users/avatar-5.jpg') }}" class="img-fluid me-2 avatar-sm rounded-circle" alt="avatar-5" />
+                                                            <img src="{{ asset('assets/images/users/avatar-5.jpg') }}"
+                                                                 class="img-fluid me-2 avatar-sm rounded-circle"
+                                                                 alt="avatar-5" />
                                                        </div>
                                                        <div class="flex-grow-1">
                                                             <p class="mb-0 fw-semibold">Shawn Bunch</p>
@@ -154,56 +180,71 @@
                                              </a>
                                         </div>
                                         <div class="text-center py-3">
-                                             <a href="javascript:void(0);" class="btn btn-primary btn-sm">View All Notification <i class="bx bx-right-arrow-alt ms-1"></i></a>
+                                             <a href="javascript:void(0);" class="btn btn-primary btn-sm">View All
+                                                  Notification <i class="bx bx-right-arrow-alt ms-1"></i></a>
                                         </div>
                                    </div>
                               </div>
 
                               <!-- Theme Setting -->
                               <div class="topbar-item d-none d-md-flex">
-                                   <button type="button" class="topbar-button" id="theme-settings-btn" data-bs-toggle="offcanvas" data-bs-target="#theme-settings-offcanvas" aria-controls="theme-settings-offcanvas">
-                                        <iconify-icon icon="solar:settings-bold-duotone" class="fs-24 align-middle"></iconify-icon>
+                                   <button type="button" class="topbar-button" id="theme-settings-btn"
+                                        data-bs-toggle="offcanvas" data-bs-target="#theme-settings-offcanvas"
+                                        aria-controls="theme-settings-offcanvas">
+                                        <iconify-icon icon="solar:settings-bold-duotone"
+                                             class="fs-24 align-middle"></iconify-icon>
                                    </button>
                               </div>
 
                               <!-- Activity -->
                               <div class="topbar-item d-none d-md-flex">
-                                   <button type="button" class="topbar-button" id="theme-settings-btn" data-bs-toggle="offcanvas" data-bs-target="#theme-activity-offcanvas" aria-controls="theme-settings-offcanvas">
-                                        <iconify-icon icon="solar:clock-circle-bold-duotone" class="fs-24 align-middle"></iconify-icon>
+                                   <button type="button" class="topbar-button" id="theme-settings-btn"
+                                        data-bs-toggle="offcanvas" data-bs-target="#theme-activity-offcanvas"
+                                        aria-controls="theme-settings-offcanvas">
+                                        <iconify-icon icon="solar:clock-circle-bold-duotone"
+                                             class="fs-24 align-middle"></iconify-icon>
                                    </button>
                               </div>
 
                               <!-- User -->
                               <div class="dropdown topbar-item">
-                                   <a type="button" class="topbar-button" id="page-header-user-dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                   <a type="button" class="topbar-button" id="page-header-user-dropdown"
+                                        data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                         <span class="d-flex align-items-center">
-                                             <img class="rounded-circle" width="32" src="assets/images/users/avatar-1.jpg" alt="avatar-3">
+                                             <img class="rounded-circle" width="32"
+                                                  src="assets/images/users/avatar-1.jpg" alt="avatar-3">
                                         </span>
                                    </a>
                                    <div class="dropdown-menu dropdown-menu-end">
                                         <!-- item-->
                                         <h6 class="dropdown-header">Welcome Gaston!</h6>
                                         <a class="dropdown-item" href="pages-profile.html">
-                                             <i class="bx bx-user-circle text-muted fs-18 align-middle me-1"></i><span class="align-middle">Profile</span>
+                                             <i class="bx bx-user-circle text-muted fs-18 align-middle me-1"></i><span
+                                                  class="align-middle">Profile</span>
                                         </a>
                                         <a class="dropdown-item" href="apps-chat.html">
-                                             <i class="bx bx-message-dots text-muted fs-18 align-middle me-1"></i><span class="align-middle">Messages</span>
+                                             <i class="bx bx-message-dots text-muted fs-18 align-middle me-1"></i><span
+                                                  class="align-middle">Messages</span>
                                         </a>
 
                                         <a class="dropdown-item" href="pages-pricing.html">
-                                             <i class="bx bx-wallet text-muted fs-18 align-middle me-1"></i><span class="align-middle">Pricing</span>
+                                             <i class="bx bx-wallet text-muted fs-18 align-middle me-1"></i><span
+                                                  class="align-middle">Pricing</span>
                                         </a>
                                         <a class="dropdown-item" href="pages-faqs.html">
-                                             <i class="bx bx-help-circle text-muted fs-18 align-middle me-1"></i><span class="align-middle">Help</span>
+                                             <i class="bx bx-help-circle text-muted fs-18 align-middle me-1"></i><span
+                                                  class="align-middle">Help</span>
                                         </a>
                                         <a class="dropdown-item" href="auth-lock-screen.html">
-                                             <i class="bx bx-lock text-muted fs-18 align-middle me-1"></i><span class="align-middle">Lock screen</span>
+                                             <i class="bx bx-lock text-muted fs-18 align-middle me-1"></i><span
+                                                  class="align-middle">Lock screen</span>
                                         </a>
 
                                         <div class="dropdown-divider my-1"></div>
 
                                         <a class="dropdown-item text-danger" href="auth-signin.html">
-                                             <i class="bx bx-log-out fs-18 align-middle me-1"></i><span class="align-middle">Logout</span>
+                                             <i class="bx bx-log-out fs-18 align-middle me-1"></i><span
+                                                  class="align-middle">Logout</span>
                                         </a>
                                    </div>
                               </div>
@@ -211,8 +252,10 @@
                               <!-- App Search-->
                               <form class="app-search d-none d-md-block ms-2">
                                    <div class="position-relative">
-                                        <input type="search" class="form-control" placeholder="Search..." autocomplete="off" value="">
-                                        <iconify-icon icon="solar:magnifer-linear" class="search-widget-icon"></iconify-icon>
+                                        <input type="search" class="form-control" placeholder="Search..."
+                                             autocomplete="off" value="">
+                                        <iconify-icon icon="solar:magnifer-linear"
+                                             class="search-widget-icon"></iconify-icon>
                                    </div>
                               </form>
                          </div>
@@ -222,10 +265,12 @@
 
           <!-- Activity Timeline -->
           <div>
-               <div class="offcanvas offcanvas-end border-0" tabindex="-1" id="theme-activity-offcanvas" style="max-width: 450px; width: 100%;">
+               <div class="offcanvas offcanvas-end border-0" tabindex="-1" id="theme-activity-offcanvas"
+                    style="max-width: 450px; width: 100%;">
                     <div class="d-flex align-items-center bg-primary p-3 offcanvas-header">
                          <h5 class="text-white m-0 fw-semibold">Activity Stream</h5>
-                         <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                         <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="offcanvas"
+                              aria-label="Close"></button>
                     </div>
 
                     <div class="offcanvas-body p-0">
@@ -234,22 +279,30 @@
                                    <span class="position-absolute start-0  top-0 border border-dashed h-100"></span>
                                    <div class="position-relative ps-4">
                                         <div class="mb-4">
-                                             <span class="position-absolute start-0 avatar-sm translate-middle-x bg-danger d-inline-flex align-items-center justify-content-center rounded-circle text-light fs-20"><iconify-icon icon="iconamoon:folder-check-duotone"></iconify-icon></span>
+                                             <span
+                                                  class="position-absolute start-0 avatar-sm translate-middle-x bg-danger d-inline-flex align-items-center justify-content-center rounded-circle text-light fs-20"><iconify-icon
+                                                       icon="iconamoon:folder-check-duotone"></iconify-icon></span>
                                              <div class="ms-2">
-                                                  <h5 class="mb-1 text-dark fw-semibold fs-15 lh-base">Report-Fix / Update </h5>
-                                                  <p class="d-flex align-items-center">Add 3 files to <span class=" d-flex align-items-center text-primary ms-1"><iconify-icon icon="iconamoon:file-light"></iconify-icon> Tasks</span></p>
+                                                  <h5 class="mb-1 text-dark fw-semibold fs-15 lh-base">Report-Fix /
+                                                       Update </h5>
+                                                  <p class="d-flex align-items-center">Add 3 files to <span
+                                                            class=" d-flex align-items-center text-primary ms-1"><iconify-icon
+                                                                 icon="iconamoon:file-light"></iconify-icon>
+                                                            Tasks</span></p>
                                                   <div class="bg-light bg-opacity-50 rounded-2 p-2">
                                                        <div class="row">
                                                             <div class="col-lg-6 border-end border-light">
                                                                  <div class="d-flex align-items-center gap-2">
                                                                       <i class="bx bxl-figma fs-20 text-red"></i>
-                                                                      <a href="#!" class="text-dark fw-medium">Concept.fig</a>
+                                                                      <a href="#!"
+                                                                           class="text-dark fw-medium">Concept.fig</a>
                                                                  </div>
                                                             </div>
                                                             <div class="col-lg-6">
                                                                  <div class="d-flex align-items-center gap-2">
                                                                       <i class="bx bxl-file-doc fs-20 text-success"></i>
-                                                                      <a href="#!" class="text-dark fw-medium">larkon.docs</a>
+                                                                      <a href="#!"
+                                                                           class="text-dark fw-medium">larkon.docs</a>
                                                                  </div>
                                                             </div>
                                                        </div>
@@ -260,15 +313,26 @@
                                    </div>
                                    <div class="position-relative ps-4">
                                         <div class="mb-4">
-                                             <span class="position-absolute start-0 avatar-sm translate-middle-x bg-success d-inline-flex align-items-center justify-content-center rounded-circle text-light fs-20"><iconify-icon icon="iconamoon:check-circle-1-duotone"></iconify-icon></span>
+                                             <span
+                                                  class="position-absolute start-0 avatar-sm translate-middle-x bg-success d-inline-flex align-items-center justify-content-center rounded-circle text-light fs-20"><iconify-icon
+                                                       icon="iconamoon:check-circle-1-duotone"></iconify-icon></span>
                                              <div class="ms-2">
                                                   <h5 class="mb-1 text-dark fw-semibold fs-15 lh-base">Project Status
                                                   </h5>
-                                                  <p class="d-flex align-items-center mb-0">Marked<span class=" d-flex align-items-center text-primary mx-1"><iconify-icon icon="iconamoon:file-light"></iconify-icon> Design </span> as <span class="badge bg-success-subtle text-success px-2 py-1 ms-1"> Completed</span></p>
-                                                  <div class="d-flex align-items-center gap-3 mt-1 bg-light bg-opacity-50 p-2 rounded-2">
+                                                  <p class="d-flex align-items-center mb-0">Marked<span
+                                                            class=" d-flex align-items-center text-primary mx-1"><iconify-icon
+                                                                 icon="iconamoon:file-light"></iconify-icon> Design
+                                                       </span> as <span
+                                                            class="badge bg-success-subtle text-success px-2 py-1 ms-1">
+                                                            Completed</span></p>
+                                                  <div
+                                                       class="d-flex align-items-center gap-3 mt-1 bg-light bg-opacity-50 p-2 rounded-2">
                                                        <a href="#!" class="fw-medium text-dark">UI/UX Figma Design</a>
                                                        <div class="ms-auto">
-                                                            <a href="#!" class="fw-medium text-primary fs-18" data-bs-toggle="tooltip" data-bs-title="Download" data-bs-placement="bottom"><iconify-icon icon="iconamoon:cloud-download-duotone"></iconify-icon></a>
+                                                            <a href="#!" class="fw-medium text-primary fs-18"
+                                                                 data-bs-toggle="tooltip" data-bs-title="Download"
+                                                                 data-bs-placement="bottom"><iconify-icon
+                                                                      icon="iconamoon:cloud-download-duotone"></iconify-icon></a>
                                                        </div>
                                                   </div>
                                                   <h6 class="mt-3 text-muted">Monday , 3:00 PM</h6>
@@ -277,11 +341,17 @@
                                    </div>
                                    <div class="position-relative ps-4">
                                         <div class="mb-4">
-                                             <span class="position-absolute start-0 avatar-sm translate-middle-x bg-primary d-inline-flex align-items-center justify-content-center rounded-circle text-light fs-16">UI</span>
+                                             <span
+                                                  class="position-absolute start-0 avatar-sm translate-middle-x bg-primary d-inline-flex align-items-center justify-content-center rounded-circle text-light fs-16">UI</span>
                                              <div class="ms-2">
-                                                  <h5 class="mb-1 text-dark fw-semibold fs-15">Larkon Application UI v2.0.0 <span class="badge bg-primary-subtle text-primary px-2 py-1 ms-1"> Latest</span>
+                                                  <h5 class="mb-1 text-dark fw-semibold fs-15">Larkon Application UI
+                                                       v2.0.0 <span
+                                                            class="badge bg-primary-subtle text-primary px-2 py-1 ms-1">
+                                                            Latest</span>
                                                   </h5>
-                                                  <p>Get access to over 20+ pages including a dashboard layout, charts, kanban board, calendar, and pre-order E-commerce & Marketing pages.</p>
+                                                  <p>Get access to over 20+ pages including a dashboard layout, charts,
+                                                       kanban board, calendar, and pre-order E-commerce & Marketing
+                                                       pages.</p>
                                                   <div class="mt-2">
                                                        <a href="#!" class="btn btn-light btn-sm">Download Zip</a>
                                                   </div>
@@ -291,24 +361,31 @@
                                    </div>
                                    <div class="position-relative ps-4">
                                         <div class="mb-4">
-                                             <span class="position-absolute start-0 translate-middle-x bg-success bg-gradient d-inline-flex align-items-center justify-content-center rounded-circle text-light fs-20"><img src="assets/images/users/avatar-7.jpg" alt="avatar-5" class="avatar-sm rounded-circle"></span>
+                                             <span
+                                                  class="position-absolute start-0 translate-middle-x bg-success bg-gradient d-inline-flex align-items-center justify-content-center rounded-circle text-light fs-20"><img
+                                                       src="assets/images/users/avatar-7.jpg" alt="avatar-5"
+                                                       class="avatar-sm rounded-circle"></span>
                                              <div class="ms-2">
-                                                  <h5 class="mb-0 text-dark fw-semibold fs-15 lh-base">Alex Smith Attached Photos
+                                                  <h5 class="mb-0 text-dark fw-semibold fs-15 lh-base">Alex Smith
+                                                       Attached Photos
                                                   </h5>
                                                   <div class="row g-2 mt-2">
                                                        <div class="col-lg-4">
                                                             <a href="#!">
-                                                                 <img src="assets/images/small/img-6.jpg" alt="" class="img-fluid rounded">
+                                                                 <img src="assets/images/small/img-6.jpg" alt=""
+                                                                      class="img-fluid rounded">
                                                             </a>
                                                        </div>
                                                        <div class="col-lg-4">
                                                             <a href="#!">
-                                                                 <img src="assets/images/small/img-3.jpg" alt="" class="img-fluid rounded">
+                                                                 <img src="assets/images/small/img-3.jpg" alt=""
+                                                                      class="img-fluid rounded">
                                                             </a>
                                                        </div>
                                                        <div class="col-lg-4">
                                                             <a href="#!">
-                                                                 <img src="assets/images/small/img-4.jpg" alt="" class="img-fluid rounded">
+                                                                 <img src="assets/images/small/img-4.jpg" alt=""
+                                                                      class="img-fluid rounded">
                                                             </a>
                                                        </div>
                                                   </div>
@@ -318,22 +395,34 @@
                                    </div>
                                    <div class="position-relative ps-4">
                                         <div class="mb-4">
-                                             <span class="position-absolute start-0 translate-middle-x bg-success bg-gradient d-inline-flex align-items-center justify-content-center rounded-circle text-light fs-20"><img src="{{ asset('assets/images/users/avatar-6.jpg') }}" alt="avatar-5" class="avatar-sm rounded-circle"></span>
+                                             <span
+                                                  class="position-absolute start-0 translate-middle-x bg-success bg-gradient d-inline-flex align-items-center justify-content-center rounded-circle text-light fs-20"><img
+                                                       src="{{ asset('assets/images/users/avatar-6.jpg') }}"
+                                                       alt="avatar-5" class="avatar-sm rounded-circle"></span>
                                              <div class="ms-2">
-                                                  <h5 class="mb-0 text-dark fw-semibold fs-15 lh-base">Rebecca J. added a new team member
+                                                  <h5 class="mb-0 text-dark fw-semibold fs-15 lh-base">Rebecca J. added
+                                                       a new team member
                                                   </h5>
-                                                  <p class="d-flex align-items-center gap-1"><iconify-icon icon="iconamoon:check-circle-1-duotone" class="text-success"></iconify-icon> Added a new member to Front Dashboard</p>
+                                                  <p class="d-flex align-items-center gap-1"><iconify-icon
+                                                            icon="iconamoon:check-circle-1-duotone"
+                                                            class="text-success"></iconify-icon> Added a new member to
+                                                       Front Dashboard</p>
                                                   <h6 class="mt-3 text-muted">Monday 10:00 AM</h6>
                                              </div>
                                         </div>
                                    </div>
                                    <div class="position-relative ps-4">
                                         <div class="mb-4">
-                                             <span class="position-absolute start-0 avatar-sm translate-middle-x bg-warning d-inline-flex align-items-center justify-content-center rounded-circle text-light fs-20"><iconify-icon icon="iconamoon:certificate-badge-duotone"></iconify-icon></span>
+                                             <span
+                                                  class="position-absolute start-0 avatar-sm translate-middle-x bg-warning d-inline-flex align-items-center justify-content-center rounded-circle text-light fs-20"><iconify-icon
+                                                       icon="iconamoon:certificate-badge-duotone"></iconify-icon></span>
                                              <div class="ms-2">
                                                   <h5 class="mb-0 text-dark fw-semibold fs-15 lh-base">Achievements
                                                   </h5>
-                                                  <p class="d-flex align-items-center gap-1 mt-1">Earned a <iconify-icon icon="iconamoon:certificate-badge-duotone" class="text-danger fs-20"></iconify-icon>" Best Product Award"</p>
+                                                  <p class="d-flex align-items-center gap-1 mt-1">Earned a <iconify-icon
+                                                            icon="iconamoon:certificate-badge-duotone"
+                                                            class="text-danger fs-20"></iconify-icon>" Best Product
+                                                       Award"</p>
                                                   <h6 class="mt-3 text-muted">Monday 9:30 AM</h6>
                                              </div>
                                         </div>
@@ -350,7 +439,8 @@
                <div class="offcanvas offcanvas-end border-0" tabindex="-1" id="theme-settings-offcanvas">
                     <div class="d-flex align-items-center bg-primary p-3 offcanvas-header">
                          <h5 class="text-white m-0">Theme Settings</h5>
-                         <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                         <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="offcanvas"
+                              aria-label="Close"></button>
                     </div>
 
                     <div class="offcanvas-body p-0">
@@ -361,12 +451,14 @@
                                         <h5 class="mb-3 font-16 fw-semibold">Color Scheme</h5>
 
                                         <div class="form-check mb-2">
-                                             <input class="form-check-input" type="radio" name="data-bs-theme" id="layout-color-light" value="light">
+                                             <input class="form-check-input" type="radio" name="data-bs-theme"
+                                                  id="layout-color-light" value="light">
                                              <label class="form-check-label" for="layout-color-light">Light</label>
                                         </div>
 
                                         <div class="form-check mb-2">
-                                             <input class="form-check-input" type="radio" name="data-bs-theme" id="layout-color-dark" value="dark">
+                                             <input class="form-check-input" type="radio" name="data-bs-theme"
+                                                  id="layout-color-dark" value="dark">
                                              <label class="form-check-label" for="layout-color-dark">Dark</label>
                                         </div>
                                    </div>
@@ -375,11 +467,13 @@
                                         <h5 class="my-3 font-16 fw-semibold">Topbar Color</h5>
 
                                         <div class="form-check mb-2">
-                                             <input class="form-check-input" type="radio" name="data-topbar-color" id="topbar-color-light" value="light">
+                                             <input class="form-check-input" type="radio" name="data-topbar-color"
+                                                  id="topbar-color-light" value="light">
                                              <label class="form-check-label" for="topbar-color-light">Light</label>
                                         </div>
                                         <div class="form-check mb-2">
-                                             <input class="form-check-input" type="radio" name="data-topbar-color" id="topbar-color-dark" value="dark">
+                                             <input class="form-check-input" type="radio" name="data-topbar-color"
+                                                  id="topbar-color-dark" value="dark">
                                              <label class="form-check-label" for="topbar-color-dark">Dark</label>
                                         </div>
                                    </div>
@@ -389,14 +483,16 @@
                                         <h5 class="my-3 font-16 fw-semibold">Menu Color</h5>
 
                                         <div class="form-check mb-2">
-                                             <input class="form-check-input" type="radio" name="data-menu-color" id="leftbar-color-light" value="light">
+                                             <input class="form-check-input" type="radio" name="data-menu-color"
+                                                  id="leftbar-color-light" value="light">
                                              <label class="form-check-label" for="leftbar-color-light">
                                                   Light
                                              </label>
                                         </div>
 
                                         <div class="form-check mb-2">
-                                             <input class="form-check-input" type="radio" name="data-menu-color" id="leftbar-color-dark" value="dark">
+                                             <input class="form-check-input" type="radio" name="data-menu-color"
+                                                  id="leftbar-color-dark" value="dark">
                                              <label class="form-check-label" for="leftbar-color-dark">
                                                   Dark
                                              </label>
@@ -407,35 +503,40 @@
                                         <h5 class="my-3 font-16 fw-semibold">Sidebar Size</h5>
 
                                         <div class="form-check mb-2">
-                                             <input class="form-check-input" type="radio" name="data-menu-size" id="leftbar-size-default" value="default">
+                                             <input class="form-check-input" type="radio" name="data-menu-size"
+                                                  id="leftbar-size-default" value="default">
                                              <label class="form-check-label" for="leftbar-size-default">
                                                   Default
                                              </label>
                                         </div>
 
                                         <div class="form-check mb-2">
-                                             <input class="form-check-input" type="radio" name="data-menu-size" id="leftbar-size-small" value="condensed">
+                                             <input class="form-check-input" type="radio" name="data-menu-size"
+                                                  id="leftbar-size-small" value="condensed">
                                              <label class="form-check-label" for="leftbar-size-small">
                                                   Condensed
                                              </label>
                                         </div>
 
                                         <div class="form-check mb-2">
-                                             <input class="form-check-input" type="radio" name="data-menu-size" id="leftbar-hidden" value="hidden">
+                                             <input class="form-check-input" type="radio" name="data-menu-size"
+                                                  id="leftbar-hidden" value="hidden">
                                              <label class="form-check-label" for="leftbar-hidden">
                                                   Hidden
                                              </label>
                                         </div>
 
                                         <div class="form-check mb-2">
-                                             <input class="form-check-input" type="radio" name="data-menu-size" id="leftbar-size-small-hover-active" value="sm-hover-active">
+                                             <input class="form-check-input" type="radio" name="data-menu-size"
+                                                  id="leftbar-size-small-hover-active" value="sm-hover-active">
                                              <label class="form-check-label" for="leftbar-size-small-hover-active">
                                                   Small Hover Active
                                              </label>
                                         </div>
 
                                         <div class="form-check mb-2">
-                                             <input class="form-check-input" type="radio" name="data-menu-size" id="leftbar-size-small-hover" value="sm-hover">
+                                             <input class="form-check-input" type="radio" name="data-menu-size"
+                                                  id="leftbar-size-small-hover" value="sm-hover">
                                              <label class="form-check-label" for="leftbar-size-small-hover">
                                                   Small Hover
                                              </label>
@@ -473,7 +574,8 @@
 
                <!-- Menu Toggle Button (sm-hover) -->
                <button type="button" class="button-sm-hover" aria-label="Show Full Sidebar">
-                    <iconify-icon icon="solar:double-alt-arrow-right-bold-duotone" class="button-sm-hover-icon"></iconify-icon>
+                    <iconify-icon icon="solar:double-alt-arrow-right-bold-duotone"
+                         class="button-sm-hover-icon"></iconify-icon>
                </button>
 
                <div class="scrollbar" data-simplebar>
@@ -491,7 +593,8 @@
                          </li>
 
                          <li class="nav-item">
-                              <a class="nav-link menu-arrow" href="#sidebarProducts" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarProducts">
+                              <a class="nav-link menu-arrow" href="#sidebarProducts" data-bs-toggle="collapse"
+                                   role="button" aria-expanded="false" aria-controls="sidebarProducts">
                                    <span class="nav-icon">
                                         <iconify-icon icon="solar:t-shirt-bold-duotone"></iconify-icon>
                                    </span>
@@ -519,7 +622,8 @@
                          </li>
 
                          <li class="nav-item">
-                              <a class="nav-link menu-arrow" href="#sidebarCategory" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarCategory">
+                              <a class="nav-link menu-arrow" href="#sidebarCategory" data-bs-toggle="collapse"
+                                   role="button" aria-expanded="false" aria-controls="sidebarCategory">
                                    <span class="nav-icon">
                                         <iconify-icon icon="solar:clipboard-list-bold-duotone"></iconify-icon>
                                    </span>
@@ -529,7 +633,7 @@
                                    <ul class="nav sub-navbar-nav">
                                         <li class="sub-nav-item">
                                              <a class="sub-nav-link" href="category-list.html">List</a>
-                                        </li>                         
+                                        </li>
                                         <li class="sub-nav-item">
                                              <a class="sub-nav-link" href="category-edit.html">Edit</a>
                                         </li>
@@ -541,7 +645,8 @@
                          </li>
 
                          <li class="nav-item">
-                              <a class="nav-link menu-arrow" href="#sidebarInventory" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarInventory">
+                              <a class="nav-link menu-arrow" href="#sidebarInventory" data-bs-toggle="collapse"
+                                   role="button" aria-expanded="false" aria-controls="sidebarInventory">
                                    <span class="nav-icon">
                                         <iconify-icon icon="solar:box-bold-duotone"></iconify-icon>
                                    </span>
@@ -554,14 +659,16 @@
                                              <a class="sub-nav-link" href="inventory-warehouse.html">Warehouse</a>
                                         </li>
                                         <li class="sub-nav-item">
-                                             <a class="sub-nav-link" href="inventory-received-orders.html">Received Orders</a>
+                                             <a class="sub-nav-link" href="inventory-received-orders.html">Received
+                                                  Orders</a>
                                         </li>
                                    </ul>
                               </div>
                          </li>
 
                          <li class="nav-item">
-                              <a class="nav-link menu-arrow" href="#sidebarOrders" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarOrders">
+                              <a class="nav-link menu-arrow" href="#sidebarOrders" data-bs-toggle="collapse"
+                                   role="button" aria-expanded="false" aria-controls="sidebarOrders">
                                    <span class="nav-icon">
                                         <iconify-icon icon="solar:bag-smile-bold-duotone"></iconify-icon>
                                    </span>
@@ -587,7 +694,8 @@
                          </li>
 
                          <li class="nav-item">
-                              <a class="nav-link menu-arrow" href="#sidebarPurchases" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarPurchases">
+                              <a class="nav-link menu-arrow" href="#sidebarPurchases" data-bs-toggle="collapse"
+                                   role="button" aria-expanded="false" aria-controls="sidebarPurchases">
                                    <span class="nav-icon">
                                         <iconify-icon icon="solar:card-send-bold-duotone"></iconify-icon>
                                    </span>
@@ -609,7 +717,8 @@
                          </li>
 
                          <li class="nav-item">
-                              <a class="nav-link menu-arrow" href="#sidebarAttributes" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarAttributes">
+                              <a class="nav-link menu-arrow" href="#sidebarAttributes" data-bs-toggle="collapse"
+                                   role="button" aria-expanded="false" aria-controls="sidebarAttributes">
                                    <span class="nav-icon">
                                         <iconify-icon icon="solar:confetti-minimalistic-bold-duotone"></iconify-icon>
                                    </span>
@@ -631,7 +740,8 @@
                          </li>
 
                          <li class="nav-item">
-                              <a class="nav-link menu-arrow" href="#sidebarInvoice" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarInvoice">
+                              <a class="nav-link menu-arrow" href="#sidebarInvoice" data-bs-toggle="collapse"
+                                   role="button" aria-expanded="false" aria-controls="sidebarInvoice">
                                    <span class="nav-icon">
                                         <iconify-icon icon="solar:bill-list-bold-duotone"></iconify-icon>
                                    </span>
@@ -644,7 +754,7 @@
                                         </li>
                                         <li class="sub-nav-item">
                                              <a class="sub-nav-link" href="invoice-details.html">Details</a>
-                                        </li>                            
+                                        </li>
                                         <li class="sub-nav-item">
                                              <a class="sub-nav-link" href="invoice-add.html">Create</a>
                                         </li>
@@ -673,25 +783,69 @@
                          </li>
 
                          <li class="nav-item">
-                              <a class="nav-link menu-arrow" href="#sidebarRoles" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarRoles">
+                              <a class="nav-link menu-arrow" href="#sidebarRoles" data-bs-toggle="collapse"
+                                   role="button" aria-expanded="false" aria-controls="sidebarRoles">
                                    <span class="nav-icon">
                                         <iconify-icon icon="solar:user-speak-rounded-bold-duotone"></iconify-icon>
                                    </span>
-                                   <span class="nav-text"> Roles </span>
+                                   <span class="nav-text">Roles</span>
                               </a>
                               <div class="collapse" id="sidebarRoles">
                                    <ul class="nav sub-navbar-nav">
-                                        <ul class="nav sub-navbar-nav">
-                                             <li class="sub-nav-item">
-                                                  <a class="sub-nav-link" href="role-list.html">List</a>
-                                             </li>
-                                             <li class="sub-nav-item">
-                                                  <a class="sub-nav-link" href="role-edit.html">Edit</a>
-                                             </li>
-                                             <li class="sub-nav-item">
-                                                  <a class="sub-nav-link" href="role-add.html">Create</a>
-                                             </li>
-                                        </ul>
+                                        <li class="sub-nav-item">
+                                             <a class="sub-nav-link" href="{{ route('roles.index') }}">List</a>
+                                        </li>
+                                        <li class="sub-nav-item">
+                                             <a class="sub-nav-link" href="{{ route('roles.create') }}">Create</a>
+                                        </li>
+                                        <li class="sub-nav-item">
+                                             <a class="sub-nav-link" href="{{ route('roles.deleted') }}">Deleted</a>
+                                        </li>
+                                   </ul>
+                              </div>
+                         </li>
+
+                         <!-- Customer Rank Menu -->
+                         <li class="nav-item">
+                              <a class="nav-link menu-arrow" href="#sidebarCustomerRank" data-bs-toggle="collapse"
+                                   role="button" aria-expanded="false" aria-controls="sidebarCustomerRank">
+                                   <span class="nav-icon">
+                                        <iconify-icon icon="mdi:account-star-outline"></iconify-icon>
+                                   </span>
+                                   <span class="nav-text">Customer Rank</span>
+                              </a>
+                              <div class="collapse" id="sidebarCustomerRank">
+                                   <ul class="nav sub-navbar-nav">
+                                        <li class="sub-nav-item">
+                                             <a class="sub-nav-link" href="{{ route('customers-rank.index') }}">List</a>
+                                        </li>
+                                        <li class="sub-nav-item">
+                                             <a class="sub-nav-link" href="{{ route('customers-rank.create') }}">Create</a>
+                                        </li>
+                                        <li class="sub-nav-item">
+                                             <a class="sub-nav-link" href="{{ route('customers-rank.deleted') }}">Deleted</a>
+                                        </li>
+                                   </ul>
+                              </div>
+                         </li>
+
+                         <!-- Users Menu -->
+                         <li class="nav-item">
+                              <a class="nav-link menu-arrow" href="#sidebarUsers" data-bs-toggle="collapse"
+                                   role="button" aria-expanded="false" aria-controls="sidebarUsers">
+                                   <span class="nav-icon">
+                                        <iconify-icon icon="mdi:account-multiple-outline"></iconify-icon>
+                                   </span>
+                                   <span class="nav-text">Users</span>
+                              </a>
+                              <div class="collapse" id="sidebarUsers">
+                                   <ul class="nav sub-navbar-nav">
+                                        <li class="sub-nav-item">
+                                             <a class="sub-nav-link" href="{{ route('users.index') }}">List</a>
+                                        </li>
+                                        <li class="sub-nav-item">
+                                             <a class="sub-nav-link" href="{{ route('users.create') }}">Create</a>
+                                        </li>
                                    </ul>
                               </div>
                          </li>
@@ -706,7 +860,8 @@
                          </li>
 
                          <li class="nav-item">
-                              <a class="nav-link menu-arrow" href="#sidebarCustomers" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarCustomers">
+                              <a class="nav-link menu-arrow" href="#sidebarCustomers" data-bs-toggle="collapse"
+                                   role="button" aria-expanded="false" aria-controls="sidebarCustomers">
                                    <span class="nav-icon">
                                         <iconify-icon icon="solar:users-group-two-rounded-bold-duotone"></iconify-icon>
                                    </span>
@@ -726,7 +881,8 @@
                          </li>
 
                          <li class="nav-item">
-                              <a class="nav-link menu-arrow" href="#sidebarSellers" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarSellers">
+                              <a class="nav-link menu-arrow" href="#sidebarSellers" data-bs-toggle="collapse"
+                                   role="button" aria-expanded="false" aria-controls="sidebarSellers">
                                    <span class="nav-icon">
                                         <iconify-icon icon="solar:shop-bold-duotone"></iconify-icon>
                                    </span>
@@ -753,7 +909,8 @@
                          <li class="menu-title mt-2">Other</li>
 
                          <li class="nav-item">
-                              <a class="nav-link menu-arrow" href="#sidebarCoupons" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarCoupons">
+                              <a class="nav-link menu-arrow" href="#sidebarCoupons" data-bs-toggle="collapse"
+                                   role="button" aria-expanded="false" aria-controls="sidebarCoupons">
                                    <span class="nav-icon">
                                         <iconify-icon icon="solar:leaf-bold-duotone"></iconify-icon>
                                    </span>
@@ -850,7 +1007,8 @@
                          <li class="menu-title mt-2">Custom</li>
 
                          <li class="nav-item">
-                              <a class="nav-link menu-arrow" href="#sidebarPages" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarPages">
+                              <a class="nav-link menu-arrow" href="#sidebarPages" data-bs-toggle="collapse"
+                                   role="button" aria-expanded="false" aria-controls="sidebarPages">
                                    <span class="nav-icon">
                                         <iconify-icon icon="solar:gift-bold-duotone"></iconify-icon>
                                    </span>
@@ -884,7 +1042,8 @@
                          </li>
 
                          <li class="nav-item">
-                              <a class="nav-link menu-arrow" href="#sidebarAuthentication" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarAuthentication">
+                              <a class="nav-link menu-arrow" href="#sidebarAuthentication" data-bs-toggle="collapse"
+                                   role="button" aria-expanded="false" aria-controls="sidebarAuthentication">
                                    <span class="nav-icon">
                                         <iconify-icon icon="solar:lock-keyhole-bold-duotone"></iconify-icon>
                                    </span>
@@ -894,16 +1053,16 @@
                                    <ul class="nav sub-navbar-nav">
                                         <li class="sub-nav-item">
                                              <a class="sub-nav-link" href="auth-signin.html">Sign In</a>
-                                        </li>                              
+                                        </li>
                                         <li class="sub-nav-item">
                                              <a class="sub-nav-link" href="auth-signup.html">Sign Up</a>
-                                        </li>                           
+                                        </li>
                                         <li class="sub-nav-item">
                                              <a class="sub-nav-link" href="auth-password.html">Reset Password</a>
-                                        </li>                              
+                                        </li>
                                         <li class="sub-nav-item">
                                              <a class="sub-nav-link" href="auth-lock-screen.html">Lock Screen</a>
-                                        </li>                          
+                                        </li>
                                    </ul>
                               </div>
                          </li>
@@ -921,7 +1080,8 @@
                          <li class="menu-title mt-2">Components</li>
 
                          <li class="nav-item">
-                              <a class="nav-link menu-arrow" href="#sidebarBaseUI" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarBaseUI">
+                              <a class="nav-link menu-arrow" href="#sidebarBaseUI" data-bs-toggle="collapse"
+                                   role="button" aria-expanded="false" aria-controls="sidebarBaseUI">
                                    <span class="nav-icon">
                                         <iconify-icon icon="solar:bookmark-square-bold-duotone"></iconify-icon>
                                    </span>
@@ -1000,7 +1160,8 @@
                          </li>
 
                          <li class="nav-item">
-                              <a class="nav-link menu-arrow" href="#sidebarExtendedUI" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarExtendedUI">
+                              <a class="nav-link menu-arrow" href="#sidebarExtendedUI" data-bs-toggle="collapse"
+                                   role="button" aria-expanded="false" aria-controls="sidebarExtendedUI">
                                    <span class="nav-icon">
                                         <iconify-icon icon="solar:case-round-bold-duotone"></iconify-icon>
                                    </span>
@@ -1015,7 +1176,8 @@
                                              <a class="sub-nav-link" href="extended-sweetalert.html">Sweet Alert</a>
                                         </li>
                                         <li class="sub-nav-item">
-                                             <a class="sub-nav-link" href="extended-swiper-silder.html">Swiper Slider</a>
+                                             <a class="sub-nav-link" href="extended-swiper-silder.html">Swiper
+                                                  Slider</a>
                                         </li>
                                         <li class="sub-nav-item">
                                              <a class="sub-nav-link" href="extended-scrollbar.html">Scrollbar</a>
@@ -1028,7 +1190,8 @@
                          </li>
 
                          <li class="nav-item">
-                              <a class="nav-link menu-arrow" href="#sidebarCharts" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarCharts">
+                              <a class="nav-link menu-arrow" href="#sidebarCharts" data-bs-toggle="collapse"
+                                   role="button" aria-expanded="false" aria-controls="sidebarCharts">
                                    <span class="nav-icon">
                                         <iconify-icon icon="solar:pie-chart-2-bold-duotone"></iconify-icon>
                                    </span>
@@ -1089,7 +1252,8 @@
                          </li>
 
                          <li class="nav-item">
-                              <a class="nav-link menu-arrow" href="#sidebarForms" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarForms">
+                              <a class="nav-link menu-arrow" href="#sidebarForms" data-bs-toggle="collapse"
+                                   role="button" aria-expanded="false" aria-controls="sidebarForms">
                                    <span class="nav-icon">
                                         <iconify-icon icon="solar:book-bookmark-bold-duotone"></iconify-icon>
                                    </span>
@@ -1101,7 +1265,8 @@
                                              <a class="sub-nav-link" href="forms-basic.html">Basic Elements</a>
                                         </li>
                                         <li class="sub-nav-item">
-                                             <a class="sub-nav-link" href="forms-checkbox-radio.html">Checkbox &amp; Radio</a>
+                                             <a class="sub-nav-link" href="forms-checkbox-radio.html">Checkbox &amp;
+                                                  Radio</a>
                                         </li>
                                         <li class="sub-nav-item">
                                              <a class="sub-nav-link" href="forms-choices.html">Choice Select</a>
@@ -1135,7 +1300,8 @@
                          </li>
 
                          <li class="nav-item">
-                              <a class="nav-link menu-arrow" href="#sidebarTables" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarTables">
+                              <a class="nav-link menu-arrow" href="#sidebarTables" data-bs-toggle="collapse"
+                                   role="button" aria-expanded="false" aria-controls="sidebarTables">
                                    <span class="nav-icon">
                                         <iconify-icon icon="solar:tuning-2-bold-duotone"></iconify-icon>
                                    </span>
@@ -1154,7 +1320,8 @@
                          </li>
 
                          <li class="nav-item">
-                              <a class="nav-link menu-arrow" href="#sidebarIcons" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarIcons">
+                              <a class="nav-link menu-arrow" href="#sidebarIcons" data-bs-toggle="collapse"
+                                   role="button" aria-expanded="false" aria-controls="sidebarIcons">
                                    <span class="nav-icon">
                                         <iconify-icon icon="solar:ufo-2-bold-duotone"></iconify-icon>
                                    </span>
@@ -1173,7 +1340,8 @@
                          </li>
 
                          <li class="nav-item">
-                              <a class="nav-link menu-arrow" href="#sidebarMaps" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarMaps">
+                              <a class="nav-link menu-arrow" href="#sidebarMaps" data-bs-toggle="collapse" role="button"
+                                   aria-expanded="false" aria-controls="sidebarMaps">
                                    <span class="nav-icon">
                                         <iconify-icon icon="solar:streets-map-point-bold-duotone"></iconify-icon>
                                    </span>
@@ -1202,7 +1370,8 @@
                          </li>
 
                          <li class="nav-item">
-                              <a class="nav-link menu-arrow" href="#sidebarMultiLevelDemo" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarMultiLevelDemo">
+                              <a class="nav-link menu-arrow" href="#sidebarMultiLevelDemo" data-bs-toggle="collapse"
+                                   role="button" aria-expanded="false" aria-controls="sidebarMultiLevelDemo">
                                    <span class="nav-icon">
                                         <iconify-icon icon="solar:share-circle-bold-duotone"></iconify-icon>
                                    </span>
@@ -1214,13 +1383,16 @@
                                              <a class="sub-nav-link" href="javascript:void(0);">Menu Item 1</a>
                                         </li>
                                         <li class="sub-nav-item">
-                                             <a class="sub-nav-link  menu-arrow" href="#sidebarItemDemoSubItem" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarItemDemoSubItem">
+                                             <a class="sub-nav-link  menu-arrow" href="#sidebarItemDemoSubItem"
+                                                  data-bs-toggle="collapse" role="button" aria-expanded="false"
+                                                  aria-controls="sidebarItemDemoSubItem">
                                                   <span> Menu Item 2 </span>
                                              </a>
                                              <div class="collapse" id="sidebarItemDemoSubItem">
                                                   <ul class="nav sub-navbar-nav">
                                                        <li class="sub-nav-item">
-                                                            <a class="sub-nav-link" href="javascript:void(0);">Menu Sub item</a>
+                                                            <a class="sub-nav-link" href="javascript:void(0);">Menu Sub
+                                                                 item</a>
                                                        </li>
                                                   </ul>
                                              </div>
@@ -1258,19 +1430,20 @@
      <!-- END Wrapper -->
 
      <!-- Vendor Javascript (Require in all Page) -->
-     <script src="assets/js/vendor.js"></script>
+     <script src="{{ asset('assets/js/vendor.js') }}"></script>
 
      <!-- App Javascript (Require in all Page) -->
-     <script src="assets/js/app.js"></script>
+     <script src="{{ asset('assets/js/app.js') }}"></script>
 
      <!-- Vector Map Js -->
-     <script src="assets/vendor/jsvectormap/js/jsvectormap.min.js"></script>
-     <script src="assets/vendor/jsvectormap/maps/world-merc.js"></script>
-     <script src="assets/vendor/jsvectormap/maps/world.js"></script>
+     <script src="{{ asset('assets/vendor/jsvectormap/js/jsvectormap.min.js') }}"></script>
+     <script src="{{ asset('assets/vendor/jsvectormap/maps/world-merc.js') }}"></script>
+     <script src="{{ asset('assets/vendor/jsvectormap/maps/world.js') }}"></script>
 
      <!-- Dashboard Js -->
-     <script src="assets/js/pages/dashboard.js"></script>
+     <script src="{{ asset('assets/js/pages/dashboard.js') }}"></script>
 
 </body>
 <!-- Mirrored from techzaa.in/larkon/admin/index.html by HTTrack Website Copier/3.x [XR&CO'2014], Thu, 29 May 2025 02:26:35 GMT -->
+
 </html>

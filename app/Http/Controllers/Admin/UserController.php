@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\UserStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\User\StoreUserRequest;
+use App\Http\Requests\Admin\User\UpdateUserRequest;
 use App\Models\CustomerRank;
 use App\Models\Product;
 use App\Models\Role;
@@ -18,13 +20,38 @@ class UserController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
+        $query = User::with('role', 'customerRank')->orderBy('id', 'desc');
 
-        $users = User::with('role', 'customerRank')->orderBy('id', 'desc')->paginate(10);
-        
+        // 🔍 Search by name or email
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
 
-        return view('admin.users.list', compact('users'));
+        if ($request->filled('role')) {
+            $query->where('role_id', $request->input('role'));
+        }
+
+        if ($request->filled('rank')) {
+            $query->where('customer_rank_id', $request->input('rank'));
+        }
+
+        if ($request->filled('status')) {
+        $query->where('status', $request->input('status'));
+        }
+
+        $users = $query->paginate(10)->withQueryString(); // Keep filters on pagination links
+
+        // For dropdowns
+        $roles = Role::all();
+        $ranks = CustomerRank::all();
+
+        return view('admin.users.list', compact('users', 'roles', 'ranks'));
     }
 
     /**
@@ -33,29 +60,29 @@ class UserController extends Controller
     public function create()
     {
 
-         $roles = Role::all();
+        $roles = Role::all();
 
-         $customerRanks = CustomerRank::all();
+        $customerRanks = CustomerRank::all();
 
-         $statuses = UserStatus::cases();
+        $statuses = UserStatus::cases();
         return view('admin.users.create', compact('roles', 'customerRanks', 'statuses'));
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreUserRequest $request)
     {
-        $data = $request->except('_token');
+        $data = $request->validated();
 
-        if($request->hasFile('avatar_url')){
+        if ($request->hasFile('avatar_url')) {
             $data['avatar_url'] = $request->file('avatar_url')->store('avatars', 'public');
         }
 
         User::create($data);
 
 
-        return redirect()->route('users.index')->with('success', 'User created successfully.'); 
+        return redirect()->route('users.index')->with('success', 'User created successfully.');
     }
 
     /**
@@ -85,52 +112,13 @@ class UserController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(UpdateUserRequest  $request, string $id)
     {
         $user = User::findOrFail($id);
-        $data = $request->except('_token', '_method');
-        if($request->hasFile('avatar_url')){
-           if($user->avatar_url && Storage::disk('public')->exists($user->avatar_url)){
-               Storage::disk('public')->delete($user->avatar_url);
-           }
-           $data['avatar_url'] = $request->file('avatar_url')->store('avatars', 'public');
-        }
 
-
-
-        if(empty($data['password'])){
-            unset($data['password']);
-        } else{
-            $data['password'] = bcrypt($data['password']);
-        }
+        $data = $request->validated();
 
         $user->update($data);
         return redirect()->route('users.index')->with('success', 'User updated successfully.');
-    }
-    public function softDelete(User $user){
-        $user->delete();
-        return redirect()->route('users.index')->with('success', 'User deactivated successfully.');
-    }
-    public function deleted(Request $request){
-        $deletedUsers = User::onlyTrashed()->paginate(10);
-        return view('admin.users.deleted', compact('deletedUsers'));
-    }
-    public function deletedShow($id){
-        $user = User::withTrashed()->findOrFail($id);
-        return view('admin.users.deleted-show', compact('user'));
-    }
-
-    public function restore($id){
-        $user = User::withTrashed()->findOrFail($id);
-        $user->restore();
-        return redirect()->route('users.deleted')->with('success', 'User restored successfully.');
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        
     }
 }

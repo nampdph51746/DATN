@@ -12,7 +12,7 @@
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-light-subtle d-flex justify-content-between align-items-center p-3">
                     <h5 class="card-title mb-0">Deleted Roles</h5>
-                    <form action="{{ route('customersRank.deleted') }}" method="GET" class="d-flex align-items-center">
+                    <form action="{{ route('customers-rank.deleted') }}" method="GET" class="d-flex align-items-center">
                         <div class="input-group" style="max-width: 300px;">
                             <input type="search" name="keyword" class="form-control" placeholder="Search by role name..."
                                 autocomplete="off" value="{{ request('keyword') }}">
@@ -44,14 +44,14 @@
                                         <td>{{ $customerRank->deleted_at }}</td>
                                         <td>
                                             <div class="d-flex gap-2">
-                                                <a href="{{ route('customersRank.deleted-detail', $customerRank->id) }}"
+                                                <a href="{{ route('customers-rank.deleted-detail', $customerRank->id) }}"
                                                     class="btn btn-light btn-sm" title="View Detail">
                                                     <iconify-icon icon="solar:eye-broken"
                                                         class="align-middle fs-18"></iconify-icon>
                                                 </a>
 
                                                 @if($customerRank->trashed())
-                                                    <form action="{{ route('customersRank.restore', $customerRank->id) }}"
+                                                    <form action="{{ route('customers-rank.restore', $customerRank->id) }}"
                                                         method="POST" style="display:inline;">
                                                         @csrf
                                                         <button type="submit" class="btn btn-soft-success btn-sm"
@@ -62,7 +62,7 @@
                                                     </form>
                                                 @endif
 
-                                                <form action="{{ route('customersRank.forceDelete', $customerRank->id) }}"
+                                                <form action="{{ route('customers-rank.forceDelete', $customerRank->id) }}"
                                                     method="POST" style="display:inline;">
                                                     @csrf
                                                     @method('DELETE')

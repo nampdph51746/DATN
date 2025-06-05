@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\CustomerRank\StoreCustomerRankRequest;
+use App\Http\Requests\Admin\CustomerRank\UpdateCustomerRankRequest;
 use App\Models\CustomerRank;
 use Illuminate\Http\Request;
 
@@ -13,7 +15,12 @@ class CustomerRankController extends Controller
         $query = CustomerRank::query();
 
         if ($request->filled('keyword')) {
-            $query->where('name', 'like', '%' . $request->keyword . '%');
+            $query->where('name', 'like', '%' . $request->keyword . '%')
+                ->orWhere('id', $request->keyword)->orWhere('created_at', $request->keyword);
+        }
+
+        if ($request->filled('percentage_order') && in_array($request->percentage_order, ['asc', 'desc'])) {
+            $query->orderBy('discount_percentage', $request->percentage_order);
         }
 
         $customerRanks = $query->orderBy('id', 'desc')->paginate(10)->withQueryString();
@@ -25,9 +32,9 @@ class CustomerRankController extends Controller
         return view('admin.customersRank.create');
     }
 
-    public function store(Request $request)
+    public function store(StoreCustomerRankRequest $request)
     {
-        $data = $request->except('_token');
+        $data = $request->validated();
         CustomerRank::create($data);
         return redirect()->route('customers-rank.index')->with('success', 'Customer Rank created successfully.');
     }
@@ -44,9 +51,10 @@ class CustomerRankController extends Controller
         return view('admin.customersRank.edit', compact('customerRank'));
     }
 
-    public function update(Request $request, string $id)
+    public function update(UpdateCustomerRankRequest $request, string $id)
     {
-        $data = $request->except('_token', '_method');
+        
+        $data = $request->validated();
         $customerRank = CustomerRank::find($id);
         $customerRank->update($data);
         return redirect()->route('customers-rank.index')->with('success', 'Customer Rank updated successfully.');
@@ -61,6 +69,9 @@ class CustomerRankController extends Controller
 
     public function softDelete(CustomerRank $customerRank)
     {
+        if($customerRank->users()->count() > 0) {
+            return redirect()->route('customers-rank.index')->with('error', 'Cannot delete this rank as it is assigned to customers.');
+        }
         $customerRank->delete();
         return redirect()->route('customers-rank.index')->with('success', 'Customer Rank deleted successfully.');
     }
@@ -88,6 +99,6 @@ class CustomerRankController extends Controller
     {
         $customerRank = CustomerRank::withTrashed()->findOrFail($id);
         $customerRank->restore();
-        return redirect()->route('customersRank.deleted')->with('success', 'Customer Rank restored successfully.');
+        return redirect()->route('customers-rank.deleted')->with('success', 'Customer Rank restored successfully.');
     }
 }
