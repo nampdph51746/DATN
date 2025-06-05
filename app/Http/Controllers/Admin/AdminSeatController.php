@@ -9,7 +9,7 @@ use App\Models\SeatType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class SeatController extends Controller
+class AdminSeatController extends Controller
 {
     public function index(Request $request)
     {
@@ -90,7 +90,7 @@ class SeatController extends Controller
 
         $request->validate([
             'seat_type_id' => 'required|exists:seat_types,id',
-            'status' => 'required|in:available,booked,sold',
+            'status' => 'required|in:available,reserved,booked',
         ]);
 
         $seat->update([

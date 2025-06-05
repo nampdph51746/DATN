@@ -23,6 +23,8 @@
      <!-- App css (Require in all Page) -->
      <link href="{{ asset('assets/css/app.min.css') }}" rel="stylesheet" type="text/css" />
 
+     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
      <!-- Theme Config js (Require in all Page) -->
      <script src="{{ asset('assets/js/config.js') }}"></script>
 

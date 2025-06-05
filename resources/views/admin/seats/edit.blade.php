@@ -47,7 +47,8 @@
                             <div class="col-lg-6">
                                 <div class="mb-3">
                                     <label class="form-label">Phòng chiếu</label>
-                                    <p class="form-control-static">{{ $seat->room->name }}</p>
+                                    <input type="text" class="form-control" value="{{ $seat->room->name }}" readonly disabled>
+                                    {{-- <p class="form-control-static">{{ $seat->room->name }}</p> --}}
                                 </div>
                             </div>
                             <div class="col-lg-6">
@@ -68,13 +69,13 @@
                             <div class="col-lg-6">
                                 <div class="mb-3">
                                     <label class="form-label">Hàng ghế</label>
-                                    <p class="form-control-static">{{ $seat->row_char }}</p>
+                                    <input type="text" class="form-control" value="{{ $seat->row_char }}" readonly disabled>
                                 </div>
                             </div>
                             <div class="col-lg-6">
                                 <div class="mb-3">
                                     <label class="form-label">Số ghế</label>
-                                    <p class="form-control-static">{{ $seat->seat_number }}</p>
+                                    <input type="text" class="form-control" value="{{ $seat->seat_number }}" readonly disabled>
                                 </div>
                             </div>
                         </div>
@@ -83,9 +84,9 @@
                                 <div class="mb-3">
                                     <label for="status" class="form-label">Trạng thái</label>
                                     <select name="status" id="status" class="form-control" required>
-                                        <option value="available" {{ $seat->status == 'available' ? 'selected' : '' }}>Available</option>
-                                        <option value="booked" {{ $seat->status == 'booked' ? 'selected' : '' }}>Booked</option>
-                                        <option value="sold" {{ $seat->status == 'sold' ? 'selected' : '' }}>Sold</option>
+                                        <option value="available" @selected(old('status', $seat->status->value ?? $seat->status) == 'available')>Có sẵn</option>
+                                        <option value="reserved" @selected(old('status', $seat->status->value ?? $seat->status) == 'reserved')>Đã đặt</option>
+                                        <option value="booked" @selected(old('status', $seat->status->value ?? $seat->status) == 'booked')>Đã bán</option>
                                     </select>
                                     @error('status')
                                         <span class="text-danger">{{ $message }}</span>
