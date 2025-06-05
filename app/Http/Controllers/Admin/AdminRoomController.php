@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreRoomRequest;
+use App\Http\Requests\UpdateRoomRequest;
 use Illuminate\Http\Request;
 use App\Models\Room;
 use App\Models\Cinema;
@@ -37,16 +39,8 @@ class AdminRoomController extends Controller
     }
 
     // Lưu phòng chiếu mới
-    public function store(Request $request)
+    public function store(StoreRoomRequest $request)
     {
-        $request->validate([
-            'cinema_id' => 'required|integer',
-            'room_type_id' => 'nullable|integer',
-            'name' => 'required|string|max:100',
-            'capacity' => 'required|integer',
-            'status' => 'nullable|string|max:20',
-        ]);
-
         Room::create($request->all());
 
         return redirect()->route('admin.rooms.index')->with('success', 'Tạo phòng chiếu thành công');
@@ -70,15 +64,9 @@ class AdminRoomController extends Controller
     }
 
     // Cập nhật phòng chiếu
-    public function update(Request $request, $id)
+    public function update(UpdateRoomRequest $request, $id)
     {
-        $request->validate([
-            'cinema_id' => 'required|integer',
-            'room_type_id' => 'nullable|integer',
-            'name' => 'required|string|max:100',
-            'capacity' => 'required|integer',
-            'status' => 'nullable|string|max:20',
-        ]);
+        
 
         $room = Room::findOrFail($id);
         $room->update($request->all());

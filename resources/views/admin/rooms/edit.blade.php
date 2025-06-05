@@ -46,7 +46,7 @@
                             <div class="col-lg-6">
                                 <div class="mb-3">
                                     <label for="cinema_id" class="form-label">Rạp Chiếu</label>
-                                    <select class="form-control" id="cinema_id" name="cinema_id" required>
+                                    <select class="form-control" id="cinema_id" name="cinema_id" >
                                         <option value="">Chọn Rạp Chiếu</option>
                                         @foreach ($cinemas as $cinema)
                                             <option value="{{ $cinema->id }}" {{ $room->cinema_id == $cinema->id ? 'selected' : '' }}>{{ $cinema->name }}</option>
@@ -74,7 +74,7 @@
                             <div class="col-lg-6">
                                 <div class="mb-3">
                                     <label for="name" class="form-label">Tên Phòng</label>
-                                    <input type="text" id="name" name="name" class="form-control" placeholder="Nhập tên phòng" value="{{ old('name', $room->name) }}" required>
+                                    <input type="text" id="name" name="name" class="form-control" placeholder="Nhập tên phòng" value="{{ old('name', $room->name) }}" >
                                     @error('name')
                                         <span class="text-danger">{{ $message }}</span>
                                     @endError
@@ -83,7 +83,7 @@
                             <div class="col-lg-6">
                                 <div class="mb-3">
                                     <label for="capacity" class="form-label">Sức Chứa</label>
-                                    <input type="number" id="capacity" name="capacity" class="form-control" placeholder="Nhập sức chứa" value="{{ old('capacity', $room->capacity) }}" required>
+                                    <input type="number" id="capacity" name="capacity" class="form-control" placeholder="Nhập sức chứa" value="{{ old('capacity', $room->capacity) }}" >
                                     @error('capacity')
                                         <span class="text-danger">{{ $message }}</span>
                                     @endError
