@@ -27,7 +27,7 @@ class AdminSeatController extends Controller
             })
             ->paginate(10);
 
-        return view('admin.seats.list', compact('seats', 'seatTypes'));
+        return view('admin.seats.index', compact('seats', 'seatTypes'));
     }
 
     public function create()
