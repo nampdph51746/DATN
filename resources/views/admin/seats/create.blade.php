@@ -34,6 +34,15 @@
                     @if (session('error'))
                         <div class="alert alert-danger">{{ session('error') }}</div>
                     @endif
+                    @if ($errors->any())
+                        <div class="alert alert-danger">
+                            <ul>
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
                     <form id="seatForm" action="{{ route('admin.seats.store') }}" method="POST">
                         @csrf
                         <div class="row">
@@ -43,7 +52,7 @@
                                     <select name="room_id" id="room_id" class="form-control" required>
                                         <option value="">Chọn phòng chiếu</option>
                                         @foreach ($rooms as $room)
-                                            <option value="{{ $room->id }}">{{ $room->name }}</option>
+                                            <option value="{{ $room->id }}" data-capacity="{{ $room->capacity }}">{{ $room->name }} (Sức chứa: {{ $room->capacity }})</option>
                                         @endforeach
                                     </select>
                                     @error('room_id')
@@ -86,6 +95,16 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Thông tin ghế hiện có</label>
+                                    <div id="existing-seats" class="border p-3 rounded">
+                                        <p>Vui lòng chọn phòng chiếu để xem danh sách ghế hiện có.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -93,3 +112,34 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    document.getElementById('room_id').addEventListener('change', function() {
+        const roomId = this.value;
+        const existingSeatsDiv = document.getElementById('existing-seats');
+
+        if (roomId) {
+            fetch('/admin/seats/room/' + roomId)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.seats.length > 0) {
+                        let html = '<h6>Danh sách ghế hiện có:</h6><ul>';
+                        data.seats.forEach(seat => {
+                            html += `<li>${seat.row_char}${seat.seat_number} (${seat.seat_type_name})</li>`;
+                        });
+                        html += `</ul><p>Số ghế còn lại có thể thêm: ${data.capacity - data.seats.length}</p>`;
+                        existingSeatsDiv.innerHTML = html;
+                    } else {
+                        existingSeatsDiv.innerHTML = `<p>Phòng chưa có ghế nào. Số ghế còn lại có thể thêm: ${data.capacity}</p>`;
+                    }
+                })
+                .catch(error => {
+                    existingSeatsDiv.innerHTML = '<p>Lỗi khi tải thông tin ghế.</p>';
+                });
+        } else {
+            existingSeatsDiv.innerHTML = '<p>Vui lòng chọn phòng chiếu để xem danh sách ghế hiện có.</p>';
+        }
+    });
+</script>
+@endpush

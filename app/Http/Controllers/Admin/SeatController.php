@@ -7,6 +7,7 @@ use App\Models\Seat;
 use App\Models\Room;
 use App\Models\SeatType;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class SeatController extends Controller
 {
@@ -27,7 +28,7 @@ class SeatController extends Controller
             })
             ->paginate(10);
 
-        return view('admin.seats.list', compact('seats', 'seatTypes'));
+        return view('admin.seats.index', compact('seats', 'seatTypes'));
     }
 
     public function create()
@@ -104,5 +105,59 @@ class SeatController extends Controller
     {
         $seat = Seat::with('room', 'seatType')->findOrFail($id);
         return view('admin.seats.show', compact('seat'));
+    }
+
+    public function editBulk(Request $request)
+    {
+        $seatIds = $request->input('seat_ids', []);
+        
+        if (empty($seatIds)) {
+            return redirect()->route('admin.seats.index')->with('error', 'Vui lòng chọn ít nhất một ghế để chỉnh sửa.');
+        }
+
+        $seats = Seat::with('room', 'seatType')->whereIn('id', $seatIds)->get();
+        $seatTypes = SeatType::all();
+
+        return view('admin.seats.edit-bulk', compact('seats', 'seatTypes'));
+    }
+
+    public function updateBulk(Request $request)
+    {
+        // Validate dữ liệu
+        $request->validate([
+            'seat_ids' => 'required|array',
+            'seat_ids.*' => 'required|integer|exists:seats,id',
+            'seat_type_id' => 'nullable|integer|exists:seat_types,id',
+            'status' => 'nullable|string|in:available,booked,sold,broken',
+        ]);
+
+        // Lấy seat_ids từ request
+        $seatIds = $request->input('seat_ids', []);
+        $seatTypeId = $request->input('seat_type_id');
+        $status = $request->input('status');
+
+        // Kiểm tra nếu không có ghế nào được chọn
+        if (empty($seatIds)) {
+            return redirect()->route('admin.seats.index')->with('error', 'Không có ghế nào được chọn để cập nhật.');
+        }
+
+        // Cập nhật hàng loạt ghế trong transaction
+        DB::transaction(function () use ($seatIds, $seatTypeId, $status) {
+            foreach ($seatIds as $seatId) {
+                $seat = Seat::find($seatId);
+                if ($seat) {
+                    // Chỉ cập nhật nếu có giá trị mới
+                    if ($seatTypeId) {
+                        $seat->seat_type_id = $seatTypeId;
+                    }
+                    if ($status) {
+                        $seat->status = $status; // Nếu Seat model sử dụng enum, giá trị này sẽ tự động cast
+                    }
+                    $seat->save();
+                }
+            }
+        });
+
+        return redirect()->route('admin.seats.index')->with('success', 'Cập nhật hàng loạt ghế thành công!');
     }
 }
