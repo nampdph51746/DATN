@@ -29,6 +29,10 @@
   position: relative;
 }
 
+.btn-action i {
+    font-size: 1.3rem;
+}
+
 .bx-ul .bx {
   font-size: inherit;
   line-height: inherit;

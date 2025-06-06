@@ -14,6 +14,8 @@
      <!-- App favicon -->
      <link rel="shortcut icon" href="{{ asset('assets/images/favicon.ico') }}">
 
+     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
      <!-- Vendor css (Require in all Page) -->
      <link href="{{ asset('assets/css/vendor.min.css') }}" rel="stylesheet" type="text/css" />
 
@@ -23,8 +25,13 @@
      <!-- App css (Require in all Page) -->
      <link href="{{ asset('assets/css/app.min.css') }}" rel="stylesheet" type="text/css" />
 
+     <link  href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet"/>
+
      <!-- Theme Config js (Require in all Page) -->
      <script src="{{ asset('assets/js/config.js') }}"></script>
+
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script> 
+
 
      <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
 </head>

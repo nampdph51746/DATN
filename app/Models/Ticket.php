@@ -16,14 +16,17 @@ class Ticket extends Model
         'status' => \App\Enums\TicketStatus::class,
     ];
 
+    public function tickets() {
+    return $this->hasMany(Ticket::class, 'showtime_id');
+}
+
     public function booking()
     {
         return $this->belongsTo(Booking::class);
     }
 
-    public function showtime()
-    {
-        return $this->belongsTo(Showtime::class);
+    public function showtimes() {
+    return $this->hasMany(Showtime::class, 'movie_id');
     }
 
     public function seat()

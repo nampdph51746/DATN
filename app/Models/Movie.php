@@ -30,11 +30,12 @@ class Movie extends Model
     public function ageLimit()
     {
         return $this->belongsTo(AgeLimit::class);
+        return $this->belongsTo(\App\Models\AgeLimit::class, 'age_limit_id');
     }
 
     public function genres()
     {
-        return $this->belongsToMany(Genre::class, 'movie_genres');
+        return $this->belongsToMany(Genre::class, 'movie_genres', 'movie_id', 'genre_id');
     }
 
     public function reviews()

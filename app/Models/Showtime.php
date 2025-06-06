@@ -37,4 +37,8 @@ class Showtime extends Model
     {
         return $this->hasMany(Ticket::class);
     }
+    public function seatStates()
+    {
+        return $this->hasMany(\App\Models\ShowtimeSeatState::class, 'showtime_id', 'id');
+    }
 }
