@@ -29,6 +29,11 @@
                                                 <th scope="row" class="text-muted">ID Khuyến mãi:</th>
                                                 <td>{{ $item->promotion_id }}</td>
                                             </tr>
+                                            {{-- Mã khuyến má discount_code --}}
+                                            <tr>
+                                                <th scope="row" class="text-muted">Mã giảm giá:</th>
+                                                <td>{{ $item->discount_code ?? '-' }}</td>
+                                            </tr>
                                             <tr>
                                                 <th scope="row" class="text-muted">Mô tả:</th>
                                                 <td>{{ $item->description ?? '-' }}</td>

@@ -7,6 +7,8 @@ use App\Models\CustomerRankPromotion;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\DB;
+use App\Http\Requests\CustomerRankPromotions\StoreCustomerRankPromotionsRequest;
+use App\Http\Requests\CustomerRankPromotions\UpdateCustomerRankPromotionsRequest;
 
 class CustomerRankPromotionController extends Controller
 {
@@ -23,7 +25,7 @@ class CustomerRankPromotionController extends Controller
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
                 $q->where('customer_rank_id', 'like', '%' . $request->search . '%')
-                  ->orWhere('promotion_id', 'like', '%' . $request->search . '%');
+                    ->orWhere('promotion_id', 'like', '%' . $request->search . '%');
             });
         }
         if ($request->filled('description')) {
@@ -49,17 +51,14 @@ class CustomerRankPromotionController extends Controller
         return view('admin.customer_rank_promotions.create', compact('ranks', 'promotions'));
     }
 
-    public function store(Request $request)
+    public function store(StoreCustomerRankPromotionsRequest $request)
     {
-        $data = $request->validate([
-            'customer_rank_id' => 'required|exists:customer_ranks,id',
-            'promotion_id' => 'required|exists:promotions,id',
-            'description' => 'nullable|string',
-        ]);
+        $data = $request->validated();
 
         if (CustomerRankPromotion::where('customer_rank_id', $data['customer_rank_id'])
             ->where('promotion_id', $data['promotion_id'])
-            ->exists()) {
+            ->exists()
+        ) {
             throw ValidationException::withMessages([
                 'customer_rank_id' => 'Cặp hạng khách hàng và khuyến mãi này đã tồn tại.',
             ]);
@@ -77,7 +76,7 @@ class CustomerRankPromotionController extends Controller
         return view('admin.customer_rank_promotions.edit', compact('item'));
     }
 
-    public function update(Request $request, $customer_rank_id, $promotion_id)
+    public function update(UpdateCustomerRankPromotionsRequest $request, $customer_rank_id, $promotion_id)
     {
         // Tìm bản ghi
         $item = CustomerRankPromotion::where('customer_rank_id', $customer_rank_id)
@@ -85,9 +84,7 @@ class CustomerRankPromotionController extends Controller
             ->firstOrFail();
 
         // Validate dữ liệu
-        $data = $request->validate([
-            'description' => 'nullable|string',
-        ]);
+        $data = $request->validated();
 
         // Cập nhật thủ công bằng query builder
         DB::table('customer_rank_promotions')
@@ -95,6 +92,7 @@ class CustomerRankPromotionController extends Controller
             ->where('promotion_id', $promotion_id)
             ->update([
                 'description' => $data['description'],
+                'discount_code' => $data['discount_code'],
             ]);
 
         return redirect()->route('customer_rank_promotions.index')->with('success', 'Cập nhật khuyến mãi theo hạng khách hàng thành công.');
