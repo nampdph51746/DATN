@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes; // ✅ Thêm dòng này
 
 class Cinema extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes; // ✅ Thêm SoftDeletes
 
     protected $fillable = [
         'name', 'address', 'city_id', 'hotline', 'email', 'map_url',
