@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Genre;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -11,13 +12,13 @@ class GenreController extends Controller
 {
     public function index()
     {
-        $genres = \App\Models\Genre::paginate(10);
-        return view('admin.movies.movieGenres.index', compact('genres'));
+        $genres = Genre::paginate(10);
+        return view('admin.movieGenres.index', compact('genres'));
     }
 
     public function create()
     {
-        return view('admin.movies.movieGenres.create');
+        return view('admin.movieGenres.create');
 
     }
 
@@ -28,7 +29,7 @@ class GenreController extends Controller
         'description' => 'nullable|string',
         ]);
 
-        \App\Models\Genre::create([
+        Genre::create([
             'name' => $request->name,
             'description' => $request->description,
         ]);
@@ -44,7 +45,7 @@ class GenreController extends Controller
         DB::table('movie_genres')->whereIn('genre_id', $ids)->delete();
 
         // Sau đó xóa thể loại
-        \App\Models\Genre::whereIn('id', $ids)->delete();
+        Genre::whereIn('id', $ids)->delete();
 
         return redirect()->route('admin.genres.index')->with('success', 'Đã xóa các thể loại đã chọn!');
     }
@@ -56,8 +57,8 @@ class GenreController extends Controller
 
     public function edit(string $id)
     {
-        $genre = \App\Models\Genre::findOrFail($id);
-        return view('admin.movies.movieGenres.edit', compact('genre'));
+        $genre = Genre::findOrFail($id);
+        return view('admin.movieGenres.edit', compact('genre'));
 
     }
 
@@ -68,7 +69,7 @@ class GenreController extends Controller
         'description' => 'nullable|string',
     ]);
 
-        $genre = \App\Models\Genre::findOrFail($id);
+        $genre = Genre::findOrFail($id);
         $genre->update([
             'name' => $request->name,
             'description' => $request->description,
@@ -79,7 +80,7 @@ class GenreController extends Controller
 
     public function destroy(string $id)
     {
-        $genre = \App\Models\Genre::findOrFail($id);
+        $genre = Genre::findOrFail($id);
         $genre->delete();
 
         return redirect()->route('admin.genres.index')->with('success', 'Xóa thể loại thành công!');

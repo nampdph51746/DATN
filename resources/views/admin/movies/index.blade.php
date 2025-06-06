@@ -79,10 +79,11 @@
                                             </td>
                                             <td>
                                                 <div class="d-flex align-items-center gap-2">
-                                                    <div
-                                                        class="rounded bg-light avatar-md d-flex align-items-center justify-content-center">
-                                                        <img src="{{ $movie->poster_url ? asset($movie->poster_url) : asset('assets/images/posters/default.png') }}"
-                                                            alt="" class="avatar-md">
+                                                    <div class="rounded bg-light avatar-md d-flex align-items-center justify-content-center">
+                                                        <a href="{{ route('admin.movies.show', $movie->id) }}">
+                                                            <img src="{{ $movie->poster_url ? asset($movie->poster_url) : asset('assets/images/posters/default.png') }}"
+                                                                alt="" class="avatar-md" style="cursor:pointer;">
+                                                        </a>
                                                     </div>
                                                     <p class="text-dark fw-medium fs-15 mb-0">{{ $movie->name }}</p>
                                                 </div>

@@ -183,6 +183,16 @@
                                 </div>
                                 <div class="col-lg-12">
                                     <div class="mb-3">
+                                        <label for="description" class="form-label">Mô tả</label>
+                                        <textarea id="description" name="description" class="form-control bg-light-subtle" rows="7" placeholder="Nhập mô tả phim">{{ old('description') }}</textarea>
+                                        @error('description')
+                                            <div class="text-danger mt-1">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-12">
+                                    <div class="mb-3">
                                         <label for="genres" class="form-label">Thể loại phim <span class="text-danger">*</span></label>
                                         <select id="genres" name="genres[]" class="form-control" multiple required>
                                             @foreach ($genres as $genre)
@@ -196,16 +206,6 @@
                                         @enderror
                                     </div>
                                 </div>
-                                <div class="col-lg-12">
-                                    <div class="mb-3">
-                                        <label for="description" class="form-label">Mô tả</label>
-                                        <textarea id="description" name="description" class="form-control bg-light-subtle" rows="7" placeholder="Nhập mô tả phim">{{ old('description') }}</textarea>
-                                        @error('description')
-                                            <div class="text-danger mt-1">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
-                            </div>
 
                             <!-- Tùy chọn Meta -->
                             <div class="card">

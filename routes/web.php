@@ -30,3 +30,4 @@ Route::prefix('admin/age-limits')->name('admin.age_limits.')->group(function () 
 });
 Route::get('admin/age-limits', [\App\Http\Controllers\Admin\AgeLimitController::class, 'index'])->name('admin.age_limits.index');
 Route::delete('admin/age-limits/bulk-delete', [\App\Http\Controllers\Admin\AgeLimitController::class, 'bulkDelete'])->name('admin.age_limits.bulkDelete');
+Route::get('admin/movies/{movie}', [AdminMovieController::class, 'show'])->name('admin.movies.show');

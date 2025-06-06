@@ -162,6 +162,7 @@ class AdminMovieController extends Controller
         }
 
         $movie->update($data);
+        $movie->genres()->sync($request->input('genres', []));
 
         return redirect()->route('admin.movies.index')->with('success', 'Cập nhật phim thành công');
     }
@@ -188,5 +189,10 @@ class AdminMovieController extends Controller
         $movie->delete();
 
         return redirect()->route('admin.movies.index')->with('success', 'Xóa phim thành công!');
+    }
+    public function show($id)
+    {
+        $movie = Movie::with(['genres', 'ageLimit', 'country'])->findOrFail($id);
+        return view('admin.movies.show', compact('movie'));
     }
 }

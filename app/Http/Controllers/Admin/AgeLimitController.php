@@ -11,12 +11,12 @@ class AgeLimitController extends Controller
     public function index()
     {
         $ageLimits = AgeLimit::orderBy('min_age')->paginate(10);
-        return view('admin.movies.ageLimit.index', compact('ageLimits'));
+        return view('admin.ageLimit.index', compact('ageLimits'));
     }
 
     public function create()
     {
-        return view('admin.movies.ageLimit.create');
+        return view('admin.ageLimit.create');
     }
 
     public function store(Request $request)
@@ -51,7 +51,7 @@ class AgeLimitController extends Controller
     public function bulkDelete(Request $request)
     {
         $ids = explode(',', $request->ids);
-        \App\Models\AgeLimit::whereIn('id', $ids)->delete();
+        AgeLimit::whereIn('id', $ids)->delete();
         return redirect()->route('admin.age_limits.index')->with('success', 'Đã xóa các giới hạn độ tuổi đã chọn!');
     }
 
