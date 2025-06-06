@@ -30,6 +30,7 @@ class Booking extends Model
     {
         return $this->belongsTo(Promotion::class);
     }
+    
 
     public function paymentMethod()
     {
