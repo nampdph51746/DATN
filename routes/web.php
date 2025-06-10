@@ -19,6 +19,7 @@ use App\Http\Controllers\Admin\PromotionController;
 use App\Http\Controllers\Admin\CustomerRankController;
 use App\Http\Controllers\Admin\AdminSeatTypeController;
 use App\Http\Controllers\Admin\PaymentMethodController;
+use App\Http\Controllers\Admin\AdminProductCategoriesController;
 use App\Http\Controllers\Admin\CustomerRankPromotionController;
 
 Route::get('/', function () {
@@ -78,6 +79,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::patch('cinemas/{id}/restore', [CinemaController::class, 'restore'])->name('cinemas.restore');
     Route::delete('cinemas/{id}/force-delete', [CinemaController::class, 'forceDelete'])->name('cinemas.forceDelete');
     Route::resource('cinemas', CinemaController::class);
+
+
+
 });
 
 // Routes quản lý seat-type từ origin/Giang
@@ -91,6 +95,17 @@ Route::prefix('Admin/seat-type')->name('seat-type.')->group(function () {
     Route::get('trash', [AdminSeatTypeController::class, 'trash'])->name('trash'); // Danh sách thùng rác
     Route::patch('{id}/restore', [AdminSeatTypeController::class, 'restore'])->name('restore'); // Khôi phục loại ghế
     Route::delete('{id}/force-delete', [AdminSeatTypeController::class, 'forceDelete'])->name('force-delete'); // Xóa vĩnh viễn loại ghế
+});
+Route::prefix('admin/product-categories')->name('product-categories.')->group(function () {
+    Route::get('/', [AdminProductCategoriesController::class, 'index'])->name('index');
+    Route::get('create', [AdminProductCategoriesController::class, 'create'])->name('create');
+    Route::post('store', [AdminProductCategoriesController::class, 'store'])->name('store');
+    Route::get('edit/{id}', [AdminProductCategoriesController::class, 'edit'])->name('edit');
+    Route::put('update/{id}', [AdminProductCategoriesController::class, 'update'])->name('update');
+    Route::delete('{id}', [AdminProductCategoriesController::class, 'destroy'])->name('destroy');
+    Route::get('trash', [AdminProductCategoriesController::class, 'trash'])->name('trash');
+    Route::patch('{id}/restore', [AdminProductCategoriesController::class, 'restore'])->name('restore');
+    Route::delete('{id}/force-delete', [AdminProductCategoriesController::class, 'forceDelete'])->name('force-delete');
 });
 
 // Route::delete('admin/movies/bulk-delete', [AdminMovieController::class, 'bulkDelete'])->name('admin.movies.bulkDelete');

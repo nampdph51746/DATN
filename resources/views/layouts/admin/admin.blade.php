@@ -514,7 +514,7 @@
                                 <span class="nav-icon">
                                     <iconify-icon icon="solar:tag-bold-duotone"></iconify-icon>
                                 </span>
-                                <span class="nav-text">Thể loại</span>
+                                <span class="nav-text">Thể loại phim</span>
                             </a>
                             <div class="collapse" id="sidebarGenres">
                                 <ul class="nav sub-navbar-nav">
