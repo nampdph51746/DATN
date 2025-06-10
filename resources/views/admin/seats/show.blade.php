@@ -14,11 +14,11 @@
                 </div>
                 <div class="card-footer border-top">
                     <div class="row g-2">
-                        <div class="col-lg-6">
+                        <!-- <div class="col-lg-6">
                             <a href="{{ route('admin.seats.edit', $seat->id) }}" class="btn btn-primary d-flex align-items-center justify-content-center gap-2 w-100">
                                 <i class="bx bx-edit fs-18"></i> Sửa
                             </a>
-                        </div>
+                        </div> -->
                         <div class="col-lg-6">
                             <a href="{{ route('admin.seats.index') }}" class="btn btn-outline-secondary d-flex align-items-center justify-content-center gap-2 w-100">
                                 <i class="bx bx-arrow-back fs-18"></i> Quay lại

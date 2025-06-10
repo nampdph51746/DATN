@@ -2,39 +2,21 @@
 
 @section('content')
     <div class="container-xxl">
+    @include('admin.partials.notifications')
 
         <div class="row">
             <div class="col-xl-12">
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center gap-1">
                         <h4 class="card-title flex-grow-1">All Seat Types</h4>
-                        <form class="app-search d-none d-md-block ms-2">
-                            <div class="position-relative">
-                                <input type="search" class="form-control form-control-sm ps-5 pe-3 rounded-2"
-                                    placeholder="Tìm kiếm loại ghế" autocomplete="off" value="">
-                                <iconify-icon icon="solar:magnifer-linear"
-                                    class="position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"
-                                    style="font-size: 16px;"></iconify-icon>
-                            </div>
-                        </form>
+
                         <a href="{{ route('seat-type.create') }}" class="btn btn-sm btn-primary">
-                            Add Seat Type
+                            Thêm loại ghế
                         </a>
                         <a href="{{ route('seat-type.trash') }}" class="btn btn-sm btn-outline-danger" title="Thùng rác">
                             <iconify-icon icon="solar:trash-bin-minimalistic-2-broken"
                                 class="align-middle fs-18"></iconify-icon>
                         </a>
-                        <div class="dropdown">
-                            <a href="#" class="dropdown-toggle btn btn-sm btn-outline-light" data-bs-toggle="dropdown"
-                                aria-expanded="false">
-                                This Month
-                            </a>
-                            <div class="dropdown-menu dropdown-menu-end">
-                                <a href="#!" class="dropdown-item">Download</a>
-                                <a href="#!" class="dropdown-item">Export</a>
-                                <a href="#!" class="dropdown-item">Import</a>
-                            </div>
-                        </div>
                     </div>
                     <div>
                         <div class="table-responsive">
