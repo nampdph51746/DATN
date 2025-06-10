@@ -32,22 +32,13 @@
                     <h4 class="card-title">Thông tin loại phòng</h4>
                 </div>
                 <div class="card-body">
-                    @if ($errors->any())
-                        <div class="alert alert-danger">
-                            <ul>
-                                @foreach ($errors->all() as $error)
-                                    <li>{{ $error }}</li>
-                                @endforeach
-                            </ul>
-                        </div>
-                    @endif
                     <form id="roomTypeForm" action="{{ route('admin.room-types.store') }}" method="POST">
                         @csrf
                         <div class="row">
                             <div class="col-lg-12">
                                 <div class="mb-3">
                                     <label for="name" class="form-label">Tên loại phòng <span class="text-danger">*</span></label>
-                                    <input type="text" name="name" id="name" class="form-control" required placeholder="Nhập tên loại phòng" value="{{ old('name') }}">
+                                    <input type="text" name="name" id="name" class="form-control" placeholder="Nhập tên loại phòng" value="{{ old('name') }}">
                                     @error('name')
                                         <span class="text-danger">{{ $message }}</span>
                                     @enderror

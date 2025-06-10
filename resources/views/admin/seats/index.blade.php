@@ -18,9 +18,9 @@
                             </div>
                         </form>
 
-                        <a href="{{ route('admin.seats.create') }}" class="btn btn-sm btn-primary">
+                        <!-- <a href="{{ route('admin.seats.create') }}" class="btn btn-sm btn-primary">
                             Thêm ghế ngồi
-                        </a>
+                        </a> -->
 
                         <div class="dropdown">
                             <a href="#" class="dropdown-toggle btn btn-sm btn-outline-light" data-bs-toggle="dropdown" aria-expanded="false">
@@ -31,10 +31,6 @@
                                 @foreach ($seatTypes as $seatType)
                                     <a href="{{ route('admin.seats.index', array_filter(['seat_type_id' => $seatType->id, 'query' => request('query')])) }}" class="dropdown-item {{ request('seat_type_id') == $seatType->id ? 'active' : '' }}">{{ $seatType->name }}</a>
                                 @endforeach
-                                <div class="dropdown-divider"></div>
-                                <a href="#!" class="dropdown-item">Download</a>
-                                <a href="#!" class="dropdown-item">Export</a>
-                                <a href="#!" class="dropdown-item">Import</a>
                             </div>
                         </div>
                     </div>

@@ -2,13 +2,15 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Models\Room;
+use App\Models\Seat;
+use App\Models\Cinema;
+use App\Models\RoomType;
+use App\Models\SeatType;
+use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreRoomRequest;
 use App\Http\Requests\UpdateRoomRequest;
-use Illuminate\Http\Request;
-use App\Models\Room;
-use App\Models\Cinema;
-use App\Models\RoomType;
 
 class AdminRoomController extends Controller
 {
@@ -47,11 +49,30 @@ class AdminRoomController extends Controller
     }
 
     // Xem chi tiết phòng chiếu
-    public function show($id)
+    public function show(Room $room)
     {
-        $room = Room::with(['cinema', 'roomType', 'seats'])->findOrFail($id);
+        // Lấy danh sách loại ghế
+        $seatTypes = SeatType::all();
 
-        return view('admin.rooms.show', compact('room'));
+        // Lấy danh sách ghế của phòng
+        $seats = Seat::with('seatType')
+            ->where('room_id', $room->id)
+            ->orderBy('row_char')
+            ->orderBy('seat_number')
+            ->get();
+
+        // Tính danh sách hàng
+        $rows = $seats->pluck('row_char')->unique()->sort()->values();
+
+        // Tính số ghế tối đa mỗi hàng
+        $maxSeatsPerRow = 0;
+        if (!$seats->isEmpty()) {
+            $maxSeatsPerRow = $seats->groupBy('row_char')->map(function ($group) {
+                return $group->count();
+            })->values()->max() ?: 0;
+        }
+
+        return view('admin.rooms.show', compact('room', 'seatTypes', 'seats', 'rows', 'maxSeatsPerRow'));
     }
 
     // Hiển thị form chỉnh sửa
@@ -66,8 +87,6 @@ class AdminRoomController extends Controller
     // Cập nhật phòng chiếu
     public function update(UpdateRoomRequest $request, $id)
     {
-        
-
         $room = Room::findOrFail($id);
         $room->update($request->all());
 

@@ -103,13 +103,6 @@
                                                 <a href="{{ route('admin.movies.edit', $movie->id) }}" class="btn btn-soft-primary btn-sm">
                                                     <iconify-icon icon="solar:pen-2-broken" class="align-middle fs-18"></iconify-icon>
                                                 </a>
-                                                <form action="{{ route('admin.movies.destroy', $movie->id) }}" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xóa phim này?');">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn btn-soft-danger btn-sm">
-                                                        <iconify-icon icon="solar:trash-bin-trash-broken" class="align-middle fs-18"></iconify-icon>
-                                                    </button>
-                                                </form>
                                             </div>
                                         </td>
                                     </tr>

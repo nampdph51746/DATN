@@ -8,8 +8,8 @@
                 <div class="card-body">
                     <img src="{{ asset('assets/images/seat-icon.png') }}" alt="Seat Icon" class="img-fluid rounded bg-light">
                     <div class="mt-3">
-                        <h4>Thêm ghế hàng loạt</h4>
-                        <p class="text-muted">Chọn phòng, loại ghế, và cấu hình số hàng/số ghế mỗi hàng để tạo ghế tự động.</p>
+                        <h4>Thêm ghế cho phòng: {{ $room->name }}</h4>
+                        <p class="text-muted">Chọn loại ghế và cấu hình số hàng/số ghế mỗi hàng để tạo ghế tự động.</p>
                     </div>
                 </div>
                 <div class="card-footer bg-light-subtle">
@@ -18,7 +18,7 @@
                             <button type="submit" form="seatForm" class="btn btn-primary w-100">Thêm ghế</button>
                         </div>
                         <div class="col-lg-6">
-                            <a href="{{ route('admin.seats.index') }}" class="btn btn-outline-secondary w-100">Hủy</a>
+                            <a href="{{ route('admin.rooms.show', $room->id) }}" class="btn btn-outline-secondary w-100">Hủy</a>
                         </div>
                     </div>
                 </div>
@@ -45,19 +45,12 @@
                     @endif
                     <form id="seatForm" action="{{ route('admin.seats.store') }}" method="POST">
                         @csrf
+                        <input type="hidden" name="room_id" value="{{ $room->id }}">
                         <div class="row">
                             <div class="col-lg-6">
                                 <div class="mb-3">
-                                    <label for="room_id" class="form-label">Phòng chiếu</label>
-                                    <select name="room_id" id="room_id" class="form-control" required>
-                                        <option value="">Chọn phòng chiếu</option>
-                                        @foreach ($rooms as $room)
-                                            <option value="{{ $room->id }}" data-capacity="{{ $room->capacity }}">{{ $room->name }} (Sức chứa: {{ $room->capacity }})</option>
-                                        @endforeach
-                                    </select>
-                                    @error('room_id')
-                                        <span class="text-danger">{{ $message }}</span>
-                                    @enderror
+                                    <label class="form-label">Phòng chiếu</label>
+                                    <p class="form-control-static">{{ $room->name }} (Sức chứa: {{ $room->capacity }})</p>
                                 </div>
                             </div>
                             <div class="col-lg-6">
@@ -98,9 +91,35 @@
                         <div class="row">
                             <div class="col-12">
                                 <div class="mb-3">
-                                    <label class="form-label">Thông tin ghế hiện có</label>
+                                    <label class="form-label">Sơ đồ ghế hiện có</label>
                                     <div id="existing-seats" class="border p-3 rounded">
-                                        <p>Vui lòng chọn phòng chiếu để xem danh sách ghế hiện có.</p>
+                                        @if ($seats->isEmpty())
+                                            <p>Phòng chưa có ghế nào. Số ghế có thể thêm: {{ $room->capacity }}</p>
+                                        @else
+                                            <div class="seat-map" style="display: grid; gap: 5px; grid-template-columns: repeat({{ $maxSeatsPerRow + 1 }}, 40px); max-width: 600px;">
+                                                <div class="seat"></div>
+                                                @for ($i = 1; $i <= $maxSeatsPerRow; $i++)
+                                                    <div class="seat">{{ $i }}</div>
+                                                @endfor
+                                                @foreach ($rows as $row)
+                                                    <div class="seat">{{ $row }}</div>
+                                                    @for ($i = 1; $i <= $maxSeatsPerRow; $i++)
+                                                        @php
+                                                            $seat = $seats->firstWhere('row_char', $row)->where('seat_number', str_pad($i, 2, '0', STR_PAD_LEFT));
+                                                        @endphp
+                                                        @if ($seat)
+                                                            <div class="seat {{ $seat->seat_type_name == 'VIP' ? 'seat-vip' : '' }} {{ $seat->status == 'booked' ? 'seat-booked' : '' }} {{ $seat->status == 'maintenance' ? 'seat-maintenance' : '' }}"
+                                                                 title="{{ $seat->row_char }}{{ $seat->seat_number }} ({{ $seat->seat_type_name }}, {{ $seat->status }})">
+                                                                {{ $seat->row_char }}{{ $seat->seat_number }}
+                                                            </div>
+                                                        @else
+                                                            <div class="seat"></div>
+                                                        @endif
+                                                    @endfor
+                                                @endforeach
+                                            </div>
+                                            <p class="mt-2">Số ghế hiện có: {{ $seats->count() }} / {{ $room->capacity }} (Còn lại: {{ $room->capacity - $seats->count() }})</p>
+                                        @endif
                                     </div>
                                 </div>
                             </div>
@@ -111,35 +130,35 @@
         </div>
     </div>
 </div>
+
+<style>
+    .seat-map {
+        display: grid;
+        gap: 5px;
+        max-width: 600px;
+    }
+    .seat {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #e9ecef;
+        border-radius: 4px;
+        font-size: 12px;
+        text-align: center;
+    }
+    .seat-vip {
+        background-color: #ffd700;
+    }
+    .seat-booked {
+        background-color: #dc3545;
+        color: white;
+    }
+    .seat-maintenance {
+        background-color: #6c757d;
+        color: white;
+    }
+</style>
+
 @endsection
-
-@push('scripts')
-<script>
-    document.getElementById('room_id').addEventListener('change', function() {
-        const roomId = this.value;
-        const existingSeatsDiv = document.getElementById('existing-seats');
-
-        if (roomId) {
-            fetch('/admin/seats/room/' + roomId)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.seats.length > 0) {
-                        let html = '<h6>Danh sách ghế hiện có:</h6><ul>';
-                        data.seats.forEach(seat => {
-                            html += `<li>${seat.row_char}${seat.seat_number} (${seat.seat_type_name})</li>`;
-                        });
-                        html += `</ul><p>Số ghế còn lại có thể thêm: ${data.capacity - data.seats.length}</p>`;
-                        existingSeatsDiv.innerHTML = html;
-                    } else {
-                        existingSeatsDiv.innerHTML = `<p>Phòng chưa có ghế nào. Số ghế còn lại có thể thêm: ${data.capacity}</p>`;
-                    }
-                })
-                .catch(error => {
-                    existingSeatsDiv.innerHTML = '<p>Lỗi khi tải thông tin ghế.</p>';
-                });
-        } else {
-            existingSeatsDiv.innerHTML = '<p>Vui lòng chọn phòng chiếu để xem danh sách ghế hiện có.</p>';
-        }
-    });
-</script>
-@endpush

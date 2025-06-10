@@ -2,6 +2,7 @@
 
 @section('content')
     <div class="container-xxl">
+        @include('admin.partials.notifications')
 
         <div class="row">
             <div class="col-xl-12">
@@ -10,14 +11,14 @@
                         <h4 class="card-title flex-grow-1">Danh Sách Tất Cả Phòng Chiếu</h4>
                         {{-- Form tìm kiếm theo tên phòng --}}
                         <form method="GET" action="{{ route('admin.rooms.index') }}" class="d-flex align-items-center ms-2">
-    <div class="input-group">
-        <input type="text" name="search" class="form-control form-control-sm"
-               placeholder="Tìm tên phòng..." value="{{ request('search') }}">
-        <span class="input-group-text bg-white border-start-0">
-            <iconify-icon icon="mdi:magnify" class="fs-18 text-muted"></iconify-icon>
-        </span>
-    </div>
-</form>
+                            <div class="input-group">
+                                <input type="text" name="search" class="form-control form-control-sm"
+                                    placeholder="Tìm tên phòng..." value="{{ request('search') }}">
+                                <span class="input-group-text bg-white border-start-0">
+                                    <iconify-icon icon="mdi:magnify" class="fs-18 text-muted"></iconify-icon>
+                                </span>
+                            </div>
+                        </form>
                         <a href="{{ route('admin.rooms.create') }}" class="btn btn-sm btn-primary">
                             Thêm Phòng Chiếu
                         </a>

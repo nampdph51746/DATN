@@ -2,6 +2,8 @@
 
 @section('content')
 <div class="container-xxl">
+    @include('admin.partials.notifications')
+
     <div class="row">
         <div class="col-lg-4">
             <div class="card">
@@ -112,7 +114,19 @@
                     <form action="{{ route('admin.showtimes.storeAuto') }}" method="POST" class="d-flex align-items-center gap-2 mb-3">
                         @csrf
                         <input type="hidden" name="movie_id" value="{{ $movie->id }}">
+                        <select name="room_id" class="form-control form-control-sm w-auto" required>
+                            <option value="">Chọn phòng</option>
+                            @foreach ($rooms as $room)
+                                <option value="{{ $room->id }}">{{ $room->name }}</option>
+                            @endforeach
+                        </select>
+                        @error('room_id')
+                            <span class="text-danger">{{ $message }}</span>
+                        @enderror
                         <input type="date" name="date" class="form-control form-control-sm w-auto" value="{{ now()->format('Y-m-d') }}" required>
+                        @error('date')
+                            <span class="text-danger">{{ $message }}</span>
+                        @enderror
                         <button type="submit" class="btn btn-primary btn-sm d-flex align-items-center gap-2">
                             <i class="bx bx-plus fs-18"></i> Tạo suất chiếu
                         </button>

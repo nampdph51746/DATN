@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
+use App\Models\Seat;
 use App\Models\SeatType;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 
 class AdminSeatTypeController extends Controller
 {
@@ -86,9 +87,17 @@ class AdminSeatTypeController extends Controller
     public function destroy($id)
     {
         $seatType = SeatType::findOrFail($id);
+
+        // Kiểm tra xem có ghế nào thuộc loại ghế này không
+        $seatCount = Seat::where('seat_type_id', $id)->count();
+        if ($seatCount > 0) {
+            return redirect()->route('seat-type.index')->with('error', 'Không thể xóa loại ghế vì vẫn còn ' . $seatCount . ' ghế thuộc loại này.');
+        }
+
+        // Thực hiện xóa mềm
         $seatType->delete();
 
-        return redirect()->route('seat-type.index')->with('success', 'Seat Type deleted successfully.');
+        return redirect()->route('seat-type.index')->with('success', 'Loại ghế đã được xóa thành công.');
     }
 
     public function restore($id)
@@ -98,19 +107,18 @@ class AdminSeatTypeController extends Controller
 
         return redirect()->route('seat-type.index')->with('success', 'Seat Type restored successfully.');
     }
+
     public function trash()
     {
         $seatTypes = SeatType::onlyTrashed()->paginate(10);
         return view('admin.SeatType.trash', compact('seatTypes'));
     }
+
     public function forceDelete($id)
     {
         $seatType = SeatType::onlyTrashed()->findOrFail($id);
         $seatType->forceDelete();
 
         return redirect()->route('seat-type.trash')->with('success', 'Loại ghế đã được xóa vĩnh viễn.');
-    }
-
-    
-    
+    }  
 }
