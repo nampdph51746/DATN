@@ -7,8 +7,11 @@ use App\Models\CustomerRankPromotion;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\DB;
+<<<<<<< HEAD
 use App\Http\Requests\CustomerRankPromotions\StoreCustomerRankPromotionsRequest;
 use App\Http\Requests\CustomerRankPromotions\UpdateCustomerRankPromotionsRequest;
+=======
+>>>>>>> origin/main
 
 class CustomerRankPromotionController extends Controller
 {
@@ -25,7 +28,11 @@ class CustomerRankPromotionController extends Controller
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
                 $q->where('customer_rank_id', 'like', '%' . $request->search . '%')
+<<<<<<< HEAD
                     ->orWhere('promotion_id', 'like', '%' . $request->search . '%');
+=======
+                  ->orWhere('promotion_id', 'like', '%' . $request->search . '%');
+>>>>>>> origin/main
             });
         }
         if ($request->filled('description')) {
@@ -51,6 +58,7 @@ class CustomerRankPromotionController extends Controller
         return view('admin.customer_rank_promotions.create', compact('ranks', 'promotions'));
     }
 
+<<<<<<< HEAD
     public function store(StoreCustomerRankPromotionsRequest $request)
     {
         $data = $request->validated();
@@ -59,6 +67,19 @@ class CustomerRankPromotionController extends Controller
             ->where('promotion_id', $data['promotion_id'])
             ->exists()
         ) {
+=======
+    public function store(Request $request)
+    {
+        $data = $request->validate([
+            'customer_rank_id' => 'required|exists:customer_ranks,id',
+            'promotion_id' => 'required|exists:promotions,id',
+            'description' => 'nullable|string',
+        ]);
+
+        if (CustomerRankPromotion::where('customer_rank_id', $data['customer_rank_id'])
+            ->where('promotion_id', $data['promotion_id'])
+            ->exists()) {
+>>>>>>> origin/main
             throw ValidationException::withMessages([
                 'customer_rank_id' => 'Cặp hạng khách hàng và khuyến mãi này đã tồn tại.',
             ]);
@@ -76,7 +97,11 @@ class CustomerRankPromotionController extends Controller
         return view('admin.customer_rank_promotions.edit', compact('item'));
     }
 
+<<<<<<< HEAD
     public function update(UpdateCustomerRankPromotionsRequest $request, $customer_rank_id, $promotion_id)
+=======
+    public function update(Request $request, $customer_rank_id, $promotion_id)
+>>>>>>> origin/main
     {
         // Tìm bản ghi
         $item = CustomerRankPromotion::where('customer_rank_id', $customer_rank_id)
@@ -84,7 +109,13 @@ class CustomerRankPromotionController extends Controller
             ->firstOrFail();
 
         // Validate dữ liệu
+<<<<<<< HEAD
         $data = $request->validated();
+=======
+        $data = $request->validate([
+            'description' => 'nullable|string',
+        ]);
+>>>>>>> origin/main
 
         // Cập nhật thủ công bằng query builder
         DB::table('customer_rank_promotions')
@@ -92,7 +123,10 @@ class CustomerRankPromotionController extends Controller
             ->where('promotion_id', $promotion_id)
             ->update([
                 'description' => $data['description'],
+<<<<<<< HEAD
                 'discount_code' => $data['discount_code'],
+=======
+>>>>>>> origin/main
             ]);
 
         return redirect()->route('customer_rank_promotions.index')->with('success', 'Cập nhật khuyến mãi theo hạng khách hàng thành công.');
@@ -111,4 +145,8 @@ class CustomerRankPromotionController extends Controller
 
         return redirect()->route('customer_rank_promotions.index')->with('success', 'Xóa khuyến mãi theo hạng khách hàng thành công.');
     }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/main

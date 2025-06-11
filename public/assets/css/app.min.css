@@ -22152,3 +22152,8 @@ p.no-span::after {
     display: none;
   }
 }
+
+.main-nav {
+    overflow-y: auto !important;
+    max-height: none !important;
+}

@@ -44,6 +44,7 @@
                                     @enderror
                                 </div>
                                 <div class="mb-3">
+<<<<<<< HEAD
                                     <label for="discount_code" class="form-label">Mã giảm giá</label>
                                     <input type="text" name="discount_code" id="discount_code" value="{{ old('discount_code', $item->discount_code) }}" class="form-control @error('discount_code') is-invalid @enderror">
                                     @error('discount_code')
@@ -51,6 +52,8 @@
                                     @enderror
                                 </div>
                                 <div class="mb-3">
+=======
+>>>>>>> origin/main
                                     <label for="description" class="form-label">Mô tả</label>
                                     <textarea name="description" id="description" class="form-control @error('description') is-invalid @enderror" rows="4">{{ old('description', $item->description) }}</textarea>
                                     @error('description')

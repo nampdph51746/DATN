@@ -5,8 +5,11 @@
     <div class="row">
         <div class="col-xl-12">
             <div class="card">
+<<<<<<< HEAD
                 {{-- Thông báo  --}}
                 @include('admin.partials.alert')
+=======
+>>>>>>> origin/main
                 <div class="card-header d-flex justify-content-between align-items-center gap-1">
                     <h4 class="card-title flex-grow-1">Danh sách khuyến mãi theo hạng khách hàng</h4>
                     <div class="d-flex gap-2 align-items-center">
@@ -14,7 +17,11 @@
                             <input type="text" name="search" placeholder="Tìm kiếm ID hạng hoặc ID KM" value="{{ request('search') }}" class="form-control form-control-sm" style="width: 200px;">
                             <button type="submit" class="btn btn-sm btn-primary">Tìm</button>
                         </form>
+<<<<<<< HEAD
                         {{-- <a href="{{ route('customer_rank_promotions.create') }}" class="btn btn-sm btn-primary">Thêm mới</a> --}}
+=======
+                        <a href="{{ route('customer_rank_promotions.create') }}" class="btn btn-sm btn-primary">Thêm mới</a>
+>>>>>>> origin/main
                         <div class="dropdown">
                             <a href="#" class="dropdown-toggle btn btn-sm btn-outline-light" data-bs-toggle="dropdown" aria-expanded="false">
                                 Lọc
@@ -51,7 +58,11 @@
                                         </div>
                                     </th>
                                     <th>ID Hạng KH</th>
+<<<<<<< HEAD
                                     <th>Mã giảm giá</th>
+=======
+                                    <th>ID Khuyến mãi</th>
+>>>>>>> origin/main
                                     <th>Mô tả</th>
                                     <th>Thao tác</th>
                                 </tr>
@@ -66,7 +77,11 @@
                                         </div>
                                     </td>
                                     <td>{{ $item->customer_rank_id }}</td>
+<<<<<<< HEAD
                                     <td>{{ $item->discount_code }}</td>
+=======
+                                    <td>{{ $item->promotion_id }}</td>
+>>>>>>> origin/main
                                     <td>{{ $item->description ?? 'N/A' }}</td>
                                     <td>
                                         <div class="d-flex gap-2">
