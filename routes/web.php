@@ -1,11 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-<<<<<<< HEAD
-use App\Http\Controllers\CustomerController;
-use App\Http\Controllers\Admin\TicketController;
-use App\Http\Controllers\Admin\PromotionController;
-=======
 use App\Http\Controllers\Admin\CityController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserController;
@@ -24,17 +19,14 @@ use App\Http\Controllers\Admin\PromotionController;
 use App\Http\Controllers\Admin\CustomerRankController;
 use App\Http\Controllers\Admin\AdminSeatTypeController;
 use App\Http\Controllers\Admin\PaymentMethodController;
->>>>>>> origin/main
 use App\Http\Controllers\Admin\CustomerRankPromotionController;
+use App\Http\Controllers\Admin\PointController;
+use App\Http\Controllers\Admin\PointHistoryController;
 
 Route::get('/', function () {
     return view('welcome');
 });
 
-<<<<<<< HEAD
-Route::get('test-customer', [CustomerController::class, 'index'])->name('index');
-Route::get('test-customer-detail/{id}', [CustomerController::class, 'show'])->name('show');
-=======
 Route::prefix('admin')->name('admin.')->group(function () {
     // Seat routes from HEAD
     Route::get('seats/edit-bulk', [AdminSeatController::class, 'editBulk'])->name('seats.editBulk');
@@ -161,7 +153,6 @@ Route::get('admin/payments', [PaymentController::class, 'index'])->name('admin.p
 Route::get('admin/payments/{payment}', [PaymentController::class, 'show'])->name('admin.payments.show');
 Route::get('admin/payments/{payment}/edit-status', [PaymentController::class, 'editStatus'])->name('admin.payments.editStatus');
 Route::put('admin/payments/{payment}/update-status', [PaymentController::class, 'updateStatus'])->name('admin.payments.updateStatus');
->>>>>>> origin/main
 
 Route::get('admin/tickets', [TicketController::class, 'index'])->name('tickets.index');
 Route::get('admin/tickets/{id}', [TicketController::class, 'show'])->name('tickets.show');
@@ -177,9 +168,9 @@ Route::post('admin/customer_rank_promotions', [CustomerRankPromotionController::
 Route::get('admin/customer_rank_promotions/{customer_rank_id}/{promotion_id}', [CustomerRankPromotionController::class, 'show'])->name('customer_rank_promotions.show');
 Route::get('admin/customer_rank_promotions/{customer_rank_id}/{promotion_id}/edit', [CustomerRankPromotionController::class, 'edit'])->name('customer_rank_promotions.edit');
 Route::put('admin/customer_rank_promotions/{customer_rank_id}/{promotion_id}', [CustomerRankPromotionController::class, 'update'])->name('customer_rank_promotions.update');
-<<<<<<< HEAD
-Route::delete('admin/customer_rank_promotions/{customer_rank_id}/{promotion_id}', [CustomerRankPromotionController::class, 'destroy'])->name('customer_rank_promotions.destroy');
-=======
 Route::delete('admin/customer_rank_promotions/{customer_rank_id}/{promotion_id}', [CustomerRankPromotionController::class, 'destroy'])->name('customer_rank_promotions.destroy');
 
->>>>>>> origin/main
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::resource('points', PointController::class)->only(['index', 'show']);
+    Route::resource('point_history', PointHistoryController::class)->only(['index', 'show']);
+});

@@ -6,6 +6,8 @@ use App\Models\Booking;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use App\Http\Controllers\Controller;
+use App\Models\Point;
+use App\Models\PointHistory;
 
 class BookingController extends Controller
 {
@@ -58,13 +60,37 @@ class BookingController extends Controller
         return view('admin.bookings.edit', compact('booking'));
     }
 
-    public function updateStatus(Request $request, Booking $booking)
+    public function updateStatus(Request $request, $id)
     {
         $request->validate([
-            'status' => ['required', Rule::in(['pending', 'confirmed', 'cancelled'])],
+            'status' => ['required', Rule::in(['pending', 'confirmed', 'cancelled', 'success'])],
         ]);
 
-        $booking->update(['status' => $request->status]);
+        $booking = Booking::findOrFail($id);
+        $oldStatus = $booking->status;
+        $booking->status = $request->status;
+        $booking->save();
+
+        // Cộng điểm khi chuyển từ pending sang confirmed hoặc success
+        if ($oldStatus === 'pending' && in_array($booking->status, ['confirmed', 'success'])) {
+            $user = $booking->user;
+
+            $pointsToAdd = max(1, floor($booking->final_amount / 10000));
+
+            if ($pointsToAdd > 0 && !PointHistory::where('booking_id', $booking->id)->exists()) {
+                $point = Point::firstOrCreate(['user_id' => $user->id]);
+                $point->total_points = ($point->total_points ?? 0) + $pointsToAdd;
+                $point->save();
+
+                PointHistory::create([
+                    'user_id' => $user->id,
+                    'booking_id' => $booking->id,
+                    'points_change' => $pointsToAdd,
+                    'reason_type' => 'booking_success',
+                    'description' => 'Cộng điểm cho đơn hàng #' . $booking->id,
+                ]);
+            }
+        }
 
         return redirect()->route('admin.bookings.index')->with('success', 'Cập nhật trạng thái thành công.');
     }

@@ -5,18 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Enums\PromotionDiscountType;
 use App\Http\Controllers\Controller;
 use App\Models\Promotion;
-<<<<<<< HEAD
-use Illuminate\Contracts\Cache\Store;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
-use App\Http\Requests\Promotions\StorePromotionsRequest;
-use App\Http\Requests\Promotions\UpdatePromotionsRequest;
-use Illuminate\Support\Facades\DB;
-use App\Models\CustomerRank;
-=======
-use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
->>>>>>> origin/main
 
 class PromotionController extends Controller
 {
@@ -48,15 +38,6 @@ class PromotionController extends Controller
     public function create()
     {
         $discountTypes = PromotionDiscountType::cases();
-<<<<<<< HEAD
-        $ranks = CustomerRank::pluck('name', 'id');
-        return view('admin.promotions.create', compact('discountTypes', 'ranks'));
-    }
-
-    public function store(StorePromotionsRequest $request)
-    {
-        $data = $request->validated();
-=======
         return view('admin.promotions.create', compact('discountTypes'));
     }
 
@@ -77,7 +58,6 @@ class PromotionController extends Controller
             'applies_to' => 'nullable|string|max:50',
             'status' => 'nullable|string|max:20|in:active,pending,inactive',
         ]);
->>>>>>> origin/main
 
         Promotion::create($data);
         return redirect()->route('promotions.index')->with('success', 'Khuyến mãi đã được tạo thành công.');
@@ -87,17 +67,6 @@ class PromotionController extends Controller
     {
         $promotion = Promotion::findOrFail($id);
         $discountTypes = PromotionDiscountType::cases();
-<<<<<<< HEAD
-        $ranks = CustomerRank::pluck('name', 'id');
-        return view('admin.promotions.edit', compact('promotion', 'discountTypes', 'ranks'));
-    }
-
-    public function update(UpdatePromotionsRequest $request, $id)
-    {
-        $promotion = Promotion::findOrFail($id);
-
-        $data = $request->validated();
-=======
         return view('admin.promotions.edit', compact('promotion', 'discountTypes'));
     }
 
@@ -120,7 +89,6 @@ class PromotionController extends Controller
             'applies_to' => 'nullable|string|max:50',
             'status' => 'nullable|string|max:20|in:active,pending,inactive',
         ]);
->>>>>>> origin/main
 
         try {
             $promotion->update($data);
@@ -133,33 +101,8 @@ class PromotionController extends Controller
     public function destroy($id)
     {
         $promotion = Promotion::findOrFail($id);
-<<<<<<< HEAD
-
-        // Không cho xoá nếu đang active
-        if ($promotion->status === 'active') {
-            return redirect()->route('promotions.index')->with('error', 'Không thể xoá khuyến mãi đang hoạt động.');
-        }
-
-        // Kiểm tra liên kết với customer_rank_promotions
-        // $isLinked = DB::table('customer_rank_promotions')->where('promotion_id', $id)->exists();
-        // if ($isLinked) {
-        //     return redirect()->route('promotions.index')->with('error', 'Không thể xoá khuyến mãi vì đang được liên kết với hạng khách hàng.');
-        // }
-
-        // Kiểm tra liên kết với bookings
-        // $hasBooking = DB::table('bookings')->where('promotion_id', $id)->exists();
-        // if ($hasBooking) {
-        //     return redirect()->route('promotions.index')->with('error', 'Không thể xoá khuyến mãi vì đã được sử dụng trong đơn đặt phòng.');
-        // }
-
-        $promotion->delete();
-        // Xóa mềm
-        $promotion->forceDelete(); // Nếu muốn xóa vĩnh viễn
-        return redirect()->route('promotions.index')->with('success', 'Xoá khuyến mãi thành công.');
-=======
         $promotion->delete(); // Soft delete
         return redirect()->route('promotions.trashed')->with('success', 'Khuyến mãi đã được xóa mềm thành công.');
->>>>>>> origin/main
     }
 
     public function trashed()

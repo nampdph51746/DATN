@@ -47,9 +47,5 @@ class StorePromotionsRequest extends FormRequest
             'end_date.required' => 'Ngày kết thúc là bắt buộc.',
             'end_date.after_or_equal' => 'Ngày kết thúc phải sau hoặc bằng ngày bắt đầu.',
         ];
-<<<<<<< HEAD
-        
-=======
->>>>>>> origin/main
     }
 }
