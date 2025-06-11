@@ -173,4 +173,5 @@ Route::delete('admin/customer_rank_promotions/{customer_rank_id}/{promotion_id}'
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::resource('points', PointController::class)->only(['index', 'show']);
     Route::resource('point_history', PointHistoryController::class)->only(['index', 'show']);
+    Route::patch('point_history/toggle/{id}', [PointHistoryController::class, 'toggle'])->name('point_history.toggle');
 });
