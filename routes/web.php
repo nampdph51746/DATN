@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminAttributeController;
+use App\Http\Controllers\Admin\AdminAttributeValueController;
 use App\Http\Controllers\Admin\AdminProductController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\CityController;
@@ -34,6 +35,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
     Route::resource('seats', AdminSeatController::class);
     Route::resource('attributes', AdminAttributeController::class);
+    Route::resource('attribute-values', AdminAttributeValueController::class);
     Route::resource('products', AdminProductController::class);
 
     // Room-types routes from HEAD
