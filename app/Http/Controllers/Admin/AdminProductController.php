@@ -67,7 +67,7 @@ class AdminProductController extends Controller
 
     public function show($id)
     {
-        $product = Product::with('category')->findOrFail($id);
+    $product = Product::with(['category', 'productVariants'])->findOrFail($id);
         return view('admin.products.show', compact('product'));
     }
 
