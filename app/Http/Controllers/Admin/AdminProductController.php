@@ -30,6 +30,7 @@ class AdminProductController extends Controller
             'category_id' => 'required|exists:product_categories,id',
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'sku' => 'nullable|string|max:100|unique:products,sku',
             'image_url' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
             'product_type' => 'required|in:food,drink,combo',
             'is_active' => 'required|in:0,1',
@@ -44,6 +45,9 @@ class AdminProductController extends Controller
             'product_type.in' => 'Loại sản phẩm không hợp lệ.',
             'is_active.required' => 'Trạng thái sản phẩm là bắt buộc.',
             'is_active.in' => 'Trạng thái sản phẩm phải là Hoạt động hoặc không hoạt động.',
+            'sku.unique' => 'SKU đã tồn tại.',
+            'sku.max' => 'SKU không được vượt quá 100 ký tự.',
+            'sku.string' => 'SKU phải là chuỗi ký tự.',
         ]);
 
         $imageUrl = null;
@@ -54,6 +58,7 @@ class AdminProductController extends Controller
         Product::create([
             'category_id' => $request->category_id,
             'name' => $request->name,
+            'sku' => $request->sku,
             'description' => $request->description,
             'image_url' => $imageUrl,
             'product_type' => $request->product_type,
@@ -85,6 +90,7 @@ class AdminProductController extends Controller
             'category_id' => 'required|exists:product_categories,id',
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'sku' => 'nullable|string|max:100|unique:products,sku,' . $id,
             'image' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
             'product_type' => 'required|in:food,drink,combo',
             'is_active' => 'required|in:0,1',
@@ -101,6 +107,9 @@ class AdminProductController extends Controller
             'product_type.in' => 'Loại sản phẩm không hợp lệ.',
             'is_active.required' => 'Trạng thái sản phẩm là bắt buộc.',
             'is_active.in' => 'Trạng thái sản phẩm phải là Hoạt động hoặc Không hoạt động.',
+            'sku.unique' => 'SKU đã tồn tại.',
+            'sku.max' => 'SKU không được vượt quá 100 ký tự.',
+            'sku.string' => 'SKU phải là chuỗi ký tự.',
         ]);
 
         $product = Product::findOrFail($id);
@@ -117,6 +126,7 @@ class AdminProductController extends Controller
         $product->update([
             'category_id' => $request->category_id,
             'name' => $request->name,
+            'sku' => $request->sku,
             'description' => $request->description,
             'image_url' => $imageUrl, // Đảm bảo trường này đúng tên trong DB
             'product_type' => $request->product_type,
