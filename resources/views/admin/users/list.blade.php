@@ -100,14 +100,21 @@
                                             </td>
                                             <td>{{ $user->name }}</td>
                                             <td>{{ $user->id }}</td>
-                                            <td>{{ $user->customerRank->name }}</td>
+                                            <td>{{ $user->customerRank?->name }}</td>
                                             <td>{{ $user->role->name }}</td>
                                             <td>{{ $user->email }}</td>
                                             <td>{{ $user->address }}</td>
                                             <td>{{ $user->date_of_birth }}</td>
-                                            <td>{{ $user->created_at }}</td>
+                                            <td><?= date('d-m-y', strtotime($user->created_at))?></td>
                                             <td>
-                                               {{ $user->status }}
+                                            @if ($user->status === \App\Enums\UserStatus::Inactive)
+                                                <span class="badge bg-warning">Không hoạt động</span>
+                                            @elseif ($user->status === \App\Enums\UserStatus::Suspended)
+                                                <span class="badge bg-danger">Tạm khóa</span>
+                                            @else
+                                                <span class="badge bg-success">Hoạt động</span>
+                                            @endif
+
                                             </td>
                                             <td>
                                                 <div class="d-flex gap-2">
