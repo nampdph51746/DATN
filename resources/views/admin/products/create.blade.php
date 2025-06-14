@@ -60,32 +60,34 @@
                             <div class="row">
                                 <div class="col-lg-6">
                                     <div class="mb-3">
-                                        <label for="product-name" class="form-label">Tên sản phẩm</label>
-                                        <input type="text" id="product-name" name="name" class="form-control" value="{{ old('name') }}" placeholder="Tên mặt hàng">
-                                        @error('name')
+                                        <label for="product-sku" class="form-label">Mã sản phẩm</label>
+                                        <input type="text" id="product-sku" name="sku" class="form-control" value="{{ old('sku') }}" placeholder="Mã sản phẩm">
+                                        @error('sku')
                                             <span class="text-danger">{{ $message }}</span>
                                         @enderror
                                     </div>
                                 </div>
                                 <div class="col-lg-6">
-                                    <label for="product-categories" class="form-label">Danh mục sản phẩm</label>
-                                    <select class="form-control" id="product-categories" name="category_id" data-choices data-choices-groups data-placeholder="Chọn danh mục">
-                                        <option value="">Chọn danh mục</option>
-                                        @foreach ($categories as $category)
-                                            <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
-                                        @endforeach
-                                    </select>
-                                    @error('category_id')
-                                        <span class="text-danger">{{ $message }}</span>
-                                    @enderror
+                                    <div class="mb-3">
+                                        <label for="product-categories" class="form-label">Danh mục sản phẩm</label>
+                                        <select class="form-control" id="product-categories" name="category_id" data-choices data-choices-groups data-placeholder="Chọn danh mục">
+                                            <option value="">Chọn danh mục</option>
+                                            @foreach ($categories as $category)
+                                                <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
+                                            @endforeach
+                                        </select>
+                                        @error('category_id')
+                                            <span class="text-danger">{{ $message }}</span>
+                                        @enderror
+                                    </div>
                                 </div>
                             </div>
                             <div class="row">
                                 <div class="col-lg-6">
                                     <div class="mb-3">
-                                        <label for="product-description" class="form-label">Mô tả</label>
-                                        <textarea class="form-control bg-light-subtle" id="product-description" name="description" rows="3" placeholder="Mô tả ngắn về sản phẩm">{{ old('description') }}</textarea>
-                                        @error('description')
+                                        <label for="product-name" class="form-label">Tên sản phẩm</label>
+                                        <input type="text" id="product-name" name="name" class="form-control" value="{{ old('name') }}" placeholder="Tên mặt hàng">
+                                        @error('name')
                                             <span class="text-danger">{{ $message }}</span>
                                         @enderror
                                     </div>
@@ -115,6 +117,15 @@
                                             <option value="0" {{ old('is_active') == '0' ? 'selected' : '' }}>Không hoạt động</option>
                                         </select>
                                         @error('is_active')
+                                            <span class="text-danger">{{ $message }}</span>
+                                        @enderror
+                                    </div>
+                                </div>
+                                <div class="col-lg-6">
+                                    <div class="mb-3">
+                                        <label for="product-description" class="form-label">Mô tả</label>
+                                        <textarea class="form-control bg-light-subtle" id="product-description" name="description" rows="3" placeholder="Mô tả ngắn về sản phẩm">{{ old('description') }}</textarea>
+                                        @error('description')
                                             <span class="text-danger">{{ $message }}</span>
                                         @enderror
                                     </div>

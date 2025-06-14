@@ -65,10 +65,10 @@
                             <div class="row">
                                 <div class="col-lg-6">
                                     <div class="mb-3">
-                                        <label for="product-name" class="form-label">Tên sản phẩm</label>
-                                        <input type="text" id="product-name" name="name" class="form-control"
-                                            value="{{ old('name', $product->name) }}" placeholder="Tên mặt hàng">
-                                        @error('name')
+                                        <label for="product-sku" class="form-label">Mã sản phẩm</label>
+                                        <input type="text" id="product-sku" name="sku" class="form-control"
+                                            value="{{ old('sku', $product->sku) }}" placeholder="Mã sản phẩm">
+                                        @error('sku')
                                             <span class="text-danger">{{ $message }}</span>
                                         @enderror
                                     </div>
@@ -91,6 +91,16 @@
                             <div class="row">
                                 <div class="col-lg-6">
                                     <div class="mb-3">
+                                        <label for="product-name" class="form-label">Tên sản phẩm</label>
+                                        <input type="text" id="product-name" name="name" class="form-control"
+                                            value="{{ old('name', $product->name) }}" placeholder="Tên mặt hàng">
+                                        @error('name')
+                                            <span class="text-danger">{{ $message }}</span>
+                                        @enderror
+                                    </div>
+                                </div>
+                                <div class="col-lg-6">
+                                    <div class="mb-3">
                                         <label for="product-description" class="form-label">Mô tả</label>
                                         <textarea class="form-control bg-light-subtle" id="product-description" name="description" rows="3"
                                             placeholder="Mô tả ngắn về sản phẩm">{{ old('description', $product->description) }}</textarea>
@@ -99,6 +109,8 @@
                                         @enderror
                                     </div>
                                 </div>
+                            </div>
+                            <div class="row">
                                 <div class="col-lg-6">
                                     <div class="mb-3">
                                         <label for="product-type" class="form-label">Loại sản phẩm</label>
@@ -114,8 +126,6 @@
                                         @enderror
                                     </div>
                                 </div>
-                            </div>
-                            <div class="row">
                                 <div class="col-lg-6">
                                     <div class="mb-3">
                                         <label for="is-active" class="form-label">Trạng thái</label>

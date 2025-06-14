@@ -12,7 +12,7 @@
                         <h4 class="card-title mb-0">Tạo mới danh mục sản phẩm</h4>
                     </div>
                     <div class="card-body">
-                        <form action="{{ route('product-categories.store') }}" method="POST">
+                        <form action="{{ route('admin.product-categories.store') }}" method="POST">
                             @csrf
                             <div class="row g-4">
                                 <div class="col-lg-6">
@@ -61,7 +61,7 @@
                                     <iconify-icon icon="solar:check-circle-broken" class="align-middle fs-18 me-1"></iconify-icon>
                                     Tạo mới
                                 </button>
-                                <a href="{{ route('product-categories.index') }}" class="btn btn-outline-secondary">
+                                <a href="{{ route('admin.product-categories.index') }}" class="btn btn-outline-secondary">
                                     <iconify-icon icon="solar:close-circle-broken" class="align-middle fs-18 me-1"></iconify-icon>
                                     Hủy
                                 </a>

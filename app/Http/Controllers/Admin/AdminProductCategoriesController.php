@@ -41,7 +41,7 @@ class AdminProductCategoriesController extends Controller
             'updated_at' => now(),
         ]);
 
-        return redirect()->route('product-categories.index')->with('success', 'Danh mục sản phẩm đã được tạo thành công.');
+        return redirect()->route('admin.product-categories.index')->with('success', 'Danh mục sản phẩm đã được tạo thành công.');
     }
 
     public function edit($id)
@@ -70,7 +70,7 @@ class AdminProductCategoriesController extends Controller
             'updated_at' => now(),
         ]);
 
-        return redirect()->route('product-categories.index')->with('success', 'Danh mục sản phẩm đã được cập nhật thành công.');
+        return redirect()->route('admin.product-categories.index')->with('success', 'Danh mục sản phẩm đã được cập nhật thành công.');
     }
 
     public function destroy($id)
@@ -79,11 +79,11 @@ class AdminProductCategoriesController extends Controller
         $productCount = Product::where('category_id', $id)->count();
 
         if ($productCount > 0) {
-            return redirect()->route('product-categories.index')->with('error', 'Không thể xóa danh mục vì vẫn còn ' . $productCount . ' sản phẩm thuộc danh mục này.');
+            return redirect()->route('admin.product-categories.index')->with('error', 'Không thể xóa danh mục vì vẫn còn ' . $productCount . ' sản phẩm thuộc danh mục này.');
         }
 
         $category->delete();
-        return redirect()->route('product-categories.index')->with('success', 'Danh mục sản phẩm đã được xóa thành công.');
+        return redirect()->route('admin.product-categories.index')->with('success', 'Danh mục sản phẩm đã được xóa thành công.');
     }
 
     public function trash()
@@ -96,13 +96,13 @@ class AdminProductCategoriesController extends Controller
     {
         $category = ProductCategory::withTrashed()->findOrFail($id);
         $category->restore();
-        return redirect()->route('product-categories.index')->with('success', 'Danh mục sản phẩm đã được khôi phục thành công.');
+        return redirect()->route('admin.product-categories.index')->with('success', 'Danh mục sản phẩm đã được khôi phục thành công.');
     }
 
     public function forceDelete($id)
     {
         $category = ProductCategory::onlyTrashed()->findOrFail($id);
         $category->forceDelete();
-        return redirect()->route('product-categories.trash')->with('success', 'Danh mục sản phẩm đã được xóa vĩnh viễn.');
+        return redirect()->route('admin.product-categories.trash')->with('success', 'Danh mục sản phẩm đã được xóa vĩnh viễn.');
     }
 }

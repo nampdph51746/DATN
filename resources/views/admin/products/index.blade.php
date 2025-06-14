@@ -24,43 +24,62 @@
                             <table class="table align-middle mb-0 table-hover table-centered">
                                 <thead class="bg-light-subtle">
                                     <tr>
-                                        <th><iconify-icon icon="solar:hashtag-broken" class="align-middle fs-16 me-1"></iconify-icon>ID</th>
-                                        <th><iconify-icon icon="solar:image-broken" class="align-middle fs-16 me-1"></iconify-icon>Ảnh</th>
-                                        <th><iconify-icon icon="solar:text-field-broken" class="align-middle fs-16 me-1"></iconify-icon>Tên sản phẩm</th>
-                                        <th><iconify-icon icon="solar:document-broken" class="align-middle fs-16 me-1"></iconify-icon>Mô tả</th>
-                                        <th><iconify-icon icon="solar:tag-broken" class="align-middle fs-16 me-1"></iconify-icon>Danh mục</th>
-                                        <th><iconify-icon icon="solar:calendar-broken" class="align-middle fs-16 me-1"></iconify-icon>Ngày tạo</th>
-                                        <th><iconify-icon icon="solar:settings-broken" class="align-middle fs-16 me-1"></iconify-icon>Hành động</th>
+                                        <th><iconify-icon icon="solar:hashtag-broken"
+                                                class="align-middle fs-16 me-1"></iconify-icon>ID</th>
+                                        <th><iconify-icon icon="solar:image-broken"
+                                                class="align-middle fs-16 me-1"></iconify-icon>Ảnh</th>
+                                        <th><iconify-icon icon="solar:text-field-broken"
+                                                class="align-middle fs-16 me-1"></iconify-icon>Tên sản phẩm</th>
+                                        <th>
+                                            <iconify-icon icon="mdi:barcode"
+                                                class="align-middle fs-16 me-1"></iconify-icon>SKU
+                                        </th>
+                                        <th><iconify-icon icon="solar:document-broken"
+                                                class="align-middle fs-16 me-1"></iconify-icon>Mô tả</th>
+                                        <th><iconify-icon icon="solar:tag-broken"
+                                                class="align-middle fs-16 me-1"></iconify-icon>Danh mục</th>
+                                        <th><iconify-icon icon="solar:calendar-broken"
+                                                class="align-middle fs-16 me-1"></iconify-icon>Ngày tạo</th>
+                                        <th><iconify-icon icon="solar:settings-broken"
+                                                class="align-middle fs-16 me-1"></iconify-icon>Hành động</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach ($products as $product)
                                         <tr>
-                                            <td>{{ $loop->iteration + ($products->currentPage() - 1) * $products->perPage() }}</td>
+                                            <td>{{ $loop->iteration + ($products->currentPage() - 1) * $products->perPage() }}
+                                            </td>
                                             <td>
                                                 @if ($product->image_url)
-                                                    <img src="{{ asset('storage/' . $product->image_url) }}" alt="{{ $product->name }}" style="max-width: 200px; max-height: 100px;">
+                                                    <img src="{{ asset('storage/' . $product->image_url) }}"
+                                                        alt="{{ $product->name }}"
+                                                        style="max-width: 200px; max-height: 100px;">
                                                 @else
                                                     <span class="text-muted">Không có ảnh</span>
                                                 @endif
                                             </td>
                                             <td>
-                                                <iconify-icon icon="solar:tag-broken" class="align-middle fs-16 me-1 text-primary"></iconify-icon>
                                                 {{ $product->name }}
+                                            </td>
+                                            <td>
+                                                {{ $product->sku ?? 'Chưa có SKU' }}
                                             </td>
                                             <td>{{ Str::limit($product->description, 50) }}</td>
                                             <td>{{ $product->category->name ?? 'Chưa có danh mục' }}</td>
                                             <td>
-                                                <iconify-icon icon="solar:clock-circle-broken" class="align-middle fs-16 me-1 text-muted"></iconify-icon>
                                                 {{ $product->created_at->format('d/m/Y H:i') }}
                                             </td>
                                             <td>
                                                 <div class="d-flex gap-2">
-                                                    <a href="{{ route('admin.products.edit', $product->id) }}" class="btn btn-soft-primary btn-sm" title="Chỉnh sửa">
-                                                        <iconify-icon icon="solar:pen-2-broken" class="align-middle fs-18"></iconify-icon>
+                                                    <a href="{{ route('admin.products.edit', $product->id) }}"
+                                                        class="btn btn-soft-primary btn-sm" title="Chỉnh sửa">
+                                                        <iconify-icon icon="solar:pen-2-broken"
+                                                            class="align-middle fs-18"></iconify-icon>
                                                     </a>
-                                                    <a href="{{ route('admin.products.show', $product->id) }}" class="btn btn-soft-info btn-sm" title="Xem chi tiết">
-                                                        <iconify-icon icon="solar:eye-broken" class="align-middle fs-18"></iconify-icon>
+                                                    <a href="{{ route('admin.products.show', $product->id) }}"
+                                                        class="btn btn-soft-info btn-sm" title="Xem chi tiết">
+                                                        <iconify-icon icon="solar:eye-broken"
+                                                            class="align-middle fs-18"></iconify-icon>
                                                     </a>
                                                 </div>
                                             </td>

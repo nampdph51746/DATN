@@ -13,7 +13,7 @@
                                 <iconify-icon icon="solar:magnifer-linear" class="position-absolute top-50 start-0 translate-middle-y ms-3 text-muted" style="font-size: 16px;"></iconify-icon>
                             </div>
                         </form>
-                        <a href="{{ route('product-categories.index') }}" class="btn btn-sm btn-primary">
+                        <a href="{{ route('admin.product-categories.index') }}" class="btn btn-sm btn-primary">
                             Quay Lại Danh Sách
                         </a>
                     </div>

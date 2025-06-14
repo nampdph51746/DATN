@@ -13,11 +13,11 @@
                             Danh mục sản phẩm
                         </h4>
                         <div class="d-flex gap-2">
-                            <a href="{{ route('product-categories.create') }}" class="btn btn-sm btn-primary">
+                            <a href="{{ route('admin.product-categories.create') }}" class="btn btn-sm btn-primary">
                                 <iconify-icon icon="solar:add-circle-broken" class="align-middle fs-18 me-1"></iconify-icon>
                                 Thêm danh mục
                             </a>
-                            <a href="{{ route('product-categories.trash') }}" class="btn btn-sm btn-outline-danger" title="Thùng rác">
+                            <a href="{{ route('admin.product-categories.trash') }}" class="btn btn-sm btn-outline-danger" title="Thùng rác">
                                 <iconify-icon icon="solar:trash-bin-minimalistic-2-broken" class="align-middle fs-18"></iconify-icon>
                             </a>
                         </div>
@@ -49,10 +49,10 @@
                                             </td>
                                             <td>
                                                 <div class="d-flex gap-2">
-                                                    <a href="{{ route('product-categories.edit', $category->id) }}" class="btn btn-soft-primary btn-sm" title="Chỉnh sửa">
+                                                    <a href="{{ route('admin.product-categories.edit', $category->id) }}" class="btn btn-soft-primary btn-sm" title="Chỉnh sửa">
                                                         <iconify-icon icon="solar:pen-2-broken" class="align-middle fs-18"></iconify-icon>
                                                     </a>
-                                                    <form action="{{ route('product-categories.destroy', $category->id) }}" method="POST" style="display:inline;">
+                                                    <form action="{{ route('admin.product-categories.destroy', $category->id) }}" method="POST" style="display:inline;">
                                                         @csrf
                                                         @method('DELETE')
                                                         <button type="submit" class="btn btn-soft-danger btn-sm" title="Xóa"
