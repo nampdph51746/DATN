@@ -57,38 +57,31 @@ class AdminProductVariantController extends Controller
             'attribute_values.*.exists' => 'Giá trị thuộc tính không hợp lệ.',
         ]);
 
-        // Lấy sản phẩm để lấy SKU
         $product = Product::findOrFail($request->product_id);
         $productSku = $product->sku;
 
-        // Lấy các giá trị thuộc tính được chọn
         $attributeValues = AttributeValue::whereIn('id', $request->attribute_values)
             ->pluck('value')
             ->map(function ($value) {
-                // Chuyển có dấu thành không dấu và thay khoảng trắng bằng dấu gạch ngang
                 return Str::slug($value, '-');
             })
             ->toArray();
 
-        // Tạo SKU: product_sku + các giá trị thuộc tính
         $sku = $productSku . '-' . implode('-', $attributeValues);
         $sku = mb_strtoupper($sku);
 
-        // Kiểm tra SKU duy nhất, nếu trùng thì thêm hậu tố ngẫu nhiên
-        $baseSku = $sku;
-        $counter = 1;
-        while (ProductVariant::where('sku', $sku)->exists()) {
-            $sku = $baseSku . '-' . $counter;
-            $counter++;
+        // Kiểm tra SKU đã tồn tại chưa
+        if (ProductVariant::where('sku', $sku)->exists()) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['attribute_values' => 'Biến thể sản phẩm với thuộc tính này đã tồn tại.']);
         }
 
-        // Xử lý ảnh
         $imageUrl = null;
         if ($request->hasFile('image')) {
             $imageUrl = $request->file('image')->store('product_variants', 'public');
         }
 
-        // Tạo biến thể sản phẩm
         $productVariant = ProductVariant::create([
             'product_id' => $request->product_id,
             'sku' => $sku,
@@ -100,7 +93,6 @@ class AdminProductVariantController extends Controller
             'updated_at' => now(),
         ]);
 
-        // Lưu các giá trị thuộc tính vào product_variant_options
         foreach ($request->attribute_values as $attributeValueId) {
             ProductVariantOption::create([
                 'product_variant_id' => $productVariant->id,
@@ -109,12 +101,6 @@ class AdminProductVariantController extends Controller
         }
 
         return redirect()->route('admin.product-variants.index')->with('success', 'Biến thể sản phẩm đã được tạo thành công.');
-    }
-
-    public function show($id)
-    {
-        $productVariant = ProductVariant::with(['product', 'productVariantOptions.attributeValue.attribute'])->findOrFail($id);
-        return view('admin.product_variants.show', compact('productVariant'));
     }
 
     public function edit($id)
@@ -188,13 +174,7 @@ class AdminProductVariantController extends Controller
             $sku = $productSku . '-' . implode('-', $attributeValues);
             $sku = mb_strtoupper($sku);
 
-            // Kiểm tra SKU duy nhất, nếu trùng thì thêm hậu tố ngẫu nhiên
-            $baseSku = $sku;
-            $counter = 1;
-            while (ProductVariant::where('sku', $sku)->where('id', '!=', $id)->exists()) {
-                $sku = $baseSku . '-' . $counter;
-                $counter++;
-            }
+        
         } else {
             $sku = $productVariant->sku;
         }

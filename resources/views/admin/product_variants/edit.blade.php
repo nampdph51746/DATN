@@ -113,6 +113,11 @@
                             </div>
                         </div>
                         <label class="form-label mb-2">Thuộc tính & Giá trị thuộc tính</label>
+                        @if ($errors->has('attribute_values'))
+                            <div class="alert alert-danger py-2 mb-2">
+                                {{ $errors->first('attribute_values') }}
+                            </div>
+                        @endif
                         <div class="table-responsive">
                             <table class="table table-bordered align-middle mb-0" id="attributes-table">
                                 <thead class="table-light">
