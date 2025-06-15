@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PaymentMethodController;
@@ -32,6 +33,7 @@ Route::get('admin/payments/{payment}/edit-status', [PaymentController::class, 'e
 Route::put('admin/payments/{payment}/update-status', [PaymentController::class, 'updateStatus'])->name('admin.payments.updateStatus');
 
 
+Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
 
 Route::get('test-customer', [CustomerController::class, 'index'])->name('index');
 Route::get('test-customer-detail/{id}', [CustomerController::class, 'show'])->name('show');
