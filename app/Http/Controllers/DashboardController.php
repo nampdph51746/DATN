@@ -24,13 +24,29 @@ class DashboardController extends Controller
             $monthLabel = $date->format('M Y');
             $monthsLabel[] = $monthLabel;
 
-            $monthlyRevenue = Booking::where('status', '!=', 'cancelled')
+            // 1. Doanh thu từ đặt vé
+            $bookingRevenue = \App\Models\Booking::where('status', '!=', 'cancelled')
                 ->whereYear('created_at', $date->year)
                 ->whereMonth('created_at', $date->month)
                 ->sum('final_amount');
 
-            $revenueData[] = $monthlyRevenue;
+            // 2. Doanh thu từ sản phẩm bán kèm (đồ ăn, nước, combo...)
+            $productRevenue = DB::table('booking_items as bi')
+                ->join('bookings as b', 'bi.booking_id', '=', 'b.id')
+                ->join('product_variants as pv', 'bi.product_variant_id', '=', 'pv.id')
+                ->join('products as p', 'pv.product_id', '=', 'p.id')
+                ->where('b.status', '!=', 'cancelled')
+                ->whereYear('bi.created_at', $date->year)
+                ->whereMonth('bi.created_at', $date->month)
+                ->selectRaw('SUM(bi.quantity * bi.price_at_purchase) as total')
+                ->value('total') ?? 0;
+
+            // 3. Tổng doanh thu
+            $totalRevenue = $bookingRevenue + $productRevenue;
+
+            $revenueData[] = $totalRevenue;
         }
+
         // Thống kê payments
         $totalPayments = DB::table('payments')->count();
         $totalAmountPaid = DB::table('payments')
