@@ -51,6 +51,7 @@
                                     <td>{{ $ageLimit->name }}</td>
                                     <td>{{ $ageLimit->description }}</td>
                                     <td>{{ $ageLimit->min_age }}</td>
+                                cd
                                     <td>
                                         <a href="{{ route('admin.age_limits.edit', $ageLimit->id) }}" class="btn btn-warning btn-sm">Sửa</a>
                                         <form action="{{ route('admin.age_limits.destroy', $ageLimit->id) }}" method="POST" style="display:inline;">
