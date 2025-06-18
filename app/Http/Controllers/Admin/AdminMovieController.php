@@ -16,10 +16,17 @@ use Illuminate\Support\Facades\DB;
 class AdminMovieController extends Controller
 {
     // Danh sách phim
-    public function index()
+    public function index(Request $request)
     {
-        $movies = Movie::orderByDesc('created_at')->paginate(10);
-        return view('admin.movies.index', compact('movies'));
+        $movies = Movie::with(['genres', 'country', 'ageLimit'])->paginate(10);
+
+        // Lấy danh sách quốc gia
+        $countries = Country::all();
+
+        // Lấy danh sách giới hạn độ tuổi (nếu có dùng)
+        $ageLimits = AgeLimit::all();
+
+        return view('admin.movies.index', compact('movies', 'countries', 'ageLimits'));
     }
 
     // Form tạo phim
