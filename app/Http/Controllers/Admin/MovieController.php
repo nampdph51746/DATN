@@ -6,6 +6,7 @@ use App\Models\Room;
 use App\Models\Movie;
 use App\Models\Country;
 use App\Models\AgeLimit;
+use App\Models\Genre;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -20,36 +21,20 @@ class MovieController extends Controller
     public function index(Request $request)
     {
         $query = $request->input('query');
-        $status = $request->input('status', 'all');
+        $status = $request->input('status');
         $countryId = $request->input('country_id');
         $ageLimitId = $request->input('age_limit_id');
         $releaseDate = $request->input('release_date');
         $endDate = $request->input('end_date');
 
-        $movies = Movie::query()
-            ->with(['country', 'ageLimit'])
-            ->when($query, function ($queryBuilder) use ($query) {
-                return $queryBuilder->where('name', 'like', "%{$query}%")
-                    ->orWhere('director', 'like', "%{$query}%")
-                    ->orWhere('actors', 'like', "%{$query}%")
-                    ->orWhere('language', 'like', "%{$query}%");
+        $movies = Movie::with(['genres', 'country', 'ageLimit'])
+            ->when($query, function ($q) use ($query) {
+                $q->where('name', 'like', "%{$query}%");
             })
-            ->when($status !== 'all', function ($queryBuilder) use ($status) {
-                return $queryBuilder->where('status', $status);
+            ->when($status, function ($q) use ($status) {
+                $q->where('status', $status);
             })
-            ->when($countryId, function ($queryBuilder) use ($countryId) {
-                return $queryBuilder->where('country_id', $countryId);
-            })
-            ->when($ageLimitId, function ($queryBuilder) use ($ageLimitId) {
-                return $queryBuilder->where('age_limit_id', $ageLimitId);
-            })
-            ->when($releaseDate, function ($queryBuilder) use ($releaseDate) {
-                return $queryBuilder->where('release_date', '>=', $releaseDate);
-            })
-            ->when($endDate, function ($queryBuilder) use ($endDate) {
-                return $queryBuilder->where('end_date', '<=', $endDate);
-            })
-            ->orderBy('release_date', 'desc')
+            ->orderByDesc('id')
             ->paginate(10);
 
         $countries = Country::all();
@@ -65,8 +50,9 @@ class MovieController extends Controller
     {
         $countries = Country::all();
         $ageLimits = AgeLimit::all();
+        $genres = Genre::all(); // Thêm dòng này
 
-        return view('admin.movies.create', compact('countries', 'ageLimits'));
+        return view('admin.movies.create', compact('countries', 'ageLimits', 'genres'));
     }
 
     /**
@@ -82,7 +68,7 @@ class MovieController extends Controller
             'release_date' => 'required|date|after_or_equal:today',
             'end_date' => 'nullable|date|after_or_equal:release_date',
             'description' => 'nullable|string',
-            'poster_url' => 'nullable|url|max:255',
+            'poster' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'trailer_url' => 'nullable|url|max:255',
             'language' => 'nullable|string|max:50',
             'country_id' => 'nullable|exists:countries,id',
@@ -101,8 +87,8 @@ class MovieController extends Controller
             'release_date.after_or_equal' => 'Ngày phát hành phải từ hôm nay trở đi.',
             'end_date.date' => 'Ngày kết thúc không hợp lệ.',
             'end_date.after_or_equal' => 'Ngày kết thúc phải sau hoặc bằng ngày phát hành.',
-            'poster_url.url' => 'URL poster không hợp lệ.',
-            'poster_url.max' => 'URL poster không được vượt quá 255 ký tự.',
+            'poster.url' => 'URL poster không hợp lệ.',
+            'poster.max' => 'URL poster không được vượt quá 255 ký tự.',
             'trailer_url.url' => 'URL trailer không hợp lệ.',
             'trailer_url.max' => 'URL trailer không được vượt quá 255 ký tự.',
             'language.max' => 'Ngôn ngữ không được vượt quá 50 ký tự.',
@@ -117,7 +103,12 @@ class MovieController extends Controller
 
         try {
             DB::transaction(function () use ($request) {
-                Movie::create([
+                $posterPath = null;
+                if ($request->hasFile('poster')) {
+                    $posterPath = $request->file('poster')->store('uploads/posters', 'public');
+                }
+
+                $movie = Movie::create([
                     'name' => $request->name,
                     'director' => $request->director,
                     'actors' => $request->actors,
@@ -125,7 +116,7 @@ class MovieController extends Controller
                     'release_date' => $request->release_date,
                     'end_date' => $request->end_date,
                     'description' => $request->description,
-                    'poster_url' => $request->poster_url,
+                    'poster_url' => $posterPath,
                     'trailer_url' => $request->trailer_url,
                     'language' => $request->language,
                     'country_id' => $request->country_id,
@@ -135,6 +126,10 @@ class MovieController extends Controller
                     'created_at' => Carbon::now('Asia/Ho_Chi_Minh'),
                     'updated_at' => Carbon::now('Asia/Ho_Chi_Minh'),
                 ]);
+                // Lưu thể loại
+                if ($request->has('genres')) {
+                    $movie->genres()->sync($request->genres);
+                }
             });
 
             return redirect()->route('admin.movies.index')
@@ -181,7 +176,7 @@ class MovieController extends Controller
             ->orderBy('start_time', 'desc')
             ->paginate(5, ['*'], 'showtime_page');
 
-        $rooms = Room::all();
+        $rooms = Room::all(); // Thêm dòng này
 
         return view('admin.movies.show', compact('movie', 'showtimes', 'rooms'));
     }
@@ -194,8 +189,9 @@ class MovieController extends Controller
         $movie = Movie::findOrFail($id);
         $countries = Country::all();
         $ageLimits = AgeLimit::all();
+        $genres = Genre::all();
 
-        return view('admin.movies.edit', compact('movie', 'countries', 'ageLimits'));
+        return view('admin.movies.edit', compact('movie', 'countries', 'ageLimits', 'genres'));
     }
 
     /**
@@ -213,7 +209,7 @@ class MovieController extends Controller
             'release_date' => 'required|date',
             'end_date' => 'nullable|date|after_or_equal:release_date',
             'description' => 'nullable|string',
-            'poster_url' => 'nullable|url|max:255',
+            'poster' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'trailer_url' => 'nullable|url|max:255',
             'language' => 'nullable|string|max:50',
             'country_id' => 'nullable|exists:countries,id',
@@ -231,8 +227,8 @@ class MovieController extends Controller
             'release_date.date' => 'Ngày phát hành không hợp lệ.',
             'end_date.date' => 'Ngày kết thúc không hợp lệ.',
             'end_date.after_or_equal' => 'Ngày kết thúc phải sau hoặc bằng ngày phát hành.',
-            'poster_url.url' => 'URL poster không hợp lệ.',
-            'poster_url.max' => 'URL poster không được vượt quá 255 ký tự.',
+            'poster.url' => 'URL poster không hợp lệ.',
+            'poster.max' => 'URL poster không được vượt quá 255 ký tự.',
             'trailer_url.url' => 'URL trailer không hợp lệ.',
             'trailer_url.max' => 'URL trailer không được vượt quá 255 ký tự.',
             'language.max' => 'Ngôn ngữ không được vượt quá 50 ký tự.',
@@ -254,7 +250,7 @@ class MovieController extends Controller
             }
 
             DB::transaction(function () use ($movie, $request) {
-                $movie->update([
+                $data = [
                     'name' => $request->name,
                     'director' => $request->director,
                     'actors' => $request->actors,
@@ -262,7 +258,6 @@ class MovieController extends Controller
                     'release_date' => $request->release_date,
                     'end_date' => $request->end_date,
                     'description' => $request->description,
-                    'poster_url' => $request->poster_url,
                     'trailer_url' => $request->trailer_url,
                     'language' => $request->language,
                     'country_id' => $request->country_id,
@@ -270,7 +265,19 @@ class MovieController extends Controller
                     'status' => $request->status,
                     'average_rating' => $request->average_rating ?? 0,
                     'updated_at' => Carbon::now('Asia/Ho_Chi_Minh'),
-                ]);
+                ];
+
+                if ($request->hasFile('poster')) {
+                    $posterPath = $request->file('poster')->store('uploads/posters', 'public');
+                    $data['poster_url'] = $posterPath;
+                }
+
+                $movie->update($data);
+
+                // Cập nhật thể loại
+                if ($request->has('genres')) {
+                    $movie->genres()->sync($request->genres);
+                }
             });
 
             return redirect()->route('admin.movies.index')
