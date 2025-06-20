@@ -9,6 +9,7 @@ class PointHistory extends Model
 {
     use HasFactory;
 
+    protected $table = 'point_histories'; 
     protected $fillable = ['user_id', 'booking_id', 'points_change', 'reason_type', 'description'];
 
     protected $casts = [
