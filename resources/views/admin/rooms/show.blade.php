@@ -9,7 +9,11 @@
                     <h4 class="card-title">Chi tiết phòng chiếu: {{ $room->name }}</h4>
                     <div>
                         <a href="{{ route('admin.rooms.index') }}" class="btn btn-secondary btn-sm me-2">Quay lại</a>
-                        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addSeatsModal">Thêm ghế</button>
+                        @if ($seats->count() >= $room->capacity)
+                            <button class="btn btn-primary btn-sm disabled" title="Phòng đã đầy ghế">Thêm ghế</button>
+                        @else
+                            <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addSeatsModal">Thêm ghế</button>
+                        @endif
                     </div>
                 </div>
                 <div class="card-body">
@@ -18,6 +22,15 @@
                     @endif
                     @if (session('error'))
                         <div class="alert alert-danger">{{ session('error') }}</div>
+                    @endif
+                    @if ($errors->any())
+                        <div class="alert alert-danger">
+                            <ul>
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
                     @endif
                     <h5>Thông tin phòng</h5>
                     <p><strong>Tên phòng:</strong> {{ $room->name }}</p>
@@ -39,6 +52,24 @@
                                 <span class="badge bg-danger">Không xác định</span>
                         @endswitch
                     </p>
+
+                    <h5 class="mt-4">Phân bổ ghế</h5>
+                    @php
+                        $seatPercentages = config('seat_types.percentages');
+                        $requiredSeats = [];
+                        foreach ($seatPercentages as $type => $percentage) {
+                            $requiredSeats[$type] = (int) round(($percentage / 100) * $room->capacity);
+                        }
+                        $existingSeatsByType = $seats->groupBy('seatType.name')->map->count()->toArray();
+                    @endphp
+                    <ul>
+                        @foreach ($seatPercentages as $type => $percentage)
+                            <li><strong>{{ $type }} ({{ $percentage }}%):</strong> 
+                                {{ $existingSeatsByType[$type] ?? 0 }} / {{ $requiredSeats[$type] }} ghế
+                                (Còn lại: {{ max(0, $requiredSeats[$type] - ($existingSeatsByType[$type] ?? 0)) }} ghế)
+                            </li>
+                        @endforeach
+                    </ul>
 
                     <h5 class="mt-4">Sơ đồ ghế</h5>
                     @if ($seats->isEmpty())
@@ -65,7 +96,9 @@
                                             {{ $seat->status->value === 'booked' ? 'seat-booked' : '' }}
                                             {{ $seat->status->value === 'reserved' ? 'seat-reserved' : '' }}"
                                              data-seat-id="{{ $seat->id }}"
-                                             title="{{ $seat->row_char }}{{ $seat->seat_number }} ({{ $seat->seatType->name }}, {{ ucfirst($seat->status->value) }})">
+                                             title="{{ $seat->row_char }}{{ $seat->seat_number }} ({{ $seat->seatType->name }}, {{ ucfirst($seat->status->value) }})"
+                                             data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true"
+                                             data-bs-title="Ghế: {{ $seat->row_char }}{{ $seat->seat_number }}<br>Loại: {{ $seat->seatType->name }}<br>Trạng thái: {{ ucfirst($seat->status->value) }}">
                                             {{ $seat->row_char }}{{ $seat->seat_number }}
                                         </div>
                                     @else
@@ -86,15 +119,6 @@
                                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                 </div>
                                 <div class="modal-body">
-                                    @if ($errors->any())
-                                        <div class="alert alert-danger">
-                                            <ul>
-                                                @foreach ($errors->all() as $error)
-                                                    <li>{{ $error }}</li>
-                                                @endforeach
-                                            </ul>
-                                        </div>
-                                    @endif
                                     <form id="seatForm" action="{{ route('admin.seats.store') }}" method="POST">
                                         @csrf
                                         <input type="hidden" name="room_id" value="{{ $room->id }}">
@@ -102,8 +126,27 @@
                                             <label for="seat_type_id" class="form-label">Loại ghế</label>
                                             <select name="seat_type_id" id="seat_type_id" class="form-control" required>
                                                 <option value="">Chọn loại ghế</option>
+                                                @php
+                                                    $seatTypesOrder = config('seat_types.order');
+                                                    $nextSeatTypeId = session('next_seat_type_id');
+                                                    if (!$nextSeatTypeId) {
+                                                        foreach ($seatTypesOrder as $type) {
+                                                            $currentTypeSeats = $existingSeatsByType[$type] ?? 0;
+                                                            $requiredTypeSeats = $requiredSeats[$type] ?? 0;
+                                                            if ($currentTypeSeats < $requiredTypeSeats) {
+                                                                $nextSeatType = $seatTypes->where('name', $type)->first();
+                                                                if ($nextSeatType) {
+                                                                    $nextSeatTypeId = $nextSeatType->id;
+                                                                    break;
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                @endphp
                                                 @foreach ($seatTypes as $seatType)
-                                                    <option value="{{ $seatType->id }}">{{ $seatType->name }} ({{ $seatType->price_modifier }})</option>
+                                                    <option value="{{ $seatType->id }}" {{ $seatType->id == $nextSeatTypeId ? 'selected' : '' }}>
+                                                        {{ $seatType->name }} (Còn lại: {{ max(0, ($requiredSeats[$seatType->name] ?? 0) - ($existingSeatsByType[$seatType->name] ?? 0)) }} ghế)
+                                                    </option>
                                                 @endforeach
                                             </select>
                                             @error('seat_type_id')
@@ -127,7 +170,7 @@
                                         <div class="mb-3">
                                             <p><strong>Sức chứa phòng:</strong> {{ $room->capacity }}</p>
                                             <p><strong>Ghế hiện có:</strong> {{ $seats->count() }}</p>
-                                            <p><strong>Ghế có thể thêm:</strong> {{ $room->capacity - $seats->count() }}</p>
+                                            <p><strong>Ghế còn lại:</strong> {{ $room->capacity - $seats->count() }}</p>
                                         </div>
                                         <button type="submit" class="btn btn-primary">Thêm ghế</button>
                                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
@@ -159,6 +202,11 @@
         font-size: 12px;
         text-align: center;
         color: white;
+        cursor: pointer; /* Thêm con trỏ tay khi hover */
+        transition: transform 0.2s; /* Hiệu ứng hover */
+    }
+    .seat:hover {
+        transform: scale(1.1); /* Phóng to nhẹ khi hover */
     }
     .seat-row-label {
         background-color: #6c757d; /* Màu cho hàng (A, B, C,...) */
@@ -190,11 +238,19 @@
 </style>
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    document.querySelectorAll('.seat').forEach(seat => {
-        seat.addEventListener('click', function() {
-            if (this.dataset.seatId) {
-                alert('Ghế: ' + this.title);
+    document.addEventListener('DOMContentLoaded', function () {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+
+        document.querySelectorAll('.seat').forEach(seat => {
+            if (seat.dataset.seatId) {
+                seat.addEventListener('click', function() {
+                    window.location.href = '{{ route("admin.seats.edit", ":id") }}'.replace(':id', this.dataset.seatId);
+                });
             }
         });
     });

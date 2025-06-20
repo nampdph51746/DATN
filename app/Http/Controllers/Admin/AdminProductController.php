@@ -136,4 +136,23 @@ class AdminProductController extends Controller
 
         return redirect()->route('admin.products.index')->with('success', 'Sản phẩm đã được cập nhật thành công.');
     }
+
+    public function getVariants($id)
+    {
+        $product = Product::with('productVariants')->find($id);
+
+        if (!$product) {
+            return response()->json(['error' => 'Sản phẩm không tồn tại'], 404);
+        }
+
+        $variants = $product->productVariants->map(function ($variant) {
+            return [
+                'id' => $variant->id,
+                'sku' => $variant->sku,
+                'image_url' => $variant->image_url ?? null,
+            ];
+        });
+
+        return response()->json($variants);
+    }
 }

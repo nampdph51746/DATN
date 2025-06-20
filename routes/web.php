@@ -7,9 +7,11 @@ use App\Http\Controllers\Admin\AdminProductController;
 use App\Http\Controllers\Admin\AdminProductVariantController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\CityController;
+use App\Http\Controllers\Admin\ComboController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\MovieController;
+use App\Http\Controllers\Admin\PointController;
 use App\Http\Controllers\Admin\CinemaController;
 use App\Http\Controllers\Admin\TicketController;
 use App\Http\Controllers\Admin\BookingController;
@@ -21,10 +23,16 @@ use App\Http\Controllers\Admin\ShowtimeController;
 use App\Http\Controllers\Admin\AdminRoomController;
 use App\Http\Controllers\Admin\AdminSeatController;
 use App\Http\Controllers\Admin\PromotionController;
+use App\Http\Controllers\Admin\AdminProductController;
 use App\Http\Controllers\Admin\CustomerRankController;
+use App\Http\Controllers\Admin\PointHistoryController;
 use App\Http\Controllers\Admin\AdminSeatTypeController;
 use App\Http\Controllers\Admin\PaymentMethodController;
+use App\Http\Controllers\Admin\AdminAttributeController;
+use App\Http\Controllers\Admin\AdminAttributeValueController;
+use App\Http\Controllers\Admin\AdminProductVariantController;
 use App\Http\Controllers\Admin\CustomerRankPromotionController;
+use App\Http\Controllers\Admin\AdminProductCategoriesController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -34,6 +42,17 @@ Route::prefix('admin')->name('admin.')->group(function () {
     // Seat routes from HEAD
     Route::get('seats/edit-bulk', [AdminSeatController::class, 'editBulk'])->name('seats.editBulk');
     Route::put('seats/update-bulk', [AdminSeatController::class, 'updateBulk'])->name('seats.bulkUpdate');
+
+    Route::get('product-categories/trash', [AdminProductCategoriesController::class, 'trash'])->name('product-categories.trash');
+    Route::post('product-categories/{id}/restore', [AdminProductCategoriesController::class, 'restore'])->name('product-categories.restore');
+    Route::delete('product-categories/{id}/force-delete', [AdminProductCategoriesController::class, 'forceDelete'])->name('product-categories.forceDelete');
+    Route::resource('product-categories', AdminProductCategoriesController::class);
+
+    Route::resource('seats', AdminSeatController::class);
+    Route::resource('attributes', AdminAttributeController::class);
+    Route::resource('attribute-values', AdminAttributeValueController::class);
+    Route::resource('product-variants', AdminProductVariantController::class);
+    Route::resource('products', AdminProductController::class);
 
     Route::get('product-categories/trash', [AdminProductCategoriesController::class, 'trash'])->name('product-categories.trash');
     Route::post('product-categories/{id}/restore', [AdminProductCategoriesController::class, 'restore'])->name('product-categories.restore');
@@ -123,7 +142,7 @@ Route::prefix('admin/age-limits')->name('admin.age_limits.')->group(function () 
     Route::delete('/{id}', [AgeLimitController::class, 'destroy'])->name('destroy');
 });
 Route::get('admin/age-limits', [AgeLimitController::class, 'index'])->name('admin.age_limits.index');
-Route::delete('admin/age-limits/bulk-delete', [AgeLimitController::class, 'bulkDelete'])->name('admin.age_limits.bulkDelete');
+Route::post('admin/age-limits/bulk-delete', [AgeLimitController::class, 'bulkDelete'])->name('admin.age_limits.bulkDelete');
 
 Route::resource('admin/users', UserController::class);
 
@@ -182,3 +201,13 @@ Route::get('admin/customer_rank_promotions/{customer_rank_id}/{promotion_id}/edi
 Route::put('admin/customer_rank_promotions/{customer_rank_id}/{promotion_id}', [CustomerRankPromotionController::class, 'update'])->name('customer_rank_promotions.update');
 Route::delete('admin/customer_rank_promotions/{customer_rank_id}/{promotion_id}', [CustomerRankPromotionController::class, 'destroy'])->name('customer_rank_promotions.destroy');
 
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::resource('points', PointController::class)->only(['index', 'show']);
+    Route::resource('point_history', PointHistoryController::class)->only(['index', 'show']);
+});
+
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::resource('combos', ComboController::class)->names('combos');
+
+    Route::get('products/{id}/variants', [AdminProductController::class, 'getVariants'])->name('products.variants');
+});
