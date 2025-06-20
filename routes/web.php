@@ -1,10 +1,5 @@
 <?php
 
-use App\Http\Controllers\Admin\AdminAttributeController;
-use App\Http\Controllers\Admin\AdminAttributeValueController;
-use App\Http\Controllers\Admin\AdminProductCategoriesController;
-use App\Http\Controllers\Admin\AdminProductController;
-use App\Http\Controllers\Admin\AdminProductVariantController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\CityController;
 use App\Http\Controllers\Admin\ComboController;

@@ -1,10 +1,6 @@
 @extends('layouts.admin.admin')
 
 @section('content')
-<<<<<<< HEAD
-
-=======
->>>>>>> main
 <div class="container-xxl">
     @include('admin.partials.notifications')
 
@@ -43,11 +39,7 @@
                     <div class="card-body">
                         <div class="dropzone" id="myAwesomeDropzone" data-plugin="dropzone" data-previews-container="#file-previews" data-upload-preview-template="#uploadPreviewTemplate">
                             <div class="fallback">
-<<<<<<< HEAD
-                                <input name="image" type="file" id="imageInput" onchange="previewImage(event)" />
-=======
                                 <input name="image_url" type="file" id="imageInput" onchange="previewImage(event)" />
->>>>>>> main
                             </div>
                             <div class="dz-message needsclick">
                                 <i class="bx bx-cloud-upload fs-48 text-primary"></i>
@@ -57,11 +49,7 @@
                                 </span>
                             </div>
                         </div>
-<<<<<<< HEAD
-                        @error('image')
-=======
                         @error('image_url')
->>>>>>> main
                             <span class="text-danger">{{ $message }}</span>
                         @enderror
                     </div>
@@ -116,40 +104,24 @@
                         <div class="row">
                             <div class="col-lg-6">
                                 <div class="mb-3">
-<<<<<<< HEAD
-                                    <label for="price" class="form-label">Giá</label>
-                                    <input type="number" id="price" name="price" class="form-control" value="{{ old('price') }}" placeholder="Giá biến thể (VNĐ)" step="0.01">
-                                    @error('price')
-=======
                                     <label for="default_price" class="form-label">Giá mặc định</label>
                                     <input type="number" id="default_price" name="default_price" class="form-control" value="{{ old('default_price') }}" placeholder="Giá mặc định (VNĐ)" step="0.01">
                                     @error('default_price')
->>>>>>> main
                                         <span class="text-danger">{{ $message }}</span>
                                     @enderror
                                 </div>
                             </div>
                             <div class="col-lg-6">
                                 <div class="mb-3">
-<<<<<<< HEAD
-                                    <label for="stock" class="form-label">Tồn kho</label>
-                                    <input type="number" id="stock" name="stock_quantity" class="form-control" value="{{ old('stock_quantity') }}" placeholder="Số lượng tồn kho">
-                                    @error('stock_quantity')
-=======
                                     <label for="default_stock" class="form-label">Tồn kho mặc định</label>
                                     <input type="number" id="default_stock" name="default_stock_quantity" class="form-control" value="{{ old('default_stock_quantity') }}" placeholder="Số lượng tồn kho mặc định">
                                     @error('default_stock_quantity')
->>>>>>> main
                                         <span class="text-danger">{{ $message }}</span>
                                     @enderror
                                 </div>
                             </div>
                         </div>
                         <label class="form-label mb-2">Thuộc tính & Giá trị thuộc tính</label>
-<<<<<<< HEAD
-                        {{-- Hiển thị lỗi trùng biến thể --}}
-=======
->>>>>>> main
                         @if ($errors->has('attribute_values'))
                             <div class="alert alert-danger py-2 mb-2">
                                 {{ $errors->first('attribute_values') }}
@@ -170,22 +142,14 @@
                                             <select class="form-control attribute-select" name="attributes[]" onchange="loadAttributeValues(this)">
                                                 <option value="">Chọn thuộc tính</option>
                                                 @foreach ($attributes as $attribute)
-<<<<<<< HEAD
-                                                    <option value="{{ $attribute->id }}" data-values='@json($attribute->attributeValues)'>
-=======
                                                     <option value="{{ $attribute->id }}" data-values='@json($attribute->attributeValues->map(fn($value) => ['id' => $value->id, 'value' => $value->value]))'>
->>>>>>> main
                                                         {{ $attribute->name }}
                                                     </option>
                                                 @endforeach
                                             </select>
                                         </td>
                                         <td>
-<<<<<<< HEAD
-                                            <select class="form-control value-select" name="attribute_values[]" required>
-=======
                                             <select class="form-control value-select" multiple name="attribute_values[0][]" required>
->>>>>>> main
                                                 <option value="">Chọn giá trị thuộc tính</option>
                                             </select>
                                         </td>
@@ -203,8 +167,6 @@
                         </button>
                     </div>
                 </div>
-<<<<<<< HEAD
-=======
                 <div class="card">
                     <div class="card-header">
                         <h4 class="card-title">
@@ -230,7 +192,6 @@
                         </div>
                     </div>
                 </div>
->>>>>>> main
             </form>
         </div>
     </div>
@@ -262,16 +223,6 @@
         valueSelect.innerHTML = '<option value="">Chọn giá trị thuộc tính</option>';
         const selectedOption = select.options[select.selectedIndex];
         if (selectedOption && selectedOption.value) {
-<<<<<<< HEAD
-            const values = JSON.parse(selectedOption.getAttribute('data-values') || '[]');
-            values.forEach(value => {
-                const option = document.createElement('option');
-                option.value = value.id;
-                option.text = value.value;
-                valueSelect.appendChild(option);
-            });
-        }
-=======
             try {
                 const values = JSON.parse(selectedOption.getAttribute('data-values') || '[]');
                 values.forEach(value => {
@@ -285,22 +236,16 @@
             }
         }
         updateVariantsPreview();
->>>>>>> main
     }
 
     function addAttributeRow() {
         const container = document.getElementById('attributes-container');
-<<<<<<< HEAD
-        const firstRow = container.querySelector('.attribute-row');
-        const newRow = firstRow.cloneNode(true);
-=======
         const firstRows = container.querySelectorAll('.attribute-row');
         const newRow = firstRows[0].cloneNode(true);
 
         // Cập nhật name cho select giá trị thuộc tính
         const index = firstRows.length;
         newRow.querySelector('.value-select').name = `attribute_values[${index}][]`;
->>>>>>> main
 
         // Reset selects
         newRow.querySelector('.attribute-select').selectedIndex = 0;
@@ -312,20 +257,14 @@
 
         container.appendChild(newRow);
         updateRemoveButtons();
-<<<<<<< HEAD
-=======
         updateVariantsPreview();
->>>>>>> main
     }
 
     function removeAttributeRow(btn) {
         const row = btn.closest('.attribute-row');
         row.remove();
         updateRemoveButtons();
-<<<<<<< HEAD
-=======
         updateVariantsPreview();
->>>>>>> main
     }
 
     function updateRemoveButtons() {
@@ -333,8 +272,6 @@
         rows.forEach((row, idx) => {
             const btn = row.querySelector('.btn-remove-attribute');
             btn.style.display = rows.length > 1 ? 'inline-block' : 'none';
-<<<<<<< HEAD
-=======
             row.querySelector('.value-select').name = `attribute_values[${idx}][]`;
         });
     }
@@ -411,7 +348,6 @@
                 input.value = val.id;
                 variantsBody.appendChild(input);
             });
->>>>>>> main
         });
     }
 
@@ -445,12 +381,6 @@
                 }
             };
         }
-<<<<<<< HEAD
-    });
-</script>
-
-@endsection
-=======
 
         // Gắn sự kiện cho các select giá trị thuộc tính
         document.querySelectorAll('.value-select').forEach(select => {
@@ -467,4 +397,3 @@
 </script>
 
 @endsection
->>>>>>> main
