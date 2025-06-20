@@ -48,12 +48,22 @@ class AgeLimitController extends Controller
         return redirect()->route('admin.age_limits.index')->with('success', 'Cập nhật thành công!');
     }
 
-    public function bulkDelete(Request $request)
-    {
-        $ids = explode(',', $request->ids);
-        AgeLimit::whereIn('id', $ids)->delete();
-        return redirect()->route('admin.age_limits.index')->with('success', 'Đã xóa các giới hạn độ tuổi đã chọn!');
+public function bulkDelete(Request $request)
+{
+    $ids = collect(explode(',', $request->ids))
+        ->filter() // loại bỏ các phần tử rỗng hoặc null
+        ->map(fn($id) => (int)$id) // ép kiểu int (an toàn hơn)
+        ->all();
+
+    if (empty($ids)) {
+        return redirect()->route('admin.age_limits.index')->with('error', 'Không có giới hạn độ tuổi nào được chọn để xóa.');
     }
+
+    AgeLimit::whereIn('id', $ids)->delete();
+
+    return redirect()->route('admin.age_limits.index')->with('success', 'Đã xóa các giới hạn độ tuổi đã chọn!');
+}
+
 
     public function destroy($id)
     {
