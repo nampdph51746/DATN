@@ -46,6 +46,13 @@ class StorePromotionsRequest extends FormRequest
             'start_date.required' => 'Ngày bắt đầu là bắt buộc.',
             'end_date.required' => 'Ngày kết thúc là bắt buộc.',
             'end_date.after_or_equal' => 'Ngày kết thúc phải sau hoặc bằng ngày bắt đầu.',
+            'discount_value.required' => 'Giá trị giảm giá là bắt buộc.',
+            'discount_value.numeric' => 'Giá trị giảm giá phải là một số.',
+            'discount_value.min' => 'Giá trị giảm giá phải lớn hơn hoặc bằng 0.',
+            'quantity.integer' => 'Số lượng phải là một số nguyên.',
+            'quantity.min' => 'Số lượng phải lớn hơn hoặc bằng 0.',
+            'usage_limit_per_user.integer' => 'Giới hạn sử dụng cho mỗi người dùng phải là một số nguyên.',
+            'usage_limit_per_user.min' => 'Giới hạn sử dụng cho mỗi người dùng phải lớn hơn hoặc bằng 0.',
         ];
     }
 }

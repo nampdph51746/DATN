@@ -27,8 +27,8 @@ use App\Http\Controllers\Admin\AdminAttributeController;
 use App\Http\Controllers\Admin\AdminAttributeValueController;
 use App\Http\Controllers\Admin\AdminProductVariantController;
 use App\Http\Controllers\Admin\CustomerRankPromotionController;
-
 use App\Http\Controllers\Admin\AdminProductCategoriesController;
+use App\Http\Controllers\Client\ClientPaymentController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -200,3 +200,4 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
     Route::get('products/{id}/variants', [AdminProductController::class, 'getVariants'])->name('products.variants');
 });
+
