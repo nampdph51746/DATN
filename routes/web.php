@@ -30,7 +30,19 @@ use App\Http\Controllers\Admin\CustomerRankPromotionController;
 use App\Http\Controllers\Admin\AdminProductCategoriesController;
 
 Route::get('/', function () {
-    return view('welcome');
+    return view('client.home');
+});
+
+Route::get('/movies', function () {
+    return view('client.movies');
+});
+
+Route::get('/sign_in', function () {
+    return view('client.sign_in');
+});
+
+Route::get('/ticket_booking', function () {
+    return view('client.ticket_booking');
 });
 
 Route::prefix('admin')->name('admin.')->group(function () {
@@ -162,8 +174,8 @@ Route::prefix('roles')->name('roles.')->group(function () {
 Route::resource('admin/roles', RoleController::class);
 
 Route::prefix('admin/payment_methods')->group(function () {
-    Route::get('/', [PaymentMethodController::class, 'index'])->name('payment_methods.index');    // danh sách + tìm kiếm lọc
-    Route::get('/{id}', [PaymentMethodController::class, 'show'])->name('payment_methods.show');   // xem chi tiết
+    Route::get('/', [PaymentMethodController::class, 'index'])->name('payment_methods.index');    
+    Route::get('/{id}', [PaymentMethodController::class, 'show'])->name('payment_methods.show');   
     Route::get('/{paymentMethod}/edit-status', [PaymentMethodController::class, 'editStatus'])->name('payment_methods.editStatus');
     Route::put('/{paymentMethod}/update-status', [PaymentMethodController::class, 'updateStatus'])->name('payment_methods.updateStatus');
 });
@@ -206,3 +218,4 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
     Route::get('products/{id}/variants', [AdminProductController::class, 'getVariants'])->name('products.variants');
 });
+

@@ -33,7 +33,7 @@ class AgeLimitController extends Controller
     public function edit($id)
     {
         $ageLimit = AgeLimit::findOrFail($id);
-        return view('admin.ageLimit.edit', compact('ageLimit'));
+        return view('admin.movies.ageLimit.edit', compact('ageLimit'));
     }
 
     public function update(Request $request, $id)
@@ -48,22 +48,12 @@ class AgeLimitController extends Controller
         return redirect()->route('admin.age_limits.index')->with('success', 'Cập nhật thành công!');
     }
 
-public function bulkDelete(Request $request)
-{
-    $ids = collect(explode(',', $request->ids))
-        ->filter() // loại bỏ các phần tử rỗng hoặc null
-        ->map(fn($id) => (int)$id) // ép kiểu int (an toàn hơn)
-        ->all();
-
-    if (empty($ids)) {
-        return redirect()->route('admin.age_limits.index')->with('error', 'Không có giới hạn độ tuổi nào được chọn để xóa.');
+    public function bulkDelete(Request $request)
+    {
+        $ids = explode(',', $request->ids);
+        AgeLimit::whereIn('id', $ids)->delete();
+        return redirect()->route('admin.age_limits.index')->with('success', 'Đã xóa các giới hạn độ tuổi đã chọn!');
     }
-
-    AgeLimit::whereIn('id', $ids)->delete();
-
-    return redirect()->route('admin.age_limits.index')->with('success', 'Đã xóa các giới hạn độ tuổi đã chọn!');
-}
-
 
     public function destroy($id)
     {

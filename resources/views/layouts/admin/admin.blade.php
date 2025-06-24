@@ -31,7 +31,7 @@
      <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
 </head>
 
-    <style>
+<style>
     /* Thêm lớp tùy chỉnh để đảm bảo main-nav có thể cuộn và không bị giới hạn chiều cao */
     .main-nav-scrollable {
         overflow-y: auto !important;
