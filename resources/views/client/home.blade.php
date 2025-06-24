@@ -112,21 +112,16 @@
 						</div>
 					</div>
 				</div>
-				<div class="w3l-populohny-grids">
+				<div class="w3l-populohny-grids" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;">
 					<div class="item vhny-grid">
 						<div class="box16">
 							<a href="movies.html">
 								<figure>
-									<img class="img-fluid" src="client_assets/assets/images/wednesday.jpeg" alt="">
+									<img class="img-fluid" src="client_assets/assets/images/wednesday.jpeg" alt="" style="width: 100%; height: auto;">
 								</figure>
 								<div class="box-content">
 									<h3 class="title">A Wednesday</h3>
-									<h4> <span class="post"><span class="fa fa-clock-o"> </span> 1 Hr 4min
-
-										</span>
-
-										<span class="post fa fa-heart text-right"></span>
-									</h4>
+									<h4> <span class="post"><span class="fa fa-clock-o"> </span> 1 Hr 4min</span><span class="post fa fa-heart text-right"></span></h4>
 								</div>
 								<span class="fa fa-play video-icon" aria-hidden="true"></span>
 							</a>
@@ -136,16 +131,11 @@
 						<div class="box16">
 							<a href="movies.html">
 								<figure>
-									<img class="img-fluid" src="client_assets/assets/images/commando2.jpeg" alt="">
+									<img class="img-fluid" src="client_assets/assets/images/commando2.jpeg" alt="" style="width: 100%; height: auto;">
 								</figure>
 								<div class="box-content">
 									<h3 class="title">Commando-3</h3>
-									<h4> <span class="post"><span class="fa fa-clock-o"> </span> 1 Hr 4min
-
-										</span>
-
-										<span class="post fa fa-heart text-right"></span>
-									</h4>
+									<h4> <span class="post"><span class="fa fa-clock-o"> </span> 1 Hr 4min</span><span class="post fa fa-heart text-right"></span></h4>
 								</div>
 								<span class="fa fa-play video-icon" aria-hidden="true"></span>
 							</a>
@@ -155,16 +145,11 @@
 						<div class="box16">
 							<a href="movies.html">
 								<figure>
-									<img class="img-fluid" src="client_assets/assets/images/gujju2.jpeg" alt="">
+									<img class="img-fluid" src="client_assets/assets/images/gujju2.jpeg" alt="" style="width: 100%; height: auto;">
 								</figure>
 								<div class="box-content">
 									<h3 class="title">Gujjubhai Most Wanted</h3>
-									<h4> <span class="post"><span class="fa fa-clock-o"> </span> 1 Hr 4min
-
-										</span>
-
-										<span class="post fa fa-heart text-right"></span>
-									</h4>
+									<h4> <span class="post"><span class="fa fa-clock-o"> </span> 1 Hr 4min</span><span class="post fa fa-heart text-right"></span></h4>
 								</div>
 								<span class="fa fa-play video-icon" aria-hidden="true"></span>
 							</a>
@@ -174,16 +159,11 @@
 						<div class="box16">
 							<a href="movies.html">
 								<figure>
-									<img class="img-fluid" src="client_assets/assets/images/avtar-2.jpeg" alt="">
+									<img class="img-fluid" src="client_assets/assets/images/avtar-2.jpeg" alt="" style="width: 100%; height: auto;">
 								</figure>
 								<div class="box-content">
 									<h3 class="title">Avatar</h3>
-									<h4> <span class="post"><span class="fa fa-clock-o"> </span> 1 Hr 4min
-
-										</span>
-
-										<span class="post fa fa-heart text-right"></span>
-									</h4>
+									<h4> <span class="post"><span class="fa fa-clock-o"> </span> 1 Hr 4min</span><span class="post fa fa-heart text-right"></span></h4>
 								</div>
 								<span class="fa fa-play video-icon" aria-hidden="true"></span>
 							</a>
@@ -218,12 +198,7 @@
 									<img class="img-fluid" src="client_assets/assets/images/n1.jpg" alt="">
 								</figure>
 								<div class="box-content">
-									<h4> <span class="post"><span class="fa fa-clock-o"> </span> 2 Hr 4min
-
-										</span>
-
-										<span class="post fa fa-heart text-right"></span>
-									</h4>
+									<h4> <span class="post"><span class="fa fa-clock-o"> </span> 2 Hr 4min</span><span class="post fa fa-heart text-right"></span></h4>
 								</div>
 								<span class="fa fa-play video-icon" aria-hidden="true"></span>
 							</a>
@@ -233,7 +208,6 @@
 						<div class="button-center text-center mt-4">
 							<a href="movies.html" class="btn watch-button">Watch now</a>
 						</div>
-
 					</div>
 					<div class="item vhny-grid">
 						<div class="box16 mb-0">
@@ -242,13 +216,7 @@
 									<img class="img-fluid" src="client_assets/assets/images/n2.jpg" alt="">
 								</figure>
 								<div class="box-content">
-
-									<h4> <span class="post"><span class="fa fa-clock-o"> </span> 2 Hr 4min
-
-										</span>
-
-										<span class="post fa fa-heart text-right"></span>
-									</h4>
+									<h4> <span class="post"><span class="fa fa-clock-o"> </span> 2 Hr 4min</span><span class="post fa fa-heart text-right"></span></h4>
 								</div>
 								<span class="fa fa-play video-icon" aria-hidden="true"></span>
 							</a>
@@ -266,13 +234,7 @@
 									<img class="img-fluid" src="client_assets/assets/images/n3.jpg" alt="">
 								</figure>
 								<div class="box-content">
-
-									<h4> <span class="post"><span class="fa fa-clock-o"> </span> 2 Hr 4min
-
-										</span>
-
-										<span class="post fa fa-heart text-right"></span>
-									</h4>
+									<h4> <span class="post"><span class="fa fa-clock-o"> </span> 2 Hr 4min</span><span class="post fa fa-heart text-right"></span></h4>
 								</div>
 								<span class="fa fa-play video-icon" aria-hidden="true"></span>
 							</a>
@@ -290,13 +252,7 @@
 									<img class="img-fluid" src="client_assets/assets/images/n4.jpg" alt="">
 								</figure>
 								<div class="box-content">
-
-									<h4> <span class="post"><span class="fa fa-clock-o"> </span> 2 Hr 4min
-
-										</span>
-
-										<span class="post fa fa-heart text-right"></span>
-									</h4>
+									<h4> <span class="post"><span class="fa fa-clock-o"> </span> 2 Hr 4min</span><span class="post fa fa-heart text-right"></span></h4>
 								</div>
 								<span class="fa fa-play video-icon" aria-hidden="true"></span>
 							</a>
@@ -306,7 +262,6 @@
 						<div class="button-center text-center mt-4">
 							<a href="movies.html" class="btn watch-button">Watch now</a>
 						</div>
-
 					</div>
 					<div class="item vhny-grid">
 						<div class="box16 mb-0">
@@ -315,13 +270,7 @@
 									<img class="img-fluid" src="client_assets/assets/images/n5.jpg" alt="">
 								</figure>
 								<div class="box-content">
-
-									<h4> <span class="post"><span class="fa fa-clock-o"> </span> 2 Hr 4min
-
-										</span>
-
-										<span class="post fa fa-heart text-right"></span>
-									</h4>
+									<h4> <span class="post"><span class="fa fa-clock-o"> </span> 2 Hr 4min</span><span class="post fa fa-heart text-right"></span></h4>
 								</div>
 								<span class="fa fa-play video-icon" aria-hidden="true"></span>
 							</a>
@@ -339,13 +288,7 @@
 									<img class="img-fluid" src="client_assets/assets/images/n6.jpg" alt="">
 								</figure>
 								<div class="box-content">
-
-									<h4> <span class="post"><span class="fa fa-clock-o"> </span> 2 Hr 4min
-
-										</span>
-
-										<span class="post fa fa-heart text-right"></span>
-									</h4>
+									<h4> <span class="post"><span class="fa fa-clock-o"> </span> 2 Hr 4min</span><span class="post fa fa-heart text-right"></span></h4>
 								</div>
 								<span class="fa fa-play video-icon" aria-hidden="true"></span>
 							</a>
@@ -358,7 +301,6 @@
 					</div>
 				</div>
 			</div>
-
 		</div>
 	</section>
 
