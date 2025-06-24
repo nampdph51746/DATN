@@ -180,6 +180,19 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="col-lg-6">
+                            <div class="mb-3">
+                                <label for="genre_ids" class="form-label">Thể loại</label>
+                                <select name="genre_ids[]" id="genre_ids" class="form-control select2" multiple required>
+                                    @foreach ($genres as $genre)
+                                        <option value="{{ $genre->id }}" {{ in_array($genre->id, old('genre_ids', [])) ? 'selected' : '' }}>{{ $genre->name }}</option>
+                                    @endforeach
+                                </select>
+                                @error('genre_ids')
+                                    <span class="text-danger">{{ $message }}</span>
+                                @enderror
+                            </div>
+                        </div>
                         <div class="row">
                             <div class="col-lg-6">
                                 <div class="mb-3">

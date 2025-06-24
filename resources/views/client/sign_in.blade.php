@@ -1,4 +1,6 @@
 @extends('layouts.client.client')
+<!-- ..............Sign-in............... -->
+<link rel="stylesheet" type="text/css" href="client_assets/assets/css/sign-in.css">
 @section('content')
     <div class="container_signup_signin" id="container_signup_signin">
         <div class="form-container sign-up-container">

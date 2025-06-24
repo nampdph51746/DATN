@@ -14,10 +14,6 @@
 	<link rel="stylesheet" type="text/css"
 	href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css">
 
-	<!-- ..............Sign-in............... -->
-	<link rel="stylesheet" type="text/css" href="client_assets/assets/css/sign-in.css">
-
-
 	<!-- ..............Booking............... -->
   	<link rel="stylesheet" href="https://npmcdn.com/flickity@2/dist/flickity.css">
   	<link rel="stylesheet" type="text/css" href="client_assets/assets/css/progress.css">

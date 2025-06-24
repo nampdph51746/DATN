@@ -26,25 +26,35 @@
                         <div class="dropdown-menu dropdown-menu-end">
                             <!-- Lọc theo trạng thái -->
                             <h6 class="dropdown-header">Trạng thái</h6>
-                            <a href="{{ route('admin.movies.index', array_filter(['query' => request('query'), 'country_id' => request('country_id'), 'age_limit_id' => request('age_limit_id'), 'release_date' => request('release_date'), 'end_date' => request('end_date')])) }}" class="dropdown-item {{ !request('status') || request('status') == 'all' ? 'active' : '' }}">Tất cả</a>
-                            @foreach (['active', 'inactive', 'upcoming', 'ended'] as $status)
-                                <a href="{{ route('admin.movies.index', array_filter(['status' => $status, 'query' => request('query'), 'country_id' => request('country_id'), 'age_limit_id' => request('age_limit_id'), 'release_date' => request('release_date'), 'end_date' => request('end_date')])) }}" class="dropdown-item {{ request('status') == $status ? 'active' : '' }}">{{ ucfirst($status) }}</a>
+                            <a href="{{ route('admin.movies.index', array_filter(['query' => request('query'), 'country_id' => request('country_id'), 'age_limit_id' => request('age_limit_id'), 'genre_id' => request('genre_id'), 'release_date' => request('release_date'), 'end_date' => request('end_date')])) }}" class="dropdown-item {{ !request('status') || request('status') == 'all' ? 'active' : '' }}">Tất cả</a>
+                            @foreach (['showing', 'upcoming', 'ended'] as $status)
+                                <a href="{{ route('admin.movies.index', array_filter(['status' => $status, 'query' => request('query'), 'country_id' => request('country_id'), 'age_limit_id' => request('age_limit_id'), 'genre_id' => request('genre_id'), 'release_date' => request('release_date'), 'end_date' => request('end_date')])) }}" class="dropdown-item {{ request('status') == $status ? 'active' : '' }}">
+                                    {{ $status == 'showing' ? 'Đang chiếu' : ($status == 'upcoming' ? 'Sắp chiếu' : 'Kết thúc') }}
+                                </a>
                             @endforeach
 
                             <!-- Lọc theo quốc gia -->
                             <div class="dropdown-divider"></div>
                             <h6 class="dropdown-header">Quốc gia</h6>
-                            <a href="{{ route('admin.movies.index', array_filter(['query' => request('query'), 'status' => request('status'), 'age_limit_id' => request('age_limit_id'), 'release_date' => request('release_date'), 'end_date' => request('end_date')])) }}" class="dropdown-item {{ !request('country_id') ? 'active' : '' }}">Tất cả</a>
+                            <a href="{{ route('admin.movies.index', array_filter(['query' => request('query'), 'status' => request('status'), 'age_limit_id' => request('age_limit_id'), 'genre_id' => request('genre_id'), 'release_date' => request('release_date'), 'end_date' => request('end_date')])) }}" class="dropdown-item {{ !request('country_id') ? 'active' : '' }}">Tất cả</a>
                             @foreach ($countries as $country)
-                                <a href="{{ route('admin.movies.index', array_filter(['country_id' => $country->id, 'query' => request('query'), 'status' => request('status'), 'age_limit_id' => request('age_limit_id'), 'release_date' => request('release_date'), 'end_date' => request('end_date')])) }}" class="dropdown-item {{ request('country_id') == $country->id ? 'active' : '' }}">{{ $country->name }}</a>
+                                <a href="{{ route('admin.movies.index', array_filter(['country_id' => $country->id, 'query' => request('query'), 'status' => request('status'), 'age_limit_id' => request('age_limit_id'), 'genre_id' => request('genre_id'), 'release_date' => request('release_date'), 'end_date' => request('end_date')])) }}" class="dropdown-item {{ request('country_id') == $country->id ? 'active' : '' }}">{{ $country->name }}</a>
                             @endforeach
 
                             <!-- Lọc theo giới hạn độ tuổi -->
                             <div class="dropdown-divider"></div>
                             <h6 class="dropdown-header">Giới hạn độ tuổi</h6>
-                            <a href="{{ route('admin.movies.index', array_filter(['query' => request('query'), 'status' => request('status'), 'country_id' => request('country_id'), 'release_date' => request('release_date'), 'end_date' => request('end_date')])) }}" class="dropdown-item {{ !request('age_limit_id') ? 'active' : '' }}">Tất cả</a>
+                            <a href="{{ route('admin.movies.index', array_filter(['query' => request('query'), 'status' => request('status'), 'country_id' => request('country_id'), 'genre_id' => request('genre_id'), 'release_date' => request('release_date'), 'end_date' => request('end_date')])) }}" class="dropdown-item {{ !request('age_limit_id') ? 'active' : '' }}">Tất cả</a>
                             @foreach ($ageLimits as $ageLimit)
-                                <a href="{{ route('admin.movies.index', array_filter(['age_limit_id' => $ageLimit->id, 'query' => request('query'), 'status' => request('status'), 'country_id' => request('country_id'), 'release_date' => request('release_date'), 'end_date' => request('end_date')])) }}" class="dropdown-item {{ request('age_limit_id') == $ageLimit->id ? 'active' : '' }}">{{ $ageLimit->name ?? $ageLimit->label }}</a>
+                                <a href="{{ route('admin.movies.index', array_filter(['age_limit_id' => $ageLimit->id, 'query' => request('query'), 'status' => request('status'), 'country_id' => request('country_id'), 'genre_id' => request('genre_id'), 'release_date' => request('release_date'), 'end_date' => request('end_date')])) }}" class="dropdown-item {{ request('age_limit_id') == $ageLimit->id ? 'active' : '' }}">{{ $ageLimit->name ?? $ageLimit->label }}</a>
+                            @endforeach
+
+                            <!-- Lọc theo thể loại -->
+                            <div class="dropdown-divider"></div>
+                            <h6 class="dropdown-header">Thể loại</h6>
+                            <a href="{{ route('admin.movies.index', array_filter(['query' => request('query'), 'status' => request('status'), 'country_id' => request('country_id'), 'age_limit_id' => request('age_limit_id'), 'release_date' => request('release_date'), 'end_date' => request('end_date')])) }}" class="dropdown-item {{ !request('genre_id') ? 'active' : '' }}">Tất cả</a>
+                            @foreach ($genres as $genre)
+                                <a href="{{ route('admin.movies.index', array_filter(['genre_id' => $genre->id, 'query' => request('query'), 'status' => request('status'), 'country_id' => request('country_id'), 'age_limit_id' => request('age_limit_id'), 'release_date' => request('release_date'), 'end_date' => request('end_date')])) }}" class="dropdown-item {{ request('genre_id') == $genre->id ? 'active' : '' }}">{{ $genre->name }}</a>
                             @endforeach
                         </div>
                     </div>
@@ -57,6 +67,7 @@
                                     <th>ID</th>
                                     <th>Tên phim</th>
                                     <th>Đạo diễn</th>
+                                    <th>Thể loại</th>
                                     <th>Thời lượng (phút)</th>
                                     <th>Ngày phát hành</th>
                                     <th>Ngày kết thúc</th>
@@ -74,6 +85,7 @@
                                         <td>{{ $movie->id }}</td>
                                         <td>{{ $movie->name }}</td>
                                         <td>{{ $movie->director ?? 'N/A' }}</td>
+                                        <td>{{ $movie->genres->pluck('name')->join(', ') ?: 'N/A' }}</td>
                                         <td>{{ $movie->duration_minutes }}</td>
                                         <td>{{ $movie->release_date->format('d/m/Y') }}</td>
                                         <td>{{ $movie->end_date?->format('d/m/Y') ?? 'N/A' }}</td>
@@ -83,15 +95,15 @@
                                         <td>
                                             @php
                                                 $statusColors = [
-                                                    'active' => 'bg-success',
-                                                    'inactive' => 'bg-secondary',
+                                                    'showing' => 'bg-success',
                                                     'upcoming' => 'bg-warning',
                                                     'ended' => 'bg-danger',
                                                 ];
                                                 $statusValue = is_object($movie->status) ? $movie->status->value : $movie->status;
+                                                $statusLabel = $statusValue == 'showing' ? 'Đang chiếu' : ($statusValue == 'upcoming' ? 'Sắp chiếu' : 'Kết thúc');
                                             @endphp
                                             <span class="badge {{ $statusColors[$statusValue] ?? 'bg-secondary' }}">
-                                                {{ ucfirst($statusValue) }}
+                                                {{ $statusLabel }}
                                             </span>
                                         </td>
                                         <td>{{ $movie->created_at->format('d/m/Y H:i') }}</td>
@@ -113,7 +125,7 @@
                 </div>
                 <div class="card-footer border-top">
                     <div class="d-flex justify-content-end">
-                        {{ $movies->appends(['query' => request('query'), 'status' => request('status'), 'country_id' => request('country_id'), 'age_limit_id' => request('age_limit_id'), 'release_date' => request('release_date'), 'end_date' => request('end_date')])->links('pagination::bootstrap-5') }}
+                        {{ $movies->appends(['query' => request('query'), 'status' => request('status'), 'country_id' => request('country_id'), 'age_limit_id' => request('age_limit_id'), 'genre_id' => request('genre_id'), 'release_date' => request('release_date'), 'end_date' => request('end_date')])->links('pagination::bootstrap-5') }}
                     </div>
                 </div>
             </div>

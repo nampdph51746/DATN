@@ -24,7 +24,7 @@
                                 <div class="box16">
                                     <a href="{{ route('movie.detail', $movie->id) }}"> <!-- Giả sử có route chi tiết phim -->
                                         <figure>
-                                            <img class="img-fluid" src="{{ asset('assets/images/' . $movie->image) }}" alt="{{ $movie->title }}">
+                                            <img class="img-fluid" src="{{ asset('client_assets/assets/images/' . $movie->image) }}" alt="{{ $movie->title }}">
                                         </figure>
                                         <div class="box-content">
                                             <h3 class="title">{{ $movie->title }}</h3>
@@ -65,7 +65,7 @@
                     <div class="item vhny-grid">
                         <div class="box16 mb-0">
                             <figure>
-                                <img class="img-fluid" src="assets/images/commando3.png" alt="">
+                                <img class="img-fluid" src="client_assets/assets/images/commando3.png" alt="">
                             </figure>
                             <a href=".Commando3" data-toggle="modal">
                                 <div class="box-content">
@@ -89,7 +89,7 @@
                                             </button>
                                         </div>
                                         <div class="modal-body" id="dynamic-content">
-                                            <img src="assets/images/commando3.png" class="img-fluid modalimg" alt="" />
+                                            <img src="client_assets/assets/images/commando3.png" class="img-fluid modalimg" alt="" />
                                             <p>
                                             <h3>Release Date&nbsp;:29 November 2019</h3>
                                             <h3>Venue&nbsp;:Cg Road </h3>
@@ -138,7 +138,7 @@
                     <div class="item vhny-grid">
                         <div class="box16 mb-0">
                             <figure>
-                                <img class="img-fluid" src="assets/images/m1.jpg" alt="">
+                                <img class="img-fluid" src="client_assets/assets/images/m1.jpg" alt="">
                             </figure>
                             <a href=".Rocketman" data-toggle="modal">
                                 <div class="box-content">
@@ -162,7 +162,7 @@
                                             </button>
                                         </div>
                                         <div class="modal-body" id="dynamic-content">
-                                            <img src="assets/images/m1.jpg" class="img-fluid modalimg" alt="" />
+                                            <img src="client_assets/assets/images/m1.jpg" class="img-fluid modalimg" alt="" />
                                             <p>
                                             <h3>Release Date&nbsp;:31 May 2019 </h3>
                                             <h3>Venue&nbsp;:Cg Road </h3>
@@ -213,7 +213,7 @@
                     <div class="item vhny-grid">
                         <div class="box16 mb-0">
                             <figure>
-                                <img class="img-fluid" src="assets/images/tzp.png" alt="">
+                                <img class="img-fluid" src="client_assets/assets/images/tzp.png" alt="">
                             </figure>
                             <a href=".tzp" data-toggle="modal">
                                 <div class="box-content">
@@ -237,7 +237,7 @@
                                             </button>
                                         </div>
                                         <div class="modal-body" id="dynamic-content">
-                                            <img src="assets/images/tzp.png" class="img-fluid modalimg" alt="" />
+                                            <img src="client_assets/assets/images/tzp.png" class="img-fluid modalimg" alt="" />
                                             <p>
                                             <h3>Release Date&nbsp;:21 December 2007 </h3>
                                             <h3>Venue&nbsp;:Cg Road </h3>
@@ -287,7 +287,7 @@
                     <div class="item vhny-grid">
                         <div class="box16 mb-0">
                             <figure>
-                                <img class="img-fluid" src="assets/images/gk.png" alt="">
+                                <img class="img-fluid" src="client_assets/assets/images/gk.png" alt="">
                             </figure>
                             <a href=".gk" data-toggle="modal">
                                 <div class="box-content">
@@ -311,7 +311,7 @@
                                             </button>
                                         </div>
                                         <div class="modal-body" id="dynamic-content">
-                                            <img src="assets/images/gk.png" class="img-fluid modalimg" alt="" />
+                                            <img src="client_assets/assets/images/gk.png" class="img-fluid modalimg" alt="" />
                                             <p>
                                             <h3>Release Date &nbsp;: 28 February 2020</h3>
                                             <h3>Venue&nbsp;:Cg Road </h3>
@@ -374,7 +374,7 @@
                                             <div class="img-circle">
                                                 <a href="movies.html">
 
-                                                    <img src="assets/images/m6.jpg" class="img-fluid" alt="author image">
+                                                    <img src="client_assets/assets/images/m6.jpg" class="img-fluid" alt="author image">
                                                     <div class="overlay-icon">
 
                                                         <span class="fa fa-play video-icon" aria-hidden="true"></span>
@@ -402,7 +402,7 @@
                                     <div class="col-lg-4 new-relise-gd mt-lg-0 mt-0">
                                         <div class="slider-info">
                                             <div class="img-circle">
-                                                <a href="movies.html"><img src="assets/images/m1.jpg" class="img-fluid"
+                                                <a href="movies.html"><img src="client_assets/assets/images/m1.jpg" class="img-fluid"
                                                         alt="author image">
                                                     <div class="overlay-icon">
 
@@ -431,7 +431,7 @@
                                     <div class="col-lg-4 new-relise-gd mt-lg-0 mt-0">
                                         <div class="slider-info">
                                             <div class="img-circle">
-                                                <a href="movies.html"><img src="assets/images/m7.jpg" class="img-fluid"
+                                                <a href="movies.html"><img src="client_assets/assets/images/m7.jpg" class="img-fluid"
                                                         alt="author image">
                                                     <div class="overlay-icon">
 
