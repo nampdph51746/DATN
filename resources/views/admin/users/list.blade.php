@@ -100,7 +100,7 @@
                                             </td>
                                             <td>{{ $user->name }}</td>
                                             <td>{{ $user->id }}</td>
-                                            <td>{{ $user->customerRank->name }}</td>
+                                            <td>{{ $user->customerRank?->name }}</td>
                                             <td>{{ $user->role->name }}</td>
                                             <td>{{ $user->email }}</td>
                                             <td>{{ $user->address }}</td>

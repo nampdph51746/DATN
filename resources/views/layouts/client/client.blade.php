@@ -9,22 +9,22 @@
 
 	<link rel="stylesheet" href="client_assets/assets/css/style-starter.css">
 	<link href="//fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,600;0,700;1,600&display=swap"
-	rel="stylesheet">
+		rel="stylesheet">
 	<link rel="stylesheet" type="text/css" href="client_assets/assets/css/as-alert-message.min.css">
 	<link rel="stylesheet" type="text/css"
-	href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css">
+		href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css">
 
 	<!-- ..............Booking............... -->
-  	<link rel="stylesheet" href="https://npmcdn.com/flickity@2/dist/flickity.css">
-  	<link rel="stylesheet" type="text/css" href="client_assets/assets/css/progress.css">
+	<link rel="stylesheet" href="https://npmcdn.com/flickity@2/dist/flickity.css">
+	<link rel="stylesheet" type="text/css" href="client_assets/assets/css/progress.css">
 
-  	<link rel="stylesheet" type="text/css" href="client_assets/assets/css/ticket-booking.css">
+	<link rel="stylesheet" type="text/css" href="client_assets/assets/css/ticket-booking.css">
 
-  	<!-- ..............For progress-bar............... -->
-  	<link rel="stylesheet" type="text/css" href="client_assets/assets/css/e-ticket.css">
+	<!-- ..............For progress-bar............... -->
+	<link rel="stylesheet" type="text/css" href="client_assets/assets/css/e-ticket.css">
 
-  	<link rel="stylesheet" type="text/css" href="client_assets/assets/css/payment.css" />
-  	<link href="https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz:400,700" rel="stylesheet">
+	<link rel="stylesheet" type="text/css" href="client_assets/assets/css/payment.css" />
+	<link href="https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz:400,700" rel="stylesheet">
 </head>
 
 <body>
@@ -109,12 +109,39 @@
 						<!--/search-right-->
 
 					</div>
-					<div class="Login_SignUp" id="login"
-						style="font-size: 2rem ; display: inline-block; position: relative;">
-						<!-- <li class="nav-item"> -->
-						<a class="nav-link" href="sign_in.html"><i class="fa fa-user-circle-o"></i></a>
-						<!-- </li> -->
+					<div class="Login_SignUp dropdown" id="login"
+						style="font-size: 2rem; display: inline-block; position: relative;">
+						<a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
+							data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+							<i class="fa fa-user-circle-o"></i>
+						</a>
+						<div class="dropdown-menu dropdown-menu-right" aria-labelledby="userDropdown">
+						@if (Route::has('login'))
+							@auth
+								@if (Auth::user()->role->name == 'admin')
+									<a class="dropdown-item" href="{{ url('admin/users') }}">Admin Panel</a>
+								@endif
+
+								<a class="dropdown-item" href="{{ url('/profile') }}">Profile</a>
+								{{-- <a class="dropdown-item" href="{{ url('/dashboard') }}">Dashboard</a> --}}
+								<a class="dropdown-item" href="{{ route('logout') }}"
+								onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+									Logout
+								</a>
+								<form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+									@csrf
+								</form>
+							@else
+								<a class="dropdown-item" href="{{ route('login') }}">Login</a>
+								@if (Route::has('register'))
+									<a class="dropdown-item" href="{{ route('register') }}">Register</a>
+								@endif
+							@endauth
+						@endif
 					</div>
+
+
+
 				</div>
 				<!-- toggle switch for light and dark theme -->
 				<div class="mobile-position">
@@ -134,12 +161,12 @@
 		</nav>
 	</header>
 	<!-- main-slider -->
-    @yield('content')
+	@yield('content')
 </body>
 
 </html>
 <!-- responsive tabs -->
- <script type="text/javascript" src="client_assets/assets/js/as-alert-message.min.js"></script>
+<script type="text/javascript" src="client_assets/assets/js/as-alert-message.min.js"></script>
 <script src="client_assets/assets/js/jquery-1.9.1.min.js"></script>
 <script src="client_assets/assets/js/jquery-3.3.1.min.js"></script>
 <script src="client_assets/assets/js/easyResponsiveTabs.js"></script>
@@ -344,21 +371,21 @@
 <script type="text/javascript" src="client_assets/assets/js/sign-in.js"></script>
 
 <script>
-  let prevId = "1";
+	let prevId = "1";
 
-  window.onload = function () {
-    document.getElementById("screen-next-btn").disabled = true;
-  }
+	window.onload = function () {
+		document.getElementById("screen-next-btn").disabled = true;
+	}
 
-  function timeFunction() {
-    document.getElementById("screen-next-btn").disabled = false;
-  }
+	function timeFunction() {
+		document.getElementById("screen-next-btn").disabled = false;
+	}
 
-  function myFunction(id) {
-    document.getElementById(prevId).style.background = "rgb(243, 235, 235)";
-    document.getElementById(id).style.background = "#df0e62";
-    prevId = id;
-  }
+	function myFunction(id) {
+		document.getElementById(prevId).style.background = "rgb(243, 235, 235)";
+		document.getElementById(id).style.background = "#df0e62";
+		prevId = id;
+	}
 </script>
 
 <script src="https://npmcdn.com/flickity@2/dist/flickity.pkgd.js"></script>
