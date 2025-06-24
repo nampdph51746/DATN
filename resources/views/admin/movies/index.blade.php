@@ -54,17 +54,23 @@
                         </a>
                         <div class="dropdown-menu dropdown-menu-end">
                             <h6 class="dropdown-header">Trạng thái</h6>
-                            @foreach (['showing', 'upcoming', 'ended'] as $status)
-                                <a href="{{ route('admin.movies.index', ['status' => $status]) }}" class="dropdown-item {{ request('status') == $status ? 'active' : '' }}">
-                                    {{ ucfirst($status) }}
-                                </a>
+                            <a href="{{ route('admin.movies.index', array_filter(['query' => request('query'), 'country_id' => request('country_id'), 'age_limit_id' => request('age_limit_id'), 'release_date' => request('release_date'), 'end_date' => request('end_date')])) }}" class="dropdown-item {{ !request('status') || request('status') == 'all' ? 'active' : '' }}">Tất cả</a>
+                            @foreach (['active', 'inactive', 'upcoming', 'ended'] as $status)
+                                <a href="{{ route('admin.movies.index', array_filter(['status' => $status, 'query' => request('query'), 'country_id' => request('country_id'), 'age_limit_id' => request('age_limit_id'), 'release_date' => request('release_date'), 'end_date' => request('end_date')])) }}" class="dropdown-item {{ request('status') == $status ? 'active' : '' }}">{{ ucfirst($status) }}</a>
                             @endforeach
                             <div class="dropdown-divider"></div>
                             <h6 class="dropdown-header">Quốc gia</h6>
+                            <a href="{{ route('admin.movies.index', array_filter(['query' => request('query'), 'status' => request('status'), 'age_limit_id' => request('age_limit_id'), 'release_date' => request('release_date'), 'end_date' => request('end_date')])) }}" class="dropdown-item {{ !request('country_id') ? 'active' : '' }}">Tất cả</a>
                             @foreach ($countries as $country)
-                                <a href="{{ route('admin.movies.index', ['country_id' => $country->id]) }}" class="dropdown-item {{ request('country_id') == $country->id ? 'active' : '' }}">
-                                    {{ $country->name }}
-                                </a>
+                                <a href="{{ route('admin.movies.index', array_filter(['country_id' => $country->id, 'query' => request('query'), 'status' => request('status'), 'age_limit_id' => request('age_limit_id'), 'release_date' => request('release_date'), 'end_date' => request('end_date')])) }}" class="dropdown-item {{ request('country_id') == $country->id ? 'active' : '' }}">{{ $country->name }}</a>
+                            @endforeach
+
+                            <!-- Lọc theo giới hạn độ tuổi -->
+                            <div class="dropdown-divider"></div>
+                            <h6 class="dropdown-header">Giới hạn độ tuổi</h6>
+                            <a href="{{ route('admin.movies.index', array_filter(['query' => request('query'), 'status' => request('status'), 'country_id' => request('country_id'), 'release_date' => request('release_date'), 'end_date' => request('end_date')])) }}" class="dropdown-item {{ !request('age_limit_id') ? 'active' : '' }}">Tất cả</a>
+                            @foreach ($ageLimits as $ageLimit)
+                                <a href="{{ route('admin.movies.index', array_filter(['age_limit_id' => $ageLimit->id, 'query' => request('query'), 'status' => request('status'), 'country_id' => request('country_id'), 'release_date' => request('release_date'), 'end_date' => request('end_date')])) }}" class="dropdown-item {{ request('age_limit_id') == $ageLimit->id ? 'active' : '' }}">{{ $ageLimit->name ?? $ageLimit->label }}</a>
                             @endforeach
                         </div>
                     </div>
@@ -74,64 +80,44 @@
                         <table class="table align-middle mb-0 table-hover table-centered">
                             <thead class="bg-light-subtle">
                                 <tr>
-                                    <th style="width: 20px;">
-                                        <div class="form-check ms-1">
-                                            <input type="checkbox" class="form-check-input" id="checkAllMovies">
-                                        </div>
-                                    </th>
-                                    <th>Phim & Poster</th>
-                                    <th>Đạo Diễn</th>
-                                    <th>Thời Lượng</th>
-                                    <th>Ngày Phát Hành</th>
-                                    <th>Quốc Gia</th>
-                                    <th>Đánh Giá</th>
-                                    <th>Độ tuổi</th>
-                                    <th>Trạng Thái</th>
-                                    <th class="text-center" style="width: 120px;">Hành Động</th>
+                                    <th>ID</th>
+                                    <th>Tên phim</th>
+                                    <th>Đạo diễn</th>
+                                    <th>Thời lượng (phút)</th>
+                                    <th>Ngày phát hành</th>
+                                    <th>Ngày kết thúc</th>
+                                    <th>Ngôn ngữ</th>
+                                    <th>Quốc gia</th>
+                                    <th>Giới hạn tuổi</th>
+                                    <th>Trạng thái</th>
+                                    <th>Thời gian tạo</th>
+                                    <th>Hành động</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach ($movies as $index => $movie)
                                     <tr>
+                                        <td>{{ $movie->id }}</td>
+                                        <td>{{ $movie->name }}</td>
+                                        <td>{{ $movie->director ?? 'N/A' }}</td>
+                                        <td>{{ $movie->duration_minutes }}</td>
+                                        <td>{{ $movie->release_date->format('d/m/Y') }}</td>
+                                        <td>{{ $movie->end_date?->format('d/m/Y') ?? 'N/A' }}</td>
+                                        <td>{{ $movie->language ?? 'N/A' }}</td>
+                                        <td>{{ $movie->country?->name ?? 'N/A' }}</td>
+                                        <td>{{ $movie->ageLimit?->name ?? $movie->ageLimit?->label ?? 'N/A' }}</td>
                                         <td>
-                                            <div class="form-check ms-1">
-                                                <input type="checkbox" class="form-check-input movie-checkbox" value="{{ $movie->id }}">
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div class="d-flex align-items-center gap-2">
-                                                <div class="rounded bg-light avatar-md d-flex align-items-center justify-content-center">
-                                                    <a href="{{ route('admin.movies.show', $movie->id) }}">
-                                                        <img
-                                                            src="{{ $movie->poster_url ? asset('storage/'.$movie->poster_url) : asset('assets/images/default-poster.png') }}"
-                                                            alt="Poster"
-                                                            class="rounded bg-light"
-                                                            style="width: 48px; height: 64px; object-fit: cover;">
-                                                    </a>
-                                                </div>
-                                                <div>
-                                                    <a href="{{ route('admin.movies.show', $movie->id) }}" class="fw-bold text-dark fs-15 mb-0">{{ $movie->name }}</a>
-                                                    <div class="text-muted small">
-                                                        @if($movie->genres && $movie->genres->count())
-                                                            @foreach($movie->genres as $genre)
-                                                                <span class="badge bg-info text-dark">{{ $genre->name }}</span>
-                                                            @endforeach
-                                                        @else
-                                                            <span class="text-muted">Chưa có thể loại</span>
-                                                        @endif
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td>{{ $movie->director }}</td>
-                                        <td>{{ $movie->duration_minutes }} phút</td>
-                                        <td>
-                                            {{ $movie->release_date ? \Carbon\Carbon::parse($movie->release_date)->format('d/m/Y') : 'N/A' }}
-                                        </td>
-                                        <td>{{ $movie->country->name ?? 'N/A' }}</td>
-                                        <td>
-                                            <span class="badge p-1 bg-light text-dark fs-12 me-1">
-                                                <i class="bi bi-star-fill text-warning"></i> {{ $movie->average_rating ?? 'N/A' }}
+                                            @php
+                                                $statusColors = [
+                                                    'active' => 'bg-success',
+                                                    'inactive' => 'bg-secondary',
+                                                    'upcoming' => 'bg-warning',
+                                                    'ended' => 'bg-danger',
+                                                ];
+                                                $statusValue = is_object($movie->status) ? $movie->status->value : $movie->status;
+                                            @endphp
+                                            <span class="badge {{ $statusColors[$statusValue] ?? 'bg-secondary' }}">
+                                                {{ ucfirst($statusValue) }}
                                             </span>
                                         </td>
                                         <td>{{ $movie->ageLimit->name ?? 'Chưa có' }}</td>
@@ -168,7 +154,7 @@
                 </div>
                 <div class="card-footer border-top">
                     <div class="d-flex justify-content-end">
-                        {{ $movies->appends(request()->query())->links('pagination::bootstrap-5') }}
+                        {{ $movies->appends(['query' => request('query'), 'status' => request('status'), 'country_id' => request('country_id'), 'age_limit_id' => request('age_limit_id'), 'release_date' => request('release_date'), 'end_date' => request('end_date')])->links('pagination::bootstrap-5') }}
                     </div>
                 </div>
             </div>

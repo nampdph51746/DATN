@@ -120,16 +120,16 @@
                                 <input type="url" id="trailer_url" name="trailer_url" class="form-control" value="{{ old('trailer_url') }}">
                                 @error('trailer_url') <div class="text-danger mt-1">{{ $message }}</div> @enderror
                             </div>
-                            <div class="col-lg-12 mb-3">
-                                <label for="genres" class="form-label">Thể loại phim</label>
-                                <select id="genres" name="genres[]" class="form-control" multiple>
-                                    @foreach ($genres as $genre)
-                                        <option value="{{ $genre->id }}" {{ (collect(old('genres'))->contains($genre->id)) ? 'selected' : '' }}>
-                                            {{ $genre->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                @error('genres') <div class="text-danger mt-1">{{ $message }}</div> @enderror
+                        </div>
+                        <div class="row">
+                            <div class="col-lg-6">
+                                <div class="mb-3">
+                                    <label for="average_rating" class="form-label">Điểm đánh giá (0-10)</label>
+                                    <input type="number" name="average_rating" id="average_rating" class="form-control" value="{{ old('average_rating') }}" step="0.1" min="0" max="10">
+                                    @error('average_rating')
+                                        <span class="text-danger">{{ $message }}</span>
+                                    @enderror
+                                </div>
                             </div>
                             <div class="col-lg-12 mb-3">
                                 <label for="description" class="form-label">Mô tả</label>

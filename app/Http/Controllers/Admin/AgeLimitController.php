@@ -42,7 +42,7 @@ class AgeLimitController extends Controller
     public function edit($id)
     {
         $ageLimit = AgeLimit::findOrFail($id);
-        return view('admin.ageLimit.edit', compact('ageLimit'));
+        return view('admin.movies.ageLimit.edit', compact('ageLimit'));
     }
 
     public function update(Request $request, $id)
