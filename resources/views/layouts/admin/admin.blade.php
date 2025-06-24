@@ -34,7 +34,7 @@
      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </head>
 
-    <style>
+<style>
     /* Thêm lớp tùy chỉnh để đảm bảo main-nav có thể cuộn và không bị giới hạn chiều cao */
     .main-nav-scrollable {
         overflow-y: auto !important;

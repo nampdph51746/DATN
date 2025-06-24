@@ -71,26 +71,29 @@
                     </div>
                     <div class="row align-items-center g-2 mt-3">
                         <div class="col-lg-6">
+                            <p class="mb-0 fw-medium text-dark fs-16">Thể loại: 
+                                <span class="text-muted">
+                                    @if ($movie->genres->isNotEmpty())
+                                        {{ $movie->genres->pluck('name')->join(', ') }}
+                                    @else
+                                        N/A
+                                    @endif
+                                </span>
+                            </p>
+                        </div>
+                        <div class="col-lg-6">
                             <p class="mb-0 fw-medium text-dark fs-16">Trạng thái: 
                                 <span class="badge" style="background-color: {{ $movie->status == 'active' ? '#28a745' : ($movie->status == 'upcoming' ? '#ffc107' : ($movie->status == 'ended' ? '#dc3545' : '#6c757d')) }}; color: #fff;">
                                     {{ ucfirst(is_object($movie->status) ? $movie->status->value : $movie->status) }}
                                 </span>
                             </p>
                         </div>
+                    </div>
+                    <div class="row align-items-center g-2 mt-3">
                         <div class="col-lg-6">
                             <p class="mb-0 fw-medium text-dark fs-16">Điểm đánh giá: <span class="text-muted">{{ $movie->average_rating ?? 'N/A' }}</span></p>
                         </div>
-                    </div>
-                    <div class="row align-items-center g-2 mt-3">
                         <div class="col-lg-6">
-                            <p class="mb-0 fw-medium text-dark fs-16">Thời gian tạo: <span class="text-muted">{{ $movie->created_at->format('d/m/Y H:i') }}</span></p>
-                        </div>
-                        <div class="col-lg-6">
-                            <p class="mb-0 fw-medium text-dark fs-16">Thời gian cập nhật: <span class="text-muted">{{ $movie->updated_at->format('d/m/Y H:i') }}</span></p>
-                        </div>
-                    </div>
-                    <div class="row align-items-center g-2 mt-3">
-                        <div class="col-lg-12">
                             <p class="mb-0 fw-medium text-dark fs-16">Trailer: 
                                 <span class="text-muted">
                                     @if ($movie->trailer_url)
@@ -100,6 +103,14 @@
                                     @endif
                                 </span>
                             </p>
+                        </div>
+                    </div>
+                    <div class="row align-items-center g-2 mt-3">
+                        <div class="col-lg-6">
+                            <p class="mb-0 fw-medium text-dark fs-16">Thời gian tạo: <span class="text-muted">{{ $movie->created_at->format('d/m/Y H:i') }}</span></p>
+                        </div>
+                        <div class="col-lg-6">
+                            <p class="mb-0 fw-medium text-dark fs-16">Thời gian cập nhật: <span class="text-muted">{{ $movie->updated_at->format('d/m/Y H:i') }}</span></p>
                         </div>
                     </div>
                     <h4 class="text-dark fw-medium mt-4">Mô tả:</h4>
@@ -250,6 +261,7 @@
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@1.6.2/dist/select2-bootstrap4.min.css" rel="stylesheet" />
 
 <!-- CSS tùy chỉnh cho Select2 và Modal -->
 <style>
@@ -296,7 +308,7 @@ $('#roomSelect').select2({
     placeholder: "Chọn phòng (gõ để tìm)",
     closeOnSelect: false,
     allowClear: true,
-    theme: 'bootstrap4', // <- dòng quan trọng
+    theme: 'bootstrap4',
     width: 'resolve',
 });
 
@@ -387,5 +399,4 @@ document.getElementById('confirmCreateShowtime').addEventListener('click', funct
         </div>
     </div>
 </div>
-<link href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@1.6.2/dist/select2-bootstrap4.min.css" rel="stylesheet" />
 @endsection
