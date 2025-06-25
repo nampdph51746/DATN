@@ -22,12 +22,11 @@
                         @csrf
                         @method('PUT')
                         <div class="row">
-                            <!-- Poster phim lên đầu -->
+                            <!-- Poster phim -->
                             <div class="col-lg-12 mb-3">
                                 <label for="poster" class="form-label">Poster phim</label>
                                 <input type="file" id="poster" name="poster" class="form-control" accept="image/*" onchange="previewPoster(event)">
                                 @error('poster') <div class="text-danger mt-1">{{ $message }}</div> @enderror
-
                                 <div class="mt-2">
                                     <img
                                         id="poster-preview"
@@ -36,41 +35,49 @@
                                         style="max-width: 120px; max-height: 180px;">
                                 </div>
                             </div>
+                            <!-- Tên phim -->
                             <div class="col-lg-6 mb-3">
                                 <label for="name" class="form-label">Tên phim</label>
                                 <input type="text" id="name" name="name" class="form-control" value="{{ old('name', $movie->name) }}">
                                 @error('name') <div class="text-danger mt-1">{{ $message }}</div> @enderror
                             </div>
+                            <!-- Đạo diễn -->
                             <div class="col-lg-6 mb-3">
                                 <label for="director" class="form-label">Đạo diễn</label>
                                 <input type="text" id="director" name="director" class="form-control" value="{{ old('director', $movie->director) }}">
                                 @error('director') <div class="text-danger mt-1">{{ $message }}</div> @enderror
                             </div>
+                            <!-- Diễn viên -->
                             <div class="col-lg-6 mb-3">
                                 <label for="actors" class="form-label">Diễn viên</label>
                                 <input type="text" id="actors" name="actors" class="form-control" value="{{ old('actors', $movie->actors) }}">
                                 @error('actors') <div class="text-danger mt-1">{{ $message }}</div> @enderror
                             </div>
+                            <!-- Thời lượng -->
                             <div class="col-lg-6 mb-3">
                                 <label for="duration_minutes" class="form-label">Thời lượng (phút)</label>
                                 <input type="number" id="duration_minutes" name="duration_minutes" class="form-control" value="{{ old('duration_minutes', $movie->duration_minutes) }}">
                                 @error('duration_minutes') <div class="text-danger mt-1">{{ $message }}</div> @enderror
                             </div>
+                            <!-- Ngày phát hành -->
                             <div class="col-lg-6 mb-3">
                                 <label for="release_date" class="form-label">Ngày phát hành</label>
                                 <input type="date" id="release_date" name="release_date" class="form-control" value="{{ old('release_date', $movie->release_date) }}">
                                 @error('release_date') <div class="text-danger mt-1">{{ $message }}</div> @enderror
                             </div>
+                            <!-- Ngày kết thúc -->
                             <div class="col-lg-6 mb-3">
                                 <label for="end_date" class="form-label">Ngày kết thúc chiếu</label>
                                 <input type="date" id="end_date" name="end_date" class="form-control" value="{{ old('end_date', $movie->end_date) }}">
                                 @error('end_date') <div class="text-danger mt-1">{{ $message }}</div> @enderror
                             </div>
+                            <!-- Ngôn ngữ -->
                             <div class="col-lg-6 mb-3">
                                 <label for="language" class="form-label">Ngôn ngữ</label>
                                 <input type="text" id="language" name="language" class="form-control" value="{{ old('language', $movie->language) }}">
                                 @error('language') <div class="text-danger mt-1">{{ $message }}</div> @enderror
                             </div>
+                            <!-- Quốc gia -->
                             <div class="col-lg-6 mb-3">
                                 <label for="country_id" class="form-label">Quốc gia</label>
                                 <select id="country_id" name="country_id" class="form-control">
@@ -81,6 +88,7 @@
                                 </select>
                                 @error('country_id') <div class="text-danger mt-1">{{ $message }}</div> @enderror
                             </div>
+                            <!-- Giới hạn độ tuổi -->
                             <div class="col-lg-6 mb-3">
                                 <label for="age_limit_id" class="form-label">Giới hạn độ tuổi</label>
                                 <select id="age_limit_id" name="age_limit_id" class="form-control">
@@ -91,36 +99,44 @@
                                 </select>
                                 @error('age_limit_id') <div class="text-danger mt-1">{{ $message }}</div> @enderror
                             </div>
+                            <!-- Thể loại -->
+                            <div class="col-lg-12 mb-3">
+                                <label class="form-label">Thể loại</label>
+                                <div class="d-flex flex-wrap gap-2">
+                                    @foreach($genres as $genre)
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="genre_ids[]" id="genre_{{ $genre->id }}"
+                                                value="{{ $genre->id }}"
+                                                {{ in_array($genre->id, old('genre_ids', $movie->genres->pluck('id')->toArray())) ? 'checked' : '' }}>
+                                            <label class="form-check-label" for="genre_{{ $genre->id }}">{{ $genre->name }}</label>
+                                        </div>
+                                    @endforeach
+                                </div>
+                                @error('genre_ids') <div class="text-danger mt-1">{{ $message }}</div> @enderror
+                            </div>
+                            <!-- Trạng thái -->
                             <div class="col-lg-6 mb-3">
                                 <label for="status" class="form-label">Trạng thái</label>
                                 <select name="status" id="status" class="form-control" required>
-                                    <option value="showing" {{ old('status', $movie->status) == 'showing' ? 'selected' : '' }}>Đang chiếu</option>
+                                    <option value="active" {{ old('status', $movie->status) == 'active' ? 'selected' : '' }}>Đang chiếu</option>
                                     <option value="upcoming" {{ old('status', $movie->status) == 'upcoming' ? 'selected' : '' }}>Sắp chiếu</option>
                                     <option value="ended" {{ old('status', $movie->status) == 'ended' ? 'selected' : '' }}>Đã kết thúc</option>
                                 </select>
                                 @error('status') <div class="text-danger mt-1">{{ $message }}</div> @enderror
                             </div>
+                            <!-- Điểm đánh giá -->
                             <div class="col-lg-6 mb-3">
                                 <label for="average_rating" class="form-label">Điểm đánh giá (0-10)</label>
                                 <input type="number" id="average_rating" name="average_rating" class="form-control" value="{{ old('average_rating', $movie->average_rating) }}" step="0.1" min="0" max="10">
                                 @error('average_rating') <div class="text-danger mt-1">{{ $message }}</div> @enderror
                             </div>
-                            <div class="col-lg-6 mb-3">
+                            <!-- Trailer -->
+                            <div class="col-lg-12 mb-3">
                                 <label for="trailer_url" class="form-label">Trailer URL</label>
                                 <input type="url" id="trailer_url" name="trailer_url" class="form-control" value="{{ old('trailer_url', $movie->trailer_url) }}">
                                 @error('trailer_url') <div class="text-danger mt-1">{{ $message }}</div> @enderror
                             </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-lg-6">
-                                <div class="mb-3">
-                                    <label for="average_rating" class="form-label">Điểm đánh giá (0-10)</label>
-                                    <input type="number" name="average_rating" id="average_rating" class="form-control" value="{{ old('average_rating', $movie->average_rating) }}" step="0.1" min="0" max="10">
-                                    @error('average_rating')
-                                        <span class="text-danger">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                            </div>
+                            <!-- Mô tả -->
                             <div class="col-lg-12 mb-3">
                                 <label for="description" class="form-label">Mô tả</label>
                                 <textarea id="description" name="description" class="form-control" rows="5">{{ old('description', $movie->description) }}</textarea>

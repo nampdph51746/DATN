@@ -5,6 +5,9 @@
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
+    @if(session('error'))
+        <div class="alert alert-danger">{{ session('error') }}</div>
+    @endif
 
     <div class="row">
         <div class="col-xl-12">
@@ -81,6 +84,7 @@
                             <thead class="bg-light-subtle">
                                 <tr>
                                     <th>ID</th>
+                                    <th>Poster</th> <!-- Thêm cột poster -->
                                     <th>Tên phim</th>
                                     <th>Đạo diễn</th>
                                     <th>Thời lượng (phút)</th>
@@ -98,7 +102,18 @@
                                 @foreach ($movies as $index => $movie)
                                     <tr>
                                         <td>{{ $movie->id }}</td>
-                                        <td>{{ $movie->name }}</td>
+                                        <td>
+                                            <a href="{{ route('admin.movies.show', ['movie' => $movie->id]) }}">
+                                                <img src="{{ $movie->poster_url ? asset('storage/'.$movie->poster_url) : asset('assets/images/default-poster.png') }}"
+                                                     alt="{{ $movie->name }}"
+                                                     style="width: 60px; height: 90px; object-fit: cover; border-radius: 4px;">
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <a href="{{ route('admin.movies.show', ['movie' => $movie->id]) }}" class="fw-semibold text-primary">
+                                                {{ $movie->name }}
+                                            </a>
+                                        </td>
                                         <td>{{ $movie->director ?? 'N/A' }}</td>
                                         <td>{{ $movie->duration_minutes }}</td>
                                         <td>{{ $movie->release_date->format('d/m/Y') }}</td>
@@ -120,12 +135,7 @@
                                                 {{ ucfirst($statusValue) }}
                                             </span>
                                         </td>
-                                        <td>{{ $movie->ageLimit->name ?? 'Chưa có' }}</td>
-                                        <td>
-                                            <span class="badge bg-info">
-                                                {{ ucfirst(is_object($movie->status) ? $movie->status->value : $movie->status) }}
-                                            </span>
-                                        </td>
+                                        <td>{{ $movie->created_at->format('d/m/Y H:i') }}</td>
                                         <td class="text-center">
                                             <div class="d-flex gap-2 justify-content-center">
                                                 <a href="{{ route('admin.movies.edit', $movie->id) }}" class="btn btn-soft-primary btn-sm" title="Sửa">
@@ -145,7 +155,7 @@
                                 @endforeach
                                 @if($movies->isEmpty())
                                     <tr>
-                                        <td colspan="11" class="text-center text-muted">Không có phim nào.</td>
+                                        <td colspan="13" class="text-center text-muted">Không có phim nào.</td>
                                     </tr>
                                 @endif
                             </tbody>

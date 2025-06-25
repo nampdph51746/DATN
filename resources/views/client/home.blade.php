@@ -108,67 +108,38 @@
 							<h3 class="hny-title">Popular Movies</h3>
 						</div>
 						<div class="headerhny-right text-lg-right">
-							<h4><a class="show-title" href="movies.html">Show all</a></h4>
+							<h4><a class="show-title" href="{{ route('admin.movies.index') }}">Show all</a></h4>
 						</div>
 					</div>
 				</div>
 				<div class="w3l-populohny-grids" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;">
-					<div class="item vhny-grid">
-						<div class="box16">
-							<a href="movies.html">
-								<figure>
-									<img class="img-fluid" src="client_assets/assets/images/wednesday.jpeg" alt="" style="width: 100%; height: auto;">
-								</figure>
-								<div class="box-content">
-									<h3 class="title">A Wednesday</h3>
-									<h4> <span class="post"><span class="fa fa-clock-o"> </span> 1 Hr 4min</span><span class="post fa fa-heart text-right"></span></h4>
-								</div>
-								<span class="fa fa-play video-icon" aria-hidden="true"></span>
-							</a>
+					@if(isset($query) && $movies->isEmpty())
+						<div class="col-12">
+							<p>Không tìm thấy phim nào phù hợp với từ khóa "<strong>{{ $query }}</strong>".</p>
 						</div>
-					</div>
-					<div class="item vhny-grid">
-						<div class="box16">
-							<a href="movies.html">
-								<figure>
-									<img class="img-fluid" src="client_assets/assets/images/commando2.jpeg" alt="" style="width: 100%; height: auto;">
-								</figure>
-								<div class="box-content">
-									<h3 class="title">Commando-3</h3>
-									<h4> <span class="post"><span class="fa fa-clock-o"> </span> 1 Hr 4min</span><span class="post fa fa-heart text-right"></span></h4>
-								</div>
-								<span class="fa fa-play video-icon" aria-hidden="true"></span>
-							</a>
+					@endif
+					@foreach($movies as $movie)
+						<div class="item vhny-grid">
+							<div class="box16">
+								<a href="#">
+									<figure>
+										<img class="img-fluid"
+											src="{{ $movie->poster_url ? asset('storage/'.$movie->poster_url) : asset('client_assets/assets/images/default-movie.jpg') }}"
+											alt="{{ $movie->name }}"
+											style="width: 100%; height: 320px; object-fit: cover; border-radius: 8px;">
+									</figure>
+									<div class="box-content">
+										<h3 class="title">{{ $movie->name }}</h3>
+										<h4>
+											<span class="post"><span class="fa fa-clock-o"></span> {{ $movie->duration_minutes }} min</span>
+											<span class="post fa fa-heart text-right"></span>
+										</h4>
+									</div>
+									<span class="fa fa-play video-icon" aria-hidden="true"></span>
+								</a>
+							</div>
 						</div>
-					</div>
-					<div class="item vhny-grid">
-						<div class="box16">
-							<a href="movies.html">
-								<figure>
-									<img class="img-fluid" src="client_assets/assets/images/gujju2.jpeg" alt="" style="width: 100%; height: auto;">
-								</figure>
-								<div class="box-content">
-									<h3 class="title">Gujjubhai Most Wanted</h3>
-									<h4> <span class="post"><span class="fa fa-clock-o"> </span> 1 Hr 4min</span><span class="post fa fa-heart text-right"></span></h4>
-								</div>
-								<span class="fa fa-play video-icon" aria-hidden="true"></span>
-							</a>
-						</div>
-					</div>
-					<div class="item vhny-grid">
-						<div class="box16">
-							<a href="movies.html">
-								<figure>
-									<img class="img-fluid" src="client_assets/assets/images/avtar-2.jpeg" alt="" style="width: 100%; height: auto;">
-								</figure>
-								<div class="box-content">
-									<h3 class="title">Avatar</h3>
-									<h4> <span class="post"><span class="fa fa-clock-o"> </span> 1 Hr 4min</span><span class="post fa fa-heart text-right"></span></h4>
-								</div>
-								<span class="fa fa-play video-icon" aria-hidden="true"></span>
-							</a>
-						</div>
-					</div>
+					@endforeach
 				</div>
 			</div>
 		</div>

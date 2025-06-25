@@ -75,9 +75,8 @@
 						<!-- search popup -->
 						<div id="search" class="pop-overlay">
 							<div class="popup">
-								<form action="#" method="post" class="search-box">
-									<input type="search" placeholder="Search your Keyword" name="search"
-										required="required" autofocus="">
+								<form action="{{ route('home') }}" method="get" class="search-box">
+									<input type="search" placeholder="Tìm tên phim..." name="query" value="{{ request('query') }}" required autofocus>
 									<button type="submit" class="btn"><span class="fa fa-search"
 											aria-hidden="true"></span></button>
 								</form>

@@ -1,10 +1,6 @@
 <?php
 
-use App\Http\Controllers\Admin\AdminMovieController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Customer;
-use App\Http\Controllers\Admin\AgeLimitController;
-use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\CityController;
 use App\Http\Controllers\Admin\ComboController;
 use App\Http\Controllers\Admin\RoleController;
@@ -16,6 +12,7 @@ use App\Http\Controllers\Admin\TicketController;
 use App\Http\Controllers\Admin\BookingController;
 use App\Http\Controllers\Admin\CountryController;
 use App\Http\Controllers\Admin\PaymentController;
+use App\Http\Controllers\Admin\AgeLimitController;
 use App\Http\Controllers\Admin\RoomTypeController;
 use App\Http\Controllers\Admin\ShowtimeController;
 use App\Http\Controllers\Admin\AdminRoomController;
@@ -31,9 +28,20 @@ use App\Http\Controllers\Admin\AdminAttributeValueController;
 use App\Http\Controllers\Admin\AdminProductVariantController;
 use App\Http\Controllers\Admin\CustomerRankPromotionController;
 use App\Http\Controllers\Admin\AdminProductCategoriesController;
+use App\Http\Controllers\Client\HomeController;
 
-Route::get('/', function () {
-    return view('welcome');
+Route::get('/', [HomeController::class, 'index'])->name('home');
+
+Route::get('/movies', function () {
+    return view('client.movies');
+});
+
+Route::get('/sign_in', function () {
+    return view('client.sign_in');
+});
+
+Route::get('/ticket_booking', function () {
+    return view('client.ticket_booking');
 });
 
 Route::prefix('admin')->name('admin.')->group(function () {
@@ -41,7 +49,16 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('seats/edit-bulk', [AdminSeatController::class, 'editBulk'])->name('seats.editBulk');
     Route::put('seats/update-bulk', [AdminSeatController::class, 'updateBulk'])->name('seats.bulkUpdate');
 
+    Route::get('product-categories/trash', [AdminProductCategoriesController::class, 'trash'])->name('product-categories.trash');
+    Route::post('product-categories/{id}/restore', [AdminProductCategoriesController::class, 'restore'])->name('product-categories.restore');
+    Route::delete('product-categories/{id}/force-delete', [AdminProductCategoriesController::class, 'forceDelete'])->name('product-categories.forceDelete');
+    Route::resource('product-categories', AdminProductCategoriesController::class);
+
     Route::resource('seats', AdminSeatController::class);
+    Route::resource('attributes', AdminAttributeController::class);
+    Route::resource('attribute-values', AdminAttributeValueController::class);
+    Route::resource('product-variants', AdminProductVariantController::class);
+    Route::resource('products', AdminProductController::class);
 
     Route::get('product-categories/trash', [AdminProductCategoriesController::class, 'trash'])->name('product-categories.trash');
     Route::post('product-categories/{id}/restore', [AdminProductCategoriesController::class, 'restore'])->name('product-categories.restore');
@@ -70,6 +87,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/movies/{id}/edit', [MovieController::class, 'edit'])->name('movies.edit');
     Route::put('/movies/{id}', [MovieController::class, 'update'])->name('movies.update');
     Route::delete('/movies/{id}', [MovieController::class, 'destroy'])->name('movies.destroy');
+    Route::delete('movies/bulk-delete', [MovieController::class, 'bulkDelete'])->name('movies.bulkDelete');
+    Route::resource('movies', MovieController::class);
 
     // Tạo suất chiếu tự động (HEAD)
     Route::post('/showtimes', [ShowtimeController::class, 'storeAuto'])->name('showtimes.storeAuto');
@@ -89,7 +108,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('cities-add', [CityController::class, 'create'])->name('create');
     Route::get('cities-edit', [CityController::class, 'edit'])->name('edit');
     Route::get('cities/trash', [CityController::class, 'trash'])->name('cities.trash');
-    Route::PATCH('cities/{id}/restore', [CityController::class, 'restore'])->name('cities.restore');
+    Route::patch('cities/{id}/restore', [CityController::class, 'restore'])->name('cities.restore');
     Route::delete('cities/{id}/force-delete', [CityController::class, 'forceDelete'])->name('cities.forceDelete');
     Route::resource('cities', CityController::class);
     Route::get('cinemas', [CinemaController::class, 'index'])->name('index');
@@ -130,9 +149,6 @@ Route::prefix('admin/age-limits')->name('admin.age_limits.')->group(function () 
     Route::put('/{id}', [AgeLimitController::class, 'update'])->name('update');
     Route::delete('/{id}', [AgeLimitController::class, 'destroy'])->name('destroy');
 });
-Route::get('admin/age-limits', [\App\Http\Controllers\Admin\AgeLimitController::class, 'index'])->name('admin.age_limits.index');
-Route::delete('admin/age-limits/bulk-delete', [\App\Http\Controllers\Admin\AgeLimitController::class, 'bulkDelete'])->name('admin.age_limits.bulkDelete');
-Route::get('admin/movies/{movie}', [AdminMovieController::class, 'show'])->name('admin.movies.show');
 Route::get('admin/age-limits', [AgeLimitController::class, 'index'])->name('admin.age_limits.index');
 Route::post('admin/age-limits/bulk-delete', [AgeLimitController::class, 'bulkDelete'])->name('admin.age_limits.bulkDelete');
 
@@ -203,4 +219,3 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
     Route::get('products/{id}/variants', [AdminProductController::class, 'getVariants'])->name('products.variants');
 });
-
