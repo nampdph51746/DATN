@@ -1,12 +1,15 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\CityController;
-use App\Http\Controllers\Admin\ComboController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\ComboController;
 use App\Http\Controllers\Admin\MovieController;
 use App\Http\Controllers\Admin\PointController;
+use App\Http\Controllers\Client\HomeController;
+use App\Http\Controllers\Client\SeatController;
 use App\Http\Controllers\Admin\CinemaController;
 use App\Http\Controllers\Admin\TicketController;
 use App\Http\Controllers\Admin\BookingController;
@@ -42,12 +45,9 @@ Route::get('/sign_in', function () {
     return view('client.sign_in');
 });
 
-// Route::get('/ticket_booking', function () {
-//     return view('client.ticket_booking');
-// });
-
-Route::resource('ticket_booking', ClientProductController::class);
-
+Route::get('/ticket_booking', function () {
+    return view('client.ticket_booking');
+});
 
 Route::prefix('admin')->name('admin.')->group(function () {
     // Seat routes from HEAD
@@ -223,3 +223,15 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('products/{id}/variants', [AdminProductController::class, 'getVariants'])->name('products.variants');
 });
 
+// Breeze routes
+Route::get('/dashboard', function () {
+    return view('dashboard');
+})->middleware(['auth', 'verified'])->name('dashboard');
+
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [App\Http\Controllers\Auth\AuthenticatedSessionController::class, 'profile'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+require __DIR__.'/auth.php';
