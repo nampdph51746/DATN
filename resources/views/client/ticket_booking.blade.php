@@ -91,346 +91,442 @@
                                     </li>
                                 </ul>
                             </div>
-                            <input id="screen-next-btn" type="button" name="next-step" class="next-step" value="Continue Booking" disabled />
+                            <input id="screen-next-btn" type="button" name="next-step" class="next-step"
+                                value="Continue Booking" disabled />
                         </fieldset>
                         <fieldset>
                             <div>
-                                <iframe id="seat-sel-iframe" style="box-shadow: 0 14px 12px 0 var(--theme-border), 0 10px 50px 0 var(--theme-border); width: 800px; height: 550px; display: block; margin-left: auto; margin-right: auto;" src="seat_selection/seat_sel.html"></iframe>
+                                <iframe id="seat-sel-iframe"
+                                    style="box-shadow: 0 14px 12px 0 var(--theme-border), 0 10px 50px 0 var(--theme-border); width: 800px; height: 550px; display: block; margin-left: auto; margin-right: auto;"
+                                    src="seat_selection/seat_sel.html"></iframe>
                             </div>
                             <br>
                             <input type="button" name="next-step" class="next-step" value="Proceed to Snacks" />
                             <input type="button" name="previous-step" class="previous-step" value="Back" />
                         </fieldset>
-<!-- Bước 3: Snack Selection -->
-<fieldset>
-    <div id="snack-select-div">
-        <h2>Snack Selection</h2>
-        <div class="snack-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; padding: 20px; background: #f9f9f9; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
-            <div class="snack-item" style="display: flex; flex-direction: column; align-items: center; background: white; padding: 15px; border-radius: 8px; text-align: center;">
-                <img src="client_assets/assets/images/popcorn_combo.png" alt="Popcorn Combo" style="margin-bottom: 10px; width: 120px; height: 120px; object-fit: cover;" />
-                <div class="snack-info">
-                    <h4>Popcorn Combo (Large Popcorn + Drink)</h4>
-                    <p>Price: $10.00</p>
-                </div>
-                <div class="snack-quantity" style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
-                    <button onclick="updateQuantity('popcorn', -1)" style="padding: 5px 10px; background: #ff4b5a; color: white; border: none; border-radius: 5px;">-</button>
-                    <input type="number" id="popcorn-quantity" value="0" min="0" style="width: 60px; text-align: center; border: 1px solid #ddd; border-radius: 5px; padding: 5px;" readonly />
-                    <button onclick="updateQuantity('popcorn', 1)" style="padding: 5px 10px; background: #ff4b5a; color: white; border: none; border-radius: 5px;">+</button>
-                </div>
-            </div>
-            <div class="snack-item" style="display: flex; flex-direction: column; align-items: center; background: white; padding: 15px; border-radius: 8px; text-align: center;">
-                <img src="client_assets/assets/images/coke.png" alt="Coke (Medium)" style="margin-bottom: 10px; width: 120px; height: 120px; object-fit: cover;" />
-                <div class="snack-info">
-                    <h4>Coke (Medium)</h4>
-                    <p>Price: $5.00</p>
-                </div>
-                <div class="snack-quantity" style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
-                    <button onclick="updateQuantity('coke', -1)" style="padding: 5px 10px; background: #ff4b5a; color: white; border: none; border-radius: 5px;">-</button>
-                    <input type="number" id="coke-quantity" value="0" min="0" style="width: 60px; text-align: center; border: 1px solid #ddd; border-radius: 5px; padding: 5px;" readonly />
-                    <button onclick="updateQuantity('coke', 1)" style="padding: 5px 10px; background: #ff4b5a; color: white; border: none; border-radius: 5px;">+</button>
-                </div>
-            </div>
-            <div class="snack-item" style="display: flex; flex-direction: column; align-items: center; background: white; padding: 15px; border-radius: 8px; text-align: center;">
-                <img src="client_assets/assets/images/nachos_combo.jpg" alt="Nachos Combo" style="margin-bottom: 10px; width: 120px; height: 120px; object-fit: cover;" />
-                <div class="snack-info">
-                    <h4>Nachos Combo (Nachos + Cheese Dip)</h4>
-                    <p>Price: $8.00</p>
-                </div>
-                <div class="snack-quantity" style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
-                    <button onclick="updateQuantity('nachos', -1)" style="padding: 5px 10px; background: #ff4b5a; color: white; border: none; border-radius: 5px;">-</button>
-                    <input type="number" id="nachos-quantity" value="0" min="0" style="width: 60px; text-align: center; border: 1px solid #ddd; border-radius: 5px; padding: 5px;" readonly />
-                    <button onclick="updateQuantity('nachos', 1)" style="padding: 5px 10px; background: #ff4b5a; color: white; border: none; border-radius: 5px;">+</button>
-                </div>
-            </div>
-        </div>
-        <div style="display: flex; justify-content: space-between; margin-top: 20px;">
-            <input type="button" name="previous-step" class="previous-step" value="Back" style="padding: 10px 20px; background: #e0e0e0; color: #333; border: none; border-radius: 5px;" />
-            <input type="button" name="next-step" class="next-step" value="Proceed to Payment" style="padding: 10px 20px; background: #ff4b5a; color: white; border: none; border-radius: 5px;" />
-        </div>
-    </div>
-</fieldset>
+                        <!-- Bước 3: Snack Selection -->
+                        {{-- <fieldset>
+                            <div id="snack-select-div">
+                                <h2>Snack Selection</h2>
+                                <div class="snack-container"
+                                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; padding: 20px; background: #f9f9f9; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                                    <div class="snack-item"
+                                        style="display: flex; flex-direction: column; align-items: center; background: white; padding: 15px; border-radius: 8px; text-align: center;">
+                                        <img src="client_assets/assets/images/popcorn_combo.png" alt="Popcorn Combo"
+                                            style="margin-bottom: 10px; width: 120px; height: 120px; object-fit: cover;" />
+                                        <div class="snack-info">
+                                            <h4>Popcorn Combo (Large Popcorn + Drink)</h4>
+                                            <p>Price: $10.00</p>
+                                        </div>
+                                        <div class="snack-quantity"
+                                            style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
+                                            <button onclick="updateQuantity('popcorn', -1)"
+                                                style="padding: 5px 10px; background: #ff4b5a; color: white; border: none; border-radius: 5px;">-</button>
+                                            <input type="number" id="popcorn-quantity" value="0" min="0"
+                                                style="width: 60px; text-align: center; border: 1px solid #ddd; border-radius: 5px; padding: 5px;"
+                                                readonly />
+                                            <button onclick="updateQuantity('popcorn', 1)"
+                                                style="padding: 5px 10px; background: #ff4b5a; color: white; border: none; border-radius: 5px;">+</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; margin-top: 20px;">
+                                    <input type="button" name="previous-step" class="previous-step" value="Back"
+                                        style="padding: 10px 20px; background: #e0e0e0; color: #333; border: none; border-radius: 5px;" />
+                                    <input type="button" name="next-step" class="next-step" value="Proceed to Payment"
+                                        style="padding: 10px 20px; background: #ff4b5a; color: white; border: none; border-radius: 5px;" />
+                                </div>
+                            </div>
+                        </fieldset> --}}
 
-<!-- Bước 4: Payment -->
-<fieldset>
-    <div class="payment-container step-content" style="display: flex; justify-content: space-between; padding: 20px; gap: 20px; background: #ffffff; border-radius: 12px; box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1); max-width: 1200px; margin: 0 auto;">
-        <!-- Left Section: Payment Details -->
-        <div style="flex: 2; padding: 20px; background: #f9f9f9; border-radius: 8px; border: 1px solid #e9ecef;">
-            <h2 style="color: #1a1a1a; font-size: 1.6em; font-weight: 600; margin-bottom: 20px;">Payment Details</h2>
-            
-            <!-- Voucher Section -->
-            <div style="margin-bottom: 20px;">
-                <h3 style="color: #343a40; font-size: 1.2em; margin-bottom: 10px;">Voucher</h3>
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <input type="text" placeholder="Enter voucher code" style="flex: 1; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 1em;" />
-                    <button style="padding: 10px 20px; background: #ff4b5a; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; transition: background 0.3s;">Apply</button>
-                </div>
-            </div>
+                        <fieldset id="step-3" style="display: none;">
+                            <div id="snack-select-div">
+                                <h2>Snack Selection</h2>
+                                @foreach ($categories as $category)
+                                    <h3>{{ $category->name }}</h3>
+                                    <p>{{ $category->description }}</p>
+                                    <div class="snack-container">
+                                        @foreach ($category->products as $product)
+                                            <div class="snack-item" data-product-id="{{ $product->id }}">
+                                                <img src="{{ asset('storage/' . $product->image_url) }}"
+                                                    alt="{{ $product->name }}" class="product-image" />
+                                                <div class="snack-info">
+                                                    <h4>{{ $product->name }}</h4>
+                                                    <div class="variant-list">
+                                                        @foreach ($product->productVariants as $variant)
+                                                            <button type="button" name="variant-btn" class="variant-btn"
+                                                                data-image="{{ asset('storage/' . $variant->image_url) }}">
+                                                                {{ $variant->sku }}
+                                                            </button>
+                                                        @endforeach
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endforeach
 
-            <!-- Reward Points Section -->
-            <div style="margin-bottom: 20px;">
-                <h3 style="color: #343a40; font-size: 1.2em; margin-bottom: 10px;">Reward Points</h3>
-                <p style="color: #6c757d; margin-bottom: 10px;">Available Points: <span style="color: #ff4b5a; font-weight: 600;">500</span></p>
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <input type="number" placeholder="Enter points to use" min="0" max="500" style="flex: 1; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 1em;" />
-                    <button style="padding: 10px 20px; background: #ff4b5a; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; transition: background 0.3s;">Redeem</button>
-                </div>
-            </div>
+                                        <script>
+                                            document.addEventListener('DOMContentLoaded', function() {
+                                                const variantButtons = document.querySelectorAll('.variant-btn');
+                                                variantButtons.forEach(button => {
+                                                    button.addEventListener('click', function() {
+                                                        const newImage = this.getAttribute('data-image');
+                                                        const snackItem = this.closest('.snack-item');
+                                                        const productImage = snackItem.querySelector('.product-image');
+                                                        productImage.src = newImage;
+                                                    });
+                                                });
+                                            });
+                                        </script>
+                                    </div>
+                                    <!-- Phân trang -->
+                                    <br>
+                                    <div class="pagination">
+                                        {{ $category->products->links() }}
+                                    </div>
+                                @endforeach
+                                <div class="action-buttons">
+                                    <input type="button" name="previous-step" class="previous-step" value="Quay lại" />
+                                    <input type="button" name="next-step" class="next-step"
+                                        value="Tiến hành thanh toán" />
+                                </div>
+                            </div>
+                            <!-- Modal -->
+                            <div class="modal fade" id="productModal" tabindex="-1" aria-labelledby="productModalLabel"
+                                aria-hidden="true">
+                                <div class="modal-dialog modal-lg">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="productModalLabel">Chi tiết sản phẩm</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div id="productDetails"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </fieldset>
+                        <!-- Bước 4: Payment -->
+                        <fieldset>
+                            <div class="payment-container step-content"
+                                style="display: flex; justify-content: space-between; padding: 20px; gap: 20px; background: #ffffff; border-radius: 12px; box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1); max-width: 1200px; margin: 0 auto;">
+                                <!-- Left Section: Payment Details -->
+                                <div
+                                    style="flex: 2; padding: 20px; background: #f9f9f9; border-radius: 8px; border: 1px solid #e9ecef;">
+                                    <h2 style="color: #1a1a1a; font-size: 1.6em; font-weight: 600; margin-bottom: 20px;">
+                                        Payment Details</h2>
 
-            <!-- Payment Methods Section -->
-            <div>
-                <h3 style="color: #343a40; font-size: 1.2em; margin-bottom: 15px;">Payment Methods</h3>
-                <div style="display: flex; flex-direction: column; gap: 12px;">
-                    <label style="display: flex; align-items: center; padding: 12px; background: #fff; border: 1px solid #dee2e6; border-radius: 6px; transition: all 0.3s ease;">
-                        <input type="radio" name="payment-method" style="margin-right: 12px; transform: scale(1.3);" />
-                        <span style="flex-grow: 1; color: #1a1a1a;">Credit/Debit Card</span>
-                        <span>
-                            <i class="fa fa-cc-visa" style="color: #1a1a1a; margin-right: 8px; font-size: 1.2em;"></i>
-                            <i class="fa fa-cc-mastercard" style="color: #1a1a1a; margin-right: 8px; font-size: 1.2em;"></i>
-                        </span>
-                    </label>
-                    <label style="display: flex; align-items: center; padding: 12px; background: #fff; border: 1px solid #dee2e6; border-radius: 6px; transition: all 0.3s ease;">
-                        <input type="radio" name="payment-method" style="margin-right: 12px; transform: scale(1.3);" />
-                        <span style="flex-grow: 1; color: #1a1a1a;">PayPal</span>
-                        <span>
-                            <i class="fa fa-paypal" style="color: #1a1a1a; font-size: 1.2em;"></i>
-                        </span>
-                    </label>
-                    <label style="display: flex; align-items: center; padding: 12px; background: #fff; border: 1px solid #dee2e6; border-radius: 6px; transition: all 0.3s ease;">
-                        <input type="radio" name="payment-method" style="margin-right: 12px; transform: scale(1.3);" />
-                        <span style="flex-grow: 1; color: #1a1a1a;">Google Pay</span>
-                        <span>
-                            <i class="fab fa-google-pay" style="color: #1a1a1a; font-size: 1.2em;"></i>
-                        </span>
-                    </label>
-                </div>
-            </div>
-        </div>
+                                    <!-- Voucher Section -->
+                                    <div style="margin-bottom: 20px;">
+                                        <h3 style="color: #343a40; font-size: 1.2em; margin-bottom: 10px;">Voucher</h3>
+                                        <div style="display: flex; align-items: center; gap: 10px;">
+                                            <input type="text" placeholder="Enter voucher code"
+                                                style="flex: 1; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 1em;" />
+                                            <button
+                                                style="padding: 10px 20px; background: #ff4b5a; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; transition: background 0.3s;">Apply</button>
+                                        </div>
+                                    </div>
 
-        <!-- Right Section: Summary and Countdown -->
-        <div style="flex: 1; padding: 20px; background: #f9f9f9; border-radius: 8px; border: 1px solid #e9ecef; text-align: center;">
-            <h3 style="color: #1a1a1a; font-size: 1.4em; font-weight: 600; margin-bottom: 20px;">Payment Summary</h3>
-            <ul style="list-style: none; padding: 0; margin-bottom: 20px; text-align: left;">
-                <li style="margin-bottom: 12px; color: #495057; font-size: 1.1em;">Subtotal: <span style="color: #ff4b5a; font-weight: 600;">$50.00</span></li>
-                <li style="margin-bottom: 12px; color: #495057; font-size: 1.1em;">Discount: <span style="color: #28a745; font-weight: 600;">-$5.00</span></li>
-                <li style="margin-bottom: 12px; color: #495057; font-size: 1.1em;">Points Used: <span style="color: #28a745; font-weight: 600;">-100 pts</span></li>
-                <li style="margin-bottom: 20px; color: #495057; font-size: 1.1em; border-top: 1px solid #e9ecef; padding-top: 12px;">
-                    Total: <span style="color: #ff4b5a; font-weight: 600; font-size: 1.2em;">$45.00</span>
-                </li>
-            </ul>
-            <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e9ecef;">
-                <h2 style="color: #1a1a1a; font-size: 1.2em; margin-bottom: 10px;">Time Remaining</h2>
-                <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 10px;">
-                    <span style="background: #ff4b5a; color: #fff; padding: 8px 12px; border-radius: 4px; font-size: 1.2em; font-weight: 600;">0</span>
-                    <span style="background: #ff4b5a; color: #fff; padding: 8px 12px; border-radius: 4px; font-size: 1.2em; font-weight: 600;">7</span>
-                    <span style="background: #ff4b5a; color: #fff; padding: 8px 12px; border-radius: 4px; font-size: 1.2em; font-weight: 600;">47</span>
-                </div>
-                <p style="color: #6c757d; font-size: 0.9em;">Hours Minutes Seconds</p>
-            </div>
-        </div>
-    </div>
-    <div style="display: flex; justify-content: space-between; margin-top: 20px;">
-        <input type="button" name="previous-step" class="previous-step" value="Back" style="padding: 12px 30px; background: #6c757d; color: #fff; border: none; border-radius: 6px; font-size: 1.1em; cursor: pointer; transition: background 0.3s;" />
-        <input type="button" name="next-step" class="next-step pay-btn" value="Confirm Payment" style="padding: 12px 30px; background: #ff4b5a; color: #fff; border: none; border-radius: 6px; font-size: 1.1em; cursor: pointer; transition: background 0.3s;" />
-    </div>
-</fieldset>
+                                    <!-- Reward Points Section -->
+                                    <div style="margin-bottom: 20px;">
+                                        <h3 style="color: #343a40; font-size: 1.2em; margin-bottom: 10px;">Reward Points
+                                        </h3>
+                                        <p style="color: #6c757d; margin-bottom: 10px;">Available Points: <span
+                                                style="color: #ff4b5a; font-weight: 600;">500</span></p>
+                                        <div style="display: flex; align-items: center; gap: 10px;">
+                                            <input type="number" placeholder="Enter points to use" min="0"
+                                                max="500"
+                                                style="flex: 1; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 1em;" />
+                                            <button
+                                                style="padding: 10px 20px; background: #ff4b5a; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; transition: background 0.3s;">Redeem</button>
+                                        </div>
+                                    </div>
 
-<!-- Bước 5: E-Ticket -->
-<fieldset>
-    <h2>E-Ticket</h2>
-    <div class="ticket-body">
-        <div class="ticket">
-            <div class="holes-top"></div>
-            <div class="title">
-                <p class="cinema">MyShowz Entertainment</p>
-                <p class="movie-title">Movie Name</p>
-            </div>
-            <div class="poster">
-                <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/25240/only-god-forgives.jpg" alt="Movie: Only God Forgives" />
-            </div>
-            <div class="info">
-                <table class="info-table ticket-table">
-                    <tr>
-                        <th>SCREEN</th>
-                        <th>ROW</th>
-                        <th>SEAT</th>
-                    </tr>
-                    <tr>
-                        <td class="bigger">18</td>
-                        <td class="bigger">H</td>
-                        <td class="bigger">24</td>
-                    </tr>
-                </table>
-                <table class="info-table ticket-table">
-                    <tr>
-                        <th>PRICE</th>
-                        <th>DATE</th>
-                        <th>TIME</th>
-                    </tr>
-                    <tr>
-                        <td>RS.12.00</td>
-                        <td>4/13/21</td>
-                        <td>19:30</td>
-                    </tr>
-                </table>
-            </div>
-            <div class="holes-lower"></div>
-            <div class="serial">
-                <table class="barcode ticket-table">
-                    <tr>
-                        <td style="background-color:black;"></td>
-                        <td style="background-color:black;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:black;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:black;"></td>
-                        <td style="background-color:black;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:black;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:black;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:black;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:black;"></td>
-                        <td style="background-color:black;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:black;"></td>
-                        <td style="background-color:black;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:black;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:black;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:black;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:black;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:black;"></td>
-                        <td style="background-color:black;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:black;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:black;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:black;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:black;"></td>
-                        <td style="background-color:black;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:black;"></td>
-                        <td style="background-color:black;"></td>
-                        <td style="background-color:black;"></td>
-                        <td style="background-color:black;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:black;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:black;"></td>
-                        <td style="background-color:black;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:black;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:black;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:black;"></td>
-                        <td style="background-color:black;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:black;"></td>
-                        <td style="background-color:black;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:black;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:black;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:black;"></td>
-                        <td style="background-color:black;"></td>
-                        <td style="background-color:black;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:black;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:black;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:black;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:black;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:black;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:black;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:black;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:black;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:black;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:black;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:black;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:black;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:black;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:black;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:black;"></td>
-                        <td style="background-color:white;"></td>
-                        <td style="background-color:black;"></td>
-                        <td style="background-color:white;"></td>
-                    </tr>
-                </table>
-                <table class="numbers ticket-table">
-                    <tr>
-                        <td>9</td>
-                        <td>1</td>
-                        <td>7</td>
-                        <td>3</td>
-                        <td>7</td>
-                        <td>5</td>
-                        <td>4</td>
-                        <td>4</td>
-                        <td>4</td>
-                        <td>5</td>
-                        <td>4</td>
-                        <td>1</td>
-                        <td>4</td>
-                        <td>7</td>
-                        <td>8</td>
-                        <td>7</td>
-                        <td>3</td>
-                        <td>4</td>
-                        <td>1</td>
-                        <td>4</td>
-                        <td>5</td>
-                        <td>2</td>
-                    </tr>
-                </table>
-            </div>
-        </div>
-    </div>
-    <div style="display: flex; justify-content: center; margin-top: 20px;">
-        <input type="button" name="previous-step" class="previous-step home-page-btn" value="Browse to Home Page" style="padding: 12px 30px; background: #6c757d; color: #fff; border: none; border-radius: 6px; font-size: 1.1em; cursor: pointer; transition: background 0.3s;" onclick="location.href='index.html';" />
-    </div>
-</fieldset>
+                                    <!-- Payment Methods Section -->
+                                    <div>
+                                        <h3 style="color: #343a40; font-size: 1.2em; margin-bottom: 15px;">Payment Methods
+                                        </h3>
+                                        <div style="display: flex; flex-direction: column; gap: 12px;">
+                                            <label
+                                                style="display: flex; align-items: center; padding: 12px; background: #fff; border: 1px solid #dee2e6; border-radius: 6px; transition: all 0.3s ease;">
+                                                <input type="radio" name="payment-method"
+                                                    style="margin-right: 12px; transform: scale(1.3);" />
+                                                <span style="flex-grow: 1; color: #1a1a1a;">Credit/Debit Card</span>
+                                                <span>
+                                                    <i class="fa fa-cc-visa"
+                                                        style="color: #1a1a1a; margin-right: 8px; font-size: 1.2em;"></i>
+                                                    <i class="fa fa-cc-mastercard"
+                                                        style="color: #1a1a1a; margin-right: 8px; font-size: 1.2em;"></i>
+                                                </span>
+                                            </label>
+                                            <label
+                                                style="display: flex; align-items: center; padding: 12px; background: #fff; border: 1px solid #dee2e6; border-radius: 6px; transition: all 0.3s ease;">
+                                                <input type="radio" name="payment-method"
+                                                    style="margin-right: 12px; transform: scale(1.3);" />
+                                                <span style="flex-grow: 1; color: #1a1a1a;">PayPal</span>
+                                                <span>
+                                                    <i class="fa fa-paypal" style="color: #1a1a1a; font-size: 1.2em;"></i>
+                                                </span>
+                                            </label>
+                                            <label
+                                                style="display: flex; align-items: center; padding: 12px; background: #fff; border: 1px solid #dee2e6; border-radius: 6px; transition: all 0.3s ease;">
+                                                <input type="radio" name="payment-method"
+                                                    style="margin-right: 12px; transform: scale(1.3);" />
+                                                <span style="flex-grow: 1; color: #1a1a1a;">Google Pay</span>
+                                                <span>
+                                                    <i class="fab fa-google-pay"
+                                                        style="color: #1a1a1a; font-size: 1.2em;"></i>
+                                                </span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Right Section: Summary and Countdown -->
+                                <div
+                                    style="flex: 1; padding: 20px; background: #f9f9f9; border-radius: 8px; border: 1px solid #e9ecef; text-align: center;">
+                                    <h3 style="color: #1a1a1a; font-size: 1.4em; font-weight: 600; margin-bottom: 20px;">
+                                        Payment Summary</h3>
+                                    <ul style="list-style: none; padding: 0; margin-bottom: 20px; text-align: left;">
+                                        <li style="margin-bottom: 12px; color: #495057; font-size: 1.1em;">Subtotal: <span
+                                                style="color: #ff4b5a; font-weight: 600;">$50.00</span></li>
+                                        <li style="margin-bottom: 12px; color: #495057; font-size: 1.1em;">Discount: <span
+                                                style="color: #28a745; font-weight: 600;">-$5.00</span></li>
+                                        <li style="margin-bottom: 12px; color: #495057; font-size: 1.1em;">Points Used:
+                                            <span style="color: #28a745; font-weight: 600;">-100 pts</span>
+                                        </li>
+                                        <li
+                                            style="margin-bottom: 20px; color: #495057; font-size: 1.1em; border-top: 1px solid #e9ecef; padding-top: 12px;">
+                                            Total: <span
+                                                style="color: #ff4b5a; font-weight: 600; font-size: 1.2em;">$45.00</span>
+                                        </li>
+                                    </ul>
+                                    <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e9ecef;">
+                                        <h2 style="color: #1a1a1a; font-size: 1.2em; margin-bottom: 10px;">Time Remaining
+                                        </h2>
+                                        <div
+                                            style="display: flex; justify-content: center; gap: 10px; margin-bottom: 10px;">
+                                            <span
+                                                style="background: #ff4b5a; color: #fff; padding: 8px 12px; border-radius: 4px; font-size: 1.2em; font-weight: 600;">0</span>
+                                            <span
+                                                style="background: #ff4b5a; color: #fff; padding: 8px 12px; border-radius: 4px; font-size: 1.2em; font-weight: 600;">7</span>
+                                            <span
+                                                style="background: #ff4b5a; color: #fff; padding: 8px 12px; border-radius: 4px; font-size: 1.2em; font-weight: 600;">47</span>
+                                        </div>
+                                        <p style="color: #6c757d; font-size: 0.9em;">Hours Minutes Seconds</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-top: 20px;">
+                                <input type="button" name="previous-step" class="previous-step" value="Back"
+                                    style="padding: 12px 30px; background: #6c757d; color: #fff; border: none; border-radius: 6px; font-size: 1.1em; cursor: pointer; transition: background 0.3s;" />
+                                <input type="button" name="next-step" class="next-step pay-btn" value="Confirm Payment"
+                                    style="padding: 12px 30px; background: #ff4b5a; color: #fff; border: none; border-radius: 6px; font-size: 1.1em; cursor: pointer; transition: background 0.3s;" />
+                            </div>
+                        </fieldset>
+
+                        <!-- Bước 5: E-Ticket -->
+                        <fieldset>
+                            <h2>E-Ticket</h2>
+                            <div class="ticket-body">
+                                <div class="ticket">
+                                    <div class="holes-top"></div>
+                                    <div class="title">
+                                        <p class="cinema">MyShowz Entertainment</p>
+                                        <p class="movie-title">Movie Name</p>
+                                    </div>
+                                    <div class="poster">
+                                        <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/25240/only-god-forgives.jpg"
+                                            alt="Movie: Only God Forgives" />
+                                    </div>
+                                    <div class="info">
+                                        <table class="info-table ticket-table">
+                                            <tr>
+                                                <th>SCREEN</th>
+                                                <th>ROW</th>
+                                                <th>SEAT</th>
+                                            </tr>
+                                            <tr>
+                                                <td class="bigger">18</td>
+                                                <td class="bigger">H</td>
+                                                <td class="bigger">24</td>
+                                            </tr>
+                                        </table>
+                                        <table class="info-table ticket-table">
+                                            <tr>
+                                                <th>PRICE</th>
+                                                <th>DATE</th>
+                                                <th>TIME</th>
+                                            </tr>
+                                            <tr>
+                                                <td>RS.12.00</td>
+                                                <td>4/13/21</td>
+                                                <td>19:30</td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                    <div class="holes-lower"></div>
+                                    <div class="serial">
+                                        <table class="barcode ticket-table">
+                                            <tr>
+                                                <td style="background-color:black;"></td>
+                                                <td style="background-color:black;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:black;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:black;"></td>
+                                                <td style="background-color:black;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:black;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:black;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:black;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:black;"></td>
+                                                <td style="background-color:black;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:black;"></td>
+                                                <td style="background-color:black;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:black;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:black;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:black;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:black;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:black;"></td>
+                                                <td style="background-color:black;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:black;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:black;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:black;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:black;"></td>
+                                                <td style="background-color:black;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:black;"></td>
+                                                <td style="background-color:black;"></td>
+                                                <td style="background-color:black;"></td>
+                                                <td style="background-color:black;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:black;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:black;"></td>
+                                                <td style="background-color:black;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:black;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:black;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:black;"></td>
+                                                <td style="background-color:black;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:black;"></td>
+                                                <td style="background-color:black;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:black;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:black;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:black;"></td>
+                                                <td style="background-color:black;"></td>
+                                                <td style="background-color:black;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:black;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:black;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:black;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:black;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:black;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:black;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:black;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:black;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:black;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:black;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:black;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:black;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:black;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:black;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:black;"></td>
+                                                <td style="background-color:white;"></td>
+                                                <td style="background-color:black;"></td>
+                                                <td style="background-color:white;"></td>
+                                            </tr>
+                                        </table>
+                                        <table class="numbers ticket-table">
+                                            <tr>
+                                                <td>9</td>
+                                                <td>1</td>
+                                                <td>7</td>
+                                                <td>3</td>
+                                                <td>7</td>
+                                                <td>5</td>
+                                                <td>4</td>
+                                                <td>4</td>
+                                                <td>4</td>
+                                                <td>5</td>
+                                                <td>4</td>
+                                                <td>1</td>
+                                                <td>4</td>
+                                                <td>7</td>
+                                                <td>8</td>
+                                                <td>7</td>
+                                                <td>3</td>
+                                                <td>4</td>
+                                                <td>1</td>
+                                                <td>4</td>
+                                                <td>5</td>
+                                                <td>2</td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="display: flex; justify-content: center; margin-top: 20px;">
+                                <input type="button" name="previous-step" class="previous-step home-page-btn"
+                                    value="Browse to Home Page"
+                                    style="padding: 12px 30px; background: #6c757d; color: #fff; border: none; border-radius: 6px; font-size: 1.1em; cursor: pointer; transition: background 0.3s;"
+                                    onclick="location.href='index.html';" />
+                            </div>
+                        </fieldset>
                     </div>
                 </div>
             </div>
@@ -443,7 +539,7 @@
     let prevId = "1";
     let selectedTime = null;
 
-    window.onload = function () {
+    window.onload = function() {
         showStep(currentStep);
         document.getElementById("screen-next-btn").disabled = true;
         // Gắn sự kiện cho các nút
@@ -493,9 +589,23 @@
         e.preventDefault();
         if (currentStep > 1) {
             currentStep--;
+            if (currentStep === 2) {
+                document.getElementById('seat-sel-iframe').src = 'seat_selection/seat_sel.html';
+            }
             showStep(currentStep);
             console.log('Moving to step:', currentStep);
         }
+    }
+    
+    function showStep(step) {
+        document.querySelectorAll('fieldset').forEach((fieldset, index) => {
+            fieldset.style.display = index === step - 1 ? 'block' : 'none';
+        });
+        document.querySelectorAll('#progressbar li').forEach((li, index) => {
+            li.classList.remove('active');
+            if (index < step) li.classList.add('active');
+        });
+        console.log('Displaying step:', step);
     }
 
     function showStep(step) {
@@ -511,7 +621,86 @@
 </script>
 
 <script src="https://npmcdn.com/flickity@2/dist/flickity.pkgd.js"></script>
-<script type="text/javascript" src='https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.bundle.min.js'></script>
+<script type="text/javascript" src='https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.bundle.min.js'>
+</script>
 <script type="text/javascript" src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>
 <script src="assets/js/theme-change.js"></script>
 <script type="text/javascript" src="assets/js/ticket-booking.js"></script>
+
+
+<style>
+    .snack-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        padding: 20px;
+        background: #f9f9f9;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .snack-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background: white;
+        padding: 15px;
+        border-radius: 8px;
+        text-align: center;
+    }
+
+    .snack-item img {
+        margin-bottom: 10px;
+        width: 120px;
+        height: 120px;
+        object-fit: cover;
+    }
+
+    .snack-info {
+        margin-bottom: 10px;
+    }
+
+    .action-buttons {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 20px;
+    }
+
+    .action-buttons input {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+    }
+
+    .action-buttons .previous-step {
+        background: #e0e0e0;
+        color: #333;
+    }
+
+    .action-buttons .next-step {
+        background: #ff4b5a;
+        color: white;
+    }
+
+    .snack-quantity {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .snack-quantity button {
+        padding: 5px 10px;
+        background: #ff4b5a;
+        color: white;
+        border: none;
+        border-radius: 5px;
+    }
+
+    .snack-quantity input {
+        width: 60px;
+        text-align: center;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        padding: 5px;
+    }
+</style>

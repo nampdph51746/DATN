@@ -28,6 +28,7 @@ use App\Http\Controllers\Admin\AdminAttributeValueController;
 use App\Http\Controllers\Admin\AdminProductVariantController;
 use App\Http\Controllers\Admin\CustomerRankPromotionController;
 use App\Http\Controllers\Admin\AdminProductCategoriesController;
+use App\Http\Controllers\Client\ClientProductController;
 
 Route::get('/', function () {
     return view('client.home');
@@ -41,9 +42,12 @@ Route::get('/sign_in', function () {
     return view('client.sign_in');
 });
 
-Route::get('/ticket_booking', function () {
-    return view('client.ticket_booking');
-});
+// Route::get('/ticket_booking', function () {
+//     return view('client.ticket_booking');
+// });
+
+Route::resource('ticket_booking', ClientProductController::class);
+
 
 Route::prefix('admin')->name('admin.')->group(function () {
     // Seat routes from HEAD
