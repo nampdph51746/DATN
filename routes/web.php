@@ -33,21 +33,13 @@ use App\Http\Controllers\Admin\CustomerRankPromotionController;
 use App\Http\Controllers\Admin\AdminProductCategoriesController;
 use App\Http\Controllers\Client\ClientProductController;
 
-Route::get('/', function () {
-    return view('client.home');
-});
-
-Route::get('/movies', function () {
-    return view('client.movies');
-});
-
-Route::get('/sign_in', function () {
-    return view('client.sign_in');
-});
-
-Route::get('/ticket_booking', function () {
-    return view('client.ticket_booking');
-});
+Route::get('/', [HomeController::class, 'index'])->name('client.home');
+Route::get('/movies', [HomeController::class, 'movies'])->name('client.movies');
+Route::get('/movies/{id}', [HomeController::class, 'show'])->name('movies.show');
+Route::get('/movies/{id}/ticket-booking', [HomeController::class, 'ticketBooking'])->name('client.movies.ticketBooking');
+Route::get('/showtimes/{showtimeId}/seat-map', [SeatController::class, 'showSeatMap'])->name('client.seats.map');
+Route::post('/showtimes/{showtimeId}/reserve', [SeatController::class, 'reserveSeat'])->name('client.seats.reserve');
+Route::get('/api/seats/status/{showtimeId}', [SeatController::class, 'getSeatStatus']);
 
 Route::prefix('admin')->name('admin.')->group(function () {
     // Seat routes from HEAD

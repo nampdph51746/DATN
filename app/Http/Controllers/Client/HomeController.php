@@ -10,6 +10,7 @@ use App\Enums\MovieStatus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Log;
 
 class HomeController extends Controller
 {
@@ -45,10 +46,9 @@ class HomeController extends Controller
             ->take(6)
             ->get();
 
+            
         // Debug
-        \Log::info('Showing Movies Count: ' . $showingMovies->count());
-        \Log::info('Upcoming Movies Count: ' . $upcomingMovies->count());
-        \Log::info('Upcoming Movies Data: ' . $upcomingMovies->toJson());
+       
 
         return view('client.home', compact('showingMovies', 'upcomingMovies', 'query'));
         }
@@ -87,10 +87,9 @@ class HomeController extends Controller
     {
         $movie = Movie::findOrFail($id);
         $showtimes = $this->getShowtimes($id);
-        
-        \Log::info('Showtimes for movie ID ' . $id . ': ' . $showtimes->toJson());
         if ($showtimes->isEmpty()) {
-            \Log::warning('No showtimes found for movie ID ' . $id);
+            Log::warning("No showtimes found for movie ID {$id}");
+            return redirect()->back()->with('error', 'No showtimes available for this movie.');
         }
 
         $dates = $this->getDates($showtimes);
@@ -98,9 +97,6 @@ class HomeController extends Controller
         $seatTypes = SeatType::all();
         $showtimeId = request()->input('showtime_id'); // Chỉ lấy từ query string, không gán mặc định
 
-        \Log::info('Dates: ' . json_encode($dates));
-        \Log::info('Showtimes Data: ' . json_encode($showtimesData));
-        \Log::info('Selected Showtime ID: ' . ($showtimeId ?? 'none'));
 
         return view('client.ticket_booking', compact('movie', 'dates', 'showtimesData', 'showtimeId', 'seatTypes'));
     }
@@ -113,7 +109,6 @@ class HomeController extends Controller
             ->with('room')
             ->get();
         
-        \Log::info('Filtered Showtimes for movie ID ' . $movieId . ': ' . $showtimes->toJson());
         
         return $showtimes;
     }
@@ -238,11 +233,6 @@ class HomeController extends Controller
             ->get();
 
         // Debug
-        \Log::info('Showing Movies: ' . $showingMovies->toJson());
-        \Log::info('Recent Movies: ' . $recentMovies->toJson());
-        \Log::info('Popular Movies: ' . $popularMovies->toJson());
-        \Log::info('Trend Movies: ' . $trendMovies->toJson());
-
         return view('client.movies', compact('showingMovies', 'recentMovies', 'popularMovies', 'trendMovies', 'query'));
     }
 }

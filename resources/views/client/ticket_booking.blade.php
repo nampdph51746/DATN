@@ -20,7 +20,8 @@
                                 @if (empty($dates))
                                     <p>Không có suất chiếu nào cho phim này.</p>
                                 @else
-                                    <div class="carousel carousel-nav" data-flickity='{"contain": true, "pageDots": false }'>
+                                    <div class="carousel carousel-nav"
+                                        data-flickity='{"contain": true, "pageDots": false }'>
                                         @foreach ($dates as $index => $date)
                                             <div class="carousel-cell" id="{{ $index + 1 }}"
                                                 onclick="myFunction({{ $index + 1 }}, '{{ $date['full_date'] }}')">
@@ -39,87 +40,129 @@
                         </fieldset>
                         <fieldset>
                             <div>
-                                <iframe id="seat-sel-iframe" style="box-shadow: 0 14px 12px 0 var(--theme-border), 0 10px 50px 0 var(--theme-border); width: 800px; height: 550px; display: block; margin-left: auto; margin-right: auto;" src="seat_selection/seat_sel.html"></iframe>
+                                <h2>Seat Selection</h2>
+                                <!-- Always include iframe and placeholder -->
+                                <iframe id="seat-map-iframe" src="" width="100%" height="700"
+                                    style="border: none; overflow: hidden; display: none;">
+                                </iframe>
+                                <div id="seat-map-placeholder" style="display: block;">
+                                    <p>Please select a showtime to view the seat map.</p>
+                                </div>
                             </div>
                             <br>
                             <input type="button" name="next-step" id="proceed-snack-btn" class="next-step"
                                 value="Proceed to Snacks" />
-                            <input type="button" name="previous-step" id="back-btn" class="previous-step" value="Back" />
+                            <input type="button" name="previous-step" id="back-btn" class="previous-step"
+                                value="Back" />
                         </fieldset>
-<!-- Bước 3: Snack Selection -->
-<fieldset>
-    <div id="snack-select-div">
-        <h2>Snack Selection</h2>
-        <div class="snack-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; padding: 20px; background: #f9f9f9; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
-            <div class="snack-item" style="display: flex; flex-direction: column; align-items: center; background: white; padding: 15px; border-radius: 8px; text-align: center;">
-                <img src="client_assets/assets/images/popcorn_combo.png" alt="Popcorn Combo" style="margin-bottom: 10px; width: 120px; height: 120px; object-fit: cover;" />
-                <div class="snack-info">
-                    <h4>Popcorn Combo (Large Popcorn + Drink)</h4>
-                    <p>Price: $10.00</p>
-                </div>
-                <div class="snack-quantity" style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
-                    <button onclick="updateQuantity('popcorn', -1)" style="padding: 5px 10px; background: #ff4b5a; color: white; border: none; border-radius: 5px;">-</button>
-                    <input type="number" id="popcorn-quantity" value="0" min="0" style="width: 60px; text-align: center; border: 1px solid #ddd; border-radius: 5px; padding: 5px;" readonly />
-                    <button onclick="updateQuantity('popcorn', 1)" style="padding: 5px 10px; background: #ff4b5a; color: white; border: none; border-radius: 5px;">+</button>
-                </div>
-            </div>
-            <div class="snack-item" style="display: flex; flex-direction: column; align-items: center; background: white; padding: 15px; border-radius: 8px; text-align: center;">
-                <img src="client_assets/assets/images/coke.png" alt="Coke (Medium)" style="margin-bottom: 10px; width: 120px; height: 120px; object-fit: cover;" />
-                <div class="snack-info">
-                    <h4>Coke (Medium)</h4>
-                    <p>Price: $5.00</p>
-                </div>
-                <div class="snack-quantity" style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
-                    <button onclick="updateQuantity('coke', -1)" style="padding: 5px 10px; background: #ff4b5a; color: white; border: none; border-radius: 5px;">-</button>
-                    <input type="number" id="coke-quantity" value="0" min="0" style="width: 60px; text-align: center; border: 1px solid #ddd; border-radius: 5px; padding: 5px;" readonly />
-                    <button onclick="updateQuantity('coke', 1)" style="padding: 5px 10px; background: #ff4b5a; color: white; border: none; border-radius: 5px;">+</button>
-                </div>
-            </div>
-            <div class="snack-item" style="display: flex; flex-direction: column; align-items: center; background: white; padding: 15px; border-radius: 8px; text-align: center;">
-                <img src="client_assets/assets/images/nachos_combo.jpg" alt="Nachos Combo" style="margin-bottom: 10px; width: 120px; height: 120px; object-fit: cover;" />
-                <div class="snack-info">
-                    <h4>Nachos Combo (Nachos + Cheese Dip)</h4>
-                    <p>Price: $8.00</p>
-                </div>
-                <div class="snack-quantity" style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
-                    <button onclick="updateQuantity('nachos', -1)" style="padding: 5px 10px; background: #ff4b5a; color: white; border: none; border-radius: 5px;">-</button>
-                    <input type="number" id="nachos-quantity" value="0" min="0" style="width: 60px; text-align: center; border: 1px solid #ddd; border-radius: 5px; padding: 5px;" readonly />
-                    <button onclick="updateQuantity('nachos', 1)" style="padding: 5px 10px; background: #ff4b5a; color: white; border: none; border-radius: 5px;">+</button>
-                </div>
-            </div>
-        </div>
-        <div style="display: flex; justify-content: space-between; margin-top: 20px;">
-            <input type="button" name="previous-step" class="previous-step" value="Back" style="padding: 10px 20px; background: #e0e0e0; color: #333; border: none; border-radius: 5px;" />
-            <input type="button" name="next-step" class="next-step" value="Proceed to Payment" style="padding: 10px 20px; background: #ff4b5a; color: white; border: none; border-radius: 5px;" />
-        </div>
-    </div>
-</fieldset>
+                        <!-- Bước 3: Snack Selection -->
+                        <fieldset>
+                            <div id="snack-select-div">
+                                <h2>Snack Selection</h2>
+                                <div class="snack-container"
+                                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; padding: 20px; background: #f9f9f9; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                                    <div class="snack-item"
+                                        style="display: flex; flex-direction: column; align-items: center; background: white; padding: 15px; border-radius: 8px; text-align: center;">
+                                        <img src="client_assets/assets/images/popcorn_combo.png" alt="Popcorn Combo"
+                                            style="margin-bottom: 10px; width: 120px; height: 120px; object-fit: cover;" />
+                                        <div class="snack-info">
+                                            <h4>Popcorn Combo (Large Popcorn + Drink)</h4>
+                                            <p>Price: $10.00</p>
+                                        </div>
+                                        <div class="snack-quantity"
+                                            style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
+                                            <button onclick="updateQuantity('popcorn', -1)"
+                                                style="padding: 5px 10px; background: #ff4b5a; color: white; border: none; border-radius: 5px;">-</button>
+                                            <input type="number" id="popcorn-quantity" value="0" min="0"
+                                                style="width: 60px; text-align: center; border: 1px solid #ddd; border-radius: 5px; padding: 5px;"
+                                                readonly />
+                                            <button onclick="updateQuantity('popcorn', 1)"
+                                                style="padding: 5px 10px; background: #ff4b5a; color: white; border: none; border-radius: 5px;">+</button>
+                                        </div>
+                                    </div>
+                                    <div class="snack-item"
+                                        style="display: flex; flex-direction: column; align-items: center; background: white; padding: 15px; border-radius: 8px; text-align: center;">
+                                        <img src="client_assets/assets/images/coke.png" alt="Coke (Medium)"
+                                            style="margin-bottom: 10px; width: 120px; height: 120px; object-fit: cover;" />
+                                        <div class="snack-info">
+                                            <h4>Coke (Medium)</h4>
+                                            <p>Price: $5.00</p>
+                                        </div>
+                                        <div class="snack-quantity"
+                                            style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
+                                            <button onclick="updateQuantity('coke', -1)"
+                                                style="padding: 5px 10px; background: #ff4b5a; color: white; border: none; border-radius: 5px;">-</button>
+                                            <input type="number" id="coke-quantity" value="0" min="0"
+                                                style="width: 60px; text-align: center; border: 1px solid #ddd; border-radius: 5px; padding: 5px;"
+                                                readonly />
+                                            <button onclick="updateQuantity('coke', 1)"
+                                                style="padding: 5px 10px; background: #ff4b5a; color: white; border: none; border-radius: 5px;">+</button>
+                                        </div>
+                                    </div>
+                                    <div class="snack-item"
+                                        style="display: flex; flex-direction: column; align-items: center; background: white; padding: 15px; border-radius: 8px; text-align: center;">
+                                        <img src="client_assets/assets/images/nachos_combo.jpg" alt="Nachos Combo"
+                                            style="margin-bottom: 10px; width: 120px; height: 120px; object-fit: cover;" />
+                                        <div class="snack-info">
+                                            <h4>Nachos Combo (Nachos + Cheese Dip)</h4>
+                                            <p>Price: $8.00</p>
+                                        </div>
+                                        <div class="snack-quantity"
+                                            style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
+                                            <button onclick="updateQuantity('nachos', -1)"
+                                                style="padding: 5px 10px; background: #ff4b5a; color: white; border: none; border-radius: 5px;">-</button>
+                                            <input type="number" id="nachos-quantity" value="0" min="0"
+                                                style="width: 60px; text-align: center; border: 1px solid #ddd; border-radius: 5px; padding: 5px;"
+                                                readonly />
+                                            <button onclick="updateQuantity('nachos', 1)"
+                                                style="padding: 5px 10px; background: #ff4b5a; color: white; border: none; border-radius: 5px;">+</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; margin-top: 20px;">
+                                    <input type="button" name="previous-step" class="previous-step" value="Back"
+                                        style="padding: 10px 20px; background: #e0e0e0; color: #333; border: none; border-radius: 5px;" />
+                                    <input type="button" name="next-step" class="next-step" value="Proceed to Payment"
+                                        style="padding: 10px 20px; background: #ff4b5a; color: white; border: none; border-radius: 5px;" />
+                                </div>
+                            </div>
+                        </fieldset>
 
-<!-- Bước 4: Payment -->
-<fieldset>
-    <div class="payment-container step-content" style="display: flex; justify-content: space-between; padding: 20px; gap: 20px; background: #ffffff; border-radius: 12px; box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1); max-width: 1200px; margin: 0 auto;">
-        <!-- Left Section: Payment Details -->
-        <div style="flex: 2; padding: 20px; background: #f9f9f9; border-radius: 8px; border: 1px solid #e9ecef;">
-            <h2 style="color: #1a1a1a; font-size: 1.6em; font-weight: 600; margin-bottom: 20px;">Payment Details</h2>
-            
-            <!-- Voucher Section -->
-            <div style="margin-bottom: 20px;">
-                <h3 style="color: #343a40; font-size: 1.2em; margin-bottom: 10px;">Voucher</h3>
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <input type="text" placeholder="Enter voucher code" style="flex: 1; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 1em;" />
-                    <button style="padding: 10px 20px; background: #ff4b5a; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; transition: background 0.3s;">Apply</button>
-                </div>
-            </div>
+                        <!-- Bước 4: Payment -->
+                        <fieldset>
+                            <div class="payment-container step-content"
+                                style="display: flex; justify-content: space-between; padding: 20px; gap: 20px; background: #ffffff; border-radius: 12px; box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1); max-width: 1200px; margin: 0 auto;">
+                                <!-- Left Section: Payment Details -->
+                                <div
+                                    style="flex: 2; padding: 20px; background: #f9f9f9; border-radius: 8px; border: 1px solid #e9ecef;">
+                                    <h2 style="color: #1a1a1a; font-size: 1.6em; font-weight: 600; margin-bottom: 20px;">
+                                        Payment Details</h2>
 
-            <!-- Reward Points Section -->
-            <div style="margin-bottom: 20px;">
-                <h3 style="color: #343a40; font-size: 1.2em; margin-bottom: 10px;">Reward Points</h3>
-                <p style="color: #6c757d; margin-bottom: 10px;">Available Points: <span style="color: #ff4b5a; font-weight: 600;">500</span></p>
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <input type="number" placeholder="Enter points to use" min="0" max="500" style="flex: 1; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 1em;" />
-                    <button style="padding: 10px 20px; background: #ff4b5a; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; transition: background 0.3s;">Redeem</button>
-                </div>
-            </div>
+                                    <!-- Voucher Section -->
+                                    <div style="margin-bottom: 20px;">
+                                        <h3 style="color: #343a40; font-size: 1.2em; margin-bottom: 10px;">Voucher</h3>
+                                        <div style="display: flex; align-items: center; gap: 10px;">
+                                            <input type="text" placeholder="Enter voucher code"
+                                                style="flex: 1; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 1em;" />
+                                            <button
+                                                style="padding: 10px 20px; background: #ff4b5a; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; transition: background 0.3s;">Apply</button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Reward Points Section -->
+                                    <div style="margin-bottom: 20px;">
+                                        <h3 style="color: #343a40; font-size: 1.2em; margin-bottom: 10px;">Reward Points
+                                        </h3>
+                                        <p style="color: #6c757d; margin-bottom: 10px;">Available Points: <span
+                                                style="color: #ff4b5a; font-weight: 600;">500</span></p>
+                                        <div style="display: flex; align-items: center; gap: 10px;">
+                                            <input type="number" placeholder="Enter points to use" min="0"
+                                                max="500"
+                                                style="flex: 1; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 1em;" />
+                                            <button
+                                                style="padding: 10px 20px; background: #ff4b5a; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; transition: background 0.3s;">Redeem</button>
+                                        </div>
+                                    </div>
 
                                     <!-- Payment Methods Section -->
                                     <div>
@@ -161,33 +204,48 @@
                                     </div>
                                 </div>
 
-        <!-- Right Section: Summary and Countdown -->
-        <div style="flex: 1; padding: 20px; background: #f9f9f9; border-radius: 8px; border: 1px solid #e9ecef; text-align: center;">
-            <h3 style="color: #1a1a1a; font-size: 1.4em; font-weight: 600; margin-bottom: 20px;">Payment Summary</h3>
-            <ul style="list-style: none; padding: 0; margin-bottom: 20px; text-align: left;">
-                <li style="margin-bottom: 12px; color: #495057; font-size: 1.1em;">Subtotal: <span style="color: #ff4b5a; font-weight: 600;">$50.00</span></li>
-                <li style="margin-bottom: 12px; color: #495057; font-size: 1.1em;">Discount: <span style="color: #28a745; font-weight: 600;">-$5.00</span></li>
-                <li style="margin-bottom: 12px; color: #495057; font-size: 1.1em;">Points Used: <span style="color: #28a745; font-weight: 600;">-100 pts</span></li>
-                <li style="margin-bottom: 20px; color: #495057; font-size: 1.1em; border-top: 1px solid #e9ecef; padding-top: 12px;">
-                    Total: <span style="color: #ff4b5a; font-weight: 600; font-size: 1.2em;">$45.00</span>
-                </li>
-            </ul>
-            <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e9ecef;">
-                <h2 style="color: #1a1a1a; font-size: 1.2em; margin-bottom: 10px;">Time Remaining</h2>
-                <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 10px;">
-                    <span style="background: #ff4b5a; color: #fff; padding: 8px 12px; border-radius: 4px; font-size: 1.2em; font-weight: 600;">0</span>
-                    <span style="background: #ff4b5a; color: #fff; padding: 8px 12px; border-radius: 4px; font-size: 1.2em; font-weight: 600;">7</span>
-                    <span style="background: #ff4b5a; color: #fff; padding: 8px 12px; border-radius: 4px; font-size: 1.2em; font-weight: 600;">47</span>
-                </div>
-                <p style="color: #6c757d; font-size: 0.9em;">Hours Minutes Seconds</p>
-            </div>
-        </div>
-    </div>
-    <div style="display: flex; justify-content: space-between; margin-top: 20px;">
-        <input type="button" name="previous-step" class="previous-step" value="Back" style="padding: 12px 30px; background: #6c757d; color: #fff; border: none; border-radius: 6px; font-size: 1.1em; cursor: pointer; transition: background 0.3s;" />
-        <input type="button" name="next-step" class="next-step pay-btn" value="Confirm Payment" style="padding: 12px 30px; background: #ff4b5a; color: #fff; border: none; border-radius: 6px; font-size: 1.1em; cursor: pointer; transition: background 0.3s;" />
-    </div>
-</fieldset>
+                                <!-- Right Section: Summary and Countdown -->
+                                <div
+                                    style="flex: 1; padding: 20px; background: #f9f9f9; border-radius: 8px; border: 1px solid #e9ecef; text-align: center;">
+                                    <h3 style="color: #1a1a1a; font-size: 1.4em; font-weight: 600; margin-bottom: 20px;">
+                                        Payment Summary</h3>
+                                    <ul style="list-style: none; padding: 0; margin-bottom: 20px; text-align: left;">
+                                        <li style="margin-bottom: 12px; color: #495057; font-size: 1.1em;">Subtotal: <span
+                                                style="color: #ff4b5a; font-weight: 600;">$50.00</span></li>
+                                        <li style="margin-bottom: 12px; color: #495057; font-size: 1.1em;">Discount: <span
+                                                style="color: #28a745; font-weight: 600;">-$5.00</span></li>
+                                        <li style="margin-bottom: 12px; color: #495057; font-size: 1.1em;">Points Used:
+                                            <span style="color: #28a745; font-weight: 600;">-100 pts</span>
+                                        </li>
+                                        <li
+                                            style="margin-bottom: 20px; color: #495057; font-size: 1.1em; border-top: 1px solid #e9ecef; padding-top: 12px;">
+                                            Total: <span
+                                                style="color: #ff4b5a; font-weight: 600; font-size: 1.2em;">$45.00</span>
+                                        </li>
+                                    </ul>
+                                    <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e9ecef;">
+                                        <h2 style="color: #1a1a1a; font-size: 1.2em; margin-bottom: 10px;">Time Remaining
+                                        </h2>
+                                        <div
+                                            style="display: flex; justify-content: center; gap: 10px; margin-bottom: 10px;">
+                                            <span
+                                                style="background: #ff4b5a; color: #fff; padding: 8px 12px; border-radius: 4px; font-size: 1.2em; font-weight: 600;">0</span>
+                                            <span
+                                                style="background: #ff4b5a; color: #fff; padding: 8px 12px; border-radius: 4px; font-size: 1.2em; font-weight: 600;">7</span>
+                                            <span
+                                                style="background: #ff4b5a; color: #fff; padding: 8px 12px; border-radius: 4px; font-size: 1.2em; font-weight: 600;">47</span>
+                                        </div>
+                                        <p style="color: #6c757d; font-size: 0.9em;">Hours Minutes Seconds</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-top: 20px;">
+                                <input type="button" name="previous-step" class="previous-step" value="Back"
+                                    style="padding: 12px 30px; background: #6c757d; color: #fff; border: none; border-radius: 6px; font-size: 1.1em; cursor: pointer; transition: background 0.3s;" />
+                                <input type="button" name="next-step" class="next-step pay-btn" value="Confirm Payment"
+                                    style="padding: 12px 30px; background: #ff4b5a; color: #fff; border: none; border-radius: 6px; font-size: 1.1em; cursor: pointer; transition: background 0.3s;" />
+                            </div>
+                        </fieldset>
 
                         <!-- Bước 5: E-Ticket -->
                         <fieldset>
@@ -438,7 +496,7 @@
         });
     }
 
-    window.receiveSeats = function (seats) {
+    window.receiveSeats = function(seats) {
         console.log('Seats received:', seats);
         selectedSeats = seats;
         updateOrderSummary();
@@ -496,7 +554,8 @@
         const placeholder = document.getElementById('seat-map-placeholder');
         if (iframe && placeholder) {
             try {
-                const newSrc = '{{ route('client.seats.map', ['showtimeId' => ':showtimeId']) }}'.replace(':showtimeId', showtimeId) + '?t=' + new Date().getTime();
+                const newSrc = '{{ route('client.seats.map', ['showtimeId' => ':showtimeId']) }}'.replace(':showtimeId',
+                    showtimeId) + '?t=' + new Date().getTime();
                 console.log('Updating iframe src to:', newSrc);
                 iframe.src = newSrc;
                 iframe.style.display = 'block';
@@ -556,10 +615,12 @@
                         elements[key].textContent = showtimesData[selectedDate]?.[0]?.room_name || 'N/A';
                         break;
                     case 'ticketRow':
-                        elements[key].textContent = selectedSeats.length > 0 ? (selectedSeats[0]?.label?.split('-')[0] || 'N/A') : 'N/A';
+                        elements[key].textContent = selectedSeats.length > 0 ? (selectedSeats[0]?.label?.split('-')[
+                            0] || 'N/A') : 'N/A';
                         break;
                     case 'ticketSeat':
-                        elements[key].textContent = selectedSeats.length > 0 ? (selectedSeats[0]?.label?.split('-')[1] || 'N/A') : 'N/A';
+                        elements[key].textContent = selectedSeats.length > 0 ? (selectedSeats[0]?.label?.split('-')[
+                            1] || 'N/A') : 'N/A';
                         break;
                     case 'ticketPriceDisplay':
                         elements[key].textContent = ticketTotal.toLocaleString('vi-VN') + ' ₫';
@@ -590,23 +651,9 @@
         e.preventDefault();
         if (currentStep > 1) {
             currentStep--;
-            if (currentStep === 2) {
-                document.getElementById('seat-sel-iframe').src = 'seat_selection/seat_sel.html';
-            }
             showStep(currentStep);
             console.log('Moving to step:', currentStep);
         }
-    }
-    
-    function showStep(step) {
-        document.querySelectorAll('fieldset').forEach((fieldset, index) => {
-            fieldset.style.display = index === step - 1 ? 'block' : 'none';
-        });
-        document.querySelectorAll('#progressbar li').forEach((li, index) => {
-            li.classList.remove('active');
-            if (index < step) li.classList.add('active');
-        });
-        console.log('Displaying step:', step);
     }
 
     function showStep(step) {
@@ -621,8 +668,7 @@
     }
 </script>
 
-<script src="https://npmcdn.com/flickity@2/dist/flickity.pkgd.js"></script>
-<script type="text/javascript" src='https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.bundle.min.js'></script>
 <script type="text/javascript" src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>
-<script src="assets/js/theme-change.js"></script>
-<script type="text/javascript" src="assets/js/ticket-booking.js"></script>
+<script type="text/javascript" src='https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.bundle.min.js'>
+</script>
+<script src="https://npmcdn.com/flickity@2/dist/flickity.pkgd.js"></script>
