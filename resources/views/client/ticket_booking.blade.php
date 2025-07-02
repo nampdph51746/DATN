@@ -57,74 +57,85 @@
                         </fieldset>
                         <!-- Bước 3: Snack Selection -->
                         <fieldset>
-                            <div id="snack-select-div">
-                                <h2>Snack Selection</h2>
-                                <div class="snack-container"
-                                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; padding: 20px; background: #f9f9f9; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
-                                    <div class="snack-item"
-                                        style="display: flex; flex-direction: column; align-items: center; background: white; padding: 15px; border-radius: 8px; text-align: center;">
-                                        <img src="client_assets/assets/images/popcorn_combo.png" alt="Popcorn Combo"
-                                            style="margin-bottom: 10px; width: 120px; height: 120px; object-fit: cover;" />
-                                        <div class="snack-info">
-                                            <h4>Popcorn Combo (Large Popcorn + Drink)</h4>
-                                            <p>Price: $10.00</p>
-                                        </div>
-                                        <div class="snack-quantity"
-                                            style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
-                                            <button onclick="updateQuantity('popcorn', -1)"
-                                                style="padding: 5px 10px; background: #ff4b5a; color: white; border: none; border-radius: 5px;">-</button>
-                                            <input type="number" id="popcorn-quantity" value="0" min="0"
-                                                style="width: 60px; text-align: center; border: 1px solid #ddd; border-radius: 5px; padding: 5px;"
-                                                readonly />
-                                            <button onclick="updateQuantity('popcorn', 1)"
-                                                style="padding: 5px 10px; background: #ff4b5a; color: white; border: none; border-radius: 5px;">+</button>
-                                        </div>
-                                    </div>
-                                    <div class="snack-item"
-                                        style="display: flex; flex-direction: column; align-items: center; background: white; padding: 15px; border-radius: 8px; text-align: center;">
-                                        <img src="client_assets/assets/images/coke.png" alt="Coke (Medium)"
-                                            style="margin-bottom: 10px; width: 120px; height: 120px; object-fit: cover;" />
-                                        <div class="snack-info">
-                                            <h4>Coke (Medium)</h4>
-                                            <p>Price: $5.00</p>
-                                        </div>
-                                        <div class="snack-quantity"
-                                            style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
-                                            <button onclick="updateQuantity('coke', -1)"
-                                                style="padding: 5px 10px; background: #ff4b5a; color: white; border: none; border-radius: 5px;">-</button>
-                                            <input type="number" id="coke-quantity" value="0" min="0"
-                                                style="width: 60px; text-align: center; border: 1px solid #ddd; border-radius: 5px; padding: 5px;"
-                                                readonly />
-                                            <button onclick="updateQuantity('coke', 1)"
-                                                style="padding: 5px 10px; background: #ff4b5a; color: white; border: none; border-radius: 5px;">+</button>
-                                        </div>
-                                    </div>
-                                    <div class="snack-item"
-                                        style="display: flex; flex-direction: column; align-items: center; background: white; padding: 15px; border-radius: 8px; text-align: center;">
-                                        <img src="client_assets/assets/images/nachos_combo.jpg" alt="Nachos Combo"
-                                            style="margin-bottom: 10px; width: 120px; height: 120px; object-fit: cover;" />
-                                        <div class="snack-info">
-                                            <h4>Nachos Combo (Nachos + Cheese Dip)</h4>
-                                            <p>Price: $8.00</p>
-                                        </div>
-                                        <div class="snack-quantity"
-                                            style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
-                                            <button onclick="updateQuantity('nachos', -1)"
-                                                style="padding: 5px 10px; background: #ff4b5a; color: white; border: none; border-radius: 5px;">-</button>
-                                            <input type="number" id="nachos-quantity" value="0" min="0"
-                                                style="width: 60px; text-align: center; border: 1px solid #ddd; border-radius: 5px; padding: 5px;"
-                                                readonly />
-                                            <button onclick="updateQuantity('nachos', 1)"
-                                                style="padding: 5px 10px; background: #ff4b5a; color: white; border: none; border-radius: 5px;">+</button>
-                                        </div>
+                            <div id="snack-select-div" style="display: flex; gap: 20px; padding: 20px;">
+                                <!-- Left side: Snack Cards -->
+                                <div
+                                    style="flex: 2; background: #f9f9f9; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); padding: 20px;">
+                                    <h2>Snack Selection</h2>
+                                    <div class="snack-container"
+                                        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                                        @foreach ($products as $product)
+                                            <div class="snack-item"
+                                                style="display: flex; flex-direction: column; align-items: center; background: white; padding: 15px; border-radius: 8px; text-align: center;">
+                                                <img src="{{ asset('storage/' . $product->image_url) }}"
+                                                    alt="{{ $product->name }}"
+                                                    style="margin-bottom: 10px; width: 120px; height: 120px; object-fit: cover;" />
+                                                <div class="snack-info">
+                                                    <h4>{{ $product->name }}</h4>
+                                                    @if ($product->productVariants->isNotEmpty())
+                                                        <select class="variant-select form-select"
+                                                            data-product-id="{{ $product->id }}"
+                                                            style="margin-top: 10px; padding: 5px; border-radius: 5px;"
+                                                            onchange="updateQuantity('{{ $product->id }}', 0)">
+                                                            @foreach ($product->productVariants as $variant)
+                                                                <option value="{{ $variant->id }}"
+                                                                    data-price="{{ $variant->price }}"
+                                                                    data-sku="{{ $variant->sku }}">
+                                                                    {{ $variant->productVariantOptions->map(fn($option) => $option->attributeValue->value)->join(' - ') }}
+                                                                    ({{ number_format($variant->price) }} VNĐ)
+                                                                </option>
+                                                            @endforeach
+                                                        </select>
+                                                    @else
+                                                        <p>No variants available</p>
+                                                    @endif
+                                                </div>
+                                                <div class="snack-quantity"
+                                                    style="display: flex; align-items: center; gap: 10px; margin-top: 10px;"
+                                                    data-product-id="{{ $product->id }}">
+                                                    <button onclick="updateQuantity('{{ $product->id }}', -1)"
+                                                        style="padding: 5px 10px; background: #ff4b5a; color: white; border: none; border-radius: 5px;">-</button>
+                                                    <input type="number" id="quantity-{{ $product->id }}" value="0"
+                                                        min="0"
+                                                        style="width: 60px; text-align: center; border: 1px solid #ddd; border-radius: 5px; padding: 5px;"
+                                                        readonly />
+                                                    <button onclick="updateQuantity('{{ $product->id }}', 1)"
+                                                        style="padding: 5px 10px; background: #ff4b5a; color: white; border: none; border-radius: 5px;">+</button>
+                                                </div>
+                                            </div>
+                                        @endforeach
                                     </div>
                                 </div>
-                                <div style="display: flex; justify-content: space-between; margin-top: 20px;">
-                                    <input type="button" name="previous-step" class="previous-step" value="Back"
-                                        style="padding: 10px 20px; background: #e0e0e0; color: #333; border: none; border-radius: 5px;" />
-                                    <input type="button" name="next-step" class="next-step" value="Proceed to Payment"
-                                        style="padding: 10px 20px; background: #ff4b5a; color: white; border: none; border-radius: 5px;" />
+                                <!-- Right side: Summary Table -->
+                                <div
+                                    style="flex: 1; background: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 15px;">
+                                    <h3 style="color: #333; margin-bottom: 10px;">Order Summary</h3>
+                                    <table id="summary-table" style="width: 100%; border-collapse: collapse;">
+                                        <thead>
+                                            <tr style="border-bottom: 1px solid #eee;">
+                                                <th style="padding: 8px; text-align: left;">Product</th>
+                                                <th style="padding: 8px; text-align: center;">Quantity</th>
+                                                <th style="padding: 8px; text-align: right;">Price</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="summary-table-body">
+                                            <!-- Dynamic rows will be populated via JavaScript -->
+                                        </tbody>
+                                        <tfoot>
+                                            <tr style="border-top: 2px solid #333; font-weight: bold;">
+                                                <td style="padding: 8px; text-align: left;">Total</td>
+                                                <td style="padding: 8px; text-align: center;"></td>
+                                                <td id="total-price" style="padding: 8px; text-align: right;">0 VNĐ</td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
                                 </div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-top: 20px; padding: 0 20px;">
+                                <input type="button" name="previous-step" class="previous-step" value="Back"
+                                    style="padding: 10px 20px; background: #e0e0e0; color: #333; border: none; border-radius: 5px;" />
+                                <input type="button" name="next-step" class="next-step" value="Proceed to Payment"
+                                    style="padding: 10px 20px; background: #ff4b5a; color: white; border: none; border-radius: 5px;" />
                             </div>
                         </fieldset>
 
@@ -473,199 +484,262 @@
 @endsection
 
 <script>
-    let currentStep = 1;
-    let prevId = "1";
-    let selectedTime = null;
-    let selectedShowtimeId = null;
-    let selectedDate = @json($dates[0]['full_date'] ?? '');
-    let selectedSeats = [];
-    let ticketPrice = 0;
-    let snackTotal = 0;
-    let discount = 0;
-    const showtimesData = @json($showtimesData);
+let currentStep = 1;
+let prevId = "1";
+let selectedTime = null;
+let selectedShowtimeId = null;
+let selectedDate = @json($dates[0]['full_date'] ?? '');
+let selectedSeats = [];
+let ticketPrice = 0;
+let snackTotal = 0;
+let discount = 0;
+const showtimesData = @json($showtimesData);
 
-    window.onload = function() {
-        showStep(currentStep);
-        document.getElementById("screen-next-btn").disabled = true;
-        updateShowtimes(selectedDate);
-        document.querySelectorAll('.next-step').forEach(button => {
-            button.addEventListener('click', handleNextStep);
+window.onload = function() {
+    showStep(currentStep);
+    document.getElementById("screen-next-btn").disabled = true;
+    updateShowtimes(selectedDate);
+    document.querySelectorAll('.next-step').forEach(button => {
+        button.addEventListener('click', handleNextStep);
+    });
+    document.querySelectorAll('.previous-step').forEach(button => {
+        button.addEventListener('click', handlePreviousStep);
+    });
+
+    // Initialize summary table on variant change
+    document.querySelectorAll('.variant-select').forEach(select => {
+        select.addEventListener('change', () => {
+            const productId = select.getAttribute('data-product-id');
+            updateQuantity(productId, 0);
         });
-        document.querySelectorAll('.previous-step').forEach(button => {
-            button.addEventListener('click', handlePreviousStep);
-        });
+    });
+};
+
+window.receiveSeats = function(seats) {
+    console.log('Seats received:', seats);
+    selectedSeats = seats;
+    updateOrderSummary();
+};
+
+function myFunction(id, date) {
+    document.getElementById(prevId).style.background = "rgb(243, 235, 235)";
+    document.getElementById(id).style.background = "#df0e62";
+    prevId = id;
+    selectedDate = date;
+    selectedTime = null;
+    selectedShowtimeId = null;
+    document.getElementById("screen-next-btn").disabled = true;
+    const iframe = document.getElementById('seat-map-iframe');
+    const placeholder = document.getElementById('seat-map-placeholder');
+    if (iframe) iframe.style.display = 'none';
+    if (placeholder) placeholder.style.display = 'block';
+    updateShowtimes(date);
+}
+
+function updateShowtimes(date) {
+    console.log('Date:', date);
+    console.log('Showtimes Data:', showtimesData);
+    const timeUl = document.getElementById('time-ul');
+    timeUl.innerHTML = '';
+    const rooms = showtimesData[date] || [];
+    if (rooms.length === 0) {
+        timeUl.innerHTML = '<li class="time-li">Không có suất chiếu nào cho ngày này.</li>';
+        return;
+    }
+    rooms.forEach(room => {
+        const li = document.createElement('li');
+        li.className = 'time-li';
+        li.innerHTML = `
+            <div class="screens">${room.room_name}</div>
+            <div class="time-btn">
+                ${room.times.map(time => `
+                    <button class="screen-time" onclick="timeFunction(${time.id}, '${time.time}', ${time.base_price})">${time.time}</button>
+                `).join('')}
+            </div>
+        `;
+        timeUl.appendChild(li);
+    });
+}
+
+function timeFunction(showtimeId, time, basePrice) {
+    console.log('Executing timeFunction with showtimeId:', showtimeId);
+    selectedTime = time;
+    selectedShowtimeId = showtimeId;
+    ticketPrice = basePrice;
+    document.getElementById("screen-next-btn").disabled = false;
+    updateOrderSummary();
+
+    const iframe = document.getElementById('seat-map-iframe');
+    const placeholder = document.getElementById('seat-map-placeholder');
+    if (iframe && placeholder) {
+        try {
+            const newSrc = '{{ route('client.seats.map', ['showtimeId' => ':showtimeId']) }}'.replace(':showtimeId', showtimeId) + '?t=' + new Date().getTime();
+            console.log('Updating iframe src to:', newSrc);
+            iframe.src = newSrc;
+            iframe.style.display = 'block';
+            placeholder.style.display = 'none';
+        } catch (error) {
+            console.error('Error updating iframe:', error);
+        }
+    } else {
+        console.error('Iframe or placeholder not found in timeFunction');
+    }
+}
+
+function updateQuantity(productId, change) {
+    const quantityInput = document.getElementById(`quantity-${productId}`);
+    let currentQuantity = parseInt(quantityInput.value) || 0;
+    let newQuantity = Math.max(0, currentQuantity + change);
+    quantityInput.value = newQuantity;
+
+    // Get selected variant details
+    const select = document.querySelector(`.variant-select[data-product-id="${productId}"]`);
+    const selectedOption = select.options[select.selectedIndex];
+    const price = parseFloat(selectedOption.getAttribute('data-price')) || 0;
+    const variantName = selectedOption.text.split(' (')[0];
+    const productName = select.closest('.snack-item').querySelector('h4').textContent;
+
+    // Update snack total based on quantity * price
+    snackTotal += (newQuantity - currentQuantity) * price;
+
+    // Update summary table
+    updateSummaryTable(productId, productName, variantName, newQuantity, price);
+    updateOrderSummary();
+}
+
+function updateSummaryTable(productId, productName, variantName, quantity, price) {
+    const tableBody = document.getElementById('summary-table-body');
+    let row = document.querySelector(`#summary-table-body tr[data-product-id="${productId}"]`);
+
+    // If quantity is 0, remove the row if it exists
+    if (quantity === 0) {
+        if (row) row.remove();
+        snackTotal -= currentQuantity * price; // Adjust snackTotal when removing
+    } else {
+        // If row exists, update it; otherwise, create a new row
+        if (!row) {
+            row = document.createElement('tr');
+            row.setAttribute('data-product-id', productId);
+            tableBody.appendChild(row);
+        }
+        // Set price to quantity * price
+        row.innerHTML = `
+            <td style="padding: 8px; text-align: left;">${productName} (${variantName})</td>
+            <td style="padding: 8px; text-align: center;">${quantity}</td>
+            <td style="padding: 8px; text-align: right;">${numberFormat(quantity * price)} ₫</td>
+        `;
     }
 
-    window.receiveSeats = function(seats) {
-        console.log('Seats received:', seats);
-        selectedSeats = seats;
-        updateOrderSummary();
+    // Recalculate snack total as the sum of all prices in the table
+    let snackSubtotal = 0;
+    document.querySelectorAll('#summary-table-body tr').forEach(row => {
+        const priceText = row.children[2].textContent.replace(' ₫', '').replace(/,/g, '');
+        snackSubtotal += parseFloat(priceText);
+    });
+    snackTotal = snackSubtotal; // Sync snackTotal with table calculation
+    document.getElementById('total-price').textContent = `${numberFormat(ticketPrice * selectedSeats.length + snackTotal - discount)} ₫`;
+}
+
+function numberFormat(number) {
+    return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+function updateOrderSummary() {
+    const elements = {
+        ticketCount: document.getElementById('ticket-count'),
+        ticketPrice: document.getElementById('ticket-price'),
+        selectedSeats: document.getElementById('selected-seats'),
+        selectedShowtime: document.getElementById('selected-showtime'),
+        discountAmount: document.getElementById('discount-amount'),
+        orderTotal: document.getElementById('order-total'),
+        totalAmount: document.getElementById('total-amount'),
+        ticketScreen: document.getElementById('ticket-screen'),
+        ticketRow: document.getElementById('ticket-row'),
+        ticketSeat: document.getElementById('ticket-seat'),
+        ticketPriceDisplay: document.getElementById('ticket-price-display'),
+        ticketDate: document.getElementById('ticket-date'),
+        ticketTime: document.getElementById('ticket-time')
     };
 
-    function myFunction(id, date) {
-        document.getElementById(prevId).style.background = "rgb(243, 235, 235)";
-        document.getElementById(id).style.background = "#df0e62";
-        prevId = id;
-        selectedDate = date;
-        selectedTime = null;
-        selectedShowtimeId = null;
-        document.getElementById("screen-next-btn").disabled = true;
-        const iframe = document.getElementById('seat-map-iframe');
-        const placeholder = document.getElementById('seat-map-placeholder');
-        if (iframe) iframe.style.display = 'none';
-        if (placeholder) placeholder.style.display = 'block';
-        updateShowtimes(date);
-    }
+    const ticketCount = selectedSeats.length;
+    const ticketTotal = ticketCount * ticketPrice;
 
-    function updateShowtimes(date) {
-        console.log('Date:', date);
-        console.log('Showtimes Data:', showtimesData);
-        const timeUl = document.getElementById('time-ul');
-        timeUl.innerHTML = '';
-        const rooms = showtimesData[date] || [];
-        if (rooms.length === 0) {
-            timeUl.innerHTML = '<li class="time-li">Không có suất chiếu nào cho ngày này.</li>';
-            return;
-        }
-        rooms.forEach(room => {
-            const li = document.createElement('li');
-            li.className = 'time-li';
-            li.innerHTML = `
-                <div class="screens">${room.room_name}</div>
-                <div class="time-btn">
-                    ${room.times.map(time => `
-                        <button class="screen-time" onclick="timeFunction(${time.id}, '${time.time}', ${time.base_price})">${time.time}</button>
-                    `).join('')}
-                </div>
-            `;
-            timeUl.appendChild(li);
-        });
-    }
-
-    function timeFunction(showtimeId, time, basePrice) {
-        console.log('Executing timeFunction with showtimeId:', showtimeId);
-        selectedTime = time;
-        selectedShowtimeId = showtimeId;
-        ticketPrice = basePrice;
-        document.getElementById("screen-next-btn").disabled = false;
-        updateOrderSummary();
-
-        const iframe = document.getElementById('seat-map-iframe');
-        const placeholder = document.getElementById('seat-map-placeholder');
-        if (iframe && placeholder) {
-            try {
-                const newSrc = '{{ route('client.seats.map', ['showtimeId' => ':showtimeId']) }}'.replace(':showtimeId',
-                    showtimeId) + '?t=' + new Date().getTime();
-                console.log('Updating iframe src to:', newSrc);
-                iframe.src = newSrc;
-                iframe.style.display = 'block';
-                placeholder.style.display = 'none';
-            } catch (error) {
-                console.error('Error updating iframe:', error);
+    for (let key in elements) {
+        if (elements[key]) {
+            switch (key) {
+                case 'ticketCount':
+                    elements[key].textContent = ticketCount;
+                    break;
+                case 'ticketPrice':
+                    elements[key].textContent = ticketTotal.toLocaleString('vi-VN') + ' ₫';
+                    break;
+                case 'selectedSeats':
+                    elements[key].textContent = selectedSeats.map(seat => seat.label).join(', ') || 'N/A';
+                    break;
+                case 'selectedShowtime':
+                    elements[key].textContent = selectedTime ? `${selectedTime} - ${selectedDate}` : 'N/A';
+                    break;
+                case 'discountAmount':
+                    elements[key].textContent = discount.toLocaleString('vi-VN') + ' ₫';
+                    break;
+                case 'orderTotal':
+                case 'totalAmount':
+                    const total = ticketTotal + snackTotal - discount;
+                    elements[key].textContent = total.toLocaleString('vi-VN') + ' ₫';
+                    break;
+                case 'ticketScreen':
+                    elements[key].textContent = showtimesData[selectedDate]?.[0]?.room_name || 'N/A';
+                    break;
+                case 'ticketRow':
+                    elements[key].textContent = selectedSeats.length > 0 ? (selectedSeats[0]?.label?.split('-')[0] || 'N/A') : 'N/A';
+                    break;
+                case 'ticketSeat':
+                    elements[key].textContent = selectedSeats.length > 0 ? (selectedSeats[0]?.label?.split('-')[1] || 'N/A') : 'N/A';
+                    break;
+                case 'ticketPriceDisplay':
+                    elements[key].textContent = ticketTotal.toLocaleString('vi-VN') + ' ₫';
+                    break;
+                case 'ticketDate':
+                    elements[key].textContent = selectedDate || 'N/A';
+                    break;
+                case 'ticketTime':
+                    elements[key].textContent = selectedTime || 'N/A';
+                    break;
             }
         } else {
-            console.error('Iframe or placeholder not found in timeFunction');
+            console.warn(`Element ${key} not found in DOM`);
         }
     }
+}
 
-    function updateOrderSummary() {
-        const elements = {
-            ticketCount: document.getElementById('ticket-count'),
-            ticketPrice: document.getElementById('ticket-price'),
-            selectedSeats: document.getElementById('selected-seats'),
-            selectedShowtime: document.getElementById('selected-showtime'),
-            discountAmount: document.getElementById('discount-amount'),
-            orderTotal: document.getElementById('order-total'),
-            totalAmount: document.getElementById('total-amount'),
-            ticketScreen: document.getElementById('ticket-screen'),
-            ticketRow: document.getElementById('ticket-row'),
-            ticketSeat: document.getElementById('ticket-seat'),
-            ticketPriceDisplay: document.getElementById('ticket-price-display'),
-            ticketDate: document.getElementById('ticket-date'),
-            ticketTime: document.getElementById('ticket-time')
-        };
-
-        const ticketCount = selectedSeats.length;
-        const ticketTotal = ticketCount * ticketPrice;
-
-        for (let key in elements) {
-            if (elements[key]) {
-                switch (key) {
-                    case 'ticketCount':
-                        elements[key].textContent = ticketCount;
-                        break;
-                    case 'ticketPrice':
-                        elements[key].textContent = ticketTotal.toLocaleString('vi-VN') + ' ₫';
-                        break;
-                    case 'selectedSeats':
-                        elements[key].textContent = selectedSeats.map(seat => seat.label).join(', ') || 'N/A';
-                        break;
-                    case 'selectedShowtime':
-                        elements[key].textContent = selectedTime ? `${selectedTime} - ${selectedDate}` : 'N/A';
-                        break;
-                    case 'discountAmount':
-                        elements[key].textContent = discount.toLocaleString('vi-VN') + ' ₫';
-                        break;
-                    case 'orderTotal':
-                    case 'totalAmount':
-                        const total = ticketTotal + snackTotal - discount;
-                        elements[key].textContent = total.toLocaleString('vi-VN') + ' ₫';
-                        break;
-                    case 'ticketScreen':
-                        elements[key].textContent = showtimesData[selectedDate]?.[0]?.room_name || 'N/A';
-                        break;
-                    case 'ticketRow':
-                        elements[key].textContent = selectedSeats.length > 0 ? (selectedSeats[0]?.label?.split('-')[
-                            0] || 'N/A') : 'N/A';
-                        break;
-                    case 'ticketSeat':
-                        elements[key].textContent = selectedSeats.length > 0 ? (selectedSeats[0]?.label?.split('-')[
-                            1] || 'N/A') : 'N/A';
-                        break;
-                    case 'ticketPriceDisplay':
-                        elements[key].textContent = ticketTotal.toLocaleString('vi-VN') + ' ₫';
-                        break;
-                    case 'ticketDate':
-                        elements[key].textContent = selectedDate || 'N/A';
-                        break;
-                    case 'ticketTime':
-                        elements[key].textContent = selectedTime || 'N/A';
-                        break;
-                }
-            } else {
-                console.warn(`Element ${key} not found in DOM`);
-            }
-        }
+function handleNextStep(e) {
+    e.preventDefault();
+    if (currentStep < 5) {
+        currentStep++;
+        showStep(currentStep);
+        console.log('Moving to step:', currentStep);
     }
+}
 
-    function handleNextStep(e) {
-        e.preventDefault();
-        if (currentStep < 5) {
-            currentStep++;
-            showStep(currentStep);
-            console.log('Moving to step:', currentStep);
-        }
+function handlePreviousStep(e) {
+    e.preventDefault();
+    if (currentStep > 1) {
+        currentStep--;
+        showStep(currentStep);
+        console.log('Moving to step:', currentStep);
     }
+}
 
-    function handlePreviousStep(e) {
-        e.preventDefault();
-        if (currentStep > 1) {
-            currentStep--;
-            showStep(currentStep);
-            console.log('Moving to step:', currentStep);
-        }
-    }
-
-    function showStep(step) {
-        document.querySelectorAll('fieldset').forEach((fieldset, index) => {
-            fieldset.style.display = index === step - 1 ? 'block' : 'none';
-        });
-        document.querySelectorAll('#progressbar li').forEach((li, index) => {
-            li.classList.remove('active');
-            if (index < step) li.classList.add('active');
-        });
-        console.log('Displaying step:', step);
-    }
+function showStep(step) {
+    document.querySelectorAll('fieldset').forEach((fieldset, index) => {
+        fieldset.style.display = index === step - 1 ? 'block' : 'none';
+    });
+    document.querySelectorAll('#progressbar li').forEach((li, index) => {
+        li.classList.remove('active');
+        if (index < step) li.classList.add('active');
+    });
+    console.log('Displaying step:', step);
+}
 </script>
 
 <script type="text/javascript" src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>
