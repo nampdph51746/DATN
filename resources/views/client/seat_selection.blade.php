@@ -144,8 +144,9 @@
                         }
                     });
 
-                    // Cập nhật lại tổng kết nếu có ghế locked bởi chính tab này
+                    // Cập nhật lại tổng kết và gửi dữ liệu ban đầu về parent window
                     updateSummary();
+                    sendSeatsToParent();
                 }
             } catch (error) {
                 console.error('Error fetching initial seat status:', error);
@@ -200,6 +201,7 @@
                         seatElement.style.opacity = '0.6';
                         selectedSeats = selectedSeats.filter(seat => seat.id !== data.seat_id.toString());
                         updateSummary();
+                        sendSeatsToParent();
                     } else if (data.status === 'available') {
                         const originalColor = seatElement.getAttribute('data-original-color');
                         seatElement.style.backgroundColor = originalColor || '#28a745';
@@ -258,6 +260,7 @@
                         selectedSeats = selectedSeats.filter(seat => seat.id !== seatId);
                     }
                     updateSummary();
+                    sendSeatsToParent();
                 })
                 .catch(error => {
                     console.error('Error reserving seat:', error);
@@ -266,6 +269,7 @@
                     element.style.opacity = '1';
                     selectedSeats = selectedSeats.filter(seat => seat.id !== seatId);
                     updateSummary();
+                    sendSeatsToParent();
                 });
             }
 
@@ -300,6 +304,21 @@
             });
         }
 
+        // Hàm gửi dữ liệu ghế về parent window
+        function sendSeatsToParent() {
+            console.log('Sending seats to parent:', selectedSeats);
+            if (window.parent && window.parent.receiveSeats) {
+                try {
+                    window.parent.receiveSeats(selectedSeats);
+                    console.log('Seats sent to parent successfully');
+                } catch (error) {
+                    console.error('Error sending seats to parent:', error);
+                }
+            } else {
+                console.warn('Parent window or receiveSeats function not available');
+            }
+        }
+
         // Timer Logic
         function startTimer() {
             const now = new Date(); // Use current time dynamically
@@ -312,9 +331,9 @@
             console.log('Difference in ms:', diffMs);
 
             if (diffMs > 3600000) { // > 1 hour (3600000 ms)
-                timerDuration = 60000; // 1 minute for testing (5 minutes = 300000 ms)
+                timerDuration = 60000; // 1 minute for testing
             } else if (diffMs < 1800000) { // < 30 minutes (1800000 ms)
-                timerDuration = 30000; // 30 seconds for testing (3 minutes = 180000 ms)
+                timerDuration = 30000; // 30 seconds for testing
             } else {
                 timerDuration = 60000; // Default 1 minute for testing
             }
@@ -337,9 +356,10 @@
                     `;
                     setTimeout(() => {
                         window.top.location.href = '{{ route('movies.show', ['id' => $showtime->movie_id ?? $movie->id]) }}';
-                    }, 2000); // Redirect to movie detail page after 2 seconds
+                    }, 2000); // Redirect after 2 seconds
                     selectedSeats = []; // Reset selected seats
-                    updateSummary(); // Update summary to reflect reset
+                    updateSummary();
+                    sendSeatsToParent(); // Gửi trạng thái reset về parent
                     return;
                 }
 

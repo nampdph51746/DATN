@@ -25,9 +25,9 @@ class HomeController extends Controller
             ->with('genres')
             ->when($query, function ($q) use ($query) {
                 $q->where('name', 'like', "%{$query}%")
-                  ->orWhereHas('genres', function ($g) use ($query) {
-                      $g->where('name', 'like', "%{$query}%");
-                  });
+                    ->orWhereHas('genres', function ($g) use ($query) {
+                        $g->where('name', 'like', "%{$query}%");
+                    });
             })
             ->where('status', MovieStatus::Showing)
             ->orderBy('release_date', 'desc')
@@ -39,9 +39,9 @@ class HomeController extends Controller
             ->with('genres')
             ->when($query, function ($q) use ($query) {
                 $q->where('name', 'like', "%{$query}%")
-                  ->orWhereHas('genres', function ($g) use ($query) {
-                      $g->where('name', 'like', "%{$query}%");
-                  });
+                    ->orWhereHas('genres', function ($g) use ($query) {
+                        $g->where('name', 'like', "%{$query}%");
+                    });
             })
             ->where('status', MovieStatus::Upcoming)
             ->orderBy('release_date', 'asc')
@@ -60,7 +60,7 @@ class HomeController extends Controller
         $rooms = Room::all();
 
         // Tạo danh sách 15 ngày kế tiếp
-        $dates = collect(range(0, 14))->map(fn ($i) => now()->addDays($i));
+        $dates = collect(range(0, 14))->map(fn($i) => now()->addDays($i));
 
         // Lấy ngày được chọn từ request (hoặc mặc định hôm nay)
         $selectedDate = $request->input('date') ?? now()->format('Y-m-d');
@@ -123,8 +123,49 @@ class HomeController extends Controller
         if ($products->isEmpty()) {
             Log::warning("Không có sản phẩm nào đang hoạt động cho phim ID {$id}");
         }
+        $roomIds = $showtimes->pluck('room_id')->unique()->toArray();
+        $roomsData = Room::query()
+            ->with(['cinema' => function ($query) {
+                $query->where('status', 'active');
+            }, 'roomType'])
+            ->whereIn('id', $roomIds)
+            ->where('status', 'active')
+            ->get()
+            ->map(function ($room) {
+                return [
+                    'id' => $room->id,
+                    'name' => $room->name,
+                    'cinema' => $room->cinema ? [
+                        'id' => $room->cinema->id,
+                        'name' => $room->cinema->name,
+                        'address' => $room->cinema->address,
+                        'city_id' => $room->cinema->city_id,
+                        'hotline' => $room->cinema->hotline,
+                        'email' => $room->cinema->email,
+                        'map_url' => $room->cinema->map_url,
+                        'image_url' => $room->cinema->image_url,
+                        'opening_hours' => $room->cinema->opening_hours,
+                        'description' => $room->cinema->description,
+                        'status' => $room->cinema->status,
+                    ] : null,
+                    'room_type' => $room->roomType ? $room->roomType->name : 'N/A',
+                    'capacity' => $room->capacity,
+                    'status' => $room->status,
+                ];
+            });
+        $cinemas = $this->formatCinemas($roomsData);
 
-        return view('client.ticket_booking', compact('movie', 'dates', 'showtimesData', 'showtimeId', 'seatTypes', 'products', 'showtime'));
+        return view('client.ticket_booking', compact(
+            'movie',
+            'dates',
+            'showtimesData',
+            'showtimeId',
+            'seatTypes',
+            'products',
+            'showtime',
+            'roomsData', // Thêm roomsData vào view
+            'cinemas'
+        ));
     }
 
     private function getShowtimes($movieId)
@@ -134,7 +175,7 @@ class HomeController extends Controller
             ->where('start_time', '>=', Carbon::now())
             ->with('room')
             ->get();
-        
+
         return $showtimes;
     }
 
@@ -194,14 +235,14 @@ class HomeController extends Controller
             ->with(['genres'])
             ->when($query, function ($q) use ($query) {
                 $q->where('name', 'like', "%{$query}%")
-                  ->orWhereHas('genres', function ($g) use ($query) {
-                      $g->where('name', 'like', "%{$query}%");
-                  });
+                    ->orWhereHas('genres', function ($g) use ($query) {
+                        $g->where('name', 'like', "%{$query}%");
+                    });
             })
             ->where('status', MovieStatus::Showing)
             ->withCount(['showtimes' => function ($q) {
                 $q->where('start_time', '>=', Carbon::now()->subDays(30))
-                  ->whereHas('tickets');
+                    ->whereHas('tickets');
             }])
             ->orderBy('showtimes_count', 'desc')
             ->take(8)
@@ -212,9 +253,9 @@ class HomeController extends Controller
             ->with(['genres'])
             ->when($query, function ($q) use ($query) {
                 $q->where('name', 'like', "%{$query}%")
-                  ->orWhereHas('genres', function ($g) use ($query) {
-                      $g->where('name', 'like', "%{$query}%");
-                  });
+                    ->orWhereHas('genres', function ($g) use ($query) {
+                        $g->where('name', 'like', "%{$query}%");
+                    });
             })
             ->whereIn('status', [MovieStatus::Showing, MovieStatus::Upcoming])
             ->orderBy('created_at', 'desc')
@@ -226,14 +267,14 @@ class HomeController extends Controller
             ->with(['genres'])
             ->when($query, function ($q) use ($query) {
                 $q->where('name', 'like', "%{$query}%")
-                  ->orWhereHas('genres', function ($g) use ($query) {
-                      $g->where('name', 'like', "%{$query}%");
-                  });
+                    ->orWhereHas('genres', function ($g) use ($query) {
+                        $g->where('name', 'like', "%{$query}%");
+                    });
             })
             ->where('status', MovieStatus::Showing)
             ->withCount(['showtimes' => function ($q) {
                 $q->where('start_time', '>=', Carbon::now()->subDays(30))
-                  ->whereHas('tickets');
+                    ->whereHas('tickets');
             }])
             ->orderBy('showtimes_count', 'desc')
             ->take(8)
@@ -244,19 +285,38 @@ class HomeController extends Controller
             ->with(['genres'])
             ->when($query, function ($q) use ($query) {
                 $q->where('name', 'like', "%{$query}%")
-                  ->orWhereHas('genres', function ($g) use ($query) {
-                      $g->where('name', 'like', "%{$query}%");
-                  });
+                    ->orWhereHas('genres', function ($g) use ($query) {
+                        $g->where('name', 'like', "%{$query}%");
+                    });
             })
             ->whereIn('status', [MovieStatus::Showing, MovieStatus::Upcoming])
             ->withCount(['showtimes' => function ($q) {
                 $q->where('start_time', '>=', Carbon::now()->subDays(7))
-                  ->whereHas('tickets');
+                    ->whereHas('tickets');
             }])
             ->orderBy('showtimes_count', 'desc')
             ->take(8)
             ->get();
 
         return view('client.movies', compact('showingMovies', 'recentMovies', 'popularMovies', 'trendMovies', 'query'));
+    }
+    private function formatCinemas($roomsData)
+    {
+        return $roomsData->pluck('cinema')->unique('id')->filter()->values()->map(function ($cinema) {
+            $cinema = (array) $cinema;
+            return [
+                'id' => $cinema['id'] ?? null,
+                'name' => $cinema['name'] ?? '',
+                'address' => $cinema['address'] ?? '',
+                'city_id' => $cinema['city_id'] ?? null,
+                'hotline' => $cinema['hotline'] ?? '',
+                'email' => $cinema['email'] ?? '',
+                'map_url' => $cinema['map_url'] ?? '',
+                'image_url' => $cinema['image_url'] ?? '',
+                'opening_hours' => $cinema['opening_hours'] ?? '',
+                'description' => $cinema['description'] ?? '',
+                'status' => $cinema['status'] ?? '',
+            ];
+        });
     }
 }
