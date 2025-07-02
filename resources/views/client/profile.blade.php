@@ -134,11 +134,11 @@
             <p>{{ Auth::user()->role }}</p>
         </div>
 
-        @if (Auth::check() && in_array(Auth::user()->role, ['admin', 'staff']))
+        {{-- @if (Auth::check() && in_array(Auth::user()->role, ['admin', 'staff']))
             <div class="mb-3 d-grid">
                 <a href="{{ route('admin.dashboard') }}" class="btn btn-primary">Đi đến Trang Admin</a>
             </div>
-        @endif
+        @endif --}}
 
         <div class="mb-3 d-grid">
             <a href="{{ route('client.home') }}" class="btn btn-soft-primary">Quay lại Trang Chủ</a>

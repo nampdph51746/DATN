@@ -93,6 +93,10 @@
             color: #fff;
         }
     </style>
+
+    <!-- Thêm CDN SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <section class="w3l-main-slider position-relative" id="home">
         <div class="companies20-content">
             <div class="owl-one owl-carousel owl-theme">
@@ -195,10 +199,10 @@
                 <div class="headerhny-title">
                     <div class="w3l-title-grids">
                         <div class="headerhny-left">
-                            <h3 class="hny-title">Popular Movies</h3>
+                            <h3 class="hny-title">Phim Đang Chiếu</h3>
                         </div>
                         <div class="headerhny-right text-lg-right">
-                            <h4><a class="show-title" href="{{ route('movies.show', ['id' => $showingMovies->first()->id ?? 1]) }}">Show all</a></h4>
+                            <h4><a class="show-title" href="{{ route('movies.show', ['id' => $showingMovies->first()->id ?? 1]) }}">Xem tất cả</a></h4>
                         </div>
                     </div>
                 </div>
@@ -220,7 +224,7 @@
                                     <div class="box-content">
                                         <h3 class="title">{{ $movie->name }}</h3>
                                         <h4>
-                                            <span class="post"><span class="fa fa-clock-o"></span> {{ $movie->duration_minutes }} min</span>
+                                            <span class="post"><span class="fa fa-clock-o"></span> {{ $movie->duration_minutes }} phút</span>
                                             <span class="post fa fa-heart text-right"></span>
                                         </h4>
                                     </div>
@@ -233,9 +237,15 @@
                                 @endforeach
                             </div>
                             <div class="text-center mt-3">
-                                <a href="{{ route('client.movies.ticketBooking', ['id' => $movie->id]) }}" class="ticket-btn">
-                                    <i class="fa fa-ticket" aria-hidden="true"></i> Đặt vé
-                                </a>
+                                @auth
+                                    <a href="{{ route('client.movies.ticketBooking', ['id' => $movie->id]) }}" class="ticket-btn">
+                                        <i class="fa fa-ticket" aria-hidden="true"></i> Đặt vé
+                                    </a>
+                                @else
+                                    <a href="#" class="ticket-btn" onclick="showLoginPrompt(event, '{{ route('client.movies.ticketBooking', ['id' => $movie->id]) }}')">
+                                        <i class="fa fa-ticket" aria-hidden="true"></i> Đặt vé
+                                    </a>
+                                @endauth
                             </div>
                         </div>
                     @endforeach
@@ -250,10 +260,10 @@
                 <div class="headerhny-title">
                     <div class="w3l-title-grids">
                         <div class="headerhny-left">
-                            <h3 class="hny-title">Upcoming Movies</h3>
+                            <h3 class="hny-title">Phim Sắp Chiếu</h3>
                         </div>
                         <div class="headerhny-right text-lg-right">
-                            <h4><a class="show-title" href="{{ route('movies.show', ['id' => $upcomingMovies->first()->id ?? 1]) }}">Show all</a></h4>
+                            <h4><a class="show-title" href="{{ route('movies.show', ['id' => $upcomingMovies->first()->id ?? 1]) }}">Xem tất cả</a></h4>
                         </div>
                     </div>
                 </div>
@@ -270,7 +280,7 @@
                                     <div class="box-content">
                                         <h3 class="title">{{ $movie->name }}</h3>
                                         <h4>
-                                            <span class="post"><span class="fa fa-clock-o"></span> {{ $movie->duration_minutes }} min</span>
+                                            <span class="post"><span class="fa fa-clock-o"></span> {{ $movie->duration_minutes }} phút</span>
                                             <span class="post fa fa-heart text-right"></span>
                                         </h4>
                                     </div>
@@ -283,9 +293,15 @@
                                 @endforeach
                             </div>
                             <div class="text-center mt-3">
-                                <a href="{{ route('client.movies.ticketBooking', ['id' => $movie->id]) }}" class="ticket-btn">
-                                    <i class="fa fa-ticket" aria-hidden="true"></i> Đặt vé
-                                </a>
+                                @auth
+                                    <a href="{{ route('client.movies.ticketBooking', ['id' => $movie->id]) }}" class="ticket-btn">
+                                        <i class="fa fa-ticket" aria-hidden="true"></i> Đặt vé
+                                    </a>
+                                @else
+                                    <a href="#" class="ticket-btn" onclick="showLoginPrompt(event, '{{ route('client.movies.ticketBooking', ['id' => $movie->id]) }}')">
+                                        <i class="fa fa-ticket" aria-hidden="true"></i> Đặt vé
+                                    </a>
+                                @endauth
                             </div>
                         </div>
                     @endforeach
@@ -295,7 +311,6 @@
     </section>
 
     <!--grids-sec2-->
-    <!--mid-slider -->
     <section class="w3l-mid-slider position-relative">
         <div class="companies20-content">
             <div class="owl-mid owl-carousel owl-theme">
@@ -304,12 +319,12 @@
                         <div class="slider-info mid-view bg bg2">
                             <div class="container">
                                 <div class="mid-info">
-                                    <span class="sub-text">Comedy</span>
+                                    <span class="sub-text">Hài</span>
                                     <h3>Jumanji: The Next Level</h3>
-                                    <p>2019 ‧ Comedy/Action ‧ 2h 3m</p>
+                                    <p>2019 ‧ Hài/Hành động ‧ 2h 3m</p>
                                     <a class="watch" href="movies.html"><span class="fa fa-play"
                                             aria-hidden="true"></span>
-                                        Watch Trailer</a>
+                                        Xem Trailer</a>
                                 </div>
                             </div>
                         </div>
@@ -320,12 +335,12 @@
                         <div class="slider-info mid-view mid-top1 bg bg2">
                             <div class="container">
                                 <div class="mid-info">
-                                    <span class="sub-text">Adventure</span>
+                                    <span class="sub-text">Phiêu lưu</span>
                                     <h3>Dolittle</h3>
-                                    <p>2020 ‧ Family/Adventure ‧ 1h 41m</p>
+                                    <p>2020 ‧ Gia đình/Phiêu lưu ‧ 1h 41m</p>
                                     <a class="watch" href="movies.html"><span class="fa fa-play"
                                             aria-hidden="true"></span>
-                                        Watch Trailer</a>
+                                        Xem Trailer</a>
                                 </div>
                             </div>
                         </div>
@@ -336,12 +351,12 @@
                         <div class="slider-info mid-view mid-top2 bg bg2">
                             <div class="container">
                                 <div class="mid-info">
-                                    <span class="sub-text">Action</span>
+                                    <span class="sub-text">Hành động</span>
                                     <h3>Bad Boys for Life</h3>
-                                    <p>2020 ‧ Comedy/Action ‧ 2h 4m</p>
+                                    <p>2020 ‧ Hài/Hành động ‧ 2h 4m</p>
                                     <a class="watch" href="movies.html"><span class="fa fa-play"
                                             aria-hidden="true"></span>
-                                        Watch Trailer</a>
+                                        Xem Trailer</a>
                                 </div>
                             </div>
                         </div>
@@ -350,5 +365,27 @@
             </div>
         </div>
     </section>
+
+    <!-- JavaScript cho kiểm tra đăng nhập và hiển thị popup -->
+    <script>
+        function showLoginPrompt(event, redirectUrl) {
+            event.preventDefault();
+            Swal.fire({
+                title: 'Yêu cầu đăng nhập',
+                text: 'Bạn cần đăng nhập để đặt vé. Chuyển tới trang đăng nhập?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Đăng nhập',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = '{{ route("login") }}?redirect=' + encodeURIComponent(redirectUrl);
+                }
+            });
+        }
+    </script>
+
     @include('client.footer.footer')
 @endsection
