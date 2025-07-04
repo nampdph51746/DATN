@@ -15,6 +15,7 @@ class ProductFactory extends Factory
         return [
             'category_id' => \App\Models\ProductCategory::factory(),
             'name' => $this->faker->sentence(3),
+            'sku' => $this->faker->unique()->lexify('???'),
             'description' => $this->faker->paragraph,
             'image_url' => $this->faker->imageUrl(),
             'product_type' => $this->faker->randomElement(ProductType::cases()),

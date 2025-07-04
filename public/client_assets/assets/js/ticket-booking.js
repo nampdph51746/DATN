@@ -15,6 +15,7 @@ $(document).ready(function () {
 			.index(nextGfgStep)).addClass("active");
 
 		nextGfgStep.show();
+		const currentGfgStep = $('.some-selector');
 		currentGfgStep.animate({
 			opacity: 0
 		}, {
