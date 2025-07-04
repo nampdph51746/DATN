@@ -11,7 +11,7 @@
 	<link href="//fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,600;0,700;1,600&display=swap" rel="stylesheet">
 	<link rel="stylesheet" type="text/css" href="{{ asset('client_assets/assets/css/as-alert-message.min.css') }}">
 	<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.0.14/css/all.min.css">
-
+	<script src="https://cdn.tailwindcss.com"></script>
 	<!-- ..............Booking............... -->
 	<link rel="stylesheet" href="https://npmcdn.com/flickity@2/dist/flickity.css">
 	<link rel="stylesheet" type="text/css" href="{{ asset('client_assets/assets/css/progress.css') }}">

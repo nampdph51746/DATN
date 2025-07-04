@@ -1,3 +1,291 @@
+<style>
+.seat-selection-wrapper {
+    padding: 20px;
+    background: #0d0d0d;
+    max-width: 1200px;
+    margin: auto;
+    font-family: 'Roboto', sans-serif;
+    color: #ffffff;
+}
+
+.seat-selection-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 30px;
+}
+
+.section-title {
+    font-size: 1.8em;
+    text-align: center;
+    color: #ffffff;
+    margin-bottom: 20px;
+    font-weight: 600;
+    padding-bottom: 5px;
+    border-bottom: 2px solid #e5006e;
+}
+
+.screen {
+    text-align: center;
+    background: linear-gradient(to right, #e5006e, #1a1a1a);
+    color: #ffffff;
+    padding: 12px;
+    font-weight: 600;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 8px rgba(229, 0, 110, 0.3);
+    border: 2px solid #ffffff;
+}
+
+.seat-map {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.seat-row-container {
+    display: flex;
+    align-items: center;
+}
+
+.row-label {
+    width: 28px;
+    text-align: center;
+    font-weight: 600;
+    color: #ffffff;
+    margin-right: 10px;
+    background-color: #333333;
+    border-radius: 4px;
+    padding: 2px 0;
+    border: 1px solid #d3d3d3;
+}
+
+.seat-row {
+    display: grid;
+    gap: 6px;
+}
+
+.seat {
+    width: 40px;
+    height: 40px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    text-align: center;
+    line-height: 40px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    background-color: #28a745;
+    color: #ffffff;
+    border: 2px solid #ffffff;
+}
+
+.seat:hover {
+    transform: scale(1.1);
+}
+
+.seat.reserved {
+    cursor: not-allowed;
+    opacity: 0.6;
+    background-color: #dc3545 !important;
+}
+
+.seat.selected {
+    background-color: #e5006e;
+    color: #ffffff;
+    border: 3px solid #ffffff;
+    box-shadow: 0 0 10px rgba(229, 0, 110, 0.5);
+}
+
+.seat.empty {
+    background-color: #222222;
+    cursor: default;
+    border: 1px dashed #444444;
+}
+
+.seat-legend {
+    margin-top: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    font-size: 0.95em;
+    color: #d3d3d3;
+}
+
+.legend-color {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    margin-right: 6px;
+    border-radius: 4px;
+    border: 1px solid #ffffff;
+}
+
+.legend-color.selected {
+    background-color: #e5006e;
+}
+
+.legend-color.reserved {
+    background-color: #dc3545;
+}
+
+.summary-section {
+    background: #1c1c1c;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    border: 2px solid #333333;
+}
+
+.summary-title {
+    font-size: 1.4em;
+    margin-bottom: 15px;
+    color: #ffffff;
+    text-align: center;
+    font-weight: 600;
+    padding-bottom: 5px;
+    border-bottom: 2px solid #e5006e;
+}
+
+.ticket-info {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.movie-poster {
+    flex: 0 0 120px;
+}
+
+.poster-image {
+    width: 120px;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    object-fit: cover;
+}
+
+.info-details {
+    flex: 1;
+}
+
+.info-line {
+    margin-bottom: 12px;
+    font-size: 0.75em;
+    display: flex;
+    justify-content: space-between;
+    color: #d3d3d3;
+}
+
+.info-line.total {
+    font-weight: 600;
+    font-size: 1.05em;
+    border-top: 1px solid #444444;
+    padding-top: 10px;
+    margin-top: 15px;
+    color: #ffffff;
+}
+
+.timer-section {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #333333;
+}
+
+.snack-table {
+    width: 100%;
+    margin-top: 10px;
+    border-collapse: collapse;
+}
+
+.snack-table th, .snack-table td {
+    padding: 8px;
+    text-align: left;
+    color: #d3d3d3;
+    border-bottom: 1px solid #444444;
+}
+
+.snack-table th {
+    font-weight: 600;
+}
+
+.timer-box {
+    background: #e5006e;
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 1.4em;
+    font-weight: bold;
+    min-width: 50px;
+    display: inline-block;
+    text-align: center;
+}
+
+.timer-label {
+    color: #d3d3d3;
+    font-size: 0.85em;
+    margin-top: 4px;
+}
+
+@media (max-width: 768px) {
+    .seat-selection-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .seat {
+        width: 30px;
+        height: 30px;
+        line-height: 30px;
+        font-size: 10px;
+    }
+
+    .ticket-info {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .movie-poster {
+        flex: 0 0 100px;
+    }
+
+    .poster-image {
+        width: 100px;
+    }
+}
+
+/* Custom classes */
+.bg-dark { background-color: #1c1c1c; }
+.bg-dark-gray { background-color: #222222; }
+.bg-fuchsia { background-color: #e5006e; }
+.bg-gradient-fuchsia {
+    background: linear-gradient(to right, #e5006e, #1a1a1a);
+}
+
+.custom-btn {
+    padding: 10px 24px;
+    color: #fff;
+    font-weight: 600;
+    font-size: 15px;
+    border: none;
+    border-radius: 9999px; /* Full rounded */
+    transition: background-color 0.3s ease;
+}
+
+.bg-danger { background-color: #dc3545; }
+.text-white { color: #ffffff; }
+.text-gray-light { color: #d3d3d3; }
+.border-white { border-color: #ffffff; }
+.border-fuchsia { border-color: #e5006e; }
+.border-light { border-color: #d3d3d3; }
+.form-select { appearance: none; }
+.shadow-lg { box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
+</style>
+
 @extends('layouts.client.client')
 @section('content')
     <div class="container" id="progress-container-id">
@@ -15,7 +303,7 @@
                         <br>
                         <fieldset>
                             <div id="screen-select-div">
-                                <h2>Show time Selection</h2>
+                                <!-- <h2>Show time Selection</h2> -->
                                 <h3>{{ $movie->title }}</h3>
                                 @if (empty($dates))
                                     <p>Không có suất chiếu nào cho phim này.</p>
@@ -40,9 +328,9 @@
                         </fieldset>
                         <fieldset>
                             <div>
-                                <h2>Seat Selection</h2>
+                                <!-- <h2>Seat Selection</h2> -->
                                 <iframe id="seat-map-iframe" src="" width="100%" height="700"
-                                    style="border: none; overflow: hidden; display: none;" onload="onIframeLoad()">
+                                    style="border: none; overflow: hidden; display: none;" onload="on onIframeLoad()">
                                 </iframe>
                                 <div id="seat-map-placeholder" style="display: block;">
                                     <p>Please select a showtime to view the seat map.</p>
@@ -56,91 +344,118 @@
                         </fieldset>
                         <!-- Bước 3: Snack Selection -->
                         <fieldset>
-                            <div id="snack-select-div" style="display: flex; gap: 20px; padding: 20px;">
+                            <div id="snack-select-div" class="flex gap-4 p-4">
                                 <!-- Left side: Snack Cards -->
-                                <div
-                                    style="flex: 2; background: #f9f9f9; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); padding: 20px;">
-                                    <h2>Snack Selection</h2>
-                                    <div class="snack-container"
-                                        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                                <div class="basis-[70%] bg-[#121212] rounded-lg shadow-md p-4">
+                                    <h2 class="text-lg text-white font-semibold mb-3 border-b border-fuchsia pb-1">Snack Selection</h2>
+                                    <div class="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-4">
                                         @foreach ($products as $product)
-                                            <div class="snack-item"
-                                                style="display: flex; flex-direction: column; align-items: center; background: white; padding: 15px; border-radius: 8px; text-align: center;">
+                                            <div class="flex flex-col items-center bg-white p-3 rounded-lg text-center">
                                                 <img src="{{ asset('storage/' . $product->image_url) }}"
                                                     alt="{{ $product->name }}"
-                                                    style="margin-bottom: 10px; width: 120px; height: 120px; object-fit: cover;" />
+                                                    class="mb-2 w-24 h-24 object-cover rounded" />
                                                 <div class="snack-info">
-                                                    <h4>{{ $product->name }}</h4>
+                                                    <h4 class="text-base">{{ $product->name }}</h4>
                                                     @if ($product->productVariants->isNotEmpty())
-                                                        <select class="variant-select form-select"
-                                                            data-product-id="{{ $product->id }}"
-                                                            style="margin-top: 10px; padding: 5px; border-radius: 5px;"
-                                                            onchange="updateQuantity('{{ $product->id }}', 0)">
+                                                        <select class="variant-select form-select mt-2 p-1.5 rounded-md border text-sm"
+                                                                data-product-id="{{ $product->id }}"
+                                                                onchange="updateVariant('{{ $product->id }}')">
                                                             @foreach ($product->productVariants as $variant)
                                                                 <option value="{{ $variant->id }}"
-                                                                    data-price="{{ $variant->price }}"
-                                                                    data-sku="{{ $variant->sku }}">
+                                                                        data-price="{{ $variant->price }}"
+                                                                        data-sku="{{ $variant->sku }}">
                                                                     {{ $variant->productVariantOptions->map(fn($option) => $option->attributeValue->value)->join(' - ') }}
                                                                     ({{ number_format($variant->price) }} VNĐ)
                                                                 </option>
                                                             @endforeach
                                                         </select>
                                                     @else
-                                                        <p>No variants available</p>
+                                                        <p class="text-sm">No variants available</p>
                                                     @endif
                                                 </div>
-                                                <div class="snack-quantity"
-                                                    style="display: flex; align-items: center; gap: 10px; margin-top: 10px;"
+                                                <div class="snack-quantity flex items-center gap-2 mt-2"
                                                     data-product-id="{{ $product->id }}">
                                                     <button onclick="updateQuantity('{{ $product->id }}', -1)"
-                                                        style="padding: 5px 10px; background: #ff4b5a; color: white; border: none; border-radius: 5px;">-</button>
-                                                    <input type="number" id="quantity-{{ $product->id }}" value="0"
-                                                        min="0"
-                                                        style="width: 60px; text-align: center; border: 1px solid #ddd; border-radius: 5px; padding: 5px;"
+                                                            class="p-1.5 bg-red-500 text-white border-none rounded-md text-sm">-</button>
+                                                    <input type="number" id="quantity-{{ $product->id }}" value="0" min="0"
+                                                        class="w-12 text-center border border-gray-300 rounded-md p-1 text-sm"
                                                         readonly />
                                                     <button onclick="updateQuantity('{{ $product->id }}', 1)"
-                                                        style="padding: 5px 10px; background: #ff4b5a; color: white; border: none; border-radius: 5px;">+</button>
+                                                            class="p-1.5 bg-red-500 text-white border-none rounded-md text-sm">+</button>
                                                 </div>
                                             </div>
                                         @endforeach
                                     </div>
                                 </div>
-                                <!-- Right side: Summary Table -->
-                                <div
-                                    style="flex: 1; background: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 15px;">
-                                    <h3 style="color: #333; margin-bottom: 10px;">Order Summary</h3>
-                                    <table id="summary-table" style="width: 100%; border-collapse: collapse;">
-                                        <thead>
-                                            <tr style="border-bottom: 1px solid #eee;">
-                                                <th style="padding: 8px; text-align: left;">Item</th>
-                                                <th style="padding: 8px; text-align: center;">Quantity</th>
-                                                <th style="padding: 8px; text-align: right;">Price</th>
+
+                                <!-- Right side: Thông tin đặt vé -->
+                                <div class="basis-[30%] summary-section">
+                                    <h3 class="summary-title">Thông tin đặt vé</h3>
+                                    <div class="ticket-info">
+                                        <div class="movie-poster">
+                                            <img src="{{ $movie->image_path ? asset('storage/' . $movie->image_path) : asset('images/default-poster.jpg') }}"
+                                                alt="{{ $movie->title ?? 'Chưa xác định' }}"
+                                                class="poster-image" />
+                                        </div>
+                                        <div class="info-details">
+                                            <div class="info-line"><strong>Phim:</strong> <span id="movie-title">{{ $movie->title ?? 'Chưa xác định' }}</span></div>
+                                            <div class="info-line"><strong>Rạp:</strong> <span id="summary-cinema-name">{{ $cinema->name ?? 'Chưa xác định' }}</span></div>
+                                            <div class="info-line"><strong>Suất:</strong> <span id="selected-showtime">{{ $showtime?->start_time?->format('H:i d/m/Y') ?? 'Chưa xác định' }}</span></div>
+                                            <div class="info-line"><strong>Phòng:</strong> <span id="room-name">{{ $room->name ?? 'Chưa xác định' }}</span></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="info-line"><strong>Ghế:</strong> <span id="selected-seats">{{ $selectedSeats ?? 'Chưa chọn ghế' }}</span></div>
+                                    <div class="info-line"><strong>Tiền vé:</strong> <span id="ticket-price">{{ number_format($totalPrice ?? 0) }} ₫</span></div>
+
+                                    <hr style="border: none; height: 2px; margin: 8px 0;">
+                                    <!-- Danh sách đồ ăn -->
+                                    <table id="summary-table-body" class="snack-table text-sm mt-2">
+                                        <thead class="text-center">
+                                            <tr>
+                                                <th style="width: 50%;">Tên món</th>
+                                                <th style="width: 25%;">Số lượng</th>
+                                                <th style="width: 25%;">Giá</th>
                                             </tr>
                                         </thead>
-                                        <tbody id="summary-table-body">
-                                            <!-- Movie Ticket Information -->
-                                            <tr id="movie-ticket-row" style="border-bottom: 1px solid #eee;">
-                                                <td style="padding: 8px; text-align: left;" id="movie-ticket-info">N/A</td>
-                                                <td style="padding: 8px; text-align: center;" id="ticket-quantity">0</td>
-                                                <td style="padding: 8px; text-align: right;" id="ticket-price">0 ₫</td>
-                                            </tr>
-                                            <!-- Snack rows will be populated dynamically via JavaScript -->
-                                        </tbody>
-                                        <tfoot>
-                                            <tr style="border-top: 2px solid #333; font-weight: bold;">
-                                                <td style="padding: 8px; text-align: left;">Total</td>
-                                                <td style="padding: 8px; text-align: center;"></td>
-                                                <td id="total-price" style="padding: 8px; text-align: right;">0 ₫</td>
-                                            </tr>
-                                        </tfoot>
+                                        <tbody></tbody>
                                     </table>
+                                    <div class="info-line mt-1"><strong>Tổng tiền đồ ăn:</strong> <span id="snack-total">0 ₫</span></div>
+
+                                    <!-- Dòng hr màu hồng -->
+                                    <hr style="border: none; height: 2px; background-color: #e5006e; margin: 8px 0;">
+
+                                    <!-- Tổng cộng -->
+                                    <div class="info-line"><strong>Tổng cộng:</strong> <span id="summary-total">0 ₫</span></div>
+
+                                    <!-- Đếm ngược -->
+                                    <div class="timer-section mt-4" id="timer-section">
+                                        <h2 style="color: #ffffff; font-size: 1.2em; margin-bottom: 10px;"><strong>Time Remaining</strong></h2>
+                                        <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 10px;" id="timer-display">
+                                            <div style="text-align: center;">
+                                                <span id="hours-snack" class="timer-box">00</span>
+                                                <div class="timer-label">Giờ</div>
+                                            </div>
+                                            <div style="text-align: center;">
+                                                <span id="minutes-snack" class="timer-box">00</span>
+                                                <div class="timer-label">Phút</div>
+                                            </div>
+                                            <div style="text-align: center;">
+                                                <span id="seconds-snack" class="timer-box">00</span>
+                                                <div class="timer-label">Giây</div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <div style="display: flex; justify-content: space-between; margin-top: 20px; padding: 0 20px;">
-                                <input type="button" name="previous-step" class="previous-step" value="Back"
-                                    style="padding: 10px 20px; background: #e0e0e0; color: #333; border: none; border-radius: 5px;" />
-                                <input type="button" name="next-step" class="next-step" value="Proceed to Payment"
-                                    style="padding: 10px 20px; background: #ff4b5a; color: white; border: none; border-radius: 5px;" />
+
+                            <div class="flex justify-between mt-4 px-4">
+                                <input type="button" name="previous-step" id="back-btn"
+                                    class="previous-step custom-btn bg-gray-600 hover:bg-gray-700"
+                                    value="Back" />
+                                <input type="button" name="next-step" id="proceed-snack-btn"
+                                    class="next-step custom-btn bg-[#e5006e] hover:bg-[#c4005c]"
+                                    value="Proceed to Payment" />
                             </div>
                         </fieldset>
                         <!-- Bước 4: Payment -->
@@ -243,13 +558,13 @@
                                             style="display: flex; justify-content: center; gap: 10px; margin-bottom: 10px;">
                                             <span
                                                 style="background: #ff4b5a; color: #fff; padding: 8px 12px; border-radius: 4px; font-size: 1.2em; font-weight: 600;"
-                                                id="hours">0</span>
+                                                id="hours-payment">00</span>
                                             <span
                                                 style="background: #ff4b5a; color: #fff; padding: 8px 12px; border-radius: 4px; font-size: 1.2em; font-weight: 600;"
-                                                id="minutes">0</span>
+                                                id="minutes-payment">00</span>
                                             <span
                                                 style="background: #ff4b5a; color: #fff; padding: 8px 12px; border-radius: 4px; font-size: 1.2em; font-weight: 600;"
-                                                id="seconds">0</span>
+                                                id="seconds-payment">00</span>
                                         </div>
                                         <p style="color: #6c757d; font-size: 0.9em;">Hours Minutes Seconds</p>
                                     </div>
@@ -383,9 +698,58 @@
     let ticketPrice = 0;
     let snackTotal = 0;
     let discount = 0;
+    let cinemaName = 'N/A'; // Thêm biến toàn cục cho cinemaName
     const showtimesData = @json($showtimesData);
     const roomsData = @json($roomsData);
     const movieTitle = @json($movie->name ?? 'N/A');
+
+    // Lưu trữ thông tin biến thể theo productId
+    let variantData = {};
+
+    let countdownInterval = null;
+    let countdownEndTime = null;
+
+    function startCountdown(durationInSeconds) {
+        const endTime = new Date().getTime() + durationInSeconds * 1000;
+        countdownEndTime = endTime;
+
+        updateTimerDisplay(); // Chạy ngay lập tức
+        if (countdownInterval) clearInterval(countdownInterval);
+        countdownInterval = setInterval(updateTimerDisplay, 1000);
+    }
+
+    function updateTimerDisplay() {
+        if (!countdownEndTime) return;
+        const now = new Date().getTime();
+        let distance = countdownEndTime - now;
+
+        if (distance <= 0) {
+            clearInterval(countdownInterval);
+            countdownInterval = null;
+            ['hours-snack', 'minutes-snack', 'seconds-snack', 'hours-payment', 'minutes-payment', 'seconds-payment'].forEach(id => {
+                const element = document.getElementById(id);
+                if (element) element.textContent = "00";
+            });
+            return;
+        }
+
+        const hours = Math.floor(distance / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+        ['hours-snack', 'hours-payment'].forEach(id => {
+            const element = document.getElementById(id);
+            if (element) element.textContent = String(hours).padStart(2, '0');
+        });
+        ['minutes-snack', 'minutes-payment'].forEach(id => {
+            const element = document.getElementById(id);
+            if (element) element.textContent = String(minutes).padStart(2, '0');
+        });
+        ['seconds-snack', 'seconds-payment'].forEach(id => {
+            const element = document.getElementById(id);
+            if (element) element.textContent = String(seconds).padStart(2, '0');
+        });
+    }
 
     window.onload = function() {
         showStep(currentStep);
@@ -398,12 +762,15 @@
             button.addEventListener('click', handlePreviousStep);
         });
 
-        // Initialize summary table on variant change
+        // Khởi tạo variant data
         document.querySelectorAll('.variant-select').forEach(select => {
-            select.addEventListener('change', () => {
-                const productId = select.getAttribute('data-product-id');
-                updateQuantity(productId, 0);
-            });
+            const productId = select.getAttribute('data-product-id');
+            const selectedOption = select.options[select.selectedIndex];
+            variantData[productId] = {
+                variantName: selectedOption.text.split(' (')[0],
+                price: parseFloat(selectedOption.getAttribute('data-price')) || 0
+            };
+            select.addEventListener('change', () => updateVariant(productId));
         });
 
         // Update summary table on page load
@@ -420,11 +787,13 @@
         }
     }
 
-    window.receiveSeats = function(seats) {
-        console.log('Seats received in parent window:', seats);
-        selectedSeats = Array.isArray(seats) ? seats : [];
+    window.receiveSeats = function(data) {
+        console.log('Data received in parent window:', data);
+        selectedSeats = Array.isArray(data.seats) ? data.seats : [];
+        cinemaName = data.cinemaName || 'N/A'; // Nhận cinemaName từ iframe
+        sessionStorage.setItem('cinemaName', cinemaName); // Lưu vào sessionStorage
+        console.log('Updated selectedSeats and cinemaName in parent:', { selectedSeats, cinemaName });
         updateOrderSummary();
-        console.log('Updated selectedSeats in parent:', selectedSeats);
     };
 
     function myFunction(id, date) {
@@ -478,6 +847,9 @@
         document.getElementById("screen-next-btn").disabled = false;
         updateOrderSummary();
 
+        // Khởi động timer với thời gian mặc định (10 phút = 600 giây)
+        startCountdown(600);
+
         const iframe = document.getElementById('seat-map-iframe');
         const placeholder = document.getElementById('seat-map-placeholder');
         if (iframe && placeholder) {
@@ -496,6 +868,24 @@
         }
     }
 
+    function updateVariant(productId) {
+        const select = document.querySelector(`.variant-select[data-product-id="${productId}"]`);
+        if (!select) return;
+        const selectedOption = select.options[select.selectedIndex];
+        variantData[productId] = {
+            variantName: selectedOption.text.split(' (')[0],
+            price: parseFloat(selectedOption.getAttribute('data-price')) || 0
+        };
+        const quantity = parseInt(document.getElementById(`quantity-${productId}`).value) || 0;
+        if (quantity > 0) {
+            const productName = select.closest('.flex.flex-col.items-center').querySelector('h4').textContent;
+            const variantKey = `${productId}-${variantData[productId].variantName}`;
+            updateSummaryTable(variantKey, productName, variantData[productId].variantName, quantity, variantData[productId].price);
+            snackTotal = calculateSnackTotal();
+            updateOrderSummary();
+        }
+    }
+
     function updateQuantity(productId, change) {
         const quantityInput = document.getElementById(`quantity-${productId}`);
         let currentQuantity = parseInt(quantityInput.value) || 0;
@@ -503,27 +893,30 @@
         quantityInput.value = newQuantity;
 
         const select = document.querySelector(`.variant-select[data-product-id="${productId}"]`);
+        if (!select) return;
         const selectedOption = select.options[select.selectedIndex];
         const price = parseFloat(selectedOption.getAttribute('data-price')) || 0;
         const variantName = selectedOption.text.split(' (')[0];
-        const productName = select.closest('.snack-item').querySelector('h4').textContent;
+        const productName = select.closest('.flex.flex-col.items-center').querySelector('h4').textContent;
+        const variantKey = `${productId}-${variantName}`;
 
         snackTotal += (newQuantity - currentQuantity) * price;
-        updateSummaryTable(productId, productName, variantName, newQuantity, price);
+        updateSummaryTable(variantKey, productName, variantName, newQuantity, price);
         updateOrderSummary();
     }
 
-    function updateSummaryTable(productId, productName, variantName, quantity, price) {
+    function updateSummaryTable(variantKey, productName, variantName, quantity, price) {
         const tableBody = document.getElementById('summary-table-body');
-        let row = document.querySelector(`#summary-table-body tr[data-product-id="${productId}"]`);
+        if (!tableBody) return;
+        let row = document.querySelector(`#summary-table-body tr[data-variant-key="${variantKey}"]`);
 
         if (quantity === 0) {
             if (row) row.remove();
         } else {
             if (!row) {
                 row = document.createElement('tr');
-                row.setAttribute('data-product-id', productId);
-                tableBody.appendChild(row);
+                row.setAttribute('data-variant-key', variantKey);
+                tableBody.querySelector('tbody')?.appendChild(row) ?? tableBody.appendChild(row);
             }
             row.innerHTML = `
                 <td style="padding: 8px; text-align: left;">${productName} (${variantName})</td>
@@ -531,18 +924,28 @@
                 <td style="padding: 8px; text-align: right;">${numberFormat(quantity * price)} ₫</td>
             `;
         }
+        snackTotal = calculateSnackTotal();
+    }
 
+    function calculateSnackTotal() {
         let snackSubtotal = 0;
-        document.querySelectorAll('#summary-table-body tr[data-product-id]').forEach(row => {
+        document.querySelectorAll('#summary-table-body tr[data-variant-key]').forEach(row => {
             const priceText = row.children[2].textContent.replace(' ₫', '').replace(/,/g, '');
             snackSubtotal += parseFloat(priceText) || 0;
         });
-        snackTotal = snackSubtotal;
-        updateOrderSummary();
+        return snackSubtotal;
     }
 
     function numberFormat(number) {
         return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+
+    function formatDateDisplay(dateStr) {
+        const dateObj = new Date(dateStr);
+        const day = String(dateObj.getDate()).padStart(2, '0');
+        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const year = dateObj.getFullYear();
+        return `${day}/${month}/${year}`;
     }
 
     function updateOrderSummary() {
@@ -563,10 +966,6 @@
             movieTitle: document.getElementById('movie-title'),
             cinemaName: document.getElementById('cinema-name'),
             roomName: document.getElementById('room-name'),
-            movieTicketInfo: document.getElementById('movie-ticket-info'),
-            ticketQuantity: document.getElementById('ticket-quantity'),
-            ticketPriceSummary: document.getElementById('ticket-price'),
-            totalPrice: document.getElementById('total-price'),
             ticketScreenDisplay: document.getElementById('ticket-screen-display'),
             ticketRowDisplay: document.getElementById('ticket-row-display'),
             ticketSeatDisplay: document.getElementById('ticket-seat-display'),
@@ -575,41 +974,40 @@
             ticketTimeDisplay: document.getElementById('ticket-time-display'),
             subtotalDisplay: document.getElementById('subtotal-display'),
             discountDisplay: document.getElementById('discount-display'),
-            totalDisplay: document.getElementById('total-display')
+            totalDisplay: document.getElementById('total-display'),
+            summaryCinemaName: document.getElementById('summary-cinema-name'),
+            snackItems: document.getElementById('snack-items'),
+            snackTotal: document.getElementById('snack-total')
         };
 
-        // Tìm tên phòng và tên rạp dựa trên selectedShowtimeId
+        // Log để debug
+        console.log('Selected seats before update:', JSON.stringify(selectedSeats));
+
+        // Sử dụng biến toàn cục cinemaName, chỉ tính lại nếu cần
         let roomName = 'N/A';
-        let cinemaName = 'N/A';
         if (selectedShowtimeId && showtimesData[selectedDate]) {
             for (const room of showtimesData[selectedDate]) {
                 const showtime = room.times.find(time => time.id == selectedShowtimeId);
                 if (showtime) {
                     roomName = room.room_name;
                     const roomData = roomsData.find(r => r.name === roomName);
-                    cinemaName = roomData ? roomData.cinema.name : 'N/A';
+                    if (roomData && roomData.cinema && roomData.cinema.name && cinemaName === 'N/A') {
+                        cinemaName = roomData.cinema.name;
+                    }
                     break;
                 }
             }
         }
 
+        // Cập nhật summary-cinema-name
+        if (elements.summaryCinemaName) {
+            elements.summaryCinemaName.textContent = cinemaName;
+        } else {
+            console.warn('Element summary-cinema-name not found in DOM');
+        }
+
         const ticketCount = selectedSeats.length;
         let ticketTotal = selectedSeats.reduce((sum, seat) => sum + (seat.price || ticketPrice), 0);
-
-        if (elements.movieTicketInfo && elements.ticketQuantity && elements.ticketPriceSummary) {
-            if (ticketCount > 0) {
-                const seatLabels = selectedSeats.map(seat => seat.label).join(', ');
-                const showtimeText = selectedTime ? `${selectedTime} - ${selectedDate}` : 'N/A';
-                elements.movieTicketInfo.textContent =
-                    `${movieTitle} (${roomName}, ${cinemaName}, ${showtimeText}, Ghế: ${seatLabels})`;
-                elements.ticketQuantity.textContent = ticketCount;
-                elements.ticketPriceSummary.textContent = numberFormat(ticketTotal) + ' ₫';
-            } else {
-                elements.movieTicketInfo.textContent = 'Chưa chọn vé';
-                elements.ticketQuantity.textContent = '0';
-                elements.ticketPriceSummary.textContent = '0 ₫';
-            }
-        }
 
         for (let key in elements) {
             if (elements[key]) {
@@ -621,10 +1019,11 @@
                         elements[key].textContent = numberFormat(ticketTotal) + ' ₫';
                         break;
                     case 'selectedSeats':
-                        elements[key].textContent = selectedSeats.map(seat => seat.label).join(', ') || 'N/A';
+                        elements[key].textContent = selectedSeats.map(seat => seat.label || 'N/A').join(', ') || 'N/A';
                         break;
                     case 'selectedShowtime':
-                        elements[key].textContent = selectedTime ? `${selectedTime} - ${selectedDate}` : 'N/A';
+                        const formattedTime = selectedTime ? selectedTime.replace(/(AM|PM)/i, '').trim() : '';
+                        elements[key].textContent = formattedTime && selectedDate ? `${formattedTime} ${formatDateDisplay(selectedDate)}` : 'N/A';
                         break;
                     case 'discountAmount':
                         elements[key].textContent = numberFormat(discount) + ' ₫';
@@ -638,12 +1037,10 @@
                         elements[key].textContent = roomName;
                         break;
                     case 'ticketRow':
-                        elements[key].textContent = selectedSeats.length > 0 ? selectedSeats.map(seat => seat.label
-                            .split('-')[0]).join(', ') || 'N/A' : 'N/A';
+                        elements[key].textContent = selectedSeats.length > 0 ? selectedSeats.map(seat => (seat.label || 'N/A').split('-')[0]).join(', ') || 'N/A' : 'N/A';
                         break;
                     case 'ticketSeat':
-                        elements[key].textContent = selectedSeats.length > 0 ? selectedSeats.map(seat => seat.label
-                            .split('-')[1]).join(', ') || 'N/A' : 'N/A';
+                        elements[key].textContent = selectedSeats.length > 0 ? selectedSeats.map(seat => (seat.label || 'N/A').split('-')[1]).join(', ') || 'N/A' : 'N/A';
                         break;
                     case 'ticketPriceDisplay':
                         elements[key].textContent = numberFormat(ticketTotal) + ' ₫';
@@ -663,19 +1060,14 @@
                     case 'roomName':
                         elements[key].textContent = roomName;
                         break;
-                    case 'totalPrice':
-                        elements[key].textContent = numberFormat(ticketTotal + snackTotal - discount) + ' ₫';
-                        break;
                     case 'ticketScreenDisplay':
                         elements[key].textContent = roomName;
                         break;
                     case 'ticketRowDisplay':
-                        elements[key].textContent = selectedSeats.length > 0 ? selectedSeats.map(seat => seat.label
-                            .split('-')[0]).join(', ') || 'N/A' : 'N/A';
+                        elements[key].textContent = selectedSeats.length > 0 ? selectedSeats.map(seat => (seat.label || 'N/A').split('-')[0]).join(', ') || 'N/A' : 'N/A';
                         break;
                     case 'ticketSeatDisplay':
-                        elements[key].textContent = selectedSeats.length > 0 ? selectedSeats.map(seat => seat.label
-                            .split('-')[1]).join(', ') || 'N/A' : 'N/A';
+                        elements[key].textContent = selectedSeats.length > 0 ? selectedSeats.map(seat => (seat.label || 'N/A').split('-')[1]).join(', ') || 'N/A' : 'N/A';
                         break;
                     case 'ticketPriceFinal':
                         elements[key].textContent = numberFormat(ticketTotal) + ' ₫';
@@ -695,19 +1087,38 @@
                     case 'totalDisplay':
                         elements[key].textContent = numberFormat(ticketTotal + snackTotal - discount) + ' ₫';
                         break;
+                    case 'summaryCinemaName':
+                        elements[key].textContent = cinemaName;
+                        break;
+                    case 'snackItems':
+                        elements[key].textContent = snackTotal > 0 ? document.querySelectorAll('#summary-table-body tr[data-product-id]').length > 0 ? Array.from(document.querySelectorAll('#summary-table-body tr[data-product-id]')).map(row => row.children[0].textContent).join(', ') : 'Chưa chọn đồ ăn' : 'Chưa chọn đồ ăn';
+                        break;
+                    case 'snackTotal':
+                        elements[key].textContent = numberFormat(snackTotal) + ' ₫';
+                        break;
                 }
             } else {
                 console.warn(`Element ${key} not found in DOM`);
             }
         }
+        const summaryTotalElement = document.getElementById('summary-total');
+        if (summaryTotalElement) {
+            const totalAmount = ticketTotal + snackTotal - discount;
+            summaryTotalElement.textContent = numberFormat(totalAmount) + ' ₫';
+        }
     }
 
     function handleNextStep(e) {
         e.preventDefault();
+        if (currentStep === 1 && !selectedShowtimeId) {
+            alert('Vui lòng chọn suất chiếu trước khi tiếp tục.');
+            return;
+        }
         if (currentStep < 5) {
-            console.log('Moving to step:', currentStep + 1, 'with selected seats:', selectedSeats);
+            console.log('Moving to step:', currentStep + 1, 'with selected seats:', selectedSeats, 'cinemaName:', cinemaName);
             currentStep++;
             showStep(currentStep);
+            updateOrderSummary();
         }
     }
 
@@ -728,6 +1139,24 @@
             li.classList.remove('active');
             if (index < step) li.classList.add('active');
         });
+
+        // Cập nhật hiển thị timer cho bước 3 và 4
+        if (step === 3 || step === 4) {
+            if (countdownInterval) {
+                updateTimerDisplay(); // Cập nhật hiển thị nếu timer đang chạy
+            }
+        } else if (step === 1) {
+            // Dừng timer nếu quay lại bước 1
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+                countdownInterval = null;
+                ['hours-snack', 'minutes-snack', 'seconds-snack', 'hours-payment', 'minutes-payment', 'seconds-payment'].forEach(id => {
+                    const element = document.getElementById(id);
+                    if (element) element.textContent = "00";
+                });
+            }
+        }
+
         console.log('Displaying step:', step);
     }
 </script>

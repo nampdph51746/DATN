@@ -70,15 +70,41 @@
                 <div class="info-line text-gray-light"><strong>Tiền vé:</strong> <span id="total-ticket-price-summary">0 ₫</span></div>
 
                 <!-- Timer Section -->
-                <div class="timer-section" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #333333;" id="timer-section" style="display: none;">
-                    <h2 style="color: #ffffff; font-size: 1.2em; margin-bottom: 10px;">Time Remaining</h2>
-                    <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 10px;" id="timer-display">
-                        <span style="background: #e5006e; color: #fff; padding: 8px 12px; border-radius: 4px; font-size: 1.2em; font-weight: 600;" id="hours">0</span>
-                        <span style="background: #e5006e; color: #fff; padding: 8px 12px; border-radius: 4px; font-size: 1.2em; font-weight: 600;" id="minutes">0</span>
-                        <span style="background: #e5006e; color: #fff; padding: 8px 12px; border-radius: 4px; font-size: 1.2em; font-weight: 600;" id="seconds">0</span>
-                    </div>
-                    <p style="color: #d3d3d3; font-size: 0.9em;">Hours Minutes Seconds</p>
-                </div>
+<div class="timer-section" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #333333;" id="timer-section">
+    <div style="text-align: center;">
+        <h2 style="color: #ffffff; font-size: 1.4em; margin-bottom: 16px; font-weight: bold;">Time Remaining</h2>
+
+        <div style="display: flex; justify-content: center; gap: 16px; margin-bottom: 10px;" id="timer-display">
+            <!-- Giờ -->
+            <div style="display: flex; flex-direction: column; align-items: center;">
+                <span id="hours-seat"
+                    style="background: #e5006e; color: #fff; padding: 10px 10px; border-radius: 6px; font-size: 1.6em; font-weight: bold; min-width: 45px; text-align: center;">
+                    00
+                </span>
+                <span style="margin-top: 6px; font-size: 0.95em; color: #ffffff;">Giờ</span>
+            </div>
+
+            <!-- Phút -->
+            <div style="display: flex; flex-direction: column; align-items: center;">
+                <span id="minutes-seat"
+                    style="background: #e5006e; color: #fff; padding: 10px 10px; border-radius: 6px; font-size: 1.6em; font-weight: bold; min-width: 45px; text-align: center;">
+                    09
+                </span>
+                <span style="margin-top: 6px; font-size: 0.95em; color: #ffffff;">Phút</span>
+            </div>
+
+            <!-- Giây -->
+            <div style="display: flex; flex-direction: column; align-items: center;">
+                <span id="seconds-seat"
+                    style="background: #e5006e; color: #fff; padding: 10px 10px; border-radius: 6px; font-size: 1.6em; font-weight: bold; min-width: 45px; text-align: center;">
+                    19
+                </span>
+                <span style="margin-top: 6px; font-size: 0.95em; color: #ffffff;">Giây</span>
+            </div>
+        </div>
+    </div>
+</div>
+
             </div>
         </div>
     </div>
@@ -88,6 +114,7 @@
         let selectedSeats = [];
         let timerStarted = false;
         let timerInterval;
+        let countdownEndTime = null;
 
         const sessionId = '{{ session()->getId() }}';
         const showtimeId = '{{ $showtime->id }}';
@@ -123,7 +150,6 @@
                                 seatElement.style.opacity = '0.6';
                                 seatElement.style.pointerEvents = 'none';
                             } else {
-                                // Nếu ghế do phiên hiện tại giữ thì đánh dấu là selected
                                 seatElement.classList.add('selected');
                                 seatElement.style.backgroundColor = '#e5006e';
                                 seatElement.style.opacity = '1';
@@ -144,7 +170,6 @@
                         }
                     });
 
-                    // Cập nhật lại tổng kết và gửi dữ liệu ban đầu về parent window
                     updateSummary();
                     sendSeatsToParent();
                 }
@@ -153,8 +178,13 @@
             }
         }
 
-        // Call fetch on page load
-        document.addEventListener('DOMContentLoaded', fetchInitialSeatStatus);
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchInitialSeatStatus();
+            startTimer(); // Start timer immediately when page loads
+            timerStarted = true;
+            document.getElementById('timer-section').style.display = 'block';
+            sendTimerToParent();
+        });
 
         console.log('Pusher Config:', {
             key: '{{ $pusher_key }}',
@@ -188,7 +218,6 @@
         channel.bind('seat-status-updated', function(data) {
             console.log('Received seat-status-updated event:', data);
             console.log('Comparing locked_by:', data.locked_by, 'with sessionId:', sessionId);
-            console.log('Seat ID:', data.seat_id, 'Is even:', parseInt(data.seat_id) % 2 === 0);
 
             const seatElement = document.querySelector(`.seat[data-seat-id="${data.seat_id}"]`);
             if (seatElement) {
@@ -273,15 +302,8 @@
                 });
             }
 
-            // Start timer on first seat selection
-            if (!timerStarted) {
-                console.log('Starting timer...');
-                startTimer();
-                document.getElementById('timer-section').style.display = 'block';
-                timerStarted = true;
-            }
-
             updateSummary();
+            sendSeatsToParent();
         }
 
         function updateSummary() {
@@ -304,62 +326,67 @@
             });
         }
 
-        // Hàm gửi dữ liệu ghế về parent window
         function sendSeatsToParent() {
             console.log('Sending seats to parent:', selectedSeats);
+            const cinemaName = document.getElementById('cinema-name')?.textContent || 'Chưa xác định';
             if (window.parent && window.parent.receiveSeats) {
                 try {
-                    window.parent.receiveSeats(selectedSeats);
-                    console.log('Seats sent to parent successfully');
+                    window.parent.receiveSeats({
+                        seats: selectedSeats,
+                        cinemaName: cinemaName
+                    });
+                    console.log('Seats and cinemaName sent to parent successfully:', { seats: selectedSeats, cinemaName });
                 } catch (error) {
-                    console.error('Error sending seats to parent:', error);
+                    console.error('Error sending seats and cinemaName to parent:', error);
                 }
             } else {
                 console.warn('Parent window or receiveSeats function not available');
             }
         }
 
-        // Timer Logic
-        function startTimer() {
-            const now = new Date(); // Use current time dynamically
-            const showtime = new Date('{{ $showtime->start_time->toIso8601String() }}');
-            const diffMs = showtime - now;
-            let timerDuration;
-
-            console.log('Current time:', now);
-            console.log('Showtime:', showtime);
-            console.log('Difference in ms:', diffMs);
-
-            if (diffMs > 3600000) { // > 1 hour (3600000 ms)
-                timerDuration = 60000; // 1 minute for testing
-            } else if (diffMs < 1800000) { // < 30 minutes (1800000 ms)
-                timerDuration = 30000; // 30 seconds for testing
+        function sendTimerToParent() {
+            if (window.parent && window.parent.receiveTimer) {
+                try {
+                    window.parent.receiveTimer({
+                        endTime: countdownEndTime ? countdownEndTime.getTime() : null
+                    });
+                    console.log('Timer endTime sent to parent:', countdownEndTime);
+                } catch (error) {
+                    console.error('Error sending timer to parent:', error);
+                }
             } else {
-                timerDuration = 60000; // Default 1 minute for testing
+                console.warn('Parent window or receiveTimer function not available');
             }
+        }
 
-            console.log('Timer duration set to:', timerDuration, 'ms');
-
+        function startTimer() {
+            const timerDuration = 600000; // 600 seconds (10 minutes)
+            const now = new Date();
             const endTime = new Date(now.getTime() + timerDuration);
+            countdownEndTime = endTime;
+
             const timerDisplay = document.getElementById('timer-display');
-            const hoursElem = document.getElementById('hours');
-            const minutesElem = document.getElementById('minutes');
-            const secondsElem = document.getElementById('seconds');
+            const hoursElem = document.getElementById('hours-seat');
+            const minutesElem = document.getElementById('minutes-seat');
+            const secondsElem = document.getElementById('seconds-seat');
 
             function updateTimer() {
                 const now = new Date();
-                const diff = endTime - now;
+                const diff = countdownEndTime - now;
                 if (diff <= 0) {
                     clearInterval(timerInterval);
+                    timerStarted = false;
+                    countdownEndTime = null;
                     timerDisplay.innerHTML = `
                         <span style="background: #dc3545; color: #fff; padding: 10px 15px; border-radius: 4px; font-size: 1.2em; font-weight: 600;">Đơn hàng đã quá hạn</span>
                     `;
+                    selectedSeats = [];
+                    updateSummary();
+                    sendSeatsToParent();
+                    sendTimerToParent();
                     setTimeout(() => {
                         window.top.location.href = '{{ route('movies.show', ['id' => $showtime->movie_id ?? $movie->id]) }}';
-                    }, 2000); // Redirect after 2 seconds
-                    selectedSeats = []; // Reset selected seats
-                    updateSummary();
-                    sendSeatsToParent(); // Gửi trạng thái reset về parent
+                    }, 2000);
                     return;
                 }
 
@@ -372,10 +399,27 @@
                 secondsElem.textContent = String(seconds).padStart(2, '0');
             }
 
-            updateTimer(); // Run immediately
-            timerInterval = setInterval(updateTimer, 1000); // Start interval
+            updateTimer();
+            timerInterval = setInterval(updateTimer, 1000);
             console.log('Timer started with interval:', timerInterval);
         }
+
+        // Handle reset seats message from parent
+        window.addEventListener('message', function(event) {
+            if (event.data.resetSeats) {
+                selectedSeats.forEach(seat => {
+                    const seatElement = document.querySelector(`.seat[data-seat-id="${seat.id}"]`);
+                    if (seatElement) {
+                        seatElement.classList.remove('selected');
+                        seatElement.style.backgroundColor = seatElement.getAttribute('data-original-color') || '#28a745';
+                        seatElement.style.opacity = '1';
+                    }
+                });
+                selectedSeats = [];
+                updateSummary();
+                sendSeatsToParent();
+            }
+        });
     </script>
 @else
     <div class="alert alert-danger bg-danger text-white">

@@ -78,7 +78,7 @@ class SeatController extends Controller
         $response = [
             'room' => [
                 'id'    => $room->id,
-                'name'  => $room->name,
+            'name'  => $room->name,
                 'rows'  => $rows,
                 'cols'  => $cols,
             ],
@@ -102,7 +102,7 @@ class SeatController extends Controller
         $room = $showtime->room;
 
         $bookedSeats = Ticket::where('showtime_id', $showtimeId)
-            ->whereHas('booking', fn($query) => $query->where('status', 'confirmed'))
+            ->whereHas('booking', fn ($query) => $query->where('status', 'confirmed'))
             ->pluck('seat_id')
             ->toArray();
 
@@ -188,7 +188,7 @@ class SeatController extends Controller
                         'locked_by' => $seatState->locked_by,
                         'locked_until' => $seatState->locked_until,
                     ]));
-                    if ($seatState->status === SeatStatus::Reserved) {
+                    if ($seatState->status === \App\Enums\SeatStatus::Reserved) {
                         if ($seatState->locked_by !== $sessionId && Carbon::now()->lt($seatState->locked_until)) {
                             Log::warning("Seat ID $id is locked by another session until " . $seatState->locked_until);
                             return response()->json([
@@ -197,7 +197,7 @@ class SeatController extends Controller
                         } elseif (Carbon::now()->gte($seatState->locked_until)) {
                             Log::info("Seat ID $id lock expired, resetting state");
                             $seatState->update([
-                                'status' => SeatStatus::Available,
+                                'status' => \App\Enums\SeatStatus::Available,
                                 'locked_by' => null,
                                 'locked_until' => null,
                             ]);
