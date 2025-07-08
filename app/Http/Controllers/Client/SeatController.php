@@ -15,6 +15,7 @@ use App\Models\ShowtimeSeatState;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 
+
 class SeatController extends Controller
 {
     public function getSeatsForShowtime($showtimeId)

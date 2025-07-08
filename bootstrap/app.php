@@ -11,9 +11,18 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->group('web', [
+            \Illuminate\Session\Middleware\StartSession::class,
+            \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+            \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class, // Thêm middleware CSRF
+        ]);
+
         $middleware->alias([
             'admin.staff' => \App\Http\Middleware\EnsureUserIsAdminOrStaff::class,
+
         ]);
+
+        
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

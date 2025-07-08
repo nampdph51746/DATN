@@ -2,7 +2,8 @@
 
 namespace App\Enums;
 
-enum PointReasonType: string {
+enum PointReasonType: string
+{
     case Earned = 'earned';
     case Spent = 'spent';
     case Expired = 'expired';
