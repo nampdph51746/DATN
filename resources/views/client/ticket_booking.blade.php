@@ -4297,3 +4297,4 @@
 <script type="text/javascript" src='https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.bundle.min.js'>
 </script>
 <script src="https://npmcdn.com/flickity@2/dist/flickity.pkgd.js"></script>
+>>>>>>>>> Temporary merge branch 2
