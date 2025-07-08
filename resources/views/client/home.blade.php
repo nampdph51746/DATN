@@ -95,7 +95,6 @@
     </style>
 
     <!-- Thêm CDN SweetAlert2 -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <section class="w3l-main-slider position-relative" id="home">
         <div class="companies20-content">
@@ -365,27 +364,5 @@
             </div>
         </div>
     </section>
-
-    <!-- JavaScript cho kiểm tra đăng nhập và hiển thị popup -->
-    <script>
-        function showLoginPrompt(event, redirectUrl) {
-            event.preventDefault();
-            Swal.fire({
-                title: 'Yêu cầu đăng nhập',
-                text: 'Bạn cần đăng nhập để đặt vé. Chuyển tới trang đăng nhập?',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#dc3545',
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: 'Đăng nhập',
-                cancelButtonText: 'Hủy'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    window.location.href = '{{ route("login") }}?redirect=' + encodeURIComponent(redirectUrl);
-                }
-            });
-        }
-    </script>
-
     @include('client.footer.footer')
 @endsection

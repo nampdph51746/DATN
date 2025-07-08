@@ -4171,10 +4171,20 @@
                         // Cập nhật order summary để tính lại tổng tiền
                         updateOrderSummary();
                         
-                        // Hiển thị thông báo thành công với chi tiết
+                        // Hiển thị thông báo thành công với SweetAlert2
                         const pointValue = points * 1000;
-                        alert(`Đổi điểm thành công!\n${points} điểm = ${numberFormat(pointValue)}₫\nTổng giảm giá: ${numberFormat(discount)}₫`);
-                        
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Đổi điểm thành công!',
+                            html: `<div style=\"font-size:1.1rem\"><b>${points}</b> điểm = <b>${numberFormat(pointValue)}₫</b><br>Tổng giảm giá: <b>${numberFormat(discount)}₫</b></div>`,
+                            confirmButtonText: 'Đóng',
+                            customClass: {
+                                title: 'swal2-title',
+                                htmlContainer: 'swal2-html-container',
+                                confirmButton: 'swal2-confirm'
+                            }
+                        });
+
                         // Reset input
                         pointsInputEl.value = '0';
                     } else {

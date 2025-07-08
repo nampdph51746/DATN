@@ -22,6 +22,8 @@
 	<link rel="stylesheet" type="text/css" href="{{ asset('client_assets/assets/css/e-ticket.css') }}">
 	<link rel="stylesheet" type="text/css" href="{{ asset('client_assets/assets/css/payment.css') }}">
 	<link href="https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz:400,700" rel="stylesheet">
+	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 </head>
 
 <style>
@@ -36,6 +38,26 @@
 		}
 	</style>
 
+	 <!-- JavaScript cho kiểm tra đăng nhập và hiển thị popup -->
+    <script>
+        function showLoginPrompt(event, redirectUrl) {
+            event.preventDefault();
+            Swal.fire({
+                title: 'Yêu cầu đăng nhập',
+                text: 'Bạn cần đăng nhập để đặt vé. Chuyển tới trang đăng nhập?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Đăng nhập',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = '{{ route("login") }}?redirect=' + encodeURIComponent(redirectUrl);
+                }
+            });
+        }
+    </script>
 <body>
 	<!-- header -->
 	<header id="site-header" class="w3l-header fixed-top">

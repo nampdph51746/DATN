@@ -335,11 +335,20 @@
 					</div>
 
 					{{-- Nút đặt vé --}}
-					<a href="{{ route('client.movies.ticketBooking', ['id' => $movie->id]) }}"
-					class="btn btn-primary px-4 py-2 mt-4"
-					style="font-size: 16px; font-weight: 500;">
-						🎟️ Đặt vé ngay
-					</a>
+					@auth
+						<a href="{{ route('client.movies.ticketBooking', ['id' => $movie->id]) }}"
+							class="btn btn-primary px-4 py-2 mt-4"
+							style="font-size: 16px; font-weight: 500;">
+							🎟️ Đặt vé ngay
+						</a>
+					@else
+						<a href="#" 
+							class="btn btn-primary px-4 py-2 mt-4"
+							style="font-size: 16px; font-weight: 500;"
+							onclick="showLoginPrompt(event, '{{ route('client.movies.ticketBooking', ['id' => $movie->id]) }}')">
+							🎟️ Đặt vé ngay
+						</a>
+					@endauth
 				</div>
 			</div>
 
