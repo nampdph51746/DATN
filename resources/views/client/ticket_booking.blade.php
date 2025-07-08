@@ -1160,7 +1160,7 @@
                                                 <div style="margin: 10px 0; text-align: right;">
                                                     <button id="refresh-promotions-btn" onclick="refreshPromotionData()"
                                                         class="refresh-promotions-btn"
-                                                        title="Cập nhật danh sách mã giảm giá mới nhất từ hệ thống. Bạn cũng có thể nhấn F5 khi đang focus vào phần này."
+                                                        title="Cập nhật danh sách mã giảm giá mới nhất từ hệ thống."
                                                         style="background: #f3f4f6; border: 1px solid #d1d5db; padding: 8px 12px; border-radius: 6px; color: #6b7280; font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s;"
                                                         onmouseover="this.style.background='#e5e7eb'; this.style.borderColor='#9ca3af';"
                                                         onmouseout="this.style.background='#f3f4f6'; this.style.borderColor='#d1d5db';">
@@ -4027,80 +4027,38 @@
                 // Kiểm tra có thay đổi nào không
                 const hasChanges = newTotalCount !== oldTotalCount || totalNewCodes > 0;
 
-                // Hiển thị thông báo thành công với thông tin thay đổi
-                const toast = document.createElement('div');
-                toast.className = 'toast-notification';
-                toast.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background: ${hasChanges ? '#10b981' : '#3b82f6'};
-                color: white;
-                padding: 12px 20px;
-                border-radius: 8px;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-                z-index: 10000;
-                font-size: 14px;
-                opacity: 0;
-                transform: translateX(100%);
-                transition: all 0.3s ease;
-            `;
-
+                // Hiển thị thông báo thành công với SweetAlert2
+                let swalText = '';
                 if (hasChanges) {
-                    // Có sự thay đổi
                     if (totalNewCodes > 0) {
-                        // Hiển thị danh sách mã mới
-                        let newCodesMessage =
-                            `<i class="fas fa-check-circle"></i> Đã tìm thấy ${totalNewCodes} mã giảm giá mới!`;
-
-                        // Hiển thị chi tiết nếu có thay đổi trong từng loại
+                        swalText = `Đã tìm thấy ${totalNewCodes} mã giảm giá mới!`;
                         if (newCodes.rank.length > 0) {
-                            newCodesMessage +=
-                                `<br><small>• ${newCodes.rank.length} mã VIP: ${newCodes.rank.join(', ')}</small>`;
+                            swalText += `\n• ${newCodes.rank.length} mã VIP: ${newCodes.rank.join(', ')}`;
                         }
                         if (newCodes.general.length > 0) {
-                            newCodesMessage +=
-                                `<br><small>• ${newCodes.general.length} mã chung: ${newCodes.general.join(', ')}</small>`;
+                            swalText += `\n• ${newCodes.general.length} mã chung: ${newCodes.general.join(', ')}`;
                         }
                         if (newCodes.higher.length > 0) {
-                            newCodesMessage +=
-                                `<br><small>• ${newCodes.higher.length} mã hạng cao: ${newCodes.higher.join(', ')}</small>`;
+                            swalText += `\n• ${newCodes.higher.length} mã hạng cao: ${newCodes.higher.join(', ')}`;
                         }
-
-                        toast.innerHTML = newCodesMessage;
-                        toast.style.padding = '12px 16px';
                     } else if (newTotalCount > oldTotalCount) {
-                        // Số lượng mã tăng lên
-                        toast.innerHTML =
-                            `<i class="fas fa-check-circle"></i> Đã cập nhật! Có thêm ${newTotalCount - oldTotalCount} mã giảm giá.`;
+                        swalText = `Đã cập nhật! Có thêm ${newTotalCount - oldTotalCount} mã giảm giá.`;
                     } else {
-                        // Số lượng mã giảm đi
-                        toast.innerHTML =
-                            `<i class="fas fa-check-circle"></i> Đã cập nhật! Có ${oldTotalCount - newTotalCount} mã giảm giá đã hết hạn.`;
+                        swalText = `Đã cập nhật! Có ${oldTotalCount - newTotalCount} mã giảm giá đã hết hạn.`;
                     }
                 } else {
-                    // Không có sự thay đổi
-                    toast.innerHTML = '<i class="fas fa-info-circle"></i> Danh sách mã giảm giá đã được cập nhật';
+                    swalText = 'Danh sách mã giảm giá đã được cập nhật';
                 }
-
-                document.body.appendChild(toast);
-
-                // Hiển thị toast
-                setTimeout(() => {
-                    toast.style.opacity = '1';
-                    toast.style.transform = 'translateX(0)';
-                }, 100);
-
-                // Ẩn toast sau 3 giây
-                setTimeout(() => {
-                    toast.style.opacity = '0';
-                    toast.style.transform = 'translateX(100%)';
-                    setTimeout(() => {
-                        if (toast.parentNode) {
-                            toast.parentNode.removeChild(toast);
-                        }
-                    }, 300);
-                }, 3000);
+                if (window.Swal) {
+                    Swal.fire({
+                        icon: hasChanges ? 'success' : 'info',
+                        title: hasChanges ? 'Cập nhật thành công!' : 'Thông báo',
+                        text: swalText,
+                        confirmButtonColor: '#e5006e',
+                        timer: 2200,
+                        showConfirmButton: false
+                    });
+                }
 
                 // Highlight các mã mới nếu có
                 if (totalNewCodes > 0) {
