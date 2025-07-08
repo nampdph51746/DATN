@@ -1,3 +1,8 @@
+    @if(isset($userRank) && isset($userRank->discount_percentage))
+        <script>
+            window.userRankDiscountPercentage = {{ (float)$userRank->discount_percentage }};
+        </script>
+    @endif
 <style>
     .seat-selection-wrapper {
         padding: 20px;
@@ -1231,7 +1236,14 @@
                                                 điểm</button>
                                         </div>
                                         <div style="color: #aaa; font-size: 0.95em; margin-top: 4px;">
-                                            1 điểm = 1,000₫ • Tổng giảm giá tối đa 30%
+                                            1 điểm = 1,000₫ • Tổng giảm giá tối đa
+                                            <span id="max-discount-percent-text">
+                                                <script>
+                                                    document.write((typeof window.userRankDiscountPercentage !== 'undefined' && !isNaN(window.userRankDiscountPercentage))
+                                                        ? window.userRankDiscountPercentage + '%'
+                                                        : '30%');
+                                                </script>
+                                            </span>
                                         </div>
                                     </div>
                                     <div>
@@ -2661,7 +2673,12 @@
     function handleNextStep(e) {
         e.preventDefault();
         if (currentStep === 1 && !selectedShowtimeId) {
-            alert('Vui lòng chọn suất chiếu trước khi tiếp tục.');
+            Swal.fire({
+                icon: 'warning',
+                title: 'Chưa chọn suất chiếu',
+                text: 'Vui lòng chọn suất chiếu trước khi tiếp tục.',
+                confirmButtonText: 'Đóng'
+            });
             return;
         }
         if (currentStep < 5) {
@@ -3672,7 +3689,12 @@
             promotionBtn.title = `Mã này dành cho hạng ${rankName}. Hãy nâng hạng để sử dụng!`;
             
             clickHandler = () => {
-                alert(`Mã này dành cho hạng ${rankName}. Hãy nâng hạng để sử dụng!`);
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Không đủ hạng sử dụng mã',
+                    text: `Mã này dành cho hạng ${rankName}. Hãy nâng hạng để sử dụng!`,
+                    confirmButtonText: 'Đóng'
+                });
             };
         } else if (type === 'rank') {
             // User's rank promotions
@@ -4092,25 +4114,50 @@
             });
             
             if (points <= 0) {
-                alert(`Vui lòng nhập số điểm hợp lệ (lớn hơn 0).`);
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Số điểm không hợp lệ',
+                    text: 'Vui lòng nhập số điểm hợp lệ (lớn hơn 0).',
+                    confirmButtonText: 'Đóng',
+                });
                 applyPointsBtn.disabled = false;
                 return;
             }
             
             if (points > availablePoints || isNaN(availablePoints)) {
-                alert(`Bạn chỉ có ${availablePoints} điểm khả dụng.`);
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Không đủ điểm',
+                    text: `Bạn chỉ có ${availablePoints} điểm khả dụng.`,
+                    confirmButtonText: 'Đóng',
+                });
                 applyPointsBtn.disabled = false;
                 return;
             }
             
             // Kiểm tra giới hạn 30% phía frontend
             const pointDiscount = points * 1000;
-            const maxTotalDiscount = subtotal * 0.3;
+            // Lấy phần trăm giảm giá tối đa theo hạng từ biến PHP (nếu có), mặc định 30
+            let maxDiscountPercent = 30;
+            if (typeof window.userRankDiscountPercentage !== 'undefined' && !isNaN(window.userRankDiscountPercentage)) {
+                maxDiscountPercent = window.userRankDiscountPercentage;
+            }
+            const maxTotalDiscount = subtotal * (maxDiscountPercent / 100);
             const totalDiscount = promotionDiscount + pointDiscount;
             
             if (totalDiscount > maxTotalDiscount) {
                 const maxPointsAllowed = Math.floor((maxTotalDiscount - promotionDiscount) / 1000);
-                alert(`Tổng giảm giá không được vượt quá 30% đơn hàng. Bạn chỉ có thể dùng tối đa ${maxPointsAllowed} điểm.`);
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Vượt quá giới hạn giảm giá!',
+                    html: `<div style=\"font-size:1.1rem\">Tổng giảm giá không được vượt quá <b>${maxDiscountPercent}%</b> đơn hàng.<br>Bạn chỉ có thể dùng tối đa <b>${maxPointsAllowed}</b> điểm.</div>`,
+                    confirmButtonText: 'Đóng',
+                    customClass: {
+                        title: 'swal2-title',
+                        htmlContainer: 'swal2-html-container',
+                        confirmButton: 'swal2-confirm'
+                    }
+                });
                 applyPointsBtn.disabled = false;
                 return;
             }
@@ -4189,13 +4236,23 @@
                         pointsInputEl.value = '0';
                     } else {
                         console.error('Server returned error:', data.error);
-                        alert(data.error || 'Có lỗi khi đổi điểm.');
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Lỗi',
+                            text: data.error || 'Có lỗi khi đổi điểm.',
+                            confirmButtonText: 'Đóng',
+                        });
                     }
                 })
                 .catch(error => {
                     console.error('Error applying points:', error);
                     console.error('Error stack:', error.stack);
-                    alert('Đã có lỗi xảy ra khi đổi điểm: ' + error.message);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Lỗi',
+                        text: 'Đã có lỗi xảy ra khi đổi điểm: ' + error.message,
+                        confirmButtonText: 'Đóng',
+                    });
                 })
                 .finally(() => {
                     console.log('Request completed, re-enabling button');
