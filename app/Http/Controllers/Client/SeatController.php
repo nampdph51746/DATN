@@ -15,6 +15,7 @@ use App\Models\ShowtimeSeatState;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 
+
 class SeatController extends Controller
 {
     public function getSeatsForShowtime($showtimeId)
@@ -78,7 +79,7 @@ class SeatController extends Controller
         $response = [
             'room' => [
                 'id'    => $room->id,
-                'name'  => $room->name,
+            'name'  => $room->name,
                 'rows'  => $rows,
                 'cols'  => $cols,
             ],
@@ -102,7 +103,7 @@ class SeatController extends Controller
         $room = $showtime->room;
 
         $bookedSeats = Ticket::where('showtime_id', $showtimeId)
-            ->whereHas('booking', fn($query) => $query->where('status', 'confirmed'))
+            ->whereHas('booking', fn ($query) => $query->where('status', 'confirmed'))
             ->pluck('seat_id')
             ->toArray();
 

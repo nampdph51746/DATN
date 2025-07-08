@@ -50,4 +50,9 @@ class Promotion extends Model
     {
         return $this->belongsTo(CustomerRank::class, 'rank_id');
     }
+
+    public function customerRankPromotion()
+    {
+        return $this->hasOne(CustomerRankPromotion::class);
+    }
 }

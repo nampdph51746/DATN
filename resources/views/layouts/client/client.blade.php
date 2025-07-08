@@ -5,13 +5,14 @@
 	<!-- Required meta tags -->
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<meta name="csrf-token" content="{{ csrf_token() }}">
 	<title>Home</title>
 
 	<link rel="stylesheet" href="{{ asset('client_assets/assets/css/style-starter.css') }}">
 	<link href="//fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,600;0,700;1,600&display=swap" rel="stylesheet">
 	<link rel="stylesheet" type="text/css" href="{{ asset('client_assets/assets/css/as-alert-message.min.css') }}">
 	<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.0.14/css/all.min.css">
-
+	<script src="https://cdn.tailwindcss.com"></script>
 	<!-- ..............Booking............... -->
 	<link rel="stylesheet" href="https://npmcdn.com/flickity@2/dist/flickity.css">
 	<link rel="stylesheet" type="text/css" href="{{ asset('client_assets/assets/css/progress.css') }}">
@@ -264,8 +265,8 @@
 <script>
 	$(document).ready(function () {
 		$('.popup-with-zoom-anim').magnificPopup({
-			**type: 'iframe',**
-			<!-- **Ghi chú**: Đổi từ `type: 'inline'` sang `type: 'iframe'` để hỗ trợ hiển thị iframe Vimeo trong slider. -->
+			type: 'iframe',
+			// <!-- **Ghi chú**: Đổi từ `type: 'inline'` sang `type: 'iframe'` để hỗ trợ hiển thị iframe Vimeo trong slider. -->
 			fixedContentPos: false,
 			fixedBgPos: true,
 			overflowY: 'auto',
@@ -277,8 +278,8 @@
 		});
 
 		$('.popup-with-move-anim').magnificPopup({
-			**type: 'iframe',**
-			<!-- **Ghi chú**: Đổi từ `type: 'inline'` sang `type: 'iframe'` để đảm bảo nhất quán với các popup khác. -->
+			type: 'iframe',
+			// <!-- **Ghi chú**: Đổi từ `type: 'inline'` sang `type: 'iframe'` để đảm bảo nhất quán với các popup khác. -->
 			fixedContentPos: false,
 			fixedBgPos: true,
 			overflowY: 'auto',
@@ -336,32 +337,32 @@
 	let prevId = "1";
 
 	window.onload = function () {
-		**try {**
+		try {
 			document.getElementById("screen-next-btn").disabled = true;
-		**} catch (e) {**
-			**console.log("Element 'screen-next-btn' not found");**
-		**}**
-		<!-- **Ghi chú**: Thêm try-catch để xử lý lỗi `Cannot set properties of null` khi `screen-next-btn` không tồn tại trong DOM. -->
+		} catch (e) {
+			console.log("Element 'screen-next-btn' not found");
+	}
+		// <!-- **Ghi chú**: Thêm try-catch để xử lý lỗi `Cannot set properties of null` khi `screen-next-btn` không tồn tại trong DOM. -->
 	}
 
 	function timeFunction() {
-		**try {**
+		try {
 			document.getElementById("screen-next-btn").disabled = false;
-		**} catch (e) {**
-			**console.log("Element 'screen-next-btn' not found");**
-		**}**
-		<!-- **Ghi chú**: Thêm try-catch để xử lý lỗi tương tự cho hàm `timeFunction`. -->
+		} catch (e) {
+			console.log("Element 'screen-next-btn' not found");
+		}
+		// <!-- **Ghi chú**: Thêm try-catch để xử lý lỗi tương tự cho hàm `timeFunction`. -->
 	}
 
 	function myFunction(id) {
-		**try {**
+		try {
 			document.getElementById(prevId).style.background = "rgb(243, 235, 235)";
 			document.getElementById(id).style.background = "#df0e62";
 			prevId = id;
-		**} catch (e) {**
-			**console.log("Error in myFunction: ", e);**
-		**}**
-		<!-- **Ghi chú**: Thêm try-catch để xử lý lỗi nếu các phần tử DOM không tồn tại. -->
+		} catch (e) {
+			console.log("Error in myFunction: ", e);
+		}
+		// <!-- **Ghi chú**: Thêm try-catch để xử lý lỗi nếu các phần tử DOM không tồn tại. -->
 	}
 </script>
 

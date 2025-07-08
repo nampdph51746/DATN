@@ -15,7 +15,7 @@ class PromotionController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Promotion::query()
+        $query = Promotion::with('rank')
             ->when($request->filled('search'), function ($q) use ($request) {
                 $q->where('name', 'like', '%' . $request->search . '%')
                     ->orWhere('code', 'like', '%' . $request->search . '%');
@@ -34,7 +34,7 @@ class PromotionController extends Controller
 
     public function show($id)
     {
-        $promotion = Promotion::findOrFail($id);
+        $promotion = Promotion::with('rank')->findOrFail($id);
         return view('admin.promotions.show', compact('promotion'));
     }
 
@@ -49,7 +49,17 @@ class PromotionController extends Controller
     {
         $data = $request->validated();
 
-        Promotion::create($data);
+        $promotion = Promotion::create($data);
+        
+        // Nếu có chọn hạng khách hàng, tạo liên kết trong bảng customer_rank_promotions
+        if (!empty($data['rank_id'])) {
+            \App\Models\CustomerRankPromotion::create([
+                'customer_rank_id' => $data['rank_id'],
+                'promotion_id' => $promotion->id,
+                'description' => 'Khuyến mãi dành cho hạng ' . \App\Models\CustomerRank::find($data['rank_id'])->name
+            ]);
+        }
+        
         return redirect()->route('promotions.index')->with('success', 'Khuyến mãi đã được tạo thành công.');
     }
 
@@ -69,6 +79,23 @@ class PromotionController extends Controller
 
         try {
             $promotion->update($data);
+            
+            // Xử lý cập nhật liên kết customer_rank_promotions
+            if (!empty($data['rank_id'])) {
+                // Xóa liên kết cũ nếu có
+                \App\Models\CustomerRankPromotion::where('promotion_id', $id)->delete();
+                
+                // Tạo liên kết mới
+                \App\Models\CustomerRankPromotion::create([
+                    'customer_rank_id' => $data['rank_id'],
+                    'promotion_id' => $promotion->id,
+                    'description' => 'Khuyến mãi dành cho hạng ' . \App\Models\CustomerRank::find($data['rank_id'])->name
+                ]);
+            } else {
+                // Nếu không chọn hạng nào, xóa tất cả liên kết
+                \App\Models\CustomerRankPromotion::where('promotion_id', $id)->delete();
+            }
+            
             return redirect()->route('promotions.index')->with('success', 'Khuyến mãi đã được cập nhật thành công.');
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'Cập nhật thất bại: ' . $e->getMessage()])->withInput();
@@ -78,13 +105,17 @@ class PromotionController extends Controller
     public function destroy($id)
     {
         $promotion = Promotion::findOrFail($id);
+        
+        // Xóa tất cả liên kết trong customer_rank_promotions trước khi xóa promotion
+        \App\Models\CustomerRankPromotion::where('promotion_id', $id)->delete();
+        
         $promotion->delete(); // Soft delete
         return redirect()->route('promotions.trashed')->with('success', 'Khuyến mãi đã được xóa mềm thành công.');
     }
 
     public function trashed()
     {
-        $promotions = Promotion::onlyTrashed()->orderBy('deleted_at', 'desc')->paginate(20);
+        $promotions = Promotion::onlyTrashed()->with('rank')->orderBy('deleted_at', 'desc')->paginate(20);
         $discountTypes = PromotionDiscountType::cases();
         return view('admin.promotions.trashed', compact('promotions', 'discountTypes'));
     }
@@ -99,6 +130,10 @@ class PromotionController extends Controller
     public function forceDelete($id)
     {
         $promotion = Promotion::onlyTrashed()->findOrFail($id);
+        
+        // Xóa tất cả liên kết trong customer_rank_promotions trước khi xóa vĩnh viễn
+        \App\Models\CustomerRankPromotion::where('promotion_id', $id)->delete();
+        
         $promotion->forceDelete();
         return redirect()->route('promotions.trashed')->with('success', 'Đã xóa vĩnh viễn!');
     }
