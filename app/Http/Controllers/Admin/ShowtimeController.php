@@ -138,12 +138,12 @@ class ShowtimeController extends Controller
         ]);
 
         try {
-            \Log::info('Raw Start Time: ' . $request->start_time . ', Raw End Time: ' . $request->end_time);
+            Log::info('Raw Start Time: ' . $request->start_time . ', Raw End Time: ' . $request->end_time);
 
             $start = \Carbon\Carbon::parse($request->start_time, 'Asia/Ho_Chi_Minh')->setSeconds(0);
             $end = \Carbon\Carbon::parse($request->end_time, 'Asia/Ho_Chi_Minh')->setSeconds(0);
 
-            \Log::info('Start Timezone: ' . $start->timezone->getName() . ', End Timezone: ' . $end->timezone->getName());
+            Log::info('Start Timezone: ' . $start->timezone->getName() . ', End Timezone: ' . $end->timezone->getName());
 
             $startDate = $start->toDateString();
             $endDate = $end->toDateString();
@@ -152,7 +152,7 @@ class ShowtimeController extends Controller
             }
 
             $duration = abs($end->diffInMinutes($start));
-            \Log::info('Start Time: ' . $start->toDateTimeString() . ', End Time: ' . $end->toDateTimeString() . ', Duration: ' . $duration . ' minutes');
+            Log::info('Start Time: ' . $start->toDateTimeString() . ', End Time: ' . $end->toDateTimeString() . ', Duration: ' . $duration . ' minutes');
 
             if ($end->lessThan($start)) {
                 return redirect()->back()->with('error', 'Thời gian kết thúc phải sau thời gian bắt đầu.');
@@ -190,7 +190,7 @@ class ShowtimeController extends Controller
 
             return redirect()->route('admin.showtimes.index')->with('success', 'Cập nhật suất chiếu thành công!');
         } catch (\Exception $e) {
-            \Log::error('Lỗi khi cập nhật suất chiếu: ' . $e->getMessage());
+            Log::error('Lỗi khi cập nhật suất chiếu: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Có lỗi xảy ra khi cập nhật suất chiếu. Vui lòng thử lại.');
         }
     }

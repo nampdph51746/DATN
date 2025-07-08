@@ -6,7 +6,7 @@
             <div class="col-xl-12">
                 <div class="card shadow-sm">
                     {{-- Thông báo --}}
-
+                    @include('admin.partials.alert')
                     <div class="card-header d-flex justify-content-between align-items-center gap-1 bg-primary text-white">
                         <h4 class="card-title flex-grow-1 mb-0">
                             <iconify-icon icon="solar:gift-bold" class="fs-3 me-2"></iconify-icon>
