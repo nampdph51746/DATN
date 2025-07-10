@@ -120,23 +120,29 @@
 					@endif
 					@foreach($movies as $movie)
 						<div class="item vhny-grid">
-							<div class="box16">
+							<div class="box16 mb-0">
 								<a href="#">
 									<figure>
 										<img class="img-fluid"
 											src="{{ $movie->poster_url ? asset('storage/'.$movie->poster_url) : asset('client_assets/assets/images/default-movie.jpg') }}"
 											alt="{{ $movie->name }}"
-											style="width: 100%; height: 320px; object-fit: cover; border-radius: 8px;">
+							style="width: 100%; height: 320px; object-fit: cover; border-radius: 8px;">
 									</figure>
 									<div class="box-content">
-										<h3 class="title">{{ $movie->name }}</h3>
 										<h4>
-											<span class="post"><span class="fa fa-clock-o"></span> {{ $movie->duration_minutes }} min</span>
+											<span class="post">
+												<span class="fa fa-clock-o"></span> {{ $movie->duration_minutes }} min
+											</span>
 											<span class="post fa fa-heart text-right"></span>
 										</h4>
 									</div>
 									<span class="fa fa-play video-icon" aria-hidden="true"></span>
 								</a>
+							</div>
+							<h3><a class="title-gd" href="#">{{ $movie->name }}</a></h3>
+							<p>{{ Str::limit($movie->description, 60, '...') }}</p>
+							<div class="button-center text-center mt-4">
+								<a href="#" class="btn watch-button">Đặt vé ngay</a>
 							</div>
 						</div>
 					@endforeach
@@ -162,114 +168,58 @@
 					</div>
 				</div>
 				<div class="owl-three owl-carousel owl-theme">
-					<div class="item vhny-grid">
-						<div class="box16 mb-0">
-							<a href="movies.html">
-								<figure>
-									<img class="img-fluid" src="client_assets/assets/images/n1.jpg" alt="">
-								</figure>
-								<div class="box-content">
-									<h4> <span class="post"><span class="fa fa-clock-o"> </span> 2 Hr 4min</span><span class="post fa fa-heart text-right"></span></h4>
+					@if(isset($newReleases) && $newReleases->count() > 0)
+						@foreach($newReleases as $movie)
+							<div class="item vhny-grid">
+								<div class="box16 mb-0">
+									<a href="#">
+										<figure>
+											<img class="img-fluid" 
+												src="{{ $movie->poster_url ? asset('storage/'.$movie->poster_url) : asset('client_assets/assets/images/default-movie.jpg') }}" 
+												alt="{{ $movie->name }}">
+										</figure>
+										<div class="box-content">
+											<h4>
+												<span class="post">
+													<span class="fa fa-clock-o"></span> {{ $movie->duration_minutes ?? 120 }} min
+												</span>
+												<span class="post fa fa-heart text-right"></span>
+											</h4>
+										</div>
+										<span class="fa fa-play video-icon" aria-hidden="true"></span>
+									</a>
 								</div>
-								<span class="fa fa-play video-icon" aria-hidden="true"></span>
-							</a>
-						</div>
-						<h3> <a class="title-gd" href="movies.html">No Time to Die</a></h3>
-						<p>Lorem ipsum dolor sit amet consectetur adipisicing elit</p>
-						<div class="button-center text-center mt-4">
-							<a href="movies.html" class="btn watch-button">Watch now</a>
-						</div>
-					</div>
-					<div class="item vhny-grid">
-						<div class="box16 mb-0">
-							<a href="movies.html">
-								<figure>
-									<img class="img-fluid" src="client_assets/assets/images/n2.jpg" alt="">
-								</figure>
-								<div class="box-content">
-									<h4> <span class="post"><span class="fa fa-clock-o"> </span> 2 Hr 4min</span><span class="post fa fa-heart text-right"></span></h4>
+								<h3><a class="title-gd" href="#">{{ $movie->name }}</a></h3>
+								<p>{{ Str::limit($movie->description, 60, '...') }}</p>
+								<div class="button-center text-center mt-4">
+									<a href="#" class="btn watch-button">Đặt vé ngay</a>
 								</div>
-								<span class="fa fa-play video-icon" aria-hidden="true"></span>
-							</a>
+							</div>
+						@endforeach
+					@else
+						<!-- Fallback nếu không có dữ liệu -->
+						<div class="item vhny-grid">
+							<div class="box16 mb-0">
+								<a href="#">
+									<figure>
+										<img class="img-fluid" src="client_assets/assets/images/n1.jpg" alt="">
+									</figure>
+									<div class="box-content">
+										<h4>
+											<span class="post"><span class="fa fa-clock-o"></span> 2 Hr 4min</span>
+											<span class="post fa fa-heart text-right"></span>
+										</h4>
+									</div>
+									<span class="fa fa-play video-icon" aria-hidden="true"></span>
+								</a>
+							</div>
+							<h3><a class="title-gd" href="#">No Time to Die</a></h3>
+							<p>Lorem ipsum dolor sit amet consectetur adipisicing elit</p>
+							<div class="button-center text-center mt-4">
+								<a href="#" class="btn watch-button">Watch now</a>
+							</div>
 						</div>
-						<h3> <a class="title-gd" href="movies.html">Mulan</a></h3>
-						<p>Lorem ipsum dolor sit amet consectetur adipisicing elit</p>
-						<div class="button-center text-center mt-4">
-							<a href="movies.html" class="btn watch-button">Watch now</a>
-						</div>
-					</div>
-					<div class="item vhny-grid">
-						<div class="box16 mb-0">
-							<a href="movies.html">
-								<figure>
-									<img class="img-fluid" src="client_assets/assets/images/n3.jpg" alt="">
-								</figure>
-								<div class="box-content">
-									<h4> <span class="post"><span class="fa fa-clock-o"> </span> 2 Hr 4min</span><span class="post fa fa-heart text-right"></span></h4>
-								</div>
-								<span class="fa fa-play video-icon" aria-hidden="true"></span>
-							</a>
-						</div>
-						<h3> <a class="title-gd" href="movies.html">Free Guy</a></h3>
-						<p>Lorem ipsum dolor sit amet consectetur adipisicing elit</p>
-						<div class="button-center text-center mt-4">
-							<a href="movies.html" class="btn watch-button">Watch now</a>
-						</div>
-					</div>
-					<div class="item vhny-grid">
-						<div class="box16 mb-0">
-							<a href="movies.html">
-								<figure>
-									<img class="img-fluid" src="client_assets/assets/images/n4.jpg" alt="">
-								</figure>
-								<div class="box-content">
-									<h4> <span class="post"><span class="fa fa-clock-o"> </span> 2 Hr 4min</span><span class="post fa fa-heart text-right"></span></h4>
-								</div>
-								<span class="fa fa-play video-icon" aria-hidden="true"></span>
-							</a>
-						</div>
-						<h3> <a class="title-gd" href="movies.html">My Spy</a></h3>
-						<p>Lorem ipsum dolor sit amet consectetur adipisicing elit</p>
-						<div class="button-center text-center mt-4">
-							<a href="movies.html" class="btn watch-button">Watch now</a>
-						</div>
-					</div>
-					<div class="item vhny-grid">
-						<div class="box16 mb-0">
-							<a href="movies.html">
-								<figure>
-									<img class="img-fluid" src="client_assets/assets/images/n5.jpg" alt="">
-								</figure>
-								<div class="box-content">
-									<h4> <span class="post"><span class="fa fa-clock-o"> </span> 2 Hr 4min</span><span class="post fa fa-heart text-right"></span></h4>
-								</div>
-								<span class="fa fa-play video-icon" aria-hidden="true"></span>
-							</a>
-						</div>
-						<h3> <a class="title-gd" href="movies.html">Scoob</a></h3>
-						<p>Lorem ipsum dolor sit amet consectetur adipisicing elit</p>
-						<div class="button-center text-center mt-4">
-							<a href="movies.html" class="btn watch-button">Watch now</a>
-						</div>
-					</div>
-					<div class="item vhny-grid">
-						<div class="box16 mb-0">
-							<a href="movies.html">
-								<figure>
-									<img class="img-fluid" src="client_assets/assets/images/n6.jpg" alt="">
-								</figure>
-								<div class="box-content">
-									<h4> <span class="post"><span class="fa fa-clock-o"> </span> 2 Hr 4min</span><span class="post fa fa-heart text-right"></span></h4>
-								</div>
-								<span class="fa fa-play video-icon" aria-hidden="true"></span>
-							</a>
-						</div>
-						<h3> <a class="title-gd" href="movies.html">Downhill</a></h3>
-						<p>Lorem ipsum dolor sit amet consectetur adipisicing elit</p>
-						<div class="button-center text-center mt-4">
-							<a href="movies.html" class="btn watch-button">Watch now</a>
-						</div>
-					</div>
+					@endif
 				</div>
 			</div>
 		</div>

@@ -23,7 +23,14 @@ class HomeController extends Controller
         }
 
         $movies = $movies->orderBy('release_date', 'desc')->take(8)->get();
+        
+        // Lấy phim mới phát hành
+        $newReleases = \App\Models\Movie::query()
+            ->with('genres')
+            ->orderBy('release_date', 'desc')
+            ->take(6)
+            ->get();
 
-        return view('client.home', compact('movies', 'query'));
+        return view('client.home', compact('movies', 'newReleases', 'query'));
     }
 }
