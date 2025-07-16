@@ -1526,7 +1526,6 @@
     @endsection
 
     <script>
-        
         let currentStep = 1;
         let selectedTime = null;
         let selectedShowtimeId = null;
@@ -1683,17 +1682,36 @@
                 console.warn('No showtimes available for date:', date);
                 return;
             }
+            // Hiển thị từng phòng chiếu với các khung giờ riêng của phòng đó
             rooms.forEach(room => {
+                if (!room.times || !Array.isArray(room.times)) return;
                 const li = document.createElement('li');
                 li.className = 'time-li';
-                li.innerHTML = `
-                <div class="screens">${room.room_name}</div>
-                <div class="time-btn">
-                    ${room.times.map(time => `
-                                                                                <button class="screen-time" onclick="timeFunction(${time.id}, '${time.time}', ${time.base_price})">${time.time}</button>
-                                                                            `).join('')}
-                </div>
-            `;
+                // Tên phòng chiếu
+                const roomDiv = document.createElement('div');
+                roomDiv.className = 'screens';
+                roomDiv.textContent = room.room_name;
+                li.appendChild(roomDiv);
+
+                // Danh sách khung giờ của phòng
+                const timeDiv = document.createElement('div');
+                timeDiv.className = 'time-btn';
+                // Deduplicate times per room
+                const seenTimes = new Set();
+                room.times.forEach(time => {
+                    const key = time.time || time.id;
+                    if (!seenTimes.has(key)) {
+                        seenTimes.add(key);
+                        const btn = document.createElement('button');
+                        btn.className = 'screen-time';
+                        btn.textContent = time.time;
+                        btn.onclick = function() {
+                            timeFunction(time.id, time.time, time.base_price);
+                        };
+                        timeDiv.appendChild(btn);
+                    }
+                });
+                li.appendChild(timeDiv);
                 timeUl.appendChild(li);
             });
         }
@@ -2774,14 +2792,15 @@
             document.getElementById('input-discount').value = validDiscount;
             document.getElementById('input-final-amount').value = total;
 
-            // ✅ Sửa lại phần snack_items để có cả số lượng
-            const snackItemRows = document.querySelectorAll('#summary-table-body tr[data-variant-key]');1
-            const snackItemsArray = Array.from(snackItemRows).map(row => {
-                const name = row.children[0]?.textContent.trim() || '';
-                const quantity = row.children[1]?.textContent.trim() || '1';
-                return `${name} x ${quantity}`;
-            });
-            document.getElementById('input-snack-items').value = snackItemsArray.join(', ');
+        // ✅ Sửa lại phần snack_items để có cả số lượng
+        const snackItemRows = document.querySelectorAll('#summary-table-body tr[data-variant-key]');
+        1
+        const snackItemsArray = Array.from(snackItemRows).map(row => {
+            const name = row.children[0]?.textContent.trim() || '';
+            const quantity = row.children[1]?.textContent.trim() || '1';
+            return `${name} x ${quantity}`;
+        });
+        document.getElementById('input-snack-items').value = snackItemsArray.join(', ');
 
 
         }
