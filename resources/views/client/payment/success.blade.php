@@ -15,7 +15,7 @@
             <div class="h-4 bg-gradient-to-r from-gray-100 via-white to-gray-100" style="background: repeating-linear-gradient(90deg, #f3f4f6, #f3f4f6 8px, #fff 8px, #fff 16px);"></div>
             <div class="p-6">
                 <div class="text-center mb-4">
-                    <p class="text-lg font-semibold text-pink-600">MyShowz Entertainment</p>
+                    <p class="text-lg font-semibold text-pink-600">{{ $room->cinema->name }}</p>
                     <p class="text-xl font-bold text-gray-800">{{ $movie->title ?? 'Tên phim' }}</p>
                 </div>
                 <div class="flex justify-center mb-4">
