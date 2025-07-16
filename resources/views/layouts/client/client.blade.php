@@ -59,6 +59,8 @@
         }
     </script>
 <body>
+	@stack('scripts')
+
 	<!-- header -->
 	<header id="site-header" class="w3l-header fixed-top">
 		<!--/nav-->
