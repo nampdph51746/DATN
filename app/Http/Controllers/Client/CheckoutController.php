@@ -25,10 +25,12 @@ public function previewBooking(Request $request)
         'room_name' => $request->input('room_name'),
         'showtime' => $request->input('showtime'),
         'snack_items' => $request->input('snack_items'),
-        'items' => $request->input('items', []),
+        'items' => is_string($request->input('items'))
+            ? (json_decode($request->input('items', '[]'), true) ?? [])
+            : ($request->input('items') ?? []),
     ];
     
-    dd($bookingData); 
+    // dd($bookingData); 
     session(['booking_preview' => $bookingData]);
 
     return view('client.checkout', compact('bookingData'));

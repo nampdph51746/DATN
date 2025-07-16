@@ -176,6 +176,22 @@ class VnpayController extends Controller
               'locked_until' => null,
             ]);
         }
+
+        // Sau khi tạo $booking
+        $items = is_string($bookingData['items'])
+            ? json_decode($bookingData['items'], true)
+            : ($bookingData['items'] ?? []);
+        if (is_array($items)) {
+            foreach ($items as $item) {
+                BookingItem::create([
+                    'booking_id' => $booking->id,
+                    'product_variant_id' => $item['product_variant_id'],
+                    'quantity' => $item['quantity'],
+                    'price_at_purchase' => $item['price_at_purchase'],
+                ]);
+            }
+        }
+
         DB::commit();
         session()->forget('booking_preview');
 
