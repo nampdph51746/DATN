@@ -2,21 +2,22 @@
 
 namespace App\Http\Controllers\Client;
 
-use App\Enums\SeatStatus;
+use App\Models\Room;
 use App\Models\Seat;
-use App\Models\SeatType;
-use App\Models\ShowtimeSeatState;
+use App\Models\Movie;
 use App\Models\Ticket;
 use App\Models\Booking;
 use App\Models\Payment;
+use App\Models\SeatType;
+use App\Models\Showtime;
+use App\Enums\SeatStatus;
 use App\Models\BookingItem;
 use App\Enums\BookingStatus;
 use Illuminate\Http\Request;
+use App\Models\ProductVariant;
+use App\Models\ShowtimeSeatState;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
-use App\Models\Movie;
-use App\Models\Room;
-use App\Models\Showtime;
 
 class VnpayController extends Controller
 {
@@ -189,6 +190,12 @@ class VnpayController extends Controller
                     'quantity' => $item['quantity'],
                     'price_at_purchase' => $item['price_at_purchase'],
                 ]);
+                // Trừ tồn kho product_variant
+                $variant = ProductVariant::find($item['product_variant_id']);
+                if ($variant) {
+                    $variant->stock_quantity = max(0, $variant->stock_quantity - (int)$item['quantity']);
+                    $variant->save();
+                }
             }
         }
 
