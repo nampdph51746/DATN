@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Client\CheckoutController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\CityController;
@@ -32,6 +33,8 @@ use App\Http\Controllers\Admin\AdminProductVariantController;
 use App\Http\Controllers\Admin\CustomerRankPromotionController;
 use App\Http\Controllers\Admin\AdminProductCategoriesController;
 use App\Http\Controllers\Client\ClientPaymentController;
+use App\Http\Controllers\Client\VnpayController;
+
 
 Route::get('/', [HomeController::class, 'index'])->name('client.home');
 Route::get('/movies', [HomeController::class, 'movies'])->name('client.movies');
@@ -41,6 +44,23 @@ Route::get('/showtimes/{showtimeId}/seat-map', [SeatController::class, 'showSeat
 Route::post('/showtimes/{showtimeId}/reserve', [SeatController::class, 'reserveSeat'])->name('client.seats.reserve');
 Route::get('/api/seats/status/{showtimeId}', [SeatController::class, 'getSeatStatus']);
 Route::post('/apply-promotion-auto', [App\Http\Controllers\Client\HomeController::class, 'applyDiscountCodeAutomatically'])->name('client.applyPromotionAuto');
+
+Route::post('/checkout/vnpay', [VnpayController::class, 'redirectToVnpay'])->name('checkout.vnpay');
+Route::get('/checkout/confirmation', [CheckoutController::class, 'showConfirmation'])->name('checkout.confirmation');
+
+
+Route::get('/checkout/vnpay_return', [VnpayController::class, 'vnpayReturn'])->name('vnpay.return');
+
+Route::post('/checkout/preview', [CheckoutController::class, 'previewBooking'])->name('checkout.preview');
+
+Route::get('/payment-success', function () {
+    return 'Thanh toán thành công!';
+})->name('client.success');
+
+Route::get('/payment-failed', function () {
+    return 'Thanh toán thất bại!';
+})->name('client.failed');
+
 
 Route::post('/apply-promotion', [App\Http\Controllers\Client\HomeController::class, 'applyDiscountCode'])->name('client.applyPromotion');
 
@@ -144,7 +164,7 @@ Route::prefix('Admin/seat-type')->name('seat-type.')->group(function () {
 Route::delete('admin/genres/bulk-delete', [\App\Http\Controllers\Admin\GenreController::class, 'bulkDelete'])->name('admin.genres.bulkDelete');
 
 Route::prefix('admin')->name('admin.')->group(function () {
-   Route::resource('genres', App\Http\Controllers\Admin\GenreController::class);
+    Route::resource('genres', App\Http\Controllers\Admin\GenreController::class);
 });
 
 Route::prefix('admin/age-limits')->name('admin.age_limits.')->group(function () {
@@ -166,7 +186,7 @@ Route::prefix('customers-rank')->name('customers-rank.')->group(function () {
     Route::delete('{customerRank}/soft-delete', [CustomerRankController::class, 'softDelete'])->name('softDelete');
     Route::get('deleted/detail/{id}', [CustomerRankController::class, 'deletedShow'])->name('deleted-detail');
     Route::post('deleted/{id}/restore', [CustomerRankController::class, 'restore'])->name('restore');
-    Route::delete('deleted/{id}/force-delete', [CustomerRankController::class, 'forceDelete'])->name('forceDelete');    
+    Route::delete('deleted/{id}/force-delete', [CustomerRankController::class, 'forceDelete'])->name('forceDelete');
 });
 Route::resource('admin/customers-rank', CustomerRankController::class);
 
@@ -181,8 +201,8 @@ Route::prefix('roles')->name('roles.')->group(function () {
 Route::resource('admin/roles', RoleController::class);
 
 Route::prefix('admin/payment_methods')->group(function () {
-    Route::get('/', [PaymentMethodController::class, 'index'])->name('payment_methods.index');    
-    Route::get('/{id}', [PaymentMethodController::class, 'show'])->name('payment_methods.show');   
+    Route::get('/', [PaymentMethodController::class, 'index'])->name('payment_methods.index');
+    Route::get('/{id}', [PaymentMethodController::class, 'show'])->name('payment_methods.show');
     Route::get('/{paymentMethod}/edit-status', [PaymentMethodController::class, 'editStatus'])->name('payment_methods.editStatus');
     Route::put('/{paymentMethod}/update-status', [PaymentMethodController::class, 'updateStatus'])->name('payment_methods.updateStatus');
 });
@@ -239,4 +259,4 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

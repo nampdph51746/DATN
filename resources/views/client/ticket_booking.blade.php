@@ -1288,31 +1288,12 @@
                                                 </span>
                                             </div>
                                         </div>
-                                        <div>
-                                            <h4 style="color: #e5006e; font-size: 1.1em; margin-bottom: 10px;">Phương thức
-                                                thanh toán</h4>
-                                            <div style="display: flex; flex-direction: column; gap: 10px;">
-                                                <label style="display: flex; align-items: center; gap: 10px;">
-                                                    <input type="radio" name="payment-method" checked
-                                                        style="accent-color: #e5006e;" />
-                                                    <span style="color: #fff;">Thẻ ngân hàng</span>
-                                                </label>
-                                                <label style="display: flex; align-items: center; gap: 10px;">
-                                                    <input type="radio" name="payment-method"
-                                                        style="accent-color: #e5006e;" />
-                                                    <span style="color: #fff;">Ví điện tử</span>
-                                                </label>
-                                                <label style="display: flex; align-items: center; gap: 10px;">
-                                                    <input type="radio" name="payment-method"
-                                                        style="accent-color: #e5006e;" />
-                                                    <span style="color: #fff;">Tiền mặt tại quầy</span>
-                                                </label>
-                                            </div>
-                                        </div>
                                     </div>
                                     <!-- Right Section: Thông tin đặt vé -->
                                     <div class="summary-section" id="payment-summary-section" style="flex: 1;">
                                         <h3 class="summary-title">Thông tin đặt vé</h3>
+
+                                        <!-- Thông tin phim -->
                                         <div class="ticket-info">
                                             <div class="movie-poster">
                                                 <img id="payment-movie-poster"
@@ -1334,6 +1315,8 @@
                                                 </div>
                                             </div>
                                         </div>
+
+                                        <!-- Các dòng tổng hợp -->
                                         <div class="info-line"><strong>Ghế:</strong> <span
                                                 id="payment-selected-seats">{{ $selectedSeats ?? 'Chưa chọn ghế' }}</span>
                                         </div>
@@ -1347,6 +1330,8 @@
                                         <div id="auto-promotion-info" class="auto-promotion-info"></div>
                                         <div class="info-line"><strong>Điểm đã dùng:</strong> <span
                                                 id="points-used-line">0</span></div>
+
+                                        <!-- Bảng đồ ăn -->
                                         <hr style="border: none; height: 2px; margin: 8px 0;">
                                         <table id="payment-snack-table" class="snack-table text-sm mt-2">
                                             <thead>
@@ -1358,22 +1343,51 @@
                                             </thead>
                                             <tbody></tbody>
                                         </table>
+
                                         <div class="info-line"><strong>Tổng tiền đồ ăn:</strong> <span
                                                 id="payment-snack-total">0 ₫</span></div>
                                         <div class="info-line"><strong>Tổng phụ:</strong> <span id="subtotalDisplay">0
                                                 ₫</span></div>
+
                                         <hr style="border: none; height: 2px; background-color: #e5006e; margin: 8px 0;">
                                         <div class="info-line"><strong>Tổng cộng:</strong> <span id="totalDisplay">0
-                                                ₫</span>
-                                        </div>
+                                                ₫</span></div>
                                         <div class="info-line"><strong>Tổng thanh toán:</strong> <span
-                                                id="paymentSummaryTotal">0 ₫</span></div> <!-- Thêm phần tử này -->
+                                                id="paymentSummaryTotal">0 ₫</span></div>
                                         <div class="info-line"><strong>Danh sách đồ ăn:</strong> <span
-                                                id="snackItems">Chưa
-                                                chọn đồ ăn</span></div>
+                                                id="snackItems">Chưa chọn đồ ăn</span></div>
+
+                                        <!-- ✅ FORM ĐẶT VÉ chuyển xuống đây -->
+                                        <!-- HTML -->
+                                        <form id="checkoutForm" action="{{ route('checkout.preview') }}" method="POST">
+                                            @csrf
+
+                                            <input type="hidden" name="movie_title" id="input-movie-title">
+                                            <input type="hidden" name="cinema_name" id="input-cinema-name">
+                                            <input type="hidden" name="room_name" id="input-room-name">
+                                            <input type="hidden" name="showtime" id="input-showtime">
+                                            <input type="hidden" name="snack_items" id="input-snack-items">
+
+                                            <input type="hidden" name="total_amount_before_discount"
+                                                id="input-total-before">
+                                            <input type="hidden" name="discount_amount" id="input-discount">
+                                            <input type="hidden" name="final_amount" id="input-final-amount">
+                                            <input type="hidden" name="items" id="input-items">
+
+
+                                            <input type="hidden" name="promotion_id" value="{{ $promotionId ?? '' }}">
+                                            <input type="hidden" name="payment_method_id" value="1">
+                                            {{-- Ví dụ VNPAY = 1 --}}
+                                            <div id="snack-item-inputs-container"></div>
+                                            <button type="submit" class="btn btn-success check_out">Thanh toán
+                                                VNPAY</button>
+                                        </form>
+
+
+                                        <!-- Đồng hồ đếm ngược -->
                                         <div class="timer-section mt-4" id="timer-section-payment">
-                                            <h2 style="color: #ffffff; font-size: 1.2em; margin-bottom: 10px;"><strong>Time
-                                                    Remaining</strong></h2>
+                                            <h2 style="color: #ffffff; font-size: 1.2em; margin-bottom: 10px;"><strong>Thời
+                                                    gian còn lại</strong></h2>
                                             <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 10px;"
                                                 id="timer-display-payment">
                                                 <div style="text-align: center;">
@@ -1391,6 +1405,7 @@
                                             </div>
                                         </div>
                                     </div>
+
                                 </div>
                                 <div class="flex justify-between mt-4 px-4">
                                     <input type="button" name="previous-step" id="back-btn"
@@ -1676,8 +1691,8 @@
                 <div class="screens">${room.room_name}</div>
                 <div class="time-btn">
                     ${room.times.map(time => `
-                            <button class="screen-time" onclick="timeFunction(${time.id}, '${time.time}', ${time.base_price})">${time.time}</button>
-                        `).join('')}
+                                                                                <button class="screen-time" onclick="timeFunction(${time.id}, '${time.time}', ${time.base_price})">${time.time}</button>
+                                                                            `).join('')}
                 </div>
             `;
                 timeUl.appendChild(li);
@@ -1884,7 +1899,7 @@
                         if (promotionValue > currentSubtotal) {
                             console.log(
                                 `Auto promotion value ${promotionValue} exceeds order subtotal ${currentSubtotal}, cannot apply`
-                                );
+                            );
 
                             // Reset discount và không áp dụng mã
                             promotionDiscount = 0;
@@ -1912,7 +1927,7 @@
                         if (potentialTotalDiscount > maxTotalDiscount) {
                             console.log(
                                 `Total discount would exceed 30% limit: ${potentialTotalDiscount} > ${maxTotalDiscount}`
-                                );
+                            );
 
                             // Reset discount và không áp dụng mã
                             promotionDiscount = 0;
@@ -2749,6 +2764,27 @@
                     checkMinimumOrderAmount();
                 }, 100);
             }
+            // Lưu dữ liệu vào form để gửi đi
+            // Lưu dữ liệu vào form để gửi đi
+            document.getElementById('input-movie-title').value = movieTitle || 'N/A';
+            document.getElementById('input-cinema-name').value = cinemaName || 'N/A';
+            document.getElementById('input-room-name').value = roomName || 'N/A';
+            document.getElementById('input-showtime').value = selectedDate + ' ' + (selectedTime || 'N/A');
+
+            document.getElementById('input-total-before').value = ticketTotal + (snackTotal || 0);
+            document.getElementById('input-discount').value = validDiscount;
+            document.getElementById('input-final-amount').value = total;
+
+            // ✅ Sửa lại phần snack_items để có cả số lượng
+            const snackItemRows = document.querySelectorAll('#summary-table-body tr[data-variant-key]');1
+            const snackItemsArray = Array.from(snackItemRows).map(row => {
+                const name = row.children[0]?.textContent.trim() || '';
+                const quantity = row.children[1]?.textContent.trim() || '1';
+                return `${name} x ${quantity}`;
+            });
+            document.getElementById('input-snack-items').value = snackItemsArray.join(', ');
+
+
         }
 
         // Hàm xử lý bước tiếp theo
@@ -3134,7 +3170,7 @@
                             } else {
                                 console.error(
                                     '[DEBUG] higher-promotions-count element not found - this may cause display issues'
-                                    );
+                                );
                             }
                         }
 
@@ -3419,7 +3455,7 @@
 
             console.log(
                 `[DEBUG] Rendered ${type} promotions: ${sourceData.length} total, showing first ${Math.min(data.pageSize, sourceData.length)}`
-                );
+            );
         }
 
         // Hàm update search results indicator
@@ -3703,7 +3739,7 @@
                 `${type === 'rank' ? 'rank' : type === 'general' ? 'general' : 'higher-rank'}-promotions-content`);
             console.log(
                 `[DEBUG] Toggling promotion section for ${type}, content ID: ${type === 'rank' ? 'rank' : type === 'general' ? 'general' : 'higher-rank'}-promotions-content`
-                );
+            );
             if (!content) {
                 console.error(`[DEBUG] Content element not found for type: ${type}`);
                 return;
@@ -4500,6 +4536,10 @@
 
             console.log('Page initialization completed');
         };
+
+        document.getElementById('checkoutForm').addEventListener('submit', function(e) {
+            updateOrderSummary(); // Cập nhật dữ liệu vào form trước khi gửi đi
+        });
     </script>
 
     <script type="text/javascript" src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>

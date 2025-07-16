@@ -34,5 +34,10 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
+// 'vnpay' => [
+//     'tmncode' => env('VNPAY_TMN_CODE', 'MIXLC4YW'),
+//     'hash_secret' => env('VNPAY_HASH_SECRET', 'NX3ZCRHQUHCZZO6CYTWKQG1URUCNBFXW'),
+//     'url' => env('VNPAY_URL', 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html'),
+// ],
 
 ];

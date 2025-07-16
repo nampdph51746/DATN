@@ -20,6 +20,7 @@ use App\Enums\PromotionDiscountType;
 use App\Models\Point;
 use App\Models\PointHistory;
 use App\Models\CustomerRank;
+
 class HomeController extends Controller
 {
     public function index()
@@ -31,9 +32,9 @@ class HomeController extends Controller
             ->with('genres')
             ->when($query, function ($q) use ($query) {
                 $q->where('name', 'like', "%{$query}%")
-                  ->orWhereHas('genres', function ($g) use ($query) {
-                      $g->where('name', 'like', "%{$query}%");
-                  });
+                    ->orWhereHas('genres', function ($g) use ($query) {
+                        $g->where('name', 'like', "%{$query}%");
+                    });
             })
             ->where('status', MovieStatus::Showing)
             ->orderBy('release_date', 'desc')
@@ -45,9 +46,9 @@ class HomeController extends Controller
             ->with('genres')
             ->when($query, function ($q) use ($query) {
                 $q->where('name', 'like', "%{$query}%")
-                  ->orWhereHas('genres', function ($g) use ($query) {
-                      $g->where('name', 'like', "%{$query}%");
-                  });
+                    ->orWhereHas('genres', function ($g) use ($query) {
+                        $g->where('name', 'like', "%{$query}%");
+                    });
             })
             ->where('status', MovieStatus::Upcoming)
             ->orderBy('release_date', 'asc')
@@ -55,7 +56,7 @@ class HomeController extends Controller
             ->get();
 
         return view('client.home', compact('showingMovies', 'upcomingMovies', 'query'));
-        }
+    }
 
     public function show(Request $request, $id)
     {
@@ -78,14 +79,14 @@ class HomeController extends Controller
             ->orderBy('start_time')
             ->get();
 
-            return view('client.detailmovie', compact(
-                'movie',
-                'showtimes',
-                'rooms',
-                'dates',
-                'selectedDate'
-            ));
-        }
+        return view('client.detailmovie', compact(
+            'movie',
+            'showtimes',
+            'rooms',
+            'dates',
+            'selectedDate'
+        ));
+    }
 
     public function ticketBooking($id)
     {
@@ -159,6 +160,27 @@ class HomeController extends Controller
         $discount = 0;
         $pointsUsed = 0;
         $promotionId = null;
+
+        $bookingData = [
+    'movie_id' => $movie->id,
+    'movie_title' => $movie->title,
+    'showtime_id' => $showtime?->id,
+    'showtime_start' => $showtime?->start_time,
+    'room_name' => $room?->name,
+    'cinema_name' => $cinema?->name,
+    'user_id' => $user?->id,
+    'user_points' => $userPoints,
+    'user_rank' => $userRank?->name ?? null,
+    'products' => $products,
+    'promotion_status' => $promotionStatus,
+    'discount' => $discount,
+    'points_used' => $pointsUsed,
+    'promotion_id' => $promotionId,
+    'seat_types' => $seatTypes,
+];
+
+              session(['booking_data' => $bookingData]);
+              
 
         return view('client.ticket_booking', compact(
             'movie',
@@ -249,14 +271,14 @@ class HomeController extends Controller
             ->with(['genres'])
             ->when($query, function ($q) use ($query) {
                 $q->where('name', 'like', "%{$query}%")
-                  ->orWhereHas('genres', function ($g) use ($query) {
-                      $g->where('name', 'like', "%{$query}%");
-                  });
+                    ->orWhereHas('genres', function ($g) use ($query) {
+                        $g->where('name', 'like', "%{$query}%");
+                    });
             })
             ->where('status', MovieStatus::Showing)
             ->withCount(['showtimes' => function ($q) {
                 $q->where('start_time', '>=', Carbon::now()->subDays(30))
-                  ->whereHas('tickets'); // Đếm vé bán ra trong 30 ngày
+                    ->whereHas('tickets'); // Đếm vé bán ra trong 30 ngày
             }])
             ->orderBy('showtimes_count', 'desc')
             ->take(8)
@@ -267,9 +289,9 @@ class HomeController extends Controller
             ->with(['genres'])
             ->when($query, function ($q) use ($query) {
                 $q->where('name', 'like', "%{$query}%")
-                  ->orWhereHas('genres', function ($g) use ($query) {
-                      $g->where('name', 'like', "%{$query}%");
-                  });
+                    ->orWhereHas('genres', function ($g) use ($query) {
+                        $g->where('name', 'like', "%{$query}%");
+                    });
             })
             ->whereIn('status', [MovieStatus::Showing, MovieStatus::Upcoming])
             ->orderBy('created_at', 'desc')
@@ -281,14 +303,14 @@ class HomeController extends Controller
             ->with(['genres'])
             ->when($query, function ($q) use ($query) {
                 $q->where('name', 'like', "%{$query}%")
-                  ->orWhereHas('genres', function ($g) use ($query) {
-                      $g->where('name', 'like', "%{$query}%");
-                  });
+                    ->orWhereHas('genres', function ($g) use ($query) {
+                        $g->where('name', 'like', "%{$query}%");
+                    });
             })
             ->where('status', MovieStatus::Showing)
             ->withCount(['showtimes' => function ($q) {
                 $q->where('start_time', '>=', Carbon::now()->subDays(30))
-                  ->whereHas('tickets');
+                    ->whereHas('tickets');
             }])
             ->orderBy('showtimes_count', 'desc')
             ->take(8)
@@ -299,14 +321,14 @@ class HomeController extends Controller
             ->with(['genres'])
             ->when($query, function ($q) use ($query) {
                 $q->where('name', 'like', "%{$query}%")
-                  ->orWhereHas('genres', function ($g) use ($query) {
-                      $g->where('name', 'like', "%{$query}%");
-                  });
+                    ->orWhereHas('genres', function ($g) use ($query) {
+                        $g->where('name', 'like', "%{$query}%");
+                    });
             })
             ->whereIn('status', [MovieStatus::Showing, MovieStatus::Upcoming])
             ->withCount(['showtimes' => function ($q) {
                 $q->where('start_time', '>=', Carbon::now()->subDays(7))
-                  ->whereHas('tickets');
+                    ->whereHas('tickets');
             }])
             ->orderBy('showtimes_count', 'desc')
             ->take(8)
@@ -414,7 +436,6 @@ class HomeController extends Controller
                 'promotion_rank' => $promotion->rank?->name ?? 'Chung',
                 'max_discount' => $promotion->max_discount_amount ? (float)$promotion->max_discount_amount : null
             ]);
-        
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json(['error' => $e->errors()['code'][0] ?? 'Dữ liệu không hợp lệ. '], 422);
         } catch (\Exception $e) {
@@ -599,7 +620,6 @@ class HomeController extends Controller
                 'user_rank_id' => $userRankId,
                 'data' => $categorizedPromotions
             ]);
-            
         } catch (\Exception $e) {
             Log::error('[DEBUG] Exception in getAvailablePromotions:', [
                 'message' => $e->getMessage(),
@@ -607,7 +627,7 @@ class HomeController extends Controller
                 'line' => $e->getLine(),
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Đã có lỗi xảy ra khi lấy danh sách mã giảm giá. Vui lòng thử lại.',
@@ -637,13 +657,13 @@ class HomeController extends Controller
             ->where('rank_id', $userRankId)
             ->orderBy('discount_value', 'desc')
             ->get();
-            
+
         // Debug: kiểm tra tất cả promotions cho rank này không quan tâm thời gian
         $allRankPromotions = Promotion::with('rank')
             ->where('status', 'active')
             ->where('rank_id', $userRankId)
             ->get();
-            
+
         Log::info('[DEBUG] All promotions for this rank (ignoring time):', [
             'userRankId' => $userRankId,
             'count' => $allRankPromotions->count(),
@@ -658,7 +678,7 @@ class HomeController extends Controller
                 'rank_name' => $p->rank?->name
             ])
         ]);
-            
+
         Log::info('[DEBUG] getUserRankPromotions result:', [
             'userRankId' => $userRankId,
             'count' => $promotions->count(),
@@ -682,7 +702,7 @@ class HomeController extends Controller
             ->whereNull('rank_id')
             ->orderBy('discount_value', 'desc')
             ->get();
-            
+
         Log::info('[DEBUG] getGeneralPromotions result:', [
             'count' => $promotions->count(),
             'promotions' => $promotions->map(fn($p) => [
@@ -701,7 +721,7 @@ class HomeController extends Controller
             'userRankId' => $userRankId,
             'now' => $now instanceof \DateTime ? $now->format('Y-m-d H:i:s') : $now
         ]);
-        
+
         if (!$userRankId) {
             Log::info('[DEBUG] getOtherRankPromotions: No user rank ID, returning empty collection.');
             return collect();
@@ -730,23 +750,23 @@ class HomeController extends Controller
         // Log all higher ranks first to check if we're considering the right ranks
         $higherRanks = CustomerRank::where('min_points_required', '>', $userRank->min_points_required)
             ->get();
-            
+
         Log::info('[DEBUG] Higher ranks available in database:', [
             'count' => $higherRanks->count(),
             'ranks' => $higherRanks->map(fn($r) => ['id' => $r->id, 'name' => $r->name, 'min_points' => $r->min_points_required])
         ]);
-        
+
         // Check ALL promotions that belong to higher ranks regardless of other conditions
         $allHigherRankPromotions = Promotion::with('rank')
             ->whereHas('rank', function ($query) use ($userRank) {
                 $query->where('min_points_required', '>', $userRank->min_points_required);
             })
             ->get();
-            
+
         Log::info('[DEBUG] ALL promotions for higher ranks (ignoring status/dates):', [
             'count' => $allHigherRankPromotions->count(),
             'promotions' => $allHigherRankPromotions->map(fn($p) => [
-                'id' => $p->id, 
+                'id' => $p->id,
                 'code' => $p->code,
                 'name' => $p->name,
                 'rank_name' => $p->rank?->name,
@@ -756,7 +776,7 @@ class HomeController extends Controller
                 'quantity' => $p->quantity
             ])
         ]);
-        
+
         // Chỉ lấy các promotion cho rank cao hơn rank hiện tại của user
         // dựa trên min_points_required
         $promotions = Promotion::with('rank')
@@ -775,7 +795,7 @@ class HomeController extends Controller
                 $query->where('min_points_required', '>', $userRank->min_points_required);
             })
             ->get();
-            
+
         Log::info('[DEBUG] getOtherRankPromotions result:', [
             'count' => $promotions->count(),
             'promotions' => $promotions->map(fn($p) => ['id' => $p->id, 'name' => $p->name, 'rank_name' => $p->rank?->name])
@@ -787,7 +807,7 @@ class HomeController extends Controller
     private function formatPromotion($promotion, $category)
     {
         $discountAmount = $this->calculateDiscountAmount($promotion);
-        
+
         return [
             'id' => $promotion->id,
             'code' => $promotion->code,
@@ -810,16 +830,16 @@ class HomeController extends Controller
     {
         // Hàm này chỉ dùng để hiển thị ước tính, không phải tính toán thực tế
         // Tính toán thực tế sẽ được thực hiện trong applyDiscountCode và applyDiscountCodeAutomatically
-        
+
         if ($promotion->discount_type === 'fixed') {
             return (float)$promotion->discount_value;
         }
-        
+
         if ($promotion->discount_type === 'percentage') {
             // Trả về giá trị phần trăm để hiển thị, không phải số tiền thực tế
             return (float)$promotion->discount_value;
         }
-        
+
         return 0;
     }
 
@@ -828,15 +848,14 @@ class HomeController extends Controller
         if ($promotion->discount_type instanceof PromotionDiscountType && $promotion->discount_type->value === 'percentage') {
             return (float)$promotion->discount_value . '%';
         }
-        
+
         if (is_string($promotion->discount_type) && $promotion->discount_type === 'percentage') {
             return (float)$promotion->discount_value . '%';
         }
 
         return number_format((float)$promotion->discount_value) . '₫';
     }
-
-    public function applyDiscountCodeAutomatically(Request $request)
+       public function applyDiscountCodeAutomatically(Request $request)
     {
         try {
             Log::info('[DEBUG] applyDiscountCodeAutomatically input:', $request->all());
@@ -850,219 +869,218 @@ class HomeController extends Controller
                 return response()->json(['success' => false, 'message' => 'Vui lòng đăng nhập để sử dụng mã giảm giá'], 401);
             }
 
-        $orderAmount = $request->order_amount;
-        $now = now();
+            $orderAmount = $request->order_amount;
+            $now = now();
 
-        // Kiểm tra đơn hàng tối thiểu 200,000đ
-        if ($orderAmount < 200000) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Đơn hàng tối thiểu 200,000 ₫ để sử dụng mã giảm giá.',
-                'minimum_required' => 200000,
-                'current_amount' => $orderAmount
-            ]);
-        }
+            // Kiểm tra đơn hàng tối thiểu 200,000đ
+            if ($orderAmount < 200000) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Đơn hàng tối thiểu 200,000 ₫ để sử dụng mã giảm giá.',
+                    'minimum_required' => 200000,
+                    'current_amount' => $orderAmount
+                ]);
+            }
 
-        Log::info('[DEBUG] User info for auto promotion:', [
-            'user_id' => $user->id,
-            'user_rank_id' => $user->customer_rank_id,
-            'user_rank_name' => $user->customerRank?->name ?? 'Khách thường',
-            'order_amount' => $orderAmount
-        ]);
-
-        // Tìm mã giảm giá tốt nhất theo thứ tự ưu tiên:
-        // 1. Mã giảm giá dành riêng cho rank của user
-        // 2. Mã giảm giá chung (không giới hạn rank)
-        $promotionQuery = Promotion::where('status', 'active')
-            ->where('start_date', '<=', $now)
-            ->where('end_date', '>=', $now)
-            ->where('quantity', '>', 0)
-            ->where(function($query) use ($orderAmount) {
-                $query->whereNull('min_booking_value')
-                      ->orWhere('min_booking_value', '<=', $orderAmount);
-            })
-            ->where(function($query) use ($orderAmount) {
-                // Lọc ra mã Fixed có giá trị lớn hơn order amount
-                $query->where('discount_type', 'percentage')
-                      ->orWhere(function($subQuery) use ($orderAmount) {
-                          $subQuery->where('discount_type', 'fixed')
-                                   ->where('discount_value', '<=', $orderAmount);
-                      });
-            });
-
-        $bestPromotion = null;
-        
-        // BƯỚC 1: Ưu tiên tìm mã giảm giá dành riêng cho rank của user
-        if ($user->customer_rank_id) {
-            $rankPromotions = (clone $promotionQuery)
-                ->where('rank_id', $user->customer_rank_id)
-                ->with('rank')
-                ->orderByRaw('
-                    CASE 
-                        WHEN discount_type = "percentage" THEN 
-                            LEAST(
-                                ? * (discount_value / 100), 
-                                COALESCE(max_discount_amount, ?)
-                            )
-                        ELSE discount_value 
-                    END DESC
-                ', [$orderAmount, $orderAmount])
-                ->get();
-
-            Log::info('[DEBUG] Found rank-specific promotions:', [
-                'user_rank_id' => $user->customer_rank_id,
-                'user_rank_name' => $user->customerRank?->name,
-                'promotions_count' => $rankPromotions->count(),
-                'promotions' => $rankPromotions->map(function($p) {
-                    return [
-                        'id' => $p->id,
-                        'code' => $p->code,
-                        'name' => $p->name,
-                        'discount_type' => $p->discount_type,
-                        'discount_value' => $p->discount_value,
-                        'rank_name' => $p->rank?->name
-                    ];
-                })
-            ]);
-
-            $bestPromotion = $rankPromotions->first();
-        }
-
-        // BƯỚC 2: Nếu không có mã giảm giá theo rank, tìm mã giảm giá chung
-        if (!$bestPromotion) {
-            $generalPromotions = $promotionQuery
-                ->whereNull('rank_id')
-                ->orderByRaw('
-                    CASE 
-                        WHEN discount_type = "percentage" THEN 
-                            LEAST(
-                                ? * (discount_value / 100), 
-                                COALESCE(max_discount_amount, ?)
-                            )
-                        ELSE discount_value 
-                    END DESC
-                ', [$orderAmount, $orderAmount])
-                ->get();
-
-            Log::info('[DEBUG] Found general promotions:', [
-                'promotions_count' => $generalPromotions->count(),
-                'promotions' => $generalPromotions->map(function($p) {
-                    return [
-                        'id' => $p->id,
-                        'code' => $p->code,
-                        'name' => $p->name,
-                        'discount_type' => $p->discount_type,
-                        'discount_value' => $p->discount_value
-                    ];
-                })
-            ]);
-
-            $bestPromotion = $generalPromotions->first();
-        }
-
-        if (!$bestPromotion) {
-            Log::warning('[DEBUG] Không tìm thấy mã giảm giá phù hợp:', [
+            Log::info('[DEBUG] User info for auto promotion:', [
                 'user_id' => $user->id,
                 'user_rank_id' => $user->customer_rank_id,
                 'user_rank_name' => $user->customerRank?->name ?? 'Khách thường',
                 'order_amount' => $orderAmount
             ]);
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Không có mã giảm giá phù hợp cho hạng ' . ($user->customerRank?->name ?? 'Khách thường')
-            ]);
-        }
 
-        // Kiểm tra điều kiện giá trị mã giảm giá dựa trên discount_type
-        if ($bestPromotion->discount_type === 'fixed' && (float)$bestPromotion->discount_value > $orderAmount) {
-            // Chỉ áp dụng cho mã cố định: nếu giá trị mã > đơn hàng thì không cho phép
-            Log::warning('[DEBUG] Auto promotion fixed value exceeds order amount:', [
-                'promotion_code' => $bestPromotion->code,
-                'promotion_value' => (float)$bestPromotion->discount_value,
-                'order_amount' => $orderAmount
-            ]);
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Giá trị mã giảm giá (' . number_format((float)$bestPromotion->discount_value) . '₫) lớn hơn tổng đơn hàng (' . number_format($orderAmount) . '₫).',
-                'promotion_value' => (float)$bestPromotion->discount_value,
-                'order_amount' => $orderAmount
-            ]);
-        }
+            // Tìm mã giảm giá tốt nhất theo thứ tự ưu tiên:
+            // 1. Mã giảm giá dành riêng cho rank của user
+            // 2. Mã giảm giá chung (không giới hạn rank)
+            $promotionQuery = Promotion::where('status', 'active')
+                ->where('start_date', '<=', $now)
+                ->where('end_date', '>=', $now)
+                ->where('quantity', '>', 0)
+                ->where(function ($query) use ($orderAmount) {
+                    $query->whereNull('min_booking_value')
+                        ->orWhere('min_booking_value', '<=', $orderAmount);
+                })
+                ->where(function ($query) use ($orderAmount) {
+                    // Lọc ra mã Fixed có giá trị lớn hơn order amount
+                    $query->where('discount_type', 'percentage')
+                        ->orWhere(function ($subQuery) use ($orderAmount) {
+                            $subQuery->where('discount_type', 'fixed')
+                                ->where('discount_value', '<=', $orderAmount);
+                        });
+                });
 
-        // Đối với mã phần trăm, kiểm tra nếu discount_value > 100%
-        if ($bestPromotion->discount_type === 'percentage' && (float)$bestPromotion->discount_value > 100) {
-            Log::warning('[DEBUG] Auto promotion percentage exceeds 100%:', [
-                'promotion_code' => $bestPromotion->code,
-                'promotion_percentage' => (float)$bestPromotion->discount_value
-            ]);
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Mã giảm giá phần trăm không hợp lệ (>100%).',
-                'promotion_percentage' => (float)$bestPromotion->discount_value
-            ]);
-        }
+            $bestPromotion = null;
 
-        // Tính toán giảm giá theo đúng logic database
-        $discount = 0;
-        if ($bestPromotion->discount_type === 'percentage') {
-            // Mã phần trăm: tính % của order amount
-            $discount = $orderAmount * ((float)$bestPromotion->discount_value / 100);
-            
-            // Áp dụng max_discount_amount nếu có
-            if ($bestPromotion->max_discount_amount && $discount > (float)$bestPromotion->max_discount_amount) {
-                $discount = (float)$bestPromotion->max_discount_amount;
+            // BƯỚC 1: Ưu tiên tìm mã giảm giá dành riêng cho rank của user
+            if ($user->customer_rank_id) {
+                $rankPromotions = (clone $promotionQuery)
+                    ->where('rank_id', $user->customer_rank_id)
+                    ->with('rank')
+                    ->orderByRaw('
+                    CASE 
+                        WHEN discount_type = "percentage" THEN 
+                            LEAST(
+                                ? * (discount_value / 100), 
+                                COALESCE(max_discount_amount, ?)
+                            )
+                        ELSE discount_value 
+                    END DESC
+                ', [$orderAmount, $orderAmount])
+                    ->get();
+
+                Log::info('[DEBUG] Found rank-specific promotions:', [
+                    'user_rank_id' => $user->customer_rank_id,
+                    'user_rank_name' => $user->customerRank?->name,
+                    'promotions_count' => $rankPromotions->count(),
+                    'promotions' => $rankPromotions->map(function ($p) {
+                        return [
+                            'id' => $p->id,
+                            'code' => $p->code,
+                            'name' => $p->name,
+                            'discount_type' => $p->discount_type,
+                            'discount_value' => $p->discount_value,
+                            'rank_name' => $p->rank?->name
+                        ];
+                    })
+                ]);
+
+                $bestPromotion = $rankPromotions->first();
             }
-        } else {
-            // Mã cố định: lấy giá trị discount_value
-            $discount = (float)$bestPromotion->discount_value;
-        }
 
-        // Đảm bảo discount không vượt quá order amount
-        $discount = min($discount, $orderAmount);
+            // BƯỚC 2: Nếu không có mã giảm giá theo rank, tìm mã giảm giá chung
+            if (!$bestPromotion) {
+                $generalPromotions = $promotionQuery
+                    ->whereNull('rank_id')
+                    ->orderByRaw('
+                    CASE 
+                        WHEN discount_type = "percentage" THEN 
+                            LEAST(
+                                ? * (discount_value / 100), 
+                                COALESCE(max_discount_amount, ?)
+                            )
+                        ELSE discount_value 
+                    END DESC
+                ', [$orderAmount, $orderAmount])
+                    ->get();
 
-        // Xác định loại mã giảm giá và thông tin rank
-        $promotionType = $bestPromotion->rank_id ? 'Mã giảm giá theo hạng' : 'Mã giảm giá chung';
-        $userRankName = $user->customerRank?->name ?? 'Khách thường';
-        $promotionRankName = $bestPromotion->rank?->name ?? 'Chung';
+                Log::info('[DEBUG] Found general promotions:', [
+                    'promotions_count' => $generalPromotions->count(),
+                    'promotions' => $generalPromotions->map(function ($p) {
+                        return [
+                            'id' => $p->id,
+                            'code' => $p->code,
+                            'name' => $p->name,
+                            'discount_type' => $p->discount_type,
+                            'discount_value' => $p->discount_value
+                        ];
+                    })
+                ]);
 
-        // Giảm số lượng mã
-        $bestPromotion->decrement('quantity');
+                $bestPromotion = $generalPromotions->first();
+            }
 
-        Log::info('[DEBUG] Áp dụng mã giảm giá tự động thành công:', [
-            'user_id' => $user->id,
-            'user_rank' => $userRankName,
-            'promotion_id' => $bestPromotion->id,
-            'promotion_code' => $bestPromotion->code,
-            'promotion_name' => $bestPromotion->name,
-            'promotion_rank' => $promotionRankName,
-            'promotion_type' => $promotionType,
-            'discount' => $discount,
-            'order_amount' => $orderAmount,
-            'final_amount' => $orderAmount - $discount
-        ]);
+            if (!$bestPromotion) {
+                Log::warning('[DEBUG] Không tìm thấy mã giảm giá phù hợp:', [
+                    'user_id' => $user->id,
+                    'user_rank_id' => $user->customer_rank_id,
+                    'user_rank_name' => $user->customerRank?->name ?? 'Khách thường',
+                    'order_amount' => $orderAmount
+                ]);
 
-        return response()->json([
-            'success' => true,
-            'message' => $bestPromotion->rank_id 
-                ? "Áp dụng mã giảm giá hạng {$promotionRankName} thành công!" 
-                : 'Áp dụng mã giảm giá chung thành công!',
-            'promotion_id' => $bestPromotion->id,
-            'promotion_code' => $bestPromotion->code,
-            'promotion_name' => $bestPromotion->name,
-            'promotion_type' => $promotionType,
-            'promotion_rank' => $promotionRankName,
-            'user_rank' => $userRankName,
-            'discount' => $discount,
-            'final_amount' => $orderAmount - $discount,
-            'discount_type' => $bestPromotion->discount_type,
-            'discount_value' => (float)$bestPromotion->discount_value,
-            'display_text' => $this->getDiscountDisplayText($bestPromotion),
-            'max_discount' => $bestPromotion->max_discount_amount ? (float)$bestPromotion->max_discount_amount : null
-        ]);
-        
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Không có mã giảm giá phù hợp cho hạng ' . ($user->customerRank?->name ?? 'Khách thường')
+                ]);
+            }
+
+            // Kiểm tra điều kiện giá trị mã giảm giá dựa trên discount_type
+            if ($bestPromotion->discount_type === 'fixed' && (float)$bestPromotion->discount_value > $orderAmount) {
+                // Chỉ áp dụng cho mã cố định: nếu giá trị mã > đơn hàng thì không cho phép
+                Log::warning('[DEBUG] Auto promotion fixed value exceeds order amount:', [
+                    'promotion_code' => $bestPromotion->code,
+                    'promotion_value' => (float)$bestPromotion->discount_value,
+                    'order_amount' => $orderAmount
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Giá trị mã giảm giá (' . number_format((float)$bestPromotion->discount_value) . '₫) lớn hơn tổng đơn hàng (' . number_format($orderAmount) . '₫).',
+                    'promotion_value' => (float)$bestPromotion->discount_value,
+                    'order_amount' => $orderAmount
+                ]);
+            }
+
+            // Đối với mã phần trăm, kiểm tra nếu discount_value > 100%
+            if ($bestPromotion->discount_type === 'percentage' && (float)$bestPromotion->discount_value > 100) {
+                Log::warning('[DEBUG] Auto promotion percentage exceeds 100%:', [
+                    'promotion_code' => $bestPromotion->code,
+                    'promotion_percentage' => (float)$bestPromotion->discount_value
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Mã giảm giá phần trăm không hợp lệ (>100%).',
+                    'promotion_percentage' => (float)$bestPromotion->discount_value
+                ]);
+            }
+
+            // Tính toán giảm giá theo đúng logic database
+            $discount = 0;
+            if ($bestPromotion->discount_type === 'percentage') {
+                // Mã phần trăm: tính % của order amount
+                $discount = $orderAmount * ((float)$bestPromotion->discount_value / 100);
+
+                // Áp dụng max_discount_amount nếu có
+                if ($bestPromotion->max_discount_amount && $discount > (float)$bestPromotion->max_discount_amount) {
+                    $discount = (float)$bestPromotion->max_discount_amount;
+                }
+            } else {
+                // Mã cố định: lấy giá trị discount_value
+                $discount = (float)$bestPromotion->discount_value;
+            }
+
+            // Đảm bảo discount không vượt quá order amount
+            $discount = min($discount, $orderAmount);
+
+            // Xác định loại mã giảm giá và thông tin rank
+            $promotionType = $bestPromotion->rank_id ? 'Mã giảm giá theo hạng' : 'Mã giảm giá chung';
+            $userRankName = $user->customerRank?->name ?? 'Khách thường';
+            $promotionRankName = $bestPromotion->rank?->name ?? 'Chung';
+
+            // Giảm số lượng mã
+            $bestPromotion->decrement('quantity');
+
+            Log::info('[DEBUG] Áp dụng mã giảm giá tự động thành công:', [
+                'user_id' => $user->id,
+                'user_rank' => $userRankName,
+                'promotion_id' => $bestPromotion->id,
+                'promotion_code' => $bestPromotion->code,
+                'promotion_name' => $bestPromotion->name,
+                'promotion_rank' => $promotionRankName,
+                'promotion_type' => $promotionType,
+                'discount' => $discount,
+                'order_amount' => $orderAmount,
+                'final_amount' => $orderAmount - $discount
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => $bestPromotion->rank_id
+                    ? "Áp dụng mã giảm giá hạng {$promotionRankName} thành công!"
+                    : 'Áp dụng mã giảm giá chung thành công!',
+                'promotion_id' => $bestPromotion->id,
+                'promotion_code' => $bestPromotion->code,
+                'promotion_name' => $bestPromotion->name,
+                'promotion_type' => $promotionType,
+                'promotion_rank' => $promotionRankName,
+                'user_rank' => $userRankName,
+                'discount' => $discount,
+                'final_amount' => $orderAmount - $discount,
+                'discount_type' => $bestPromotion->discount_type,
+                'discount_value' => (float)$bestPromotion->discount_value,
+                'display_text' => $this->getDiscountDisplayText($bestPromotion),
+                'max_discount' => $bestPromotion->max_discount_amount ? (float)$bestPromotion->max_discount_amount : null
+            ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             Log::error('[DEBUG] Validation error in applyDiscountCodeAutomatically:', [
                 'errors' => $e->errors(),
