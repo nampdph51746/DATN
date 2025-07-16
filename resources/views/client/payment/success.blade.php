@@ -1,6 +1,7 @@
 @extends('layouts.client.client')
 
 
+
 @section('content')
 
 <div class="container mx-auto px-4 py-8 sm:py-12 max-w-3xl" style="padding-top: 120px;">
@@ -66,5 +67,19 @@
     </div>
 </div>
 
+
+
 @endsection
 
+@if(session('success'))
+<script>
+    window.addEventListener('DOMContentLoaded', function() {
+        Swal.fire({
+            icon: 'success',
+            title: 'Thành công!',
+            text: '{{ session('success') }}',
+            confirmButtonColor: '#e5006e'
+        });
+    });
+</script>
+@endif
