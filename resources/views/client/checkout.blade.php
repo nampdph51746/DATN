@@ -6,16 +6,29 @@
         background-size: 200% 100%;
         animation: shimmer 1.5s infinite;
     }
+
     @keyframes shimmer {
-        0% { background-position: 200% 0; }
-        100% { background-position: -200% 0; }
+        0% {
+            background-position: 200% 0;
+        }
+
+        100% {
+            background-position: -200% 0;
+        }
     }
+
     .lazy-loaded {
         animation: fadeIn 0.5s ease-in;
     }
+
     @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
     }
 </style>
 @section('content')
@@ -37,9 +50,9 @@
                 </div>
                 <h2 class="text-2xl font-bold text-center text-indigo-900 sm:text-3xl">Đang xử lý thanh toán...</h2>
                 <p class="text-center text-gray-600 sm:text-lg max-w-xs">Vui lòng chờ giây lát để chuyển sang VNPay</p>
-                <img src="https://scontent.fhan4-1.fna.fbcdn.net/v/t39.30808-6/518268012_122164457672529593_3126298376634963809_n.jpg?stp=dst-jpg_s640x640_tt6&_nc_cat=105&ccb=1-7&_nc_sid=127cfc&_nc_ohc=Xxpba4C0rIcQ7kNvwEiqS2p&_nc_oc=AdlB-1lLtvpJTzW21bs3brnIfh-7eZwqZJpUZQeVEUvSnlUZXMyazsXvFcQEiTbXM08&_nc_zt=23&_nc_ht=scontent.fhan4-1.fna&_nc_gid=XiD4U5Gzx4xUkCE5BhyTTA&oh=00_AfT9WQTYuK7myNux10X4AmLfFWbKwqna9pvmO7AuFGUfaA&oe=687DA7AE" alt="VNPay"
-                    class="w-16 mt-4 transition-transform duration-300 hover:scale-110 lazy-loaded" loading="lazy"
-                    onload="this.classList.add('lazy-loaded'); this.classList.remove('lazy-placeholder')"
+                <img src="https://scontent.fhan4-1.fna.fbcdn.net/v/t39.30808-6/518268012_122164457672529593_3126298376634963809_n.jpg?stp=dst-jpg_s640x640_tt6&_nc_cat=105&ccb=1-7&_nc_sid=127cfc&_nc_ohc=Xxpba4C0rIcQ7kNvwEiqS2p&_nc_oc=AdlB-1lLtvpJTzW21bs3brnIfh-7eZwqZJpUZQeVEUvSnlUZXMyazsXvFcQEiTbXM08&_nc_zt=23&_nc_ht=scontent.fhan4-1.fna&_nc_gid=XiD4U5Gzx4xUkCE5BhyTTA&oh=00_AfT9WQTYuK7myNux10X4AmLfFWbKwqna9pvmO7AuFGUfaA&oe=687DA7AE"
+                    alt="VNPay" class="w-16 mt-4 transition-transform duration-300 hover:scale-110 lazy-loaded"
+                    loading="lazy" onload="this.classList.add('lazy-loaded'); this.classList.remove('lazy-placeholder')"
                     class="lazy-placeholder w-20 h-18 mt-4 rounded" />
                 <form id="autoSubmitForm" action="{{ route('checkout.vnpay') }}" method="POST" class="hidden">
                     @csrf

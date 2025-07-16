@@ -1778,47 +1778,47 @@
 
         // Hàm cập nhật số lượng
         function updateQuantity(productId, change) {
-    const quantityInput = document.getElementById(`quantity-${productId}`);
-    let currentQuantity = parseInt(quantityInput.value) || 0;
+            const quantityInput = document.getElementById(`quantity-${productId}`);
+            let currentQuantity = parseInt(quantityInput.value) || 0;
 
-    const select = document.querySelector(`.variant-select[data-product-id="${productId}"]`);
-    if (!select) return;
-    const selectedOption = select.options[select.selectedIndex];
-    const maxStock = parseInt(selectedOption.getAttribute('data-stock')) || 0;
-    const variantId = selectedOption.getAttribute('data-variant-id');
+            const select = document.querySelector(`.variant-select[data-product-id="${productId}"]`);
+            if (!select) return;
+            const selectedOption = select.options[select.selectedIndex];
+            const maxStock = parseInt(selectedOption.getAttribute('data-stock')) || 0;
+            const variantId = selectedOption.getAttribute('data-variant-id');
 
-    let newQuantity = Math.max(0, Math.min(currentQuantity + change, maxStock));
-    quantityInput.value = newQuantity;
+            let newQuantity = Math.max(0, Math.min(currentQuantity + change, maxStock));
+            quantityInput.value = newQuantity;
 
-    // Disable nút + nếu đạt max
-    const plusBtn = quantityInput.parentElement.querySelector('button:last-child');
-    if (plusBtn) plusBtn.disabled = (newQuantity >= maxStock);
+            // Disable nút + nếu đạt max
+            const plusBtn = quantityInput.parentElement.querySelector('button:last-child');
+            if (plusBtn) plusBtn.disabled = (newQuantity >= maxStock);
 
-    const price = parseFloat(selectedOption.getAttribute('data-price')) || 0;
-    const variantName = selectedOption.text.split(' (')[0];
-    const productName = select.closest('.flex.flex-col.items-center').querySelector('h4').textContent;
-    const variantKey = `${productId}-${variantName}`;
+            const price = parseFloat(selectedOption.getAttribute('data-price')) || 0;
+            const variantName = selectedOption.text.split(' (')[0];
+            const productName = select.closest('.flex.flex-col.items-center').querySelector('h4').textContent;
+            const variantKey = `${productId}-${variantName}`;
 
-    // Cập nhật selectedSnacks
-    const snackIndex = selectedSnacks.findIndex(item => item.product_variant_id == variantId);
-    if (newQuantity > 0) {
-        if (snackIndex > -1) {
-            selectedSnacks[snackIndex].quantity = newQuantity;
-            selectedSnacks[snackIndex].price_at_purchase = price;
-        } else {
-            selectedSnacks.push({
-                product_variant_id: variantId,
-                quantity: newQuantity,
-                price_at_purchase: price
-            });
-        }
-    } else if (snackIndex > -1) {
-        selectedSnacks.splice(snackIndex, 1);
-    }
+            // Cập nhật selectedSnacks
+            const snackIndex = selectedSnacks.findIndex(item => item.product_variant_id == variantId);
+            if (newQuantity > 0) {
+                if (snackIndex > -1) {
+                    selectedSnacks[snackIndex].quantity = newQuantity;
+                    selectedSnacks[snackIndex].price_at_purchase = price;
+                } else {
+                    selectedSnacks.push({
+                        product_variant_id: variantId,
+                        quantity: newQuantity,
+                        price_at_purchase: price
+                    });
+                }
+            } else if (snackIndex > -1) {
+                selectedSnacks.splice(snackIndex, 1);
+            }
 
-    snackTotal += (newQuantity - currentQuantity) * price;
-    updateSummaryTable(variantKey, productName, variantName, newQuantity, price);
-    updateOrderSummary();
+            snackTotal += (newQuantity - currentQuantity) * price;
+            updateSummaryTable(variantKey, productName, variantName, newQuantity, price);
+            updateOrderSummary();
         }
 
         // Hàm cập nhật bảng tóm tắt
@@ -2811,19 +2811,19 @@
             document.getElementById('input-total-before').value = ticketTotal + (snackTotal || 0);
             document.getElementById('input-discount').value = validDiscount;
             document.getElementById('input-final-amount').value = total;
-            
-        // ✅ Sửa lại phần snack_items để có cả số lượng
-        const snackItemRows = document.querySelectorAll('#summary-table-body tr[data-variant-key]');
-        1
-        const snackItemsArray = Array.from(snackItemRows).map(row => {
-            const name = row.children[0]?.textContent.trim() || '';
-            const quantity = row.children[1]?.textContent.trim() || '1';
-            return `${name} x ${quantity}`;
-        });
-        document.getElementById('input-snack-items').value = snackItemsArray.join(', ');
 
-        // Serialize selectedSnacks vào input-items để backend nhận đủ dữ liệu
-        document.getElementById('input-items').value = JSON.stringify(selectedSnacks);
+            // ✅ Sửa lại phần snack_items để có cả số lượng
+            const snackItemRows = document.querySelectorAll('#summary-table-body tr[data-variant-key]');
+            1
+            const snackItemsArray = Array.from(snackItemRows).map(row => {
+                const name = row.children[0]?.textContent.trim() || '';
+                const quantity = row.children[1]?.textContent.trim() || '1';
+                return `${name} x ${quantity}`;
+            });
+            document.getElementById('input-snack-items').value = snackItemsArray.join(', ');
+
+            // Serialize selectedSnacks vào input-items để backend nhận đủ dữ liệu
+            document.getElementById('input-items').value = JSON.stringify(selectedSnacks);
 
 
         }

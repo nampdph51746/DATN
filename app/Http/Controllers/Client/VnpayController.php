@@ -180,23 +180,23 @@ class VnpayController extends Controller
 
         // Sau khi tạo $booking
         $items = is_string($bookingData['items'])
-            ? json_decode($bookingData['items'], true)
-            : ($bookingData['items'] ?? []);
+          ? json_decode($bookingData['items'], true)
+          : ($bookingData['items'] ?? []);
         if (is_array($items)) {
-            foreach ($items as $item) {
-                BookingItem::create([
-                    'booking_id' => $booking->id,
-                    'product_variant_id' => $item['product_variant_id'],
-                    'quantity' => $item['quantity'],
-                    'price_at_purchase' => $item['price_at_purchase'],
-                ]);
-                // Trừ tồn kho product_variant
-                $variant = ProductVariant::find($item['product_variant_id']);
-                if ($variant) {
-                    $variant->stock_quantity = max(0, $variant->stock_quantity - (int)$item['quantity']);
-                    $variant->save();
-                }
+          foreach ($items as $item) {
+            BookingItem::create([
+              'booking_id' => $booking->id,
+              'product_variant_id' => $item['product_variant_id'],
+              'quantity' => $item['quantity'],
+              'price_at_purchase' => $item['price_at_purchase'],
+            ]);
+            // Trừ tồn kho product_variant
+            $variant = ProductVariant::find($item['product_variant_id']);
+            if ($variant) {
+              $variant->stock_quantity = max(0, $variant->stock_quantity - (int)$item['quantity']);
+              $variant->save();
             }
+          }
         }
 
         DB::commit();
