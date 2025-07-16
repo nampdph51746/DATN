@@ -1511,8 +1511,7 @@
     @endsection
 
     <script>
-        console.log('Script started loading...');
-
+        
         let currentStep = 1;
         let selectedTime = null;
         let selectedShowtimeId = null;
@@ -1792,7 +1791,7 @@
             snackTotal = calculateSnackTotal();
         }
 
-        // Hàm tính tổng tiền đồ ăn
+        // Hàm tính tổng tiền   
         function calculateSnackTotal() {
             let snackSubtotal = 0;
             document.querySelectorAll('#summary-table-body tr[data-variant-key]').forEach(row => {
@@ -4497,7 +4496,6 @@
                     }
                 }
             });
-
             console.log('Page initialization completed');
         };
     </script>
