@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\Client\CheckoutController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\CityController;
@@ -13,6 +12,7 @@ use App\Http\Controllers\Client\HomeController;
 use App\Http\Controllers\Client\SeatController;
 use App\Http\Controllers\Admin\CinemaController;
 use App\Http\Controllers\Admin\TicketController;
+use App\Http\Controllers\Client\VnpayController;
 use App\Http\Controllers\Admin\BookingController;
 use App\Http\Controllers\Admin\CountryController;
 use App\Http\Controllers\Admin\PaymentController;
@@ -22,18 +22,19 @@ use App\Http\Controllers\Admin\ShowtimeController;
 use App\Http\Controllers\Admin\AdminRoomController;
 use App\Http\Controllers\Admin\AdminSeatController;
 use App\Http\Controllers\Admin\PromotionController;
+use App\Http\Controllers\Client\CheckoutController;
 use App\Http\Controllers\Admin\AdminProductController;
 use App\Http\Controllers\Admin\CustomerRankController;
 use App\Http\Controllers\Admin\PointHistoryController;
 use App\Http\Controllers\Admin\AdminSeatTypeController;
 use App\Http\Controllers\Admin\PaymentMethodController;
 use App\Http\Controllers\Admin\AdminAttributeController;
+use App\Http\Controllers\Client\ClientPaymentController;
+use App\Http\Controllers\Client\PaymentSuccessController;
 use App\Http\Controllers\Admin\AdminAttributeValueController;
 use App\Http\Controllers\Admin\AdminProductVariantController;
 use App\Http\Controllers\Admin\CustomerRankPromotionController;
 use App\Http\Controllers\Admin\AdminProductCategoriesController;
-use App\Http\Controllers\Client\ClientPaymentController;
-use App\Http\Controllers\Client\VnpayController;
 
 
 Route::get('/', [HomeController::class, 'index'])->name('client.home');
@@ -53,9 +54,8 @@ Route::get('/checkout/vnpay_return', [VnpayController::class, 'vnpayReturn'])->n
 
 Route::post('/checkout/preview', [CheckoutController::class, 'previewBooking'])->name('checkout.preview');
 
-Route::get('/payment-success', function () {
-    return 'Thanh toán thành công!';
-})->name('client.success');
+
+Route::get('/payment-success', [PaymentSuccessController::class, 'show'])->name('client.success');
 
 Route::get('/payment-failed', function () {
     return 'Thanh toán thất bại!';

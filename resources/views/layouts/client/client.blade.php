@@ -152,6 +152,7 @@
 	</header>
 	<!-- main-slider -->
 	@yield('content')
+	
 </body>
 
 </html>
