@@ -391,7 +391,7 @@ class HomeController extends Controller
 
             // 4. Kiểm tra mã đã được sử dụng bởi user hiện tại
             if ($user) {
-                $hasUsedPromotion = \App\Models\Booking::where('user_id', $user->id)
+                $hasUsedPromotion = Booking::where('user_id', $user->id)
                     ->where('promotion_id', $promotion->id)
                     ->where('status', 'confirmed')
                     ->exists();
@@ -599,6 +599,14 @@ class HomeController extends Controller
 
             $now = now();
             $userRankId = $user->customer_rank_id;
+
+            Log::info('[DEBUG] getAvailablePromotions - User Info:', [
+                'user_id' => $user->id,
+                'user_name' => $user->name,
+                'customer_rank_id' => $userRankId,
+                'rank_name' => $user->customerRank?->name ?? 'NULL',
+                'now' => $now->format('Y-m-d H:i:s')
+            ]);
 
             // Lấy mã giảm giá cho rank của user
             $userRankPromotions = $this->getUserRankPromotions($userRankId, $now);
