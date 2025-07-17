@@ -11,6 +11,11 @@ $(document).ready(function () {
 		currentGfgStep = $(this).closest("fieldset");
 		nextGfgStep = currentGfgStep.next("fieldset");
 
+		if (currentGfgStep.length === 0 || nextGfgStep.length === 0) {
+			console.log("Cannot find fieldset elements for animation");
+			return;
+		}
+
 		$("#progressbar li").eq($("fieldset").index(nextGfgStep)).addClass("active");
 
 		nextGfgStep.show();
@@ -37,6 +42,11 @@ $(document).ready(function () {
 	$(".previous-step").click(function () {
 		currentGfgStep = $(this).closest("fieldset");
 		previousGfgStep = currentGfgStep.prev("fieldset");
+
+		if (currentGfgStep.length === 0 || previousGfgStep.length === 0) {
+			console.log("Cannot find fieldset elements for animation");
+			return;
+		}
 
 		$("#progressbar li").eq($("fieldset").index(currentGfgStep)).removeClass("active");
 
