@@ -156,14 +156,15 @@ class VnpayController extends Controller
             throw new \Exception('Không tìm thấy seat ID: ' . $seatInfo['seat_id']);
           }
 
-          $ticketPrice = $showtime->base_price * ($seatInfo['price_modifier'] ?? 1);
+          // Lấy đúng giá ghế: base_price + price_modifier
+          $ticketPrice = $showtime->base_price + ($seatInfo['price_modifier'] ?? 0);
 
           Ticket::create([
             'booking_id' => $booking->id,
             'showtime_id' => $showtime->id,
             'seat_id' => $seat->id,
             'ticket_code' => 'TICKET_' . uniqid(),
-            'price_at_purchase' => 1000000,
+            'price_at_purchase' => $ticketPrice,
             'status' => 'valid',
           ]);
 

@@ -22,7 +22,7 @@
                                             data-seat-id="{{ $seat['seat_id'] }}"
                                             data-label="{{ $seat['label'] }}"
                                             data-type="{{ $seat['seat_type'] }}"
-                                            data-price="{{ $seat['price'] }}"
+                                            data-price="{{ $showtime->base_price + ($seat['price'] ?? 0) }}"
                                             data-original-color="{{ $seat['color_code'] }}"
                                             style="background-color: {{ $seat['color_code'] }};"
                                             onclick="selectSeat(this)">
