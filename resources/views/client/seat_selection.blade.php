@@ -244,7 +244,7 @@
             }
         });
 
-        function selectSeat(element) {
+        async function selectSeat(element) {
             const seatId = element.getAttribute('data-seat-id');
             const label = element.getAttribute('data-label');
             const type = element.getAttribute('data-type');
@@ -268,37 +268,46 @@
                 element.style.backgroundColor = '#e5006e';
                 element.style.opacity = '1';
                 selectedSeats.push({ id: seatId, label: label, type: type, price: price });
+            }
 
-                console.log('Sending reserve request for seat:', seatId);
-                fetch('{{ route('client.seats.reserve', ['showtimeId' => $showtime->id]) }}', {
+            // Gửi tất cả seat_ids được chọn
+            const seatIds = selectedSeats.map(seat => seat.id);
+            console.log('Sending reserve request for seats:', seatIds);
+            try {
+                const response = await fetch('{{ route('client.seats.reserve', ['showtimeId' => $showtime->id]) }}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': '{{ csrf_token() }}'
                     },
-                    body: JSON.stringify({ seat_ids: [seatId] })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    console.log('Reserve seat response:', data);
-                    if (data.error) {
-                        console.warn('Reserve seat failed:', data.error);
-                        element.classList.remove('selected');
-                        element.style.backgroundColor = originalColor || '#28a745';
-                        element.style.opacity = '1';
-                        selectedSeats = selectedSeats.filter(seat => seat.id !== seatId);
+                    body: JSON.stringify({ seat_ids: seatIds })
+                });
+                const data = await response.json();
+                console.log('Reserve seat response:', data);
+                if (data.error) {
+                    console.warn('Reserve seat failed:', data.error);
+                    // Revert UI và selectedSeats nếu có lỗi
+                    selectedSeats = selectedSeats.filter(seat => !seatIds.includes(seat.id));
+                    document.querySelectorAll('.seat.selected').forEach(seatEl => {
+                        const id = seatEl.getAttribute('data-seat-id');
+                        if (!selectedSeats.some(seat => seat.id === id)) {
+                            seatEl.classList.remove('selected');
+                            seatEl.style.backgroundColor = seatEl.getAttribute('data-original-color') || '#28a745';
+                            seatEl.style.opacity = '1';
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Error reserving seats:', error);
+                // Revert UI và selectedSeats nếu có lỗi
+                selectedSeats = selectedSeats.filter(seat => !seatIds.includes(seat.id));
+                document.querySelectorAll('.seat.selected').forEach(seatEl => {
+                    const id = seatEl.getAttribute('data-seat-id');
+                    if (!selectedSeats.some(seat => seat.id === id)) {
+                        seatEl.classList.remove('selected');
+                        seatEl.style.backgroundColor = seatEl.getAttribute('data-original-color') || '#28a745';
+                        seatEl.style.opacity = '1';
                     }
-                    updateSummary();
-                    sendSeatsToParent();
-                })
-                .catch(error => {
-                    console.error('Error reserving seat:', error);
-                    element.classList.remove('selected');
-                    element.style.backgroundColor = originalColor || '#28a745';
-                    element.style.opacity = '1';
-                    selectedSeats = selectedSeats.filter(seat => seat.id !== seatId);
-                    updateSummary();
-                    sendSeatsToParent();
                 });
             }
 
