@@ -138,7 +138,7 @@
                                                     <tr>
                                                         <td>{{ $index + 1 }}</td>
                                                         <td>{{ $ticket->ticket_code }}</td>
-                                                        <td>{{ optional($ticket->showtime->movie)->title ?? 'N/A' }}</td>
+                                                        <td>{{ optional($ticket->showtime->movie)->name ?? 'N/A' }}</td>
                                                         <td>
                                                             {{ optional($ticket->showtime)->start_time ? $ticket->showtime->start_time->format('d/m/Y H:i') : 'N/A' }}<br>
                                                             @if (optional($ticket->showtime)->room)
@@ -209,7 +209,7 @@
                                                     <tr>
                                                         <td>{{ $index + 1 }}</td>
                                                         <td>{{ $item->productVariant->product->name ?? 'N/A' }}</td>
-                                                        <td>{{ $item->productVariant->name ?? 'N/A' }}</td>
+                                                        <td>{{ $item->productVariant->sku ?? 'N/A' }}</td>
                                                         <td>{{ $item->quantity }}</td>
                                                         <td>{{ number_format($item->price_at_purchase, 0, ',', '.') }} đ
                                                         </td>
@@ -217,7 +217,7 @@
                                                         </td>
                                                         <td>
                                                             @if ($item->productVariant->product->image_url)
-                                                                <img src="{{ asset($item->productVariant->product->image_url) }}"
+                                                                <img src="{{ asset('storage/' . $item->productVariant->product->image_url) }}"
                                                                     alt="Ảnh sản phẩm" width="50">
                                                             @else
                                                                 <span class="text-muted">Không có ảnh</span>
@@ -276,7 +276,7 @@
                                                 <p class="d-flex mb-0 align-items-center gap-1">
                                                     <iconify-icon icon="solar:shield-check-broken"></iconify-icon>
                                                     Status:
-                                                </p>_
+                                                </p>
                                             </td>
                                         @php
                                             $statusColors = [
