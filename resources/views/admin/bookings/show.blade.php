@@ -12,12 +12,15 @@
                                     <div>
                                         <h4 class="fw-medium text-dark d-flex align-items-center gap-2">
                                             {{ $booking->booking_code }}
-                                            @if ($booking->payment && $booking->payment->status == \App\Enums\PaymentStatus::Paid)
+                                            @if ($booking->payment && $booking->payment->status == \App\Enums\PaymentStatus::Pending)
                                                 <span
-                                                    class="badge bg-success-subtle text-success px-2 py-1 fs-13">Paid</span>
+                                                    class="badge bg-success-subtle text-success px-2 py-1 fs-13">Pending</span>
+                                            @elseif ($booking->payment && $booking->payment->status == \App\Enums\PaymentStatus::Completed)
+                                                <span
+                                                    class="badge bg-danger-subtle text-danger px-2 py-1 fs-13">Completed</span>
                                             @else
                                                 <span
-                                                    class="badge bg-danger-subtle text-danger px-2 py-1 fs-13">Unpaid</span>
+                                                    class="badge bg-danger-subtle text-danger px-2 py-1 fs-13">failed</span>
                                             @endif
                                             <span class="border border-warning text-warning fs-13 px-2 py-1 rounded">
                                                 {{ $booking->status }}
