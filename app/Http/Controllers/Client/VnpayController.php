@@ -66,6 +66,9 @@ class VnpayController extends Controller
     if (isset($vnp_Bill_State) && $vnp_Bill_State != "") {
       $inputData['vnp_Bill_State'] = $vnp_Bill_State;
     }
+    if (isset($vnp_Bill_State) && $vnp_Bill_State != "") {
+      $inputData['vnp_Bill_State'] = $vnp_Bill_State;
+    }
 
     //var_dump($inputData);
     ksort($inputData);
@@ -101,20 +104,39 @@ class VnpayController extends Controller
   }
 
 
-    public function vnpayReturn(Request $request)
-    {
-        $vnp_ResponseCode = $request->get('vnp_ResponseCode');
-        $vnp_TxnRef = $request->get('vnp_TxnRef');
-        $vnp_Amount = $request->get('vnp_Amount') / 100;
-        $vnp_TransactionNo = $request->get('vnp_TransactionNo');
+    //var_dump($inputData);
+    ksort($inputData);
+    $query = "";
+    $i = 0;
+    $hashdata = "";
+    foreach ($inputData as $key => $value) {
+      if ($i == 1) {
+        $hashdata .= '&' . urlencode($key) . "=" . urlencode($value);
+      } else {
+        $hashdata .= urlencode($key) . "=" . urlencode($value);
+        $i = 1;
+      }
+      $query .= urlencode($key) . "=" . urlencode($value) . '&';
+    }
 
-        if ($vnp_ResponseCode == '00') {
-            DB::beginTransaction();
-            try {
-                $bookingData = session('booking_preview');
+    $vnp_Url = $vnp_Url . "?" . $query;
+    if (isset($vnp_HashSecret)) {
+      $vnpSecureHash =   hash_hmac('sha512', $hashdata, $vnp_HashSecret); //  
+      $vnp_Url .= 'vnp_SecureHash=' . $vnpSecureHash;
+    }
+    $returnData = array(
+      'code' => '00',
+      'message' => 'success',
+      'data' => $vnp_Url
+    );
+    if (isset($_POST['redirect'])) {
+      header('Location: ' . $vnp_Url);
+      die();
+    } else {
+      echo json_encode($returnData);
+    }
+  }
 
-                // Log bookingData để debug
-                Log::info('Booking data:', $bookingData);
 
                 $promotionId = $bookingData['promotion_id'] ?? null;
 
@@ -290,8 +312,155 @@ class VnpayController extends Controller
                 ]);
                 return redirect()->route('client.failed')->with('error', 'Thanh toán không thành công: ' . $e->getMessage());
             }
+  public function vnpayReturn(Request $request)
+  {
+    $vnp_ResponseCode = $request->get('vnp_ResponseCode');
+    $vnp_TxnRef = $request->get('vnp_TxnRef'); // booking_code
+    $vnp_Amount = $request->get('vnp_Amount') / 100;
+    $vnp_TransactionNo = $request->get('vnp_TransactionNo');
+
+    if ($vnp_ResponseCode == '00') {
+      DB::beginTransaction();
+      try {
+        // Lấy dữ liệu session
+        $bookingData = session('booking_preview');
+        
+        // Debug: Log session data
+        Log::info('VnpayController - Session booking_preview data:', [
+          'bookingData' => $bookingData,
+          'promotion_id' => $bookingData['promotion_id'] ?? 'null',
+          'user_id' => $bookingData['user_id'] ?? 'null'
+        ]);
+        
+        // dd($bookingData);
+
+        // Kiểm tra lại mã giảm giá trước khi tạo booking (nếu có)
+        $promotionId = $bookingData['promotion_id'] ?? null;
+        
+        // Xử lý promotion_id - đảm bảo nó là integer hoặc null
+        if ($promotionId === '' || $promotionId === '0' || $promotionId === 0) {
+            $promotionId = null;
+        } else if ($promotionId) {
+            $promotionId = (int) $promotionId;
+        }
+        
+        Log::info('VnpayController - Final promotion_id to be saved:', [
+            'original' => $bookingData['promotion_id'] ?? 'not_set',
+            'processed' => $promotionId,
+            'type' => gettype($promotionId)
+        ]);
+        
+        if ($promotionId) {
+          $hasUsedPromotion = Booking::where('user_id', $bookingData['user_id'])
+            ->where('promotion_id', $promotionId)
+            ->where('status', 'confirmed')
+            ->exists();
+          
+          if ($hasUsedPromotion) {
+            DB::rollBack();
+            return redirect()->route('client.failed')->with('error', 'Mã giảm giá này đã được sử dụng trong đơn hàng trước đó.');
+          }
         }
 
-        return redirect()->route('client.failed')->with('error', 'Thanh toán không thành công!');
+        // 1. Tạo bản ghi trong bảng bookings
+        $booking = Booking::create([
+          'user_id' => (int) $bookingData['user_id'],
+          'booking_code' => $bookingData['booking_code'],
+          'total_amount_before_discount' => $bookingData['total_amount_before_discount'] ?? 0,
+          'discount_amount' => (float) $bookingData['discount_amount'] ?? 0,
+          'final_amount' => (float) $bookingData['final_amount'],
+          'promotion_id' => $promotionId,
+          'payment_method_id' => (int) $bookingData['payment_method_id'],
+          'status' => BookingStatus::Confirmed, // CHÍNH XÁC
+          'notes' => $bookingData['notes'],
+        ]);
+        // dd($booking);
+        Payment::create([
+          'booking_id' => $booking->id,
+          'payment_method_id' => $booking->payment_method_id ?? 1,
+          'amount' => $vnp_Amount,
+          'transaction_id_gateway' => $vnp_TransactionNo,
+          'status' => 'pending',
+          'payment_details' => json_encode($request->all()),
+          'paid_at' => now(),
+        ]);
+
+        $movie = Movie::where('name', $bookingData['movie_title'])->firstOrFail();
+        $room = Room::where('name', $bookingData['room_name'])->firstOrFail();
+        $startTime = $bookingData['showtime'] ? \Carbon\Carbon::parse($bookingData['showtime']) : now();
+        $endTime = $startTime->copy()->addMinutes(90);
+
+        $showtime = Showtime::create([
+          'movie_id' => $movie->id,
+          'room_id' => $room->id,
+          'start_time' => $startTime,
+          'end_time' => $endTime,
+          'base_price' => $vnp_Amount, // hoặc logic động nếu có
+          'status' => 'scheduled',
+        ]);
+        $selectedSeatInfos = session('selected_seats_info', []);
+
+        foreach ($selectedSeatInfos as $seatInfo) {
+          $seat = Seat::where('id', $seatInfo['seat_id'])->first();
+
+          if (!$seat) {
+            throw new \Exception('Không tìm thấy seat ID: ' . $seatInfo['seat_id']);
+          }
+
+          // Lấy đúng giá ghế: base_price + price_modifier
+          $ticketPrice = $showtime->base_price + ($seatInfo['price_modifier'] ?? 0);
+
+          Ticket::create([
+            'booking_id' => $booking->id,
+            'showtime_id' => $showtime->id,
+            'seat_id' => $seat->id,
+            'ticket_code' => 'TICKET_' . uniqid(),
+            'price_at_purchase' => $ticketPrice,
+            'status' => 'valid',
+          ]);
+
+          // Cập nhật trạng thái ghế trong ShowtimeSeatState (nếu cần)
+          ShowtimeSeatState::where('showtime_id', $showtime->id)
+            ->where('seat_id', $seat->id)
+            ->update([
+              'status' => SeatStatus::Available,
+              'booking_id' => $booking->id,
+              'locked_by' => null,
+              'locked_until' => null,
+            ]);
+        }
+
+        // Sau khi tạo $booking
+        $items = is_string($bookingData['items'])
+          ? json_decode($bookingData['items'], true)
+          : ($bookingData['items'] ?? []);
+        if (is_array($items)) {
+          foreach ($items as $item) {
+            BookingItem::create([
+              'booking_id' => $booking->id,
+              'product_variant_id' => $item['product_variant_id'],
+              'quantity' => $item['quantity'],
+              'price_at_purchase' => $item['price_at_purchase'],
+            ]);
+            // Trừ tồn kho product_variant
+            $variant = ProductVariant::find($item['product_variant_id']);
+            if ($variant) {
+              $variant->stock_quantity = max(0, $variant->stock_quantity - (int)$item['quantity']);
+              $variant->save();
+            }
+          }
+        }
+
+        DB::commit();
+        session()->forget('booking_preview');
+
+        return redirect()->route('client.success')->with('success', 'Thanh toán thành công!');
+      } catch (\Exception $e) {
+        DB::rollBack();
+        dd($e->getMessage(), $e->getLine(), $e->getFile());
+      }
     }
+
+    return redirect()->route('client.failed')->with('error', 'Thanh toán không thành công!');
+  }
 }
