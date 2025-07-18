@@ -12,68 +12,76 @@
                                     <div>
                                         <h4 class="fw-medium text-dark d-flex align-items-center gap-2">
                                             {{ $booking->booking_code }}
-                                            @if ($booking->payments->first() && (is_object($booking->payments->first()->status) ? $booking->payments->first()->status->value : (string) $booking->payments->first()->status) === 'completed')
-                                                <span class="badge bg-success-subtle text-success px-2 py-1 fs-13">Đã thanh toán</span>
+                                            @if ($booking->payment && $booking->payment->status == \App\Enums\PaymentStatus::Pending)
+                                                <span
+                                                    class="badge bg-success-subtle text-success px-2 py-1 fs-13">Pending</span>
+                                            @elseif ($booking->payment && $booking->payment->status == \App\Enums\PaymentStatus::Completed)
+                                                <span
+                                                    class="badge bg-danger-subtle text-danger px-2 py-1 fs-13">Completed</span>
                                             @else
-                                                <span class="badge bg-danger-subtle text-danger px-2 py-1 fs-13">Chưa thanh toán</span>
+                                                <span
+                                                    class="badge bg-danger-subtle text-danger px-2 py-1 fs-13">failed</span>
                                             @endif
                                             <span class="border border-warning text-warning fs-13 px-2 py-1 rounded">
-                                                {{ ucfirst(is_object($booking->status) ? $booking->status->value : (string) $booking->status) }}
+                                                {{ $booking->status }}
                                             </span>
                                         </h4>
                                         <p class="mb-0">
-                                            Đơn đặt vé / Chi tiết đơn hàng / #{{ $booking->booking_code }} -
-                                            {{ $booking->created_at->format('F d, Y \a\t h:i A') }}
+                                            Order / Order Details / #{{ $booking->booking_code }} -
+                                            {{ $booking->created_at->format('F d , Y \a\t h:i A') }}
                                         </p>
                                     </div>
                                     <div>
                                         <a href="#!" class="btn btn-outline-secondary">Refund</a>
                                         <a href="{{ route('admin.bookings.index') }}" class="btn btn-outline-secondary">Return</a>
+                                        <a href="#!" class="btn btn-primary">Edit Order</a>
                                     </div>
                                 </div>
 
                                 <div class="mt-4">
-                                    <h4 class="fw-medium text-dark">Tiến trình đặt vé</h4>
+                                    <h4 class="fw-medium text-dark">Progress</h4>
                                 </div>
 
-                                <div class="row row-cols-xxl-4 row-cols-md-2 row-cols-1">
-                                    @php
-                                        $statusValue = is_object($booking->status) ? $booking->status->value : (string) $booking->status;
-                                        $paymentCompleted = $booking->payments->first() && (is_object($booking->payments->first()->status) ? $booking->payments->first()->status->value : (string) $booking->payments->first()->status) === 'completed';
-                                        $progressWidths = [
-                                            'pending' => [25, 0, 0, 0],
-                                            'confirmed' => [100, $paymentCompleted ? 100 : 50, 100, $paymentCompleted ? 100 : 0],
-                                            'completed' => [100, 100, 100, 100],
-                                        ];
-                                        $widths = $progressWidths[$statusValue] ?? [25, 0, 0, 0];
-                                    @endphp
+                                <div class="row row-cols-xxl-5 row-cols-md-2 row-cols-1">
                                     <div class="col">
                                         <div class="progress mt-3" style="height: 10px;">
                                             <div class="progress-bar progress-bar-striped progress-bar-animated bg-success"
-                                                 role="progressbar" style="width: {{ $widths[0] }}%"></div>
+                                                role="progressbar" style="width: 100%"></div>
                                         </div>
-                                        <p class="mb-0 mt-2">Đặt vé</p>
+                                        <p class="mb-0 mt-2">Order Confirming</p>
                                     </div>
                                     <div class="col">
                                         <div class="progress mt-3" style="height: 10px;">
-                                            <div class="progress-bar progress-bar-striped progress-bar-animated {{ $widths[1] > 0 ? 'bg-success' : 'bg-warning' }}"
-                                                 role="progressbar" style="width: {{ $widths[1] }}%"></div>
+                                            <div class="progress-bar progress-bar-striped progress-bar-animated bg-success"
+                                                role="progressbar" style="width: 100%"></div>
                                         </div>
-                                        <p class="mb-0 mt-2">Thanh toán</p>
+                                        <p class="mb-0 mt-2">Payment Pending</p>
                                     </div>
                                     <div class="col">
                                         <div class="progress mt-3" style="height: 10px;">
-                                            <div class="progress-bar progress-bar-striped progress-bar-animated {{ $widths[2] > 0 ? 'bg-success' : 'bg-warning' }}"
-                                                 role="progressbar" style="width: {{ $widths[2] }}%"></div>
+                                            <div class="progress-bar progress-bar-striped progress-bar-animated bg-warning"
+                                                role="progressbar" style="width: 60%"></div>
                                         </div>
-                                        <p class="mb-0 mt-2">Xác nhận</p>
+                                        <div class="d-flex align-items-center gap-2 mt-2">
+                                            <p class="mb-0">Processing</p>
+                                            <div class="spinner-border spinner-border-sm text-warning" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                        </div>
                                     </div>
                                     <div class="col">
                                         <div class="progress mt-3" style="height: 10px;">
-                                            <div class="progress-bar progress-bar-striped progress-bar-animated {{ $widths[3] > 0 ? 'bg-success' : 'bg-primary' }}"
-                                                 role="progressbar" style="width: {{ $widths[3] }}%"></div>
+                                            <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary"
+                                                role="progressbar" style="width: 0%"></div>
                                         </div>
-                                        <p class="mb-0 mt-2">Hoàn tất</p>
+                                        <p class="mb-0 mt-2">Shipping</p>
+                                    </div>
+                                    <div class="col">
+                                        <div class="progress mt-3" style="height: 10px;">
+                                            <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary"
+                                                role="progressbar" style="width: 0%"></div>
+                                        </div>
+                                        <p class="mb-0 mt-2">Delivered</p>
                                     </div>
                                 </div>
 
@@ -87,17 +95,25 @@
                                         {{ number_format($booking->discount_amount, 0, ',', '.') }} đ</p>
                                     <p><strong>Tổng thanh toán:</strong>
                                         {{ number_format($booking->final_amount, 0, ',', '.') }} đ</p>
-                                    <p><strong>Trạng thái:</strong> {{ ucfirst(is_object($booking->status) ? $booking->status->value : (string) $booking->status) }}</p>
-                                    <p><strong>Ghi chú:</strong> {{ $booking->notes ?? 'Không có' }}</p>
+                                    <p><strong>Trạng thái:</strong> {{ $booking->status }}</p>
+                                    <p><strong>Ghi chú:</strong> {{ $booking->notes }}</p>
                                 </div>
                             </div>
 
-                            <div class="card-footer bg-light-subtle">
-                                <!-- Xóa Estimated shipping date và Make As Ready To Ship -->
+                            <div
+                                class="card-footer d-flex flex-wrap align-items-center justify-content-between bg-light-subtle gap-2">
+                                <p class="border rounded mb-0 px-2 py-1 bg-body">
+                                    <i class='bx bx-arrow-from-left align-middle fs-16'></i>
+                                    Estimated shipping date:
+                                    <span class="text-dark fw-medium">{{ now()->addDays(2)->format('M d, Y') }}</span>
+                                </p>
+                                <div>
+                                    <a href="#!" class="btn btn-primary">Make As Ready To Ship</a>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- Danh sách vé -->
+                        {{-- Ticket --}}
                         <div class="card mt-4">
                             <div class="card-header bg-primary text-white">
                                 <strong>Danh sách vé</strong>
@@ -143,18 +159,22 @@
                                                         </td>
                                                         @php
                                                             $statusColors = [
-                                                                'pending' => 'bg-warning',
+                                                                'pending'   => 'bg-warning',
                                                                 'confirmed' => 'bg-success',
                                                                 'cancelled' => 'bg-danger',
                                                             ];
+
+                                                            // Xử lý an toàn: nếu là enum thì lấy ->value, nếu không thì cast về string
                                                             $statusValue = is_object($ticket->status) ? $ticket->status->value : (string) $ticket->status;
                                                         @endphp
+
                                                         <td>
                                                             <span class="badge {{ $statusColors[$statusValue] ?? 'bg-secondary' }}">
                                                                 {{ ucfirst($statusValue) }}
                                                             </span>
                                                         </td>
-                                                        <td>{{ $ticket->created_at ? $ticket->created_at->format('d/m/Y H:i') : '' }}</td>
+                                                        <td>{{ $ticket->created_at ? $ticket->created_at->format('d/m/Y H:i') : '' }}
+                                                        </td>
                                                     </tr>
                                                 @endforeach
                                             </tbody>
@@ -164,7 +184,7 @@
                             </div>
                         </div>
 
-                        <!-- Danh sách sản phẩm đã đặt -->
+                        {{-- Product --}}
                         <div class="card mt-4">
                             <div class="card-header bg-primary text-white">
                                 <strong>Danh sách sản phẩm đã đặt</strong>
@@ -200,7 +220,7 @@
                                                         </td>
                                                         <td>
                                                             @if ($item->productVariant->product->image_url)
-                                                                <img src="{{ asset($item->productVariant->product->image_url) }}"
+                                                                <img src="{{ asset('storage/' . $item->productVariant->product->image_url) }}"
                                                                     alt="Ảnh sản phẩm" width="50">
                                                             @else
                                                                 <span class="text-muted">Không có ảnh</span>
@@ -224,16 +244,20 @@
                             </div>
                         </div>
                     </div>
+
+                    {{-- Thanh Toán --}}
+
                 </div>
             </div>
             <div class="col-xl-3 col-lg-4">
                 @php
-                    $payment = $booking->payments->first();
+                    $payment = $booking->payments->first(); // Lấy thanh toán đầu tiên
                 @endphp
+
                 @if ($payment)
                     <div class="card mt-4">
                         <div class="card-header">
-                            <h4 class="card-title">Tóm tắt thanh toán</h4>
+                            <h4 class="card-title">Payment Summary</h4>
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
@@ -243,7 +267,7 @@
                                             <td class="px-0">
                                                 <p class="d-flex mb-0 align-items-center gap-1">
                                                     <iconify-icon icon="solar:bill-list-broken"></iconify-icon>
-                                                    Mã giao dịch:
+                                                    Transaction ID:
                                                 </p>
                                             </td>
                                             <td class="text-end text-dark fw-medium px-0">
@@ -254,27 +278,32 @@
                                             <td class="px-0">
                                                 <p class="d-flex mb-0 align-items-center gap-1">
                                                     <iconify-icon icon="solar:shield-check-broken"></iconify-icon>
-                                                    Trạng thái:
+                                                    Status:
                                                 </p>
                                             </td>
-                                            @php
-                                                $statusColors = [
-                                                    'pending' => 'text-warning',
-                                                    'completed' => 'text-success',
-                                                    'failed' => 'text-danger',
-                                                ];
-                                                $statusValue = is_object($payment->status) ? $payment->status->value : (string) $payment->status;
-                                                $statusColor = $statusColors[$statusValue] ?? 'text-muted';
-                                            @endphp
-                                            <td class="text-end fw-medium px-0">
-                                                <span class="{{ $statusColor }}">{{ ucfirst($statusValue) }}</span>
-                                            </td>
+                                        @php
+                                            $statusColors = [
+                                                'pending'   => 'text-warning',
+                                                'completed' => 'text-success',
+                                                'failed'    => 'text-danger',
+                                            ];
+
+                                            // Ép về chuỗi nếu là Enum object
+                                            $statusValue = is_object($payment->status) ? $payment->status->value : (string) $payment->status;
+
+                                            $statusColor = $statusColors[$statusValue] ?? 'text-muted';
+                                        @endphp
+
+                                        <td class="text-end fw-medium px-0">
+                                            <span class="{{ $statusColor }}">{{ ucfirst($statusValue) }}</span>
+                                        </td>
+
                                         </tr>
                                         <tr>
                                             <td class="px-0">
                                                 <p class="d-flex mb-0 align-items-center gap-1">
-                                                    <iconify-icon icon="solar:calendar-broken"></iconify-icon>
-                                                    Thời gian thanh toán:
+                                                    <iconify-icon icon="solar:calendar-broken"></iconify-icon> Paid
+                                                    At:
                                                 </p>
                                             </td>
                                             <td class="text-end text-dark fw-medium px-0">
@@ -286,7 +315,7 @@
                                                 <td class="px-0">
                                                     <p class="d-flex mb-0 align-items-center gap-1">
                                                         <iconify-icon icon="solar:document-text-broken"></iconify-icon>
-                                                        Chi tiết:
+                                                        Details:
                                                     </p>
                                                 </td>
                                                 <td class="text-end px-0">
@@ -301,19 +330,23 @@
                                 </table>
                             </div>
                         </div>
+
+                        {{-- Footer hiển thị Total + Payment Method --}}
                         <div class="card-footer d-flex justify-content-between bg-light-subtle flex-wrap">
                             <div class="d-flex flex-column">
-                                <p class="fw-medium text-dark mb-1">Tổng tiền</p>
+                                <p class="fw-medium text-dark mb-1">Total Amount</p>
                                 <p class="fw-bold text-dark mb-0">
                                     {{ number_format($payment->amount, 0, ',', '.') }} đ</p>
                             </div>
                             <div class="d-flex flex-column text-end">
-                                <p class="fw-medium text-dark mb-1">Phương thức thanh toán</p>
+                                <p class="fw-medium text-dark mb-1">Payment Method</p>
                                 <p class="fw-bold text-primary mb-0">
                                     {{ $payment->paymentMethod->name ?? 'Không rõ' }}</p>
                             </div>
                         </div>
                     </div>
+
+                    {{-- Modal chi tiết thanh toán --}}
                     @if ($payment->payment_details)
                         <div class="modal fade" id="paymentDetailModal{{ $payment->id }}" tabindex="-1"
                             aria-labelledby="paymentDetailModalLabel{{ $payment->id }}" aria-hidden="true">
@@ -335,6 +368,7 @@
                 @else
                     <div class="alert alert-warning mt-4">Chưa có thông tin thanh toán nào cho đơn hàng này.</div>
                 @endif
+                {{-- Promotion --}}
                 @if ($booking->promotion)
                     <div class="card mt-4">
                         <div class="card-header">
@@ -363,7 +397,9 @@
                         </div>
                     </div>
                 @endif
+
             </div>
         </div>
     </div>
+
 @endsection
