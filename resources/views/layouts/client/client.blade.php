@@ -129,9 +129,28 @@
 						</div>
 						<!-- /search popup -->
 					</div>
-					<div class="Login_SignUp" id="login" style="font-size: 2rem ; display: inline-block; position: relative;">
-						<a class="nav-link" href="sign_in.html"><i class="fa fa-user-circle-o"></i></a>
-					</div>
+					<div class="Login_SignUp dropdown" id="login" style="font-size: 2rem ; display: inline-block; position: relative;">
+    <a class="nav-link dropdown-toggle" href="#" id="accountDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        <i class="fa fa-user-circle-o"></i>
+    </a>
+    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="accountDropdown" style="min-width: 180px;">
+        @if (!Auth::check())
+            <a class="dropdown-item" href="{{ route('login') }}">Đăng nhập</a>
+            <a class="dropdown-item" href="{{ route('register') }}">Đăng ký</a>
+        @else
+            <a class="dropdown-item" href="#">Tài khoản của tôi</a>
+            <a class="dropdown-item" href="# }}">Lịch sử giao dịch</a>
+            <div class="dropdown-divider"></div>
+            <a class="dropdown-item" href="{{ route('logout') }}"
+               onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                Đăng xuất
+            </a>
+            <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+                @csrf
+            </form>
+        @endif
+    </div>
+</div>
 				</div>
 				<!-- toggle switch for light and dark theme -->
 				<div class="mobile-position">
