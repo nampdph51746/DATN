@@ -5,17 +5,18 @@ namespace App\Http\Controllers\Client;
 use App\Models\Room;
 use App\Models\Seat;
 use App\Models\Movie;
+use App\Models\Point;
 use App\Models\Ticket;
 use App\Models\Booking;
 use App\Models\Payment;
 use App\Models\SeatType;
 use App\Models\Showtime;
 use App\Enums\SeatStatus;
+use App\Enums\TicketStatus;
 use App\Models\BookingItem;
 use App\Enums\BookingStatus;
-use App\Enums\TicketStatus;
+use App\Models\PointHistory;
 use Illuminate\Http\Request;
-use App\Models\Promotion;
 use App\Models\ProductVariant;
 use App\Models\ShowtimeSeatState;
 use Illuminate\Support\Facades\DB;
@@ -24,76 +25,81 @@ use App\Http\Controllers\Controller;
 
 class VnpayController extends Controller
 {
-    public function redirectToVnpay(Request $request)
-    {
-        $data = $request->all();
-        $final_amount = $data['final_amount'];
-        $code_cart = rand(00, 9999);
-        $vnp_Url = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
-        $vnp_Returnurl = route('vnpay.return');
-        $vnp_TmnCode = "MIXLC4YW";
-        $vnp_HashSecret = "NX3ZCRHQUHCZZO6CYTWKQG1URUCNBFXW";
+  public function redirectToVnpay(Request $request)
+  {
+    // dd($request->all());
+    $data = $request->all();
+    $final_amount = $data['final_amount'];
+    $code_cart = rand(00, 9999);
+    $vnp_Url = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
+    $vnp_Returnurl = route('vnpay.return'); // Đường dẫn trả về sau khi thanh toán thành công
+    $vnp_TmnCode = "MIXLC4YW"; //Mã website tại VNPAY 
+    $vnp_HashSecret = "NX3ZCRHQUHCZZO6CYTWKQG1URUCNBFXW"; //Chuỗi bí mật
 
-        $vnp_TxnRef = $code_cart;
-        $vnp_OrderInfo = 'Thanh toán đơn hàng test';
-        $vnp_OrderType = 'billpayment';
-        $vnp_Amount = (int)$final_amount * 100;
-        $vnp_Locale = 'vn';
-        $vnp_IpAddr = $_SERVER['REMOTE_ADDR'];
+    $vnp_TxnRef = $code_cart; //Mã đơn hàng. Trong thực tế Merchant cần insert đơn hàng vào DB và gửi mã này sang VNPAY
+    $vnp_OrderInfo = 'Thanh toán đơn hàng test';
+    $vnp_OrderType = 'billpayment';
+    $vnp_Amount = (int)$final_amount * 100; // Số tiền cần thanh toán, nhân với 100 để chuyển sang đơn vị đồng
+    $vnp_Locale = 'vn';
+    // $vnp_BankCode = 'NCB';
+    $vnp_IpAddr = $_SERVER['REMOTE_ADDR'];
 
-        $inputData = array(
-            "vnp_Version" => "2.1.0",
-            "vnp_TmnCode" => $vnp_TmnCode,
-            "vnp_Amount" => $vnp_Amount,
-            "vnp_Command" => "pay",
-            "vnp_CreateDate" => date('YmdHis'),
-            "vnp_CurrCode" => "VND",
-            "vnp_IpAddr" => $vnp_IpAddr,
-            "vnp_Locale" => $vnp_Locale,
-            "vnp_OrderInfo" => $vnp_OrderInfo,
-            "vnp_OrderType" => $vnp_OrderType,
-            "vnp_ReturnUrl" => $vnp_Returnurl,
-            "vnp_TxnRef" => $vnp_TxnRef,
-        );
+    $inputData = array(
+      "vnp_Version" => "2.1.0",
+      "vnp_TmnCode" => $vnp_TmnCode,
+      "vnp_Amount" => $vnp_Amount,
+      "vnp_Command" => "pay",
+      "vnp_CreateDate" => date('YmdHis'),
+      "vnp_CurrCode" => "VND",
+      "vnp_IpAddr" => $vnp_IpAddr,
+      "vnp_Locale" => $vnp_Locale,
+      "vnp_OrderInfo" => $vnp_OrderInfo,
+      "vnp_OrderType" => $vnp_OrderType,
+      "vnp_ReturnUrl" => $vnp_Returnurl,
+      "vnp_TxnRef" => $vnp_TxnRef,
 
-        if (isset($vnp_BankCode) && $vnp_BankCode != "") {
-            $inputData['vnp_BankCode'] = $vnp_BankCode;
-        }
-        if (isset($vnp_Bill_State) && $vnp_Bill_State != "") {
-            $inputData['vnp_Bill_State'] = $vnp_Bill_State;
-        }
+    );
 
-        ksort($inputData);
-        $query = "";
-        $i = 0;
-        $hashdata = "";
-        foreach ($inputData as $key => $value) {
-            if ($i == 1) {
-                $hashdata .= '&' . urlencode($key) . "=" . urlencode($value);
-            } else {
-                $hashdata .= urlencode($key) . "=" . urlencode($value);
-                $i = 1;
-            }
-            $query .= urlencode($key) . "=" . urlencode($value) . '&';
-        }
-
-        $vnp_Url = $vnp_Url . "?" . $query;
-        if (isset($vnp_HashSecret)) {
-            $vnpSecureHash = hash_hmac('sha512', $hashdata, $vnp_HashSecret);
-            $vnp_Url .= 'vnp_SecureHash=' . $vnpSecureHash;
-        }
-        $returnData = array(
-            'code' => '00',
-            'message' => 'success',
-            'data' => $vnp_Url
-        );
-        if (isset($_POST['redirect'])) {
-            header('Location: ' . $vnp_Url);
-            die();
-        } else {
-            echo json_encode($returnData);
-        }
+    if (isset($vnp_BankCode) && $vnp_BankCode != "") {
+      $inputData['vnp_BankCode'] = $vnp_BankCode;
     }
+    if (isset($vnp_Bill_State) && $vnp_Bill_State != "") {
+      $inputData['vnp_Bill_State'] = $vnp_Bill_State;
+    }
+
+    //var_dump($inputData);
+    ksort($inputData);
+    $query = "";
+    $i = 0;
+    $hashdata = "";
+    foreach ($inputData as $key => $value) {
+      if ($i == 1) {
+        $hashdata .= '&' . urlencode($key) . "=" . urlencode($value);
+      } else {
+        $hashdata .= urlencode($key) . "=" . urlencode($value);
+        $i = 1;
+      }
+      $query .= urlencode($key) . "=" . urlencode($value) . '&';
+    }
+
+    $vnp_Url = $vnp_Url . "?" . $query;
+    if (isset($vnp_HashSecret)) {
+      $vnpSecureHash =   hash_hmac('sha512', $hashdata, $vnp_HashSecret); //  
+      $vnp_Url .= 'vnp_SecureHash=' . $vnpSecureHash;
+    }
+    $returnData = array(
+      'code' => '00',
+      'message' => 'success',
+      'data' => $vnp_Url
+    );
+    if (isset($_POST['redirect'])) {
+      header('Location: ' . $vnp_Url);
+      die();
+    } else {
+      echo json_encode($returnData);
+    }
+  }
+
 
     public function vnpayReturn(Request $request)
     {
@@ -110,67 +116,39 @@ class VnpayController extends Controller
                 // Log bookingData để debug
                 Log::info('Booking data:', $bookingData);
 
-                // Lấy promotion_id từ promotion_code hoặc discount_amount
-                $promotionId = null;
-                $discountAmount = (float) ($bookingData['discount_amount'] ?? 0);
+                $promotionId = $bookingData['promotion_id'] ?? null;
 
-              if (!empty($bookingData['promotion_id'])) {
-                $promotion = Promotion::where('id', (int) $bookingData['promotion_id'])
-                    ->where('status', 'active')
-                    ->whereDate('start_date', '<=', now())
-                    ->whereDate('end_date', '>=', now())
-                    ->first();
-                if ($promotion) {
-                      $promotionId = $promotion->id;
-                      // Kiểm tra discount_amount khớp với promotion
-                      if ($promotion->discount_type == 'fixed' && $promotion->discount_value != $discountAmount) {
-                          Log::warning('Discount amount mismatch:', [
-                              'promotion_id' => $bookingData['promotion_id'],
-                              'promotion_discount_value' => $promotion->discount_value,
-                              'booking_discount_amount' => $discountAmount,
-                          ]);
-                          // Có thể đặt discount_amount theo promotion nếu cần
-                          $discountAmount = $promotion->discount_value;
-                      }
-                  } else {
-                      Log::warning('Invalid promotion_id in vnpayReturn:', [
-                          'promotion_id' => $bookingData['promotion_id'],
-                      ]);
-                  }
-              }
-
-            // Nếu không tìm thấy promotion qua code hoặc ID, thử tìm theo discount_amount
-            if (!$promotionId && $discountAmount > 0) {
-                $promotion = Promotion::where('discount_type', 'fixed')
-                    ->where('discount_value', $discountAmount)
-                    ->where('status', 'active')
-                    ->whereDate('start_date', '<=', now())
-                    ->whereDate('end_date', '>=', now())
-                    ->first();
-                if ($promotion) {
-                    $promotionId = $promotion->id;
-                    Log::info('Found promotion by discount_amount:', [
-                        'promotion_id' => $promotionId,
-                        'discount_amount' => $discountAmount,
-                    ]);
-                } else {
-                    Log::warning('No matching promotion found for discount_amount:', [
-                        'discount_amount' => $discountAmount,
-                    ]);
+                // Xử lý promotion_id - đảm bảo nó là integer hoặc null
+                if ($promotionId === '' || $promotionId === '0' || $promotionId === 0) {
+                    $promotionId = null;
+                } else if ($promotionId) {
+                    $promotionId = (int) $promotionId;
                 }
-            }
 
-                // Log để kiểm tra promotion
-                Log::info('Final promotion_id to be saved:', [
-                    'promotion_id' => $promotionId,
-                    'discount_amount' => $discountAmount,
+                Log::info('VnpayController - Final promotion_id to be saved:', [
+                    'original' => $bookingData['promotion_id'] ?? 'not_set',
+                    'processed' => $promotionId,
+                    'type' => gettype($promotionId)
                 ]);
 
+                if ($promotionId) {
+                    $hasUsedPromotion = Booking::where('user_id', $bookingData['user_id'])
+                        ->where('promotion_id', $promotionId)
+                        ->where('status', 'confirmed')
+                        ->exists();
+
+                    if ($hasUsedPromotion) {
+                        DB::rollBack();
+                        return redirect()->route('client.failed')->with('error', 'Mã giảm giá này đã được sử dụng trong đơn hàng trước đó.');
+                    }
+                }
+
+                // 1. Tạo bản ghi trong bảng bookings
                 $booking = Booking::create([
                     'user_id' => (int) $bookingData['user_id'],
                     'booking_code' => $bookingData['booking_code'],
                     'total_amount_before_discount' => $bookingData['total_amount_before_discount'] ?? 0,
-                    'discount_amount' => $discountAmount,
+                    'discount_amount' => (float) $bookingData['discount_amount'] ?? 0,
                     'final_amount' => (float) $bookingData['final_amount'],
                     'promotion_id' => $promotionId,
                     'payment_method_id' => (int) $bookingData['payment_method_id'],
@@ -178,6 +156,7 @@ class VnpayController extends Controller
                     'notes' => $bookingData['notes'],
                 ]);
 
+                // 2. Tạo bản ghi trong bảng payments
                 Payment::create([
                     'booking_id' => $booking->id,
                     'payment_method_id' => $booking->payment_method_id ?? 1,
@@ -188,6 +167,39 @@ class VnpayController extends Controller
                     'paid_at' => now(),
                 ]);
 
+                // 3. Cộng điểm thưởng cho người dùng
+                $user = $booking->user;
+                if (!$user) {
+                    Log::error("User not found for booking ID: {$booking->id}, User ID: {$booking->user_id}");
+                    throw new \Exception('Không tìm thấy người dùng.');
+                }
+
+                $pointsToAdd = max(1, floor($booking->final_amount / 10000));
+                Log::info("Points to add: {$pointsToAdd}, Booking ID: {$booking->id}, User ID: {$user->id}");
+
+                if ($pointsToAdd > 0 && !PointHistory::where('booking_id', $booking->id)->exists()) {
+                    $point = Point::firstOrCreate(
+                        ['user_id' => $user->id],
+                        ['points_expiry_date' => now()->addYear(), 'created_at' => now(), 'updated_at' => now()]
+                    );
+                    $point->total_points = ($point->total_points ?? 0) + $pointsToAdd;
+                    $point->save();
+
+                    PointHistory::create([
+                        'user_id' => $user->id,
+                        'booking_id' => $booking->id,
+                        'points_change' => $pointsToAdd,
+                        'reason_type' => 'earned',
+                        'description' => 'Cộng điểm cho đơn hàng #' . $booking->id,
+                        'created_at' => now(),
+                    ]);
+
+                    Log::info("Points added for user ID: {$user->id}, Booking ID: {$booking->id}, Points: {$pointsToAdd}");
+                } else {
+                    Log::warning("Points not added. Points: {$pointsToAdd}, Existing history: " . (PointHistory::where('booking_id', $booking->id)->exists() ? 'Yes' : 'No'));
+                }
+
+                // 4. Tạo bản ghi trong bảng showtimes
                 $movie = Movie::where('name', $bookingData['movie_title'])->firstOrFail();
                 $room = Room::where('name', $bookingData['room_name'])->firstOrFail();
                 $startTime = $bookingData['showtime'] ? \Carbon\Carbon::parse($bookingData['showtime']) : now();
@@ -202,6 +214,7 @@ class VnpayController extends Controller
                     'status' => 'scheduled',
                 ]);
 
+                // 5. Tạo bản ghi trong bảng tickets và cập nhật showtime_seat_states
                 $selectedSeatInfos = session('selected_seats_info', []);
 
                 // Log selected_seats_info để debug
@@ -244,6 +257,7 @@ class VnpayController extends Controller
                         ]);
                 }
 
+                // 6. Tạo bản ghi trong bảng booking_items
                 $items = is_string($bookingData['items'])
                     ? json_decode($bookingData['items'], true)
                     : ($bookingData['items'] ?? []);
