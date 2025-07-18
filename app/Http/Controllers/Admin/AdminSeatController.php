@@ -9,6 +9,7 @@ use App\Enums\SeatStatus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use App\Models\RoomSeatConfiguration;
 use Illuminate\Support\Facades\Validator;
 
 class AdminSeatController extends Controller
@@ -36,7 +37,31 @@ class AdminSeatController extends Controller
     public function create(Room $room)
     {
         $seatTypes = SeatType::all();
-        return view('admin.seats.create', compact('room', 'seatTypes'));
+        $seatPercentages = config('seat_types.percentages');
+        
+        // Lấy tỷ lệ tùy chỉnh từ room_seat_configurations
+        $roomSeatConfigs = RoomSeatConfiguration::where('room_id', $room->id)
+            ->with('seatType')
+            ->get()
+            ->pluck('percentage', 'seat_type_id')
+            ->toArray();
+
+        // Nếu chưa có cấu hình tùy chỉnh, sử dụng tỷ lệ mặc định
+        if ($roomSeatConfigs) {
+            $seatPercentages = $roomSeatConfigs;
+        } else {
+            $seatPercentages = [];
+            foreach ($seatTypes as $seatType) {
+                $seatPercentages[$seatType->id] = config('seat_types.percentages')[$seatType->name] ?? 0;
+            }
+        }
+
+        $seats = Seat::where('room_id', $room->id)->with('seatType')->get();
+        $maxRows = 26;
+        $maxSeatsPerRow = 50;
+        $rows = range('A', chr(64 + $maxRows));
+
+        return view('admin.seats.create', compact('room', 'seatTypes', 'seatPercentages', 'seats', 'maxRows', 'maxSeatsPerRow', 'rows'));
     }
 
     public function store(Request $request)
@@ -44,8 +69,9 @@ class AdminSeatController extends Controller
         $rules = [
             'room_id' => 'required|exists:rooms,id',
             'seat_type_id' => 'required|exists:seat_types,id',
-            'rows' => 'required|integer|min:1',
-            'seats_per_row' => 'required|integer|min:1',
+            'min_seats_per_row' => 'required|integer|min:1|max:50',
+            'seat_type_percentages' => 'required|array',
+            'seat_type_percentages.*' => 'required|numeric|min:0|max:100',
         ];
 
         $validator = Validator::make($request->all(), $rules, [
@@ -53,12 +79,15 @@ class AdminSeatController extends Controller
             'room_id.exists' => 'Phòng chiếu không tồn tại.',
             'seat_type_id.required' => 'Loại ghế là bắt buộc.',
             'seat_type_id.exists' => 'Loại ghế không tồn tại.',
-            'rows.required' => 'Số hàng là bắt buộc.',
-            'rows.integer' => 'Số hàng phải là số nguyên.',
-            'rows.min' => 'Số hàng phải lớn hơn hoặc bằng 1.',
-            'seats_per_row.required' => 'Số ghế mỗi hàng là bắt buộc.',
-            'seats_per_row.integer' => 'Số ghế mỗi hàng phải là số nguyên.',
-            'seats_per_row.min' => 'Số ghế mỗi hàng phải lớn hơn hoặc bằng 1.',
+            'min_seats_per_row.required' => 'Số ghế tối thiểu mỗi hàng là bắt buộc.',
+            'min_seats_per_row.integer' => 'Số ghế tối thiểu mỗi hàng phải là số nguyên.',
+            'min_seats_per_row.min' => 'Số ghế tối thiểu mỗi hàng phải lớn hơn hoặc bằng 1.',
+            'min_seats_per_row.max' => 'Số ghế tối thiểu mỗi hàng không được vượt quá 50.',
+            'seat_type_percentages.required' => 'Tỷ lệ loại ghế là bắt buộc.',
+            'seat_type_percentages.*.required' => 'Tỷ lệ mỗi loại ghế không được để trống.',
+            'seat_type_percentages.*.numeric' => 'Tỷ lệ phải là số.',
+            'seat_type_percentages.*.min' => 'Tỷ lệ phải lớn hơn hoặc bằng 0.',
+            'seat_type_percentages.*.max' => 'Tỷ lệ phải nhỏ hơn hoặc bằng 100.',
         ]);
 
         $room = Room::findOrFail($request->room_id);
@@ -66,6 +95,7 @@ class AdminSeatController extends Controller
             $validator->errors()->add('room_id', 'Phòng chiếu không ở trạng thái hoạt động.');
         }
 
+<<<<<<< Updated upstream
         $totalSeatsToAdd = $request->rows * $request->seats_per_row;
         $existingSeatsCount = Seat::where('room_id', $request->room_id)->count();
         if ($existingSeatsCount + $totalSeatsToAdd > $room->capacity) {
@@ -93,23 +123,112 @@ class AdminSeatController extends Controller
         }
 
         if ($validator->fails()) {
+=======
+        $existingSeatsCount = Seat::where('room_id', $request->room_id)->count();
+        if ($existingSeatsCount >= $room->capacity) {
+            $validator->errors()->add('room_id', 'Phòng đã đầy ghế.');
             return redirect()->back()->withErrors($validator)->withInput();
         }
 
+        // Kiểm tra tổng tỷ lệ phần trăm
+        $totalPercentage = array_sum($request->seat_type_percentages);
+        if (abs($totalPercentage - 100) > 0.01) {
+            $validator->errors()->add('seat_type_percentages', 'Tổng tỷ lệ loại ghế phải bằng 100%.');
+>>>>>>> Stashed changes
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
+
+        // Lưu tỷ lệ tùy chỉnh
         DB::beginTransaction();
         try {
+<<<<<<< Updated upstream
+=======
+            RoomSeatConfiguration::where('room_id', $request->room_id)->delete();
+            foreach ($request->seat_type_percentages as $seatTypeId => $percentage) {
+                if ($percentage > 0) {
+                    RoomSeatConfiguration::create([
+                        'room_id' => $request->room_id,
+                        'seat_type_id' => $seatTypeId,
+                        'percentage' => $percentage,
+                    ]);
+                }
+            }
+
+            // Tính số ghế cần thêm cho mỗi loại
+            $seatTypes = SeatType::all()->keyBy('id');
+            $requiredSeats = [];
+            $totalSeats = $room->capacity;
+            foreach ($request->seat_type_percentages as $seatTypeId => $percentage) {
+                $requiredSeats[$seatTypeId] = (int) round(($percentage / 100) * $totalSeats);
+            }
+
+            // Đếm số ghế hiện có của mỗi loại
+            $existingSeatsByType = Seat::where('room_id', $request->room_id)
+                ->select('seat_type_id', DB::raw('count(*) as count'))
+                ->groupBy('seat_type_id')
+                ->pluck('count', 'seat_type_id')
+                ->toArray();
+
+            // Tính số ghế còn lại cần thêm cho loại ghế được chọn
+            $currentTypeSeats = $existingSeatsByType[$request->seat_type_id] ?? 0;
+            $requiredTypeSeats = $requiredSeats[$request->seat_type_id] ?? 0;
+            $remainingCapacity = $room->capacity - $existingSeatsCount;
+            $totalSeatsToAdd = min($requiredTypeSeats - $currentTypeSeats, $remainingCapacity);
+
+            // Định nghĩa maxRows và maxSeatsPerRow
+            $maxRows = 26;
+            $maxSeatsPerRow = 50;
+
+            // Tự động tính số ghế mỗi hàng dựa trên min_seats_per_row
+            $minSeatsPerRow = $request->min_seats_per_row;
+            $optimalSeatsPerRow = $minSeatsPerRow;
+            for ($i = $minSeatsPerRow; $i <= $maxSeatsPerRow; $i++) {
+                if ($totalSeatsToAdd % $i === 0 && $totalSeatsToAdd / $i <= $maxRows) {
+                    $optimalSeatsPerRow = $i;
+                    break;
+                }
+            }
+            $rows = ceil($totalSeatsToAdd / $optimalSeatsPerRow);
+
+            // Kiểm tra số ghế thực tế sẽ được thêm
+            $totalSeatsProposed = $rows * $optimalSeatsPerRow;
+            if ($totalSeatsProposed > $totalSeatsToAdd) {
+                $excessSeats = $totalSeatsProposed - $totalSeatsToAdd;
+                $validator->errors()->add('min_seats_per_row', 'Số ghế tối thiểu mỗi hàng dẫn đến ' . $excessSeats . ' ghế dư. Vui lòng chọn giá trị khác để khớp với ' . $totalSeatsToAdd . ' ghế cần thêm.');
+                return redirect()->back()->withErrors($validator)->withInput();
+            }
+
+            if ($rows * $optimalSeatsPerRow > $remainingCapacity) {
+                $validator->errors()->add('min_seats_per_row', 'Số ghế muốn thêm vượt quá sức chứa còn lại (' . $remainingCapacity . ' ghế).');
+                return redirect()->back()->withErrors($validator)->withInput();
+            }
+
+            // Kiểm tra ghế trùng lặp
+            $existingSeats = Seat::where('room_id', $request->room_id)
+                ->get()
+                ->groupBy('row_char')
+                ->map->pluck('seat_number')
+                ->toArray();
+
+            // Tạo ghế mới
+>>>>>>> Stashed changes
             $createdSeats = 0;
             // Tìm hàng cao nhất hiện có
             $maxRowChar = Seat::where('room_id', $request->room_id)
                 ->max('row_char');
             $startRowIndex = $maxRowChar ? ord(strtoupper($maxRowChar)) - 64 : 0; // Chuyển từ A=1, B=2, ...
 
+<<<<<<< Updated upstream
             for ($i = 0; $i < $request->rows; $i++) {
                 $rowChar = chr(65 + $startRowIndex + $i); // Bắt đầu từ hàng tiếp theo
+=======
+            for ($i = 0; $i < $rows; $i++) {
+                $rowChar = chr(65 + $startRowIndex + $i);
+>>>>>>> Stashed changes
                 if (strlen($rowChar) > 5) {
                     throw new \Exception('Số hàng vượt quá giới hạn ký tự cho phép.');
                 }
-                for ($j = 1; $j <= $request->seats_per_row; $j++) {
+                for ($j = 1; $j <= $optimalSeatsPerRow; $j++) {
                     $seatNumber = str_pad($j, 2, '0', STR_PAD_LEFT);
                     if (isset($existingSeats[$rowChar]) && in_array($seatNumber, $existingSeats[$rowChar])) {
                         continue; // Bỏ qua ghế trùng lặp
@@ -127,12 +246,38 @@ class AdminSeatController extends Controller
                     }
                 }
             }
+<<<<<<< Updated upstream
             DB::commit();
             return redirect()->route('admin.rooms.show', $request->room_id)
                 ->with('success', "$createdSeats ghế đã được thêm thành công!");
+=======
+
+            // Xác định loại ghế tiếp theo
+            $seatTypesOrder = config('seat_types.order');
+            $currentTypeSeats += $createdSeats;
+            $remainingTypeSeats = $requiredTypeSeats - $currentTypeSeats;
+            $nextSeatTypeId = null;
+            if ($remainingTypeSeats <= 0) {
+                $nextTypeIndex = array_search($seatTypes[$request->seat_type_id]->name, $seatTypesOrder) + 1;
+                if ($nextTypeIndex < count($seatTypesOrder)) {
+                    $nextSeatType = SeatType::where('name', $seatTypesOrder[$nextTypeIndex])->first();
+                    if ($nextSeatType) {
+                        $nextSeatTypeId = $nextSeatType->id;
+                    }
+                }
+            } else {
+                $nextSeatTypeId = $request->seat_type_id;
+            }
+
+            DB::commit();
+            return redirect()->route('admin.rooms.show', $request->room_id)
+                ->with('success', "$createdSeats ghế loại '{$seatTypes[$request->seat_type_id]->name}' đã được thêm thành công!")
+                ->with('next_seat_type_id', $nextSeatTypeId);
+
+>>>>>>> Stashed changes
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->with('error', 'Lỗi khi thêm ghế: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Lỗi khi thêm ghế: ' . $e->getMessage())->withInput();
         }
     }
 

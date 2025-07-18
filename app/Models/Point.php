@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\PointHistory;
+use App\Models\User;
 
 class Point extends Model
 {
@@ -19,4 +21,12 @@ class Point extends Model
     {
         return $this->belongsTo(User::class);
     }
+<<<<<<< Updated upstream
+=======
+
+    public function histories()
+    {
+        return $this->hasMany(PointHistory::class);
+    }
+>>>>>>> Stashed changes
 }

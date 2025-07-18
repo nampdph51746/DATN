@@ -5,6 +5,9 @@
     <div class="row">
         <div class="col-xl-12">
             <div class="card">
+
+                {{-- Thông báo  --}}
+                @include('admin.partials.notifications')
                 <div class="card-header d-flex justify-content-between align-items-center gap-1">
                     <h4 class="card-title flex-grow-1">Danh sách khuyến mãi</h4>
                     <div class="d-flex gap-2 align-items-center">
@@ -74,6 +77,7 @@
                                     <th>ID</th>
                                     <th>Tên khuyến mãi</th>
                                     <th>Mã KM</th>
+                                    <th>Hạng KH</th>
                                     <th>Loại giảm giá</th>
                                     <th>Giá trị giảm</th>
                                     <th>Ngày bắt đầu</th>
@@ -94,6 +98,13 @@
                                     <td>{{ $promotion->id }}</td>
                                     <td>{{ $promotion->name }}</td>
                                     <td>{{ $promotion->code }}</td>
+                                    <td>
+                                        @if($promotion->rank)
+                                            <span class="badge bg-info">{{ $promotion->rank->name }}</span>
+                                        @else
+                                            <span class="text-muted">Tất cả</span>
+                                        @endif
+                                    </td>
                                     <td>{{ $promotion->discount_type }}</td>
                                     <td>{{ number_format($promotion->discount_value, 2) }}</td>
                                     <td>{{ $promotion->start_date->format('d/m/Y') }}</td>

@@ -9,11 +9,38 @@ class PointHistory extends Model
 {
     use HasFactory;
 
+<<<<<<< Updated upstream
+=======
+    protected $table = 'point_histories';
+>>>>>>> Stashed changes
     protected $fillable = ['user_id', 'booking_id', 'points_change', 'reason_type', 'description'];
 
     protected $casts = [
         'reason_type' => \App\Enums\PointReasonType::class,
     ];
+
+    protected static function booted()
+    {
+        static::saved(function ($history) {
+            $booking = $history->booking;
+
+            if (!$booking) {
+                return;
+            }
+
+            // Nếu là cộng điểm thì đặt lại trạng thái là Đã xác nhận
+            if ($history->points_change > 0) {
+                $booking->status = \App\Enums\BookingStatus::Confirmed;
+            }
+
+            // Nếu là trừ điểm thì chuyển về trạng thái Chờ xác nhận
+            if ($history->points_change < 0) {
+                $booking->status = \App\Enums\BookingStatus::Pending;
+            }
+
+            $booking->save();
+        });
+    }
 
     public function user()
     {

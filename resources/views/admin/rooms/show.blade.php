@@ -40,6 +40,27 @@
                         @endswitch
                     </p>
 
+<<<<<<< Updated upstream
+=======
+                    <h5 class="mt-4">Phân bổ ghế</h5>
+                    @php
+                        $requiredSeats = [];
+                        foreach ($seatPercentages as $seatTypeId => $percentage) {
+                            $seatType = $seatTypes->where('id', $seatTypeId)->first();
+                            $requiredSeats[$seatTypeId] = (int) round(($percentage / 100) * $room->capacity);
+                        }
+                        $existingSeatsByType = $seats->groupBy('seat_type_id')->map->count()->toArray();
+                    @endphp
+                    <ul>
+                        @foreach ($seatTypes as $seatType)
+                            <li><strong>{{ $seatType->name }} ({{ $seatPercentages[$seatType->id] ?? 0 }}%):</strong> 
+                                {{ $existingSeatsByType[$seatType->id] ?? 0 }} / {{ $requiredSeats[$seatType->id] ?? 0 }} ghế
+                                (Còn lại: {{ max(0, ($requiredSeats[$seatType->id] ?? 0) - ($existingSeatsByType[$seatType->id] ?? 0)) }} ghế)
+                            </li>
+                        @endforeach
+                    </ul>
+
+>>>>>>> Stashed changes
                     <h5 class="mt-4">Sơ đồ ghế</h5>
                     @if ($seats->isEmpty())
                         <p class="text-success">Phòng chưa có ghế nào. Số ghế có thể thêm: {{ $room->capacity }}</p>
@@ -98,37 +119,92 @@
                                     <form id="seatForm" action="{{ route('admin.seats.store') }}" method="POST">
                                         @csrf
                                         <input type="hidden" name="room_id" value="{{ $room->id }}">
+
+                                        <!-- Tỷ lệ loại ghế -->
+                                        <div class="mb-3">
+                                            <label class="form-label">Tỷ lệ loại ghế (%)</label>
+                                            @foreach ($seatTypes as $seatType)
+                                                <div class="flex items-center space-x-2 mb-2">
+                                                    <label for="seat_type_percentages_{{ $seatType->id }}" class="form-label">{{ $seatType->name }}</label>
+                                                    <input type="number" name="seat_type_percentages[{{ $seatType->id }}]" id="seat_type_percentages_{{ $seatType->id }}" 
+                                                           class="form-control w-20" min="0" max="100" 
+                                                           value="{{ $seatPercentages[$seatType->id] ?? 0 }}" step="0.01" required>
+                                                    <span>%</span>
+                                                </div>
+                                            @endforeach
+                                            @error('seat_type_percentages')
+                                                <span class="text-danger">{{ $message }}</span>
+                                            @enderror
+                                            <p class="text-muted mt-2" id="percentageWarning"></p>
+                                        </div>
+
+                                        <!-- Loại ghế -->
                                         <div class="mb-3">
                                             <label for="seat_type_id" class="form-label">Loại ghế</label>
                                             <select name="seat_type_id" id="seat_type_id" class="form-control" required>
                                                 <option value="">Chọn loại ghế</option>
+<<<<<<< Updated upstream
                                                 @foreach ($seatTypes as $seatType)
                                                     <option value="{{ $seatType->id }}">{{ $seatType->name }} ({{ $seatType->price_modifier }})</option>
+=======
+                                                @php
+                                                    $seatTypesOrder = config('seat_types.order');
+                                                    $nextSeatTypeId = session('next_seat_type_id');
+                                                    if (!$nextSeatTypeId) {
+                                                        foreach ($seatTypesOrder as $type) {
+                                                            $seatType = $seatTypes->where('name', $type)->first();
+                                                            $currentTypeSeats = $existingSeatsByType[$seatType->id] ?? 0;
+                                                            $requiredTypeSeats = $requiredSeats[$seatType->id] ?? 0;
+                                                            if ($currentTypeSeats < $requiredTypeSeats) {
+                                                                $nextSeatTypeId = $seatType->id;
+                                                                break;
+                                                            }
+                                                        }
+                                                    }
+                                                @endphp
+                                                @foreach ($seatTypes as $seatType)
+                                                    <option value="{{ $seatType->id }}" {{ $seatType->id == $nextSeatTypeId ? 'selected' : '' }}>
+                                                        {{ $seatType->name }} (Còn lại: {{ max(0, ($requiredSeats[$seatType->id] ?? 0) - ($existingSeatsByType[$seatType->id] ?? 0)) }} ghế)
+                                                    </option>
+>>>>>>> Stashed changes
                                                 @endforeach
                                             </select>
                                             @error('seat_type_id')
                                                 <span class="text-danger">{{ $message }}</span>
                                             @enderror
                                         </div>
-                                        <div class="mb-3">
-                                            <label for="rows" class="form-label">Số hàng</label>
-                                            <input type="number" name="rows" id="rows" class="form-control" min="1" value="1" required>
-                                            @error('rows')
-                                                <span class="text-danger">{{ $message }}</span>
-                                            @enderror
-                                        </div>
+
+                                        <!-- Số ghế mỗi hàng -->
                                         <div class="mb-3">
                                             <label for="seats_per_row" class="form-label">Số ghế mỗi hàng</label>
                                             <input type="number" name="seats_per_row" id="seats_per_row" class="form-control" min="1" value="1" required>
                                             @error('seats_per_row')
                                                 <span class="text-danger">{{ $message }}</span>
                                             @enderror
+                                            <p class="text-muted mt-2" id="seatsPerRowSuggestion"></p>
                                         </div>
+
+                                        <!-- Số ghế tối thiểu mỗi hàng -->
+                                        <div class="mb-3">
+                                            <label for="min_seats_per_row" class="form-label">Số ghế tối thiểu mỗi hàng</label>
+                                            <input type="number" name="min_seats_per_row" id="min_seats_per_row" class="form-control" min="1" value="1" required>
+                                            @error('min_seats_per_row')
+                                                <span class="text-danger">{{ $message }}</span>
+                                            @enderror
+                                            <p class="text-muted mt-2" id="minSeatsPerRowSuggestion"></p>
+                                        </div>
+
                                         <div class="mb-3">
                                             <p><strong>Sức chứa phòng:</strong> {{ $room->capacity }}</p>
                                             <p><strong>Ghế hiện có:</strong> {{ $seats->count() }}</p>
+<<<<<<< Updated upstream
                                             <p><strong>Ghế có thể thêm:</strong> {{ $room->capacity - $seats->count() }}</p>
+=======
+                                            <p><strong>Ghế còn lại:</strong> {{ $room->capacity - $seats->count() }}</p>
+                                            <p id="remainingSeatsWarning" class="text-warning"></p>
+>>>>>>> Stashed changes
                                         </div>
+
                                         <button type="submit" class="btn btn-primary">Thêm ghế</button>
                                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
                                     </form>
@@ -146,7 +222,7 @@
     .seat-map {
         display: grid;
         gap: 5px;
-        max-width: 600px;
+        max-width: {{ ($maxSeatsPerRow + 1) * 45 }}px;
     }
     .seat {
         width: 40px;
@@ -159,24 +235,32 @@
         font-size: 12px;
         text-align: center;
         color: white;
+<<<<<<< Updated upstream
+=======
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+    .seat:hover {
+        transform: scale(1.1);
+>>>>>>> Stashed changes
     }
     .seat-row-label {
-        background-color: #6c757d; /* Màu cho hàng (A, B, C,...) */
+        background-color: #6c757d;
         color: white;
     }
     .seat-number-label {
-        background-color: #adb5bd; /* Màu cho mã ghế (01, 02,...) */
+        background-color: #adb5bd;
         color: black;
     }
     .seat-empty {
         background-color: #e9ecef;
     }
     .seat-vip {
-        background-color: #ffd700; /* VIP */
+        background-color: #ffd700;
         color: black;
     }
     .seat-sweetbox {
-        background-color: #ff69b4; /* Sweetbox */
+        background-color: #ff69b4;
         color: black;
     }
     .seat-booked {
@@ -191,12 +275,128 @@
 
 @push('scripts')
 <script>
+<<<<<<< Updated upstream
     document.querySelectorAll('.seat').forEach(seat => {
         seat.addEventListener('click', function() {
             if (this.dataset.seatId) {
                 alert('Ghế: ' + this.title);
+=======
+    document.addEventListener('DOMContentLoaded', function () {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+
+        const seatForm = document.getElementById('seatForm');
+        const percentageInputs = document.querySelectorAll('input[name^="seat_type_percentages"]');
+        const seatsPerRowInput = document.getElementById('seats_per_row');
+        const minSeatsPerRowInput = document.getElementById('min_seats_per_row');
+        const percentageWarning = document.getElementById('percentageWarning');
+        const seatsPerRowSuggestion = document.getElementById('seatsPerRowSuggestion');
+        const minSeatsPerRowSuggestion = document.getElementById('minSeatsPerRowSuggestion');
+        const remainingSeatsWarning = document.getElementById('remainingSeatsWarning');
+        const seatTypeSelect = document.getElementById('seat_type_id');
+        const roomCapacity = {{ $room->capacity }};
+        const existingSeats = {{ $seats->count() }};
+        const remainingCapacity = roomCapacity - existingSeats;
+        const existingSeatsByType = {{ json_encode($existingSeatsByType) }};
+        const maxSeatsPerRow = {{ $maxSeatsPerRow }};
+        const maxRows = {{ $maxRows }};
+
+        function updateCalculations() {
+            let totalPercentage = 0;
+            percentageInputs.forEach(input => {
+                totalPercentage += parseFloat(input.value) || 0;
+            });
+
+            // Cảnh báo tổng % ghế
+            if (Math.abs(totalPercentage - 100) > 0.01) {
+                percentageWarning.innerHTML = '<span class="text-danger">Tổng tỷ lệ phải bằng 100%. Hiện tại: ' + totalPercentage.toFixed(2) + '%</span>';
+            } else {
+                percentageWarning.innerHTML = '<span class="text-success">Tổng tỷ lệ hợp lệ: ' + totalPercentage.toFixed(2) + '%</span>';
+            }
+
+            // Lấy loại ghế được chọn
+            const seatTypeId = seatTypeSelect.value;
+            const percentageInput = document.getElementById('seat_type_percentages_' + seatTypeId);
+            if (!percentageInput) {
+                seatsPerRowSuggestion.innerHTML = '';
+                remainingSeatsWarning.innerHTML = '';
+                minSeatsPerRowSuggestion.innerHTML = '';
+                return;
+            }
+
+            const percentage = parseFloat(percentageInput.value) || 0;
+            const requiredSeats = Math.round((percentage / 100) * roomCapacity);
+            const currentTypeSeats = existingSeatsByType[seatTypeId] || 0;
+            const seatsToAdd = Math.min(requiredSeats - currentTypeSeats, remainingCapacity);
+
+            const seatsPerRow = parseInt(seatsPerRowInput.value) || 1;
+            const minSeatsPerRow = parseInt(minSeatsPerRowInput.value) || 1;
+            const rows = Math.ceil(seatsToAdd / seatsPerRow);
+            const totalSeatsProposed = rows * seatsPerRow;
+            const excessSeats = totalSeatsProposed - seatsToAdd;
+
+            // Cảnh báo dư ghế
+            if (excessSeats > 0) {
+                remainingSeatsWarning.innerHTML = '<span class="text-warning">Cảnh báo: Sẽ có ' + excessSeats + ' ghế dư do không chia hết số hàng.</span>';
+            } else {
+                remainingSeatsWarning.innerHTML = '';
+            }
+
+            // Gợi ý số ghế mỗi hàng tối ưu
+            if (seatsToAdd > 0) {
+                let optimalSeatsPerRow = seatsPerRow;
+                for (let i = minSeatsPerRow; i <= maxSeatsPerRow; i++) {
+                    if (seatsToAdd % i === 0 && seatsToAdd / i <= maxRows) {
+                        optimalSeatsPerRow = i;
+                        break;
+                    }
+                }
+                const suggestedRows = Math.ceil(seatsToAdd / optimalSeatsPerRow);
+                seatsPerRowSuggestion.innerHTML = 'Đề xuất số ghế mỗi hàng: ' + optimalSeatsPerRow + ' (chia hết cho ' + seatsToAdd + ' ghế, tạo ' + suggestedRows + ' hàng)';
+            } else {
+                seatsPerRowSuggestion.innerHTML = 'Không cần thêm ghế cho loại này.';
+            }
+
+            // Cảnh báo nếu < số ghế tối thiểu mỗi hàng
+            if (seatsPerRow < minSeatsPerRow) {
+                minSeatsPerRowSuggestion.innerHTML = '<span class="text-danger">Số ghế mỗi hàng phải ≥ số tối thiểu (' + minSeatsPerRow + ').</span>';
+            } else {
+                minSeatsPerRowSuggestion.innerHTML = '';
+            }
+        }
+
+        // Gắn sự kiện
+        percentageInputs.forEach(input => input.addEventListener('input', updateCalculations));
+        seatsPerRowInput.addEventListener('input', updateCalculations);
+        minSeatsPerRowInput.addEventListener('input', updateCalculations);
+        seatTypeSelect.addEventListener('change', () => setTimeout(updateCalculations, 10));
+
+        // Click ghế để chỉnh sửa
+        document.querySelectorAll('.seat').forEach(seat => {
+            if (seat.dataset.seatId) {
+                seat.addEventListener('click', function () {
+                    window.location.href = '{{ route("admin.seats.edit", ":id") }}'.replace(':id', this.dataset.seatId);
+                });
+>>>>>>> Stashed changes
             }
         });
+
+        // Kiểm tra tổng % khi gửi form
+        seatForm.addEventListener('submit', function(e) {
+            let totalPercentage = 0;
+            percentageInputs.forEach(input => {
+                totalPercentage += parseFloat(input.value) || 0;
+            });
+            if (Math.abs(totalPercentage - 100) > 0.01) {
+                e.preventDefault();
+                alert('Tổng tỷ lệ loại ghế phải bằng 100%.');
+            }
+        });
+
+        // Khởi động tính toán ban đầu
+        updateCalculations();
     });
 </script>
 @endpush

@@ -28,7 +28,10 @@
      <!-- Theme Config js (Require in all Page) -->
      <script src="{{ asset('assets/js/config.js') }}"></script>
 
+
+
      <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </head>
 
     <style>
@@ -514,7 +517,7 @@
                                 <span class="nav-icon">
                                     <iconify-icon icon="solar:tag-bold-duotone"></iconify-icon>
                                 </span>
-                                <span class="nav-text">Thể loại</span>
+                                <span class="nav-text">Thể loại phim</span>
                             </a>
                             <div class="collapse" id="sidebarGenres">
                                 <ul class="nav sub-navbar-nav">
