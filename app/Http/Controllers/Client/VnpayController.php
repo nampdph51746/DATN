@@ -17,6 +17,7 @@ use Illuminate\Http\Request;
 use App\Models\ProductVariant;
 use App\Models\ShowtimeSeatState;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 
 class VnpayController extends Controller
@@ -109,7 +110,43 @@ class VnpayController extends Controller
       try {
         // Lấy dữ liệu session
         $bookingData = session('booking_preview');
+        
+        // Debug: Log session data
+        Log::info('VnpayController - Session booking_preview data:', [
+          'bookingData' => $bookingData,
+          'promotion_id' => $bookingData['promotion_id'] ?? 'null',
+          'user_id' => $bookingData['user_id'] ?? 'null'
+        ]);
+        
         // dd($bookingData);
+
+        // Kiểm tra lại mã giảm giá trước khi tạo booking (nếu có)
+        $promotionId = $bookingData['promotion_id'] ?? null;
+        
+        // Xử lý promotion_id - đảm bảo nó là integer hoặc null
+        if ($promotionId === '' || $promotionId === '0' || $promotionId === 0) {
+            $promotionId = null;
+        } else if ($promotionId) {
+            $promotionId = (int) $promotionId;
+        }
+        
+        Log::info('VnpayController - Final promotion_id to be saved:', [
+            'original' => $bookingData['promotion_id'] ?? 'not_set',
+            'processed' => $promotionId,
+            'type' => gettype($promotionId)
+        ]);
+        
+        if ($promotionId) {
+          $hasUsedPromotion = Booking::where('user_id', $bookingData['user_id'])
+            ->where('promotion_id', $promotionId)
+            ->where('status', 'confirmed')
+            ->exists();
+          
+          if ($hasUsedPromotion) {
+            DB::rollBack();
+            return redirect()->route('client.failed')->with('error', 'Mã giảm giá này đã được sử dụng trong đơn hàng trước đó.');
+          }
+        }
 
         // 1. Tạo bản ghi trong bảng bookings
         $booking = Booking::create([
@@ -118,7 +155,7 @@ class VnpayController extends Controller
           'total_amount_before_discount' => $bookingData['total_amount_before_discount'] ?? 0,
           'discount_amount' => (float) $bookingData['discount_amount'] ?? 0,
           'final_amount' => (float) $bookingData['final_amount'],
-          'promotion_id' => 526, //$bookingData['promotion_id']
+          'promotion_id' => $promotionId,
           'payment_method_id' => (int) $bookingData['payment_method_id'],
           'status' => BookingStatus::Confirmed, // CHÍNH XÁC
           'notes' => $bookingData['notes'],

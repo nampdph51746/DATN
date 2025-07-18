@@ -1167,10 +1167,6 @@
                                                         onmouseout="this.style.background='#f3f4f6'; this.style.borderColor='#d1d5db';">
                                                         <i class="fas fa-sync-alt"></i> Làm mới
                                                     </button>
-                                                    <small
-                                                        style="display: block; color: #9ca3af; font-size: 11px; margin-top: 4px;">
-                                                        💡 Mẹo: Nhấn F5 để cập nhật nhanh
-                                                    </small>
                                                 </div>
 
                                                 <!-- Promotion statistics -->
@@ -1537,6 +1533,7 @@
         let discount = 0; // Tổng giảm giá (mã + điểm)
         let promotionDiscount = 0; // Giảm giá từ mã khuyến mãi
         let pointsDiscount = 0; // Giảm giá từ điểm
+        let promotionId = null; // ID của mã giảm giá được áp dụng
         let cinemaName = 'N/A';
         const showtimesData = @json($showtimesData);
         const roomsData = @json($roomsData);
@@ -1545,8 +1542,7 @@
         let selectedSnacks = [];
         let countdownInterval = null;
         let countdownEndTime = null;
-        let prevId = "1"; // Biến toàn cục cho myFunction
-        let autoRefreshInterval = null; // Auto refresh interval cho promotion data
+        let prevId = "1";
 
         console.log('Variables initialized:', {
             currentStep,
@@ -1940,6 +1936,7 @@
 
                             // Reset discount và không áp dụng mã
                             promotionDiscount = 0;
+                            promotionId = null;
                             discount = pointsDiscount; // Chỉ giữ lại discount từ điểm
                             document.getElementById('voucher-discount-line').textContent = '0 ₫';
                             document.getElementById('discountDisplay').textContent = numberFormat(discount) + ' ₫';
@@ -1968,6 +1965,7 @@
 
                             // Reset discount và không áp dụng mã
                             promotionDiscount = 0;
+                            promotionId = null;
                             discount = pointsDiscount; // Chỉ giữ lại discount từ điểm
                             document.getElementById('voucher-discount-line').textContent = '0 ₫';
                             document.getElementById('discountDisplay').textContent = numberFormat(discount) + ' ₫';
@@ -2102,6 +2100,7 @@
                         console.log('No suitable promotion found or error:', data.message);
                         // Reset discount nếu không có mã giảm giá phù hợp
                         discount = 0;
+                        promotionId = null;
                         document.getElementById('voucher-discount-line').textContent = '0 ₫';
                         document.getElementById('discountDisplay').textContent = '0 ₫';
 
@@ -2139,6 +2138,7 @@
 
                     // Reset discount khi có lỗi
                     discount = 0;
+                    promotionId = null;
                     document.getElementById('voucher-discount-line').textContent = '0 ₫';
                     document.getElementById('discountDisplay').textContent = '0 ₫';
 
@@ -2209,6 +2209,13 @@
                 return;
             }
 
+            console.log('Making fetch request to:', '{{ route('client.applyPromotion') }}');
+            console.log('CSRF Token:', '{{ csrf_token() }}');
+            console.log('Request data:', {
+                code: code,
+                order_amount: subtotal
+            });
+
             fetch('{{ route('client.applyPromotion') }}', {
                     method: 'POST',
                     headers: {
@@ -2269,6 +2276,7 @@
                                 `⚠️ Đơn hàng không đủ điều kiện tối thiểu ${numberFormat(MINIMUM_ORDER_AMOUNT)} ₫`;
                             promotionFeedback.className = 'promotion-feedback error';
                         }
+                        const applyPromotionBtn = document.getElementById('apply-promotion-btn');
                         if (applyPromotionBtn) applyPromotionBtn.disabled = false;
                         return;
                     }
@@ -2287,6 +2295,7 @@
                                     `⚠️ Tổng giảm giá không được vượt quá 30% đơn hàng (hiện tại đã dùng ${numberFormat(currentPointsDiscount)}₫ từ điểm)`;
                                 promotionFeedback.className = 'promotion-feedback warning';
                             }
+                            const applyPromotionBtn = document.getElementById('apply-promotion-btn');
                             if (applyPromotionBtn) applyPromotionBtn.disabled = false;
                             return;
                         }
@@ -2295,6 +2304,7 @@
                         const maxDiscount = Math.min(promotionDiscountValue, currentSubtotal);
                         promotionDiscount = maxDiscount;
                         discount = promotionDiscount + pointsDiscount; // Tổng discount
+                        promotionId = data.promotion_id; // ✅ Thiếu dòng này!
 
                         // Cập nhật hiển thị theo loại mã giảm giá
                         const voucherDiscountLine = document.getElementById('voucher-discount-line');
@@ -2412,6 +2422,7 @@
                             .discount);
                     } else {
                         discount = 0;
+                        promotionId = null;
                         document.getElementById('voucher-discount-line').textContent = '0 ₫';
                         document.getElementById('discountDisplay').textContent = '0 ₫';
                         updateOrderSummary();
@@ -2426,9 +2437,19 @@
                     console.error('Error applying promotion:', error);
                     console.error('Error type:', typeof error);
                     console.error('Error keys:', Object.keys(error));
+                    console.error('Error stack:', error.stack);
+                    console.error('Error message:', error.message);
 
+                    // Kiểm tra nếu là lỗi fetch network
+                    if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+                        console.error('Network error detected - possible CORS, server down, or connection issue');
+                        if (promotionFeedback) {
+                            promotionFeedback.innerHTML = 'Lỗi kết nối mạng. Kiểm tra kết nối internet và thử lại.';
+                            promotionFeedback.className = 'promotion-feedback error';
+                        }
+                    }
                     // Kiểm tra nếu là lỗi từ server với data
-                    if (error.status && error.data) {
+                    else if (error.status && error.data) {
                         console.log('Server error data:', error.data);
                         if (promotionFeedback) {
                             let errorMessage = error.data.error || 'Không thể áp dụng mã giảm giá.';
@@ -2461,12 +2482,14 @@
 
                     // Reset discount trong mọi trường hợp (chỉ reset promotion, giữ lại points)
                     promotionDiscount = 0;
+                    promotionId = null;
                     discount = pointsDiscount; // Chỉ giữ lại discount từ điểm
                     document.getElementById('voucher-discount-line').textContent = '0 ₫';
                     document.getElementById('discountDisplay').textContent = numberFormat(discount) + ' ₫';
                     updateOrderSummary();
                 })
                 .finally(() => {
+                    const applyPromotionBtn = document.getElementById('apply-promotion-btn');
                     if (applyPromotionBtn) applyPromotionBtn.disabled = false;
                 });
         }
@@ -2493,6 +2516,7 @@
 
                     // Reset discount từ promotion, giữ lại points
                     promotionDiscount = 0;
+                    promotionId = null;
                     discount = pointsDiscount; // Chỉ giữ lại discount từ điểm
 
                     // Safely update discount display elements
@@ -2825,6 +2849,12 @@
             // Serialize selectedSnacks vào input-items để backend nhận đủ dữ liệu
             document.getElementById('input-items').value = JSON.stringify(selectedSnacks);
 
+            // ✅ Cập nhật promotion_id vào hidden input
+            const promotionIdInput = document.querySelector('input[name="promotion_id"]');
+            if (promotionIdInput) {
+                promotionIdInput.value = promotionId || '';
+                console.log('Updated promotion_id input:', promotionId);
+            }
 
         }
 
@@ -2878,12 +2908,6 @@
                     countdownEndTime = null;
                 }
 
-                // Dừng auto refresh khi không ở payment step
-                if (autoRefreshInterval) {
-                    clearInterval(autoRefreshInterval);
-                    autoRefreshInterval = null;
-                    console.log('Stopped auto refresh promotion data');
-                }
             } else if (step === 3 || step === 4) {
                 if (!countdownInterval && selectedShowtimeId) {
                     startCountdown(600);
@@ -2891,9 +2915,6 @@
             }
 
             if (step === 4) {
-                // Tắt tự động áp dụng mã giảm giá - để user tự nhập
-                // applyPromotionAutomatically();
-
                 // Khởi tạo lại các nút promotion để đảm bảo chúng hoạt động
                 setTimeout(() => {
                     initPromotionButtons();
@@ -2902,94 +2923,9 @@
                 // Hiển thị gợi ý mã giảm giá có sẵn cho user
                 showAvailablePromotionsSuggestion().then(() => {
                     console.log('Promotion suggestions loaded successfully');
-
-                    // Hiển thị thông báo về tính năng mới (chỉ hiển thị 1 lần)
-                    if (!localStorage.getItem('refreshPromotionTipShown')) {
-                        setTimeout(() => {
-                            const featureTip = document.createElement('div');
-                            featureTip.className = 'feature-tip';
-                            featureTip.style.cssText = `
-                            position: fixed;
-                            bottom: 20px;
-                            right: 20px;
-                            background: #1e40af;
-                            color: white;
-                            padding: 14px;
-                            border-radius: 8px;
-                            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-                            z-index: 10000;
-                            font-size: 14px;
-                            max-width: 300px;
-                            line-height: 1.4;
-                            opacity: 0;
-                            transform: translateY(20px);
-                            transition: all 0.3s ease;
-                        `;
-
-                            featureTip.innerHTML = `
-                            <div style="display: flex; align-items: flex-start;">
-                                <div style="flex: 1;">
-                                    <div style="font-weight: bold; margin-bottom: 4px;">✨ Tính năng mới!</div>
-                                    <p style="margin: 0 0 8px 0;">Danh sách mã giảm giá sẽ tự động cập nhật mỗi 30 giây để hiển thị mã mới nhất.</p>
-                                    <p style="margin: 0 0 8px 0;">Bạn cũng có thể nhấn nút <b>Làm mới</b> hoặc phím <b>F5</b> để cập nhật ngay lập tức.</p>
-                                    <button onclick="this.parentNode.parentNode.style.opacity='0'; setTimeout(() => this.parentNode.parentNode.remove(), 300); localStorage.setItem('refreshPromotionTipShown', 'true');" style="background: white; color: #1e40af; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">Đã hiểu</button>
-                                </div>
-                                <div style="margin-left: 12px; cursor: pointer;" onclick="this.parentNode.parentNode.style.opacity='0'; setTimeout(() => this.parentNode.parentNode.remove(), 300); localStorage.setItem('refreshPromotionTipShown', 'true');">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                                    </svg>
-                                </div>
-                            </div>
-                        `;
-
-                            document.body.appendChild(featureTip);
-
-                            setTimeout(() => {
-                                featureTip.style.opacity = '1';
-                                featureTip.style.transform = 'translateY(0)';
-                            }, 100);
-
-                            // Auto hide after 12 seconds
-                            setTimeout(() => {
-                                featureTip.style.opacity = '0';
-                                featureTip.style.transform = 'translateY(20px)';
-                                setTimeout(() => {
-                                    if (featureTip.parentNode) {
-                                        featureTip.parentNode.removeChild(featureTip);
-                                    }
-                                }, 300);
-                                localStorage.setItem('refreshPromotionTipShown', 'true');
-                            }, 12000);
-                        }, 2000);
-                    }
                 }).catch(error => {
                     console.error('Error loading promotion suggestions:', error);
                 });
-
-                // Bắt đầu auto refresh promotion data mỗi 30 giây
-                if (!autoRefreshInterval) {
-                    autoRefreshInterval = setInterval(() => {
-                        // Chỉ refresh nếu user không đang thao tác với promotion
-                        const promotionInput = document.getElementById('promotion-code-input');
-                        const searchInput = document.getElementById('global-promotion-search');
-                        const refreshBtn = document.getElementById('refresh-promotions-btn');
-
-                        const isUserInteracting = promotionInput && promotionInput === document.activeElement ||
-                            searchInput && searchInput === document.activeElement ||
-                            refreshBtn && refreshBtn.disabled;
-
-                        if (!isUserInteracting && currentStep === 4) {
-                            console.log('Auto refreshing promotion data...');
-                            showAvailablePromotionsSuggestion().then(() => {
-                                console.log('Auto refresh completed');
-                            }).catch(error => {
-                                console.error('Auto refresh failed:', error);
-                            });
-                        }
-                    }, 30000); // 30 seconds
-                    console.log('Started auto refresh promotion data every 30 seconds');
-                }
 
                 const elMovieTitle = document.getElementById('payment-movie-title');
                 if (elMovieTitle) elMovieTitle.textContent = movieTitle || 'N/A';
@@ -3042,223 +2978,182 @@
                 return Promise.resolve();
             }
 
-            return fetch('{{ route('client.getAvailablePromotions') }}', {
+            // Add cache busting timestamp
+            const timestamp = new Date().getTime();
+            const apiUrl = '{{ route('client.getAvailablePromotions') }}' + '?t=' + timestamp;
+            console.log('[DEBUG] Fetching promotions with timestamp:', timestamp);
+
+            return fetch(apiUrl, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Cache-Control': 'no-cache',
+                        'Pragma': 'no-cache'
                     }
                 })
                 .then(response => response.json())
                 .then(data => {
-                    console.log('[DEBUG] Raw backend response:', data);
+                    console.log('[DEBUG] Backend response:', data);
+                    console.log('[DEBUG] Raw promotion data received:', {
+                        user_rank: data.data?.user_rank?.length || 0,
+                        general: data.data?.general?.length || 0,
+                        higher_ranks: data.data?.higher_ranks?.length || 0,
+                        total_received: (data.data?.user_rank?.length || 0) + (data.data?.general?.length || 0) + (data.data?.higher_ranks?.length || 0)
+                    });
+
+                    // Debug: Log chi tiết từng loại promotion với cấu trúc chính xác
+                    if (data.data) {
+                        console.log('[DEBUG] User rank promotions details:', data.data.user_rank?.map(p => ({
+                            code: p.code,
+                            name: p.name,
+                            rank: p.rank, // Backend trả về rank là string
+                            discount_type: p.discount_type,
+                            discount_value: p.discount_value
+                        })));
+                        console.log('[DEBUG] General promotions details:', data.data.general?.map(p => ({
+                            code: p.code,
+                            name: p.name,
+                            rank: p.rank,
+                            discount_type: p.discount_type,
+                            discount_value: p.discount_value
+                        })));
+                        console.log('[DEBUG] Higher rank promotions details:', data.data.higher_ranks?.map(p => ({
+                            code: p.code,
+                            name: p.name,
+                            rank: p.rank, // Backend trả về rank là string
+                            discount_type: p.discount_type,
+                            discount_value: p.discount_value
+                        })));
+                    }
 
                     if (data.success && data.data) {
-                        console.log('[DEBUG] Available promotions from backend:', data.data);
-                        console.log('[DEBUG] Backend data structure:', {
-                            user_rank: data.data.user_rank,
-                            general: data.data.general,
-                            higher_ranks: data.data.higher_ranks,
-                            success: data.success
-                        });
-
-                        // Lấy thông tin user và ranks từ backend
+                        // Lưu thông tin user và rank
                         const userRank = data.user_rank || 'Khách thường';
                         const userRankId = data.user_rank_id;
-                        const allRanks = data.all_ranks || [];
 
-                        console.log('[DEBUG] User rank info:', {
-                            userRank,
-                            userRankId
-                        });
-                        console.log('[DEBUG] All ranks from DB:', allRanks);
+                        console.log('[DEBUG] User rank info:', { userRank, userRankId });
 
-                        // Sử dụng dữ liệu đã được phân loại từ backend
-                        // Ensure higher_ranks is always an array even if it's null/undefined
-                        const higherRanks = data.data.higher_ranks || [];
-                        console.log('[DEBUG] Higher ranks data before processing:', higherRanks);
-
+                        // Cập nhật promotionData với dữ liệu mới từ backend
                         promotionData = {
                             rank: {
                                 all: data.data.user_rank || [],
                                 displayed: [],
                                 filtered: data.data.user_rank || [],
-                                pageSize: 6,
+                                pageSize: 20,
                                 currentPage: 0
                             },
                             general: {
                                 all: data.data.general || [],
                                 displayed: [],
                                 filtered: data.data.general || [],
-                                pageSize: 6,
+                                pageSize: 20,
                                 currentPage: 0
                             },
                             higher: {
-                                all: higherRanks,
+                                all: data.data.higher_ranks || [],
                                 displayed: [],
-                                filtered: higherRanks,
-                                pageSize: 6,
+                                filtered: data.data.higher_ranks || [],
+                                pageSize: 20,
                                 currentPage: 0
                             }
                         };
 
-                        console.log('[DEBUG] Higher ranks after assignment:', {
-                            count: promotionData.higher.all.length,
-                            data: promotionData.higher.all
+                        console.log('[DEBUG] Updated promotion data:', {
+                            rank_count: promotionData.rank.all.length,
+                            general_count: promotionData.general.all.length,
+                            higher_count: promotionData.higher.all.length
                         });
 
-                        console.log('[DEBUG] Final promotion data structure after processing:', {
-                            rank: {
-                                count: promotionData.rank.all.length,
-                                codes: promotionData.rank.all.map(p => p.code),
-                                data: promotionData.rank.all
-                            },
-                            general: {
-                                count: promotionData.general.all.length,
-                                codes: promotionData.general.all.map(p => p.code),
-                                data: promotionData.general.all
-                            },
-                            higher: {
-                                count: promotionData.higher.all.length,
-                                codes: promotionData.higher.all.map(p => p.code),
-                                data: promotionData.higher.all
-                            }
-                        });
-
-                        // Force hiển thị sections nếu có dữ liệu
+                        // Cập nhật UI cho từng section
                         const hasRankPromotions = promotionData.rank.all.length > 0;
                         const hasGeneralPromotions = promotionData.general.all.length > 0;
                         const hasHigherPromotions = promotionData.higher.all.length > 0;
 
-                        console.log('[DEBUG] Sections visibility check:', {
-                            hasRankPromotions,
-                            hasGeneralPromotions,
-                            hasHigherPromotions
-                        });
-
-                        // Hiển thị từng section riêng biệt và update count
-                        if (hasRankPromotions) {
-                            const rankSection = document.getElementById('rank-promotions-section');
-                            const rankCount = document.getElementById('rank-promotions-count');
-                            if (rankSection) {
+                        // Hiển thị section rank promotions
+                        const rankSection = document.getElementById('rank-promotions-section');
+                        const rankCount = document.getElementById('rank-promotions-count');
+                        if (rankSection) {
+                            if (hasRankPromotions) {
                                 rankSection.style.display = 'block';
-                                console.log('[DEBUG] Showed rank promotions section with', promotionData.rank.all
-                                    .length, 'promotions');
-                                console.log('[DEBUG] Rank section current style:', rankSection.style.display,
-                                    rankSection.offsetHeight);
-                            } else {
-                                console.error('[DEBUG] rank-promotions-section element not found!');
-                            }
-                            if (rankCount) {
-                                rankCount.textContent = promotionData.rank.all.length;
-                            } else {
-                                console.error('[DEBUG] rank-promotions-count element not found!');
-                            }
-                        } else if (userRank && userRank !== 'Khách thường') {
-                            // Hiển thị thông báo rằng user có rank nhưng không có mã giảm giá cho rank đó
-                            console.log('[DEBUG] User has rank but no promotions available for this rank');
-                            const rankSection = document.getElementById('rank-promotions-section');
-                            if (rankSection) {
+                                if (rankCount) {
+                                    rankCount.textContent = promotionData.rank.all.length;
+                                }
+                            } else if (userRank && userRank !== 'Khách thường') {
+                                // Hiển thị thông báo không có mã cho rank này
                                 rankSection.style.display = 'block';
                                 const rankList = document.getElementById('rank-promotions-list');
                                 if (rankList) {
                                     rankList.innerHTML = `
-                                <div class="promotion-empty-state" style="padding: 20px; text-align: center; color: #6b7280; background: rgba(107, 114, 128, 0.1); border-radius: 8px; margin: 10px 0;">
-                                    <div style="font-size: 24px; margin-bottom: 8px;">🎫</div>
-                                    <p style="margin: 0; font-size: 14px;">Hiện tại chưa có mã giảm giá dành riêng cho hạng ${userRank}</p>
-                                    <p style="margin: 4px 0 0 0; font-size: 12px; opacity: 0.8;">Hãy xem các mã giảm giá chung bên dưới!</p>
-                                </div>
-                            `;
+                                        <div class="promotion-empty-state" style="padding: 20px; text-align: center; color: #6b7280; background: rgba(107, 114, 128, 0.1); border-radius: 8px; margin: 10px 0;">
+                                            <div style="font-size: 24px; margin-bottom: 8px;">🎫</div>
+                                            <p style="margin: 0; font-size: 14px;">Hiện tại chưa có mã giảm giá dành riêng cho hạng ${userRank}</p>
+                                            <p style="margin: 4px 0 0 0; font-size: 12px; opacity: 0.8;">Hãy xem các mã giảm giá chung bên dưới!</p>
+                                        </div>
+                                    `;
                                 }
-                                const rankCount = document.getElementById('rank-promotions-count');
                                 if (rankCount) {
                                     rankCount.textContent = '0';
                                 }
                             }
                         }
 
-                        if (hasGeneralPromotions) {
-                            const generalSection = document.getElementById('general-promotions-section');
-                            const generalCount = document.getElementById('general-promotions-count');
-                            if (generalSection) {
-                                generalSection.style.display = 'block';
-                                console.log('[DEBUG] Showed general promotions section with', promotionData.general.all
-                                    .length, 'promotions');
-                                console.log('[DEBUG] General promotions data:', promotionData.general.all.map(p => ({
-                                    code: p.code,
-                                    name: p.name,
-                                    rank_id: p.rank_id,
-                                    type: p.type
-                                })));
-                            }
+                        // Hiển thị section general promotions
+                        const generalSection = document.getElementById('general-promotions-section');
+                        const generalCount = document.getElementById('general-promotions-count');
+                        if (generalSection && hasGeneralPromotions) {
+                            generalSection.style.display = 'block';
                             if (generalCount) {
                                 generalCount.textContent = promotionData.general.all.length;
                             }
                         }
 
-                        if (hasHigherPromotions) {
-                            const higherSection = document.getElementById('higher-rank-promotions-section');
-                            const higherCount = document.getElementById('higher-rank-promotions-count');
-                            if (higherSection) {
-                                higherSection.style.display = 'block';
-                                console.log('[DEBUG] Showed higher rank promotions section with', promotionData.higher
-                                    .all.length, 'promotions');
-                                console.log('[DEBUG] Higher rank promotion data:', promotionData.higher.all);
-                            }
+                        // Hiển thị section higher rank promotions
+                        const higherSection = document.getElementById('higher-rank-promotions-section');
+                        const higherCount = document.getElementById('higher-rank-promotions-count');
+                        if (higherSection && hasHigherPromotions) {
+                            higherSection.style.display = 'block';
                             if (higherCount) {
                                 higherCount.textContent = promotionData.higher.all.length;
-                                console.log('[DEBUG] Updated higher rank count to', promotionData.higher.all.length);
-                            } else {
-                                console.error(
-                                    '[DEBUG] higher-promotions-count element not found - this may cause display issues'
-                                );
                             }
                         }
 
-                        // Hiển thị sections và load first page
-                        console.log('[DEBUG] About to call renderAllPromotionSections');
+                        // Render tất cả promotion sections với dữ liệu mới
                         renderAllPromotionSections();
-                        console.log('[DEBUG] Called renderAllPromotionSections');
                         updatePromotionStats();
 
-                        // Clear search when new data loads
+                        // Clear search
                         const globalSearch = document.getElementById('global-promotion-search');
                         if (globalSearch) {
                             globalSearch.value = '';
                             searchQuery = '';
                         }
 
-                        // Hiển thị section chính nếu có mã nào đó
+                        // Hiển thị section chính nếu có mã nào
                         const availablePromotionsSection = document.getElementById('available-promotions-section');
-                        if (promotionData.rank.all.length > 0 || promotionData.general.all.length > 0 || promotionData
-                            .higher.all.length > 0) {
+                        if (hasRankPromotions || hasGeneralPromotions || hasHigherPromotions) {
                             availablePromotionsSection.style.display = 'block';
                         }
 
-                        // Hiển thị thông tin gợi ý
+                        // Cập nhật thông tin feedback
                         const promotionFeedback = document.getElementById('promotion-feedback');
                         if (promotionFeedback) {
                             let suggestionText = '';
 
-                            if (promotionData.rank.all.length > 0) {
-                                suggestionText =
-                                    `🏆 Bạn có ${promotionData.rank.all.length} mã VIP dành cho hạng ${userRank}.`;
+                            if (hasRankPromotions) {
+                                suggestionText = `🏆 Bạn có ${promotionData.rank.all.length} mã VIP dành cho hạng ${userRank}.`;
                             } else if (userRank && userRank !== 'Khách thường') {
                                 suggestionText = `💎 Chưa có mã VIP cho hạng ${userRank}.`;
                             }
 
-                            if (promotionData.general.all.length > 0) {
+                            if (hasGeneralPromotions) {
                                 if (suggestionText) suggestionText += ' ';
                                 suggestionText += `🎁 Có ${promotionData.general.all.length} mã giảm giá chung.`;
                             }
 
-                            if (promotionData.higher.all.length > 0) {
+                            if (hasHigherPromotions) {
                                 if (suggestionText) suggestionText += ' ';
                                 suggestionText += `✨ Có ${promotionData.higher.all.length} mã hạng cao hơn.`;
-                                console.log('[DEBUG] Higher rank promotions for suggestion text:', promotionData.higher
-                                    .all.length);
-                                console.log('[DEBUG] Higher rank promotion codes:', promotionData.higher.all.map(p => p
-                                    .code));
                             }
 
                             if (suggestionText) {
@@ -3271,52 +3166,32 @@
                         // Cập nhật placeholder cho input
                         const promotionCodeInput = document.getElementById('promotion-code-input');
                         if (promotionCodeInput && !promotionCodeInput.readOnly) {
-                            if (promotionData.rank.all.length > 0) {
+                            if (hasRankPromotions) {
                                 promotionCodeInput.placeholder = `💎 Nhập mã ${userRank} hoặc click chọn mã phía trên`;
-                            } else if (promotionData.general.all.length > 0) {
+                            } else if (hasGeneralPromotions) {
                                 promotionCodeInput.placeholder = `🎁 Nhập mã giảm giá hoặc click chọn mã phía trên`;
                             } else {
                                 promotionCodeInput.placeholder = `📝 Nhập mã giảm giá`;
                             }
-
-                            // Apply improved styling
                             promotionCodeInput.className = 'promotion-code-input';
                         }
+
+                        console.log('[DEBUG] UI updated successfully');
                     } else {
-                        console.log('No promotions available for suggestion');
+                        console.log('No promotions available');
 
                         // Reset promotion data
                         promotionData = {
-                            rank: {
-                                all: [],
-                                displayed: [],
-                                filtered: [],
-                                pageSize: 6,
-                                currentPage: 0
-                            },
-                            general: {
-                                all: [],
-                                displayed: [],
-                                filtered: [],
-                                pageSize: 6,
-                                currentPage: 0
-                            },
-                            higher: {
-                                all: [],
-                                displayed: [],
-                                filtered: [],
-                                pageSize: 6,
-                                currentPage: 0
-                            }
+                            rank: { all: [], displayed: [], filtered: [], pageSize: 20, currentPage: 0 },
+                            general: { all: [], displayed: [], filtered: [], pageSize: 20, currentPage: 0 },
+                            higher: { all: [], displayed: [], filtered: [], pageSize: 20, currentPage: 0 }
                         };
 
                         const promotionFeedback = document.getElementById('promotion-feedback');
                         if (promotionFeedback) {
-                            promotionFeedback.innerHTML =
-                                '<small style="color: #6b7280;">Hiện tại không có mã giảm giá khả dụng</small>';
+                            promotionFeedback.innerHTML = '<small style="color: #6b7280;">Hiện tại không có mã giảm giá khả dụng</small>';
                         }
 
-                        // Ẩn section mã giảm giá
                         const availablePromotionsSection = document.getElementById('available-promotions-section');
                         if (availablePromotionsSection) {
                             availablePromotionsSection.style.display = 'none';
@@ -3325,7 +3200,7 @@
                 })
                 .catch(error => {
                     console.error('Error loading promotion suggestions:', error);
-                    throw error; // Re-throw để refreshPromotionData có thể catch
+                    throw error;
                 });
         }
 
@@ -3622,6 +3497,7 @@
 
             // Reset discount từ mã khuyến mãi
             promotionDiscount = 0;
+            promotionId = null;
             discount = pointsDiscount; // Giữ lại discount từ điểm
 
             // Reset display elements
@@ -3753,21 +3629,21 @@
                 all: [],
                 displayed: [],
                 filtered: [],
-                pageSize: 6,
+                pageSize: 20,
                 currentPage: 0
             },
             general: {
                 all: [],
                 displayed: [],
                 filtered: [],
-                pageSize: 6,
+                pageSize: 20,
                 currentPage: 0
             },
             higher: {
                 all: [],
                 displayed: [],
                 filtered: [],
-                pageSize: 6,
+                pageSize: 20,
                 currentPage: 0
             }
         };
@@ -3893,6 +3769,7 @@
 
             if (type === 'higher') {
                 // Higher rank promotions - không thể click
+                // Backend trả về promotion.rank là string tên rank
                 const rankName = promotion.rank || 'Cao hơn';
                 const rankClass = getRankCssClass(rankName);
                 const rankIcon = getRankIcon(rankName);
@@ -3923,6 +3800,7 @@
                 };
             } else if (type === 'rank') {
                 // User's rank promotions
+                // Backend trả về promotion.rank là string tên rank
                 const rankName = promotion.rank || 'VIP';
                 const rankClass = getRankCssClass(rankName);
                 const rankIcon = getRankIcon(rankName);
@@ -3977,16 +3855,31 @@
 
         // Hàm load danh sách mã giảm giá có sẵn
         function loadAvailablePromotions() {
-            fetch('{{ route('client.getAvailablePromotions') }}', {
+            console.log('[DEBUG] Loading available promotions with cache busting...');
+            
+            // Force cache busting với timestamp và random
+            const timestamp = new Date().getTime();
+            const randomId = Math.random().toString(36).substring(7);
+            const apiUrl = '{{ route('client.getAvailablePromotions') }}' + '?ts=' + timestamp + '&rnd=' + randomId;
+            
+            fetch(apiUrl, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Cache-Control': 'no-cache, no-store, must-revalidate',
+                        'Pragma': 'no-cache',
+                        'Expires': '0'
                     }
                 })
-                .then(response => response.json())
+                .then(response => {
+                    console.log('[DEBUG] API Response status:', response.status);
+                    console.log('[DEBUG] API Response headers:', [...response.headers.entries()]);
+                    return response.json();
+                })
                 .then(data => {
-                    console.log('[DEBUG] loadAvailablePromotions response:', data);
+                    console.log('[DEBUG] Fresh API response received:', data);
+                    console.log('[DEBUG] Current timestamp:', new Date().toISOString());
                     console.log('[DEBUG] Raw data structure:', {
                         success: data.success,
                         user_rank: data.user_rank,
@@ -4004,12 +3897,27 @@
                         const higherRanksCount = (data.data.higher_ranks || []).length;
                         const totalCount = userRankCount + generalCount + higherRanksCount;
 
-                        console.log('[DEBUG] Promotion counts:', {
+                        console.log('[DEBUG] Fresh promotion counts:', {
                             user_rank: userRankCount,
                             general: generalCount,
                             higher_ranks: higherRanksCount,
-                            total: totalCount
+                            total: totalCount,
+                            timestamp: new Date().toLocaleString()
                         });
+
+                        // Kiểm tra specifically cho promotion mới
+                        const allPromotions = [
+                            ...(data.data.user_rank || []),
+                            ...(data.data.general || []),
+                            ...(data.data.higher_ranks || [])
+                        ];
+                        
+                        const recentPromotions = allPromotions.filter(p => p.id >= 530);
+                        console.log('[DEBUG] Recent promotions (ID >= 530):', recentPromotions.map(p => ({
+                            id: p.id,
+                            code: p.code,
+                            category: p.category
+                        })));
 
                         // Cập nhật placeholder cho input
                         const promotionCodeInput = document.getElementById('promotion-code-input');
@@ -4043,211 +3951,109 @@
 
         // Hàm để reload promotion data và cập nhật giao diện
         function refreshPromotionData() {
-            console.log('[DEBUG] Refreshing promotion data...');
+            console.log('[DEBUG] Refreshing promotion data with force refresh...');
             const refreshBtn = document.getElementById('refresh-promotions-btn');
             if (refreshBtn) {
                 refreshBtn.disabled = true;
                 refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang tải...';
             }
 
-            // Lưu lại số lượng mã giảm giá trước khi refresh
-            const oldPromotionCounts = {
-                rank: (promotionData.rank && promotionData.rank.all) ? promotionData.rank.all.length : 0,
-                general: (promotionData.general && promotionData.general.all) ? promotionData.general.all.length : 0,
-                higher: (promotionData.higher && promotionData.higher.all) ? promotionData.higher.all.length : 0
+            // Clear any cached data
+            promotionData = {
+                rank: { all: [], displayed: [], filtered: [], pageSize: 20, currentPage: 0 },
+                general: { all: [], displayed: [], filtered: [], pageSize: 20, currentPage: 0 },
+                higher: { all: [], displayed: [], filtered: [], pageSize: 20, currentPage: 0 }
             };
 
-            const oldTotalCount = oldPromotionCounts.rank + oldPromotionCounts.general + oldPromotionCounts.higher;
-            console.log('[DEBUG] Old promotion counts:', oldPromotionCounts, 'Total:', oldTotalCount);
-
-            // Lưu các mã để phát hiện mã mới
-            const oldPromotionCodes = {
-                rank: promotionData.rank?.all?.map(p => p.code) || [],
-                general: promotionData.general?.all?.map(p => p.code) || [],
-                higher: promotionData.higher?.all?.map(p => p.code) || []
-            };
-
-            // Reload data từ backend
-            showAvailablePromotionsSuggestion().then(() => {
-                console.log('[DEBUG] Promotion data refreshed successfully');
-                if (refreshBtn) {
-                    refreshBtn.disabled = false;
-                    refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Làm mới';
-                }
-
-                // Tính số lượng mã mới
-                const newPromotionCounts = {
-                    rank: (promotionData.rank && promotionData.rank.all) ? promotionData.rank.all.length : 0,
-                    general: (promotionData.general && promotionData.general.all) ? promotionData.general.all
-                        .length : 0,
-                    higher: (promotionData.higher && promotionData.higher.all) ? promotionData.higher.all
-                        .length : 0
-                };
-
-                const newTotalCount = newPromotionCounts.rank + newPromotionCounts.general + newPromotionCounts
-                    .higher;
-                console.log('[DEBUG] New promotion counts:', newPromotionCounts, 'Total:', newTotalCount);
-
-                // Tìm các mã mới
-                const newCodes = {
-                    rank: promotionData.rank?.all?.filter(p => !oldPromotionCodes.rank.includes(p.code)).map(
-                        p => p.code) || [],
-                    general: promotionData.general?.all?.filter(p => !oldPromotionCodes.general.includes(p
-                        .code)).map(p => p.code) || [],
-                    higher: promotionData.higher?.all?.filter(p => !oldPromotionCodes.higher.includes(p.code))
-                        .map(p => p.code) || []
-                };
-
-                const totalNewCodes = newCodes.rank.length + newCodes.general.length + newCodes.higher.length;
-                console.log('[DEBUG] New codes detected:', newCodes, 'Total new:', totalNewCodes);
-
-                // Kiểm tra có thay đổi nào không
-                const hasChanges = newTotalCount !== oldTotalCount || totalNewCodes > 0;
-
-                // Hiển thị thông báo thành công với SweetAlert2
-                let swalText = '';
-                if (hasChanges) {
-                    if (totalNewCodes > 0) {
-                        swalText = `Đã tìm thấy ${totalNewCodes} mã giảm giá mới!`;
-                        if (newCodes.rank.length > 0) {
-                            swalText += `\n• ${newCodes.rank.length} mã VIP: ${newCodes.rank.join(', ')}`;
-                        }
-                        if (newCodes.general.length > 0) {
-                            swalText += `\n• ${newCodes.general.length} mã chung: ${newCodes.general.join(', ')}`;
-                        }
-                        if (newCodes.higher.length > 0) {
-                            swalText += `\n• ${newCodes.higher.length} mã hạng cao: ${newCodes.higher.join(', ')}`;
-                        }
-                    } else if (newTotalCount > oldTotalCount) {
-                        swalText = `Đã cập nhật! Có thêm ${newTotalCount - oldTotalCount} mã giảm giá.`;
-                    } else {
-                        swalText = `Đã cập nhật! Có ${oldTotalCount - newTotalCount} mã giảm giá đã hết hạn.`;
+            // Force reload data từ backend with strong cache busting
+            const timestamp = new Date().getTime();
+            const randomId = Math.random().toString(36).substring(7);
+            const apiUrl = '{{ route('client.getAvailablePromotions') }}' + '?nocache=' + timestamp + '&rnd=' + randomId;
+            
+            fetch(apiUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Cache-Control': 'no-cache, no-store, must-revalidate',
+                        'Pragma': 'no-cache',
+                        'Expires': '0'
                     }
-                } else {
-                    swalText = 'Danh sách mã giảm giá đã được cập nhật';
-                }
-                if (window.Swal) {
-                    Swal.fire({
-                        icon: hasChanges ? 'success' : 'info',
-                        title: hasChanges ? 'Cập nhật thành công!' : 'Thông báo',
-                        text: swalText,
-                        confirmButtonColor: '#e5006e',
-                        timer: 2200,
-                        showConfirmButton: false
-                    });
-                }
-
-                // Highlight các mã mới nếu có
-                if (totalNewCodes > 0) {
-                    setTimeout(() => {
-                        // Highlight rank promotions
-                        if (newCodes.rank.length > 0) {
-                            const rankList = document.getElementById('rank-promotions-list');
-                            if (rankList) {
-                                newCodes.rank.forEach(code => {
-                                    const codeBtn = rankList.querySelector(
-                                        `[data-promotion-code="${code}"]`);
-                                    if (codeBtn) {
-                                        codeBtn.classList.add('new-promotion');
-                                        codeBtn.setAttribute('data-is-new', 'true');
-                                    }
-                                });
+                })
+                .then(response => {
+                    // Kiểm tra response headers
+                    console.log('[DEBUG] Response headers:', [...response.headers.entries()]);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('[DEBUG] Fresh promotion data received:', data);
+                    
+                    if (data.success && data.data) {
+                        // Update promotionData with fresh data
+                        promotionData = {
+                            rank: {
+                                all: data.data.user_rank || [],
+                                displayed: [],
+                                filtered: data.data.user_rank || [],
+                                pageSize: 20,
+                                currentPage: 0
+                            },
+                            general: {
+                                all: data.data.general || [],
+                                displayed: [],
+                                filtered: data.data.general || [],
+                                pageSize: 20,
+                                currentPage: 0
+                            },
+                            higher: {
+                                all: data.data.higher_ranks || [],
+                                displayed: [],
+                                filtered: data.data.higher_ranks || [],
+                                pageSize: 20,
+                                currentPage: 0
                             }
+                        };
+                        
+                        // Re-render all sections
+                        renderAllPromotionSections();
+                        updatePromotionStats();
+                        
+                        console.log('[DEBUG] Promotion data refreshed successfully');
+                        if (refreshBtn) {
+                            refreshBtn.disabled = false;
+                            refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Làm mới';
                         }
 
-                        // Highlight general promotions
-                        if (newCodes.general.length > 0) {
-                            const generalList = document.getElementById('general-promotions-list');
-                            if (generalList) {
-                                newCodes.general.forEach(code => {
-                                    const codeBtn = generalList.querySelector(
-                                        `[data-promotion-code="${code}"]`);
-                                    if (codeBtn) {
-                                        codeBtn.classList.add('new-promotion');
-                                        codeBtn.setAttribute('data-is-new', 'true');
-                                    }
-                                });
-                            }
+                        // Hiển thị thông báo thành công
+                        if (window.Swal) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Cập nhật thành công!',
+                                text: 'Danh sách mã giảm giá đã được cập nhật',
+                                confirmButtonColor: '#e5006e',
+                                timer: 1500,
+                                showConfirmButton: false
+                            });
                         }
+                    }
+                })
+                .catch((error) => {
+                    console.error('[DEBUG] Error refreshing promotion data:', error);
+                    if (refreshBtn) {
+                        refreshBtn.disabled = false;
+                        refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Làm mới';
+                    }
 
-                        // Highlight higher rank promotions
-                        if (newCodes.higher.length > 0) {
-                            const higherList = document.getElementById('higher-promotions-list');
-                            if (higherList) {
-                                newCodes.higher.forEach(code => {
-                                    const codeBtn = higherList.querySelector(
-                                        `[data-promotion-code="${code}"]`);
-                                    if (codeBtn) {
-                                        codeBtn.classList.add('new-promotion');
-                                        codeBtn.setAttribute('data-is-new', 'true');
-                                    }
-                                });
-                            }
-                        }
-
-                        // Add style for new promotions if not already added
-                        if (!document.getElementById('new-promotion-styles')) {
-                            const style = document.createElement('style');
-                            style.id = 'new-promotion-styles';
-                            style.innerHTML = `
-                            .new-promotion {
-                                animation: pulse-highlight 2s infinite;
-                                box-shadow: 0 0 8px rgba(34, 197, 94, 0.6);
-                            }
-                            @keyframes pulse-highlight {
-                                0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
-                                70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
-                                100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
-                            }
-                        `;
-                            document.head.appendChild(style);
-                        }
-                    }, 500);
-                }
-            }).catch((error) => {
-                console.error('[DEBUG] Error refreshing promotion data:', error);
-                if (refreshBtn) {
-                    refreshBtn.disabled = false;
-                    refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Làm mới';
-                }
-
-                // Hiển thị thông báo lỗi
-                const toast = document.createElement('div');
-                toast.className = 'toast-notification';
-                toast.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background: #ef4444;
-                color: white;
-                padding: 12px 20px;
-                border-radius: 8px;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-                z-index: 10000;
-                font-size: 14px;
-                opacity: 0;
-                transform: translateX(100%);
-                transition: all 0.3s ease;
-            `;
-                toast.innerHTML =
-                    '<i class="fas fa-exclamation-circle"></i> Không thể cập nhật dữ liệu. Vui lòng thử lại sau.';
-                document.body.appendChild(toast);
-
-                setTimeout(() => {
-                    toast.style.opacity = '1';
-                    toast.style.transform = 'translateX(0)';
-                }, 100);
-
-                setTimeout(() => {
-                    toast.style.opacity = '0';
-                    toast.style.transform = 'translateX(100%)';
-                    setTimeout(() => {
-                        if (toast.parentNode) {
-                            toast.parentNode.removeChild(toast);
-                        }
-                    }, 300);
-                }, 3000);
-            });
+                    // Hiển thị thông báo lỗi
+                    if (window.Swal) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Lỗi cập nhật',
+                            text: 'Không thể cập nhật dữ liệu. Vui lòng thử lại sau.',
+                            confirmButtonColor: '#e5006e'
+                        });
+                    }
+                });
         }
 
         // Khởi tạo khi trang tải
@@ -4509,77 +4315,15 @@
             });
 
             // Thêm keyboard shortcuts để refresh promotion data
-            document.addEventListener('keydown', function(e) {
-                // Chỉ hoạt động khi đang ở step 4 (payment step) và focus vào promotion section
-                if (currentStep === 4) {
-                    const promotionSection = document.getElementById('available-promotions-section');
-                    const promotionInput = document.getElementById('promotion-code-input');
-                    const searchInput = document.getElementById('global-promotion-search');
-
-                    // Kiểm tra nếu user đang focus trong promotion section
-                    const isInPromotionArea = promotionSection && (
-                        promotionSection.contains(document.activeElement) ||
-                        document.activeElement === promotionInput ||
-                        document.activeElement === searchInput
-                    );
-
-                    // F5 hoặc Ctrl+R để refresh promotion data
-                    if ((e.key === 'F5' || (e.ctrlKey && e.key === 'r')) && isInPromotionArea) {
-                        e.preventDefault();
-                        console.log('Keyboard shortcut triggered: refreshing promotion data');
-                        refreshPromotionData();
-                    }
-
-                    // Ctrl+Shift+R để force refresh và clear cache
-                    if (e.ctrlKey && e.shiftKey && e.key === 'R' && isInPromotionArea) {
-                        e.preventDefault();
-                        console.log('Force refresh triggered: clearing and reloading promotion data');
-
-                        // Clear promotion data
-                        promotionData = {
-                            rank: {
-                                all: [],
-                                displayed: [],
-                                filtered: [],
-                                pageSize: 6,
-                                currentPage: 0
-                            },
-                            general: {
-                                all: [],
-                                displayed: [],
-                                filtered: [],
-                                pageSize: 6,
-                                currentPage: 0
-                            },
-                            higher: {
-                                all: [],
-                                displayed: [],
-                                filtered: [],
-                                pageSize: 6,
-                                currentPage: 0
-                            }
-                        };
-
-                        // Clear UI
-                        const availablePromotionsSection = document.getElementById(
-                            'available-promotions-section');
-                        if (availablePromotionsSection) {
-                            availablePromotionsSection.style.display = 'none';
-                        }
-
-                        // Refresh with delay to show loading effect
-                        setTimeout(() => {
-                            refreshPromotionData();
-                        }, 300);
-                    }
-                }
-            });
             console.log('Page initialization completed');
         };
 
-        document.getElementById('checkoutForm').addEventListener('submit', function(e) {
-            updateOrderSummary(); // Cập nhật dữ liệu vào form trước khi gửi đi
-        });
+        const checkoutForm = document.getElementById('checkoutForm');
+        if (checkoutForm) {
+            checkoutForm.addEventListener('submit', function(e) {
+                updateOrderSummary(); // Cập nhật dữ liệu vào form trước khi gửi đi
+            });
+        }
     </script>
 
     <script type="text/javascript" src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>
