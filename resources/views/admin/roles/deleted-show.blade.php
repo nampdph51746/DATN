@@ -26,10 +26,8 @@
                                         <td class="text-dark fw-medium px-0">{{ $role->id }}</td>
                                     </tr>
                                     <tr>
-                                        <td class="px-0 fw-semibold text-dark align-top">Description:</td>
-                                        <td class="text-dark fw-medium px-0" style="word-break: break-word; max-height: 150px; overflow-y: auto;">
-                                            {{ $role->description ?: '-' }}
-                                        </td>
+                                        <td class="px-0 fw-semibold text-dark">Guard_name:</td>
+                                        <td class="text-dark fw-medium px-0">{{ $role->guard_name }}</td>
                                     </tr>
                                     <tr>
                                         <td class="px-0 fw-semibold text-dark">Created at:</td>

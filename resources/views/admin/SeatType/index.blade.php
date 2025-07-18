@@ -9,14 +9,17 @@
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center gap-1">
                         <h4 class="card-title flex-grow-1">All Seat Types</h4>
-
+                        @can('create seat type')
                         <a href="{{ route('seat-type.create') }}" class="btn btn-sm btn-primary">
                             Thêm loại ghế
                         </a>
+                        @endcan
+                        @can('delete seat type')
                         <a href="{{ route('seat-type.trash') }}" class="btn btn-sm btn-outline-danger" title="Thùng rác">
                             <iconify-icon icon="solar:trash-bin-minimalistic-2-broken"
                                 class="align-middle fs-18"></iconify-icon>
                         </a>
+                        @endcan
                     </div>
                     <div>
                         <div class="table-responsive">

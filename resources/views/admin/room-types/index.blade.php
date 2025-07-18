@@ -15,9 +15,13 @@
                             </div>
                         </form>
 
+                        @can('create room type')
+                            
                         <a href="{{ route('admin.room-types.create') }}" class="btn btn-sm btn-primary">
                             Thêm loại phòng
                         </a>
+
+                        @endcan
 
                         <!-- <div class="dropdown">
                             <a href="#" class="dropdown-toggle btn btn-sm btn-outline-light" data-bs-toggle="dropdown" aria-expanded="false">
@@ -61,9 +65,11 @@
                                                     <a href="{{ route('admin.room-types.show', $roomType->id) }}" class="btn btn-light btn-sm">
                                                         <iconify-icon icon="solar:eye-broken" class="align-middle fs-18"></iconify-icon>
                                                     </a>
-                                                    <a href="{{ route('admin.room-types.edit', $roomType->id) }}" class="btn btn-soft-primary btn-sm">
+                                                    @can('edit room type')
+                                                         <a href="{{ route('admin.room-types.edit', $roomType->id) }}" class="btn btn-soft-primary btn-sm">
                                                         <iconify-icon icon="solar:pen-2-broken" class="align-middle fs-18"></iconify-icon>
-                                                    </a>
+                                                        </a>
+                                                    @endcan
                                                     <!-- <form action="{{ route('admin.room-types.deactivate', $roomType->id) }}" method="POST" class="d-inline">
                                                         @csrf
                                                         @method('DELETE')

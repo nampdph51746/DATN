@@ -4,15 +4,24 @@ namespace App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasFactory;
+    use HasFactory,HasRoles;
 
     protected $fillable = [
-        'role_id', 'name', 'email', 'password', 'phone_number', 'address',
-        'avatar_url', 'date_of_birth', 'status', 'email_verified_at',
-        'last_login_at', 'customer_rank_id',
+        'name',
+        'email',
+        'password',
+        'phone_number',
+        'address',
+        'avatar_url',
+        'date_of_birth',
+        'status',
+        'email_verified_at',
+        'last_login_at',
+        'customer_rank_id',
     ];
 
     protected $casts = [
@@ -44,7 +53,7 @@ class User extends Authenticatable
 
     public function points()
     {
-        return $this->hasOne(Point::class);
+        return $this->hasOne(Point::class, 'user_id', 'id');
     }
 
     public function pointHistory()

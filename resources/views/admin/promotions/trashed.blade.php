@@ -5,6 +5,9 @@
     <div class="row">
         <div class="col-xl-12">
             <div class="card">
+
+                {{-- Thông báo --}}
+                @include('admin.partials.alert')
                 <div class="card-header d-flex justify-content-between align-items-center gap-1">
                     <h4 class="card-title flex-grow-1">Danh sách khuyến mãi đã xóa mềm</h4>
                     <a href="{{ route('promotions.index') }}" class="btn btn-sm btn-primary">Quay lại danh sách</a>

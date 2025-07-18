@@ -1,95 +1,312 @@
-@extends('auth.layouts.auth')
+@extends('layouts.client.client')
 @section('title', 'Đăng nhập | CineVN')
 
 @section('content')
-    <div class="d-flex flex-column h-100 p-3">
-        <div class="d-flex flex-column flex-grow-1">
-            <div class="row h-100">
-                <div class="col-xxl-7">
-                    <div class="row justify-content-center h-100">
-                        <div class="col-lg-6 py-lg-5">
-                            <div class="d-flex flex-column h-100 justify-content-center">
+<style>
+    .login-container {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+        padding: 2rem;
+        background-color: #f9fafb;
+        transition: background-color 0.3s;
+    }
 
-                                <div class="auth-logo mb-4">
-                                    <a href="{{ url('/') }}" class="logo-dark">
-                                        <img src="{{ asset('assets/images/logo-dark.png') }}" height="24" alt="logo dark">
-                                    </a>
-                                    <a href="{{ url('/') }}" class="logo-light">
-                                        <img src="{{ asset('assets/images/logo-light.png') }}" height="24" alt="logo light">
-                                    </a>
-                                </div>
+    [data-theme="dark"] .login-container {
+        background-color: #111827;
+    }
 
-                                <h2 class="fw-bold fs-24">Đăng Nhập</h2>
-                                <p class="text-muted mt-1 mb-4">Nhập email và mật khẩu để truy cập hệ thống quản trị.</p>
+    .login-box {
+        max-width: 720px;
+        margin: auto;
+        background-color: #ffffff;
+        border-radius: 12px;
+        padding: 2.5rem;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.07);
+        transition: background-color 0.3s, color 0.3s;
+    }
 
-                                <!-- Thông báo trạng thái -->
-                                @if (session('status'))
-                                    <div class="alert alert-success">{{ session('status') }}</div>
-                                @endif
+    [data-theme="dark"] .login-box {
+        background-color: #1f2937;
+        color: #f9fafb;
+    }
 
-                                <!-- Form đăng nhập -->
-                                <form method="POST" action="{{ route('login') }}" class="authentication-form">
-                                    @csrf
+    .login-box h2 {
+        font-size: 24px;
+        font-weight: bold;
+        color: #1f2937;
+        margin-bottom: 0.5rem;
+    }
 
-                                    <!-- Email -->
-                                    <div class="mb-3">
-                                        <label class="form-label" for="email">Email</label>
-                                        <input type="email" id="email" name="email" class="form-control" placeholder="Nhập địa chỉ email" value="{{ old('email') }}" required autofocus>
-                                        @error('email')
-                                            <span class="text-danger">{{ $message }}</span>
-                                        @enderror
-                                    </div>
+    [data-theme="dark"] .login-box h2 {
+        color: #f9fafb;
+    }
 
-                                    <!-- Password -->
-                                    <div class="mb-3">
-                                        <a href="{{ route('password.request') }}" class="float-end text-muted text-unline-dashed ms-1">Quên mật khẩu?</a>
-                                        <label class="form-label" for="password">Mật khẩu</label>
-                                        <input type="password" id="password" name="password" class="form-control" placeholder="Nhập mật khẩu" required>
-                                        @error('password')
-                                            <span class="text-danger">{{ $message }}</span>
-                                        @enderror
-                                    </div>
+    .login-subtitle {
+        font-size: 14px;
+        color: #6b7280;
+        margin-bottom: 2rem;
+    }
 
-                                    <!-- Ghi nhớ đăng nhập -->
-                                    <div class="mb-3">
-                                        <div class="form-check">
-                                            <input type="checkbox" class="form-check-input" id="remember_me" name="remember">
-                                            <label class="form-check-label" for="remember_me">Ghi nhớ đăng nhập</label>
-                                        </div>
-                                    </div>
+    [data-theme="dark"] .login-subtitle {
+        color: #9ca3af;
+    }
 
-                                    <!-- Nút đăng nhập -->
-                                    <div class="mb-1 text-center d-grid">
-                                        <button class="btn btn-soft-primary" type="submit">Đăng Nhập</button>
-                                    </div>
-                                </form>
+    .form-label {
+        font-size: 14px;
+        color: #374151;
+        margin-bottom: 6px;
+        font-weight: 500;
+        display: block;
+    }
 
-                                <p class="mt-3 fw-semibold no-span">Hoặc đăng nhập với</p>
-                                <div class="d-grid gap-2">
-                                    <a href="#" class="btn btn-soft-dark"><i class="bx bxl-google fs-20 me-1"></i> Google</a>
-                                    <a href="#" class="btn btn-soft-primary"><i class="bx bxl-facebook fs-20 me-1"></i> Facebook</a>
-                                </div>
+    [data-theme="dark"] .form-label {
+        color: #d1d5db;
+    }
 
-                                <p class="text-danger text-center mt-4">
-                                    Chưa có tài khoản? 
-                                    <a href="{{ route('register') }}" class="text-dark fw-bold ms-1">Đăng Ký</a>
-                                </p>
-                            </div>
-                        </div>
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border-radius: 8px;
+        border: 1px solid #d1d5db;
+        background-color: #fff;
+        color: #111827;
+        margin-bottom: 10px;
+    }
+
+    [data-theme="dark"] .form-control {
+        background-color: #374151;
+        color: #f9fafb;
+        border-color: #4b5563;
+    }
+
+    .form-control:focus {
+        border-color: #3b82f6;
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+    }
+
+    .btn-primary {
+        background-color: #3b82f6;
+        color: #fff;
+        font-weight: 600;
+        padding: 0.75rem;
+        border-radius: 8px;
+        border: none;
+        transition: background-color 0.3s;
+        width: 100%;
+    }
+
+    .btn-primary:hover {
+        background-color: #2563eb;
+    }
+
+    .social-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.65rem;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 15px;
+        gap: 8px;
+        transition: background-color 0.3s;
+        width: 100%;
+    }
+
+    .google-btn {
+        background-color: #f3f4f6;
+        color: #1f2937;
+    }
+
+    .google-btn:hover {
+        background-color: #e5e7eb;
+    }
+
+    [data-theme="dark"] .google-btn {
+        background-color: #4b5563;
+        color: #fff;
+    }
+
+    .facebook-btn {
+        background-color: #4267B2;
+        color: #fff;
+    }
+
+    .facebook-btn:hover {
+        background-color: #365899;
+    }
+
+    .text-link {
+        color: #3b82f6;
+        font-weight: 500;
+        font-size: 14px;
+    }
+
+    .text-link:hover {
+        text-decoration: underline;
+    }
+
+    .text-danger {
+        font-size: 13px;
+        color: #ef4444;
+    }
+
+    .login-form-container {
+        display: flex;
+        gap: 40px;
+    }
+
+    .login-form-left {
+        flex: 1;
+    }
+
+    .login-form-right {
+        width: 280px;
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .divider {
+        display: flex;
+        align-items: center;
+        margin: 1.5rem 0;
+    }
+
+    .divider::before,
+    .divider::after {
+        content: "";
+        flex: 1;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .divider-text {
+        padding: 0 1rem;
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+
+    [data-theme="dark"] .divider::before,
+    [data-theme="dark"] .divider::after {
+        border-bottom-color: #4b5563;
+    }
+
+    [data-theme="dark"] .divider-text {
+        color: #9ca3af;
+    }
+
+    .remember-forgot {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .form-check {
+        display: flex;
+        align-items: center;
+    }
+
+    .form-check-input {
+        margin-right: 0.5rem;
+    }
+
+    .alert-success {
+        background-color: #d1fae5;
+        color: #065f46;
+        padding: 0.75rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        font-size: 14px;
+    }
+
+    [data-theme="dark"] .alert-success {
+        background-color: #064e3b;
+        color: #6ee7b7;
+    }
+</style>
+
+
+<div class="login-container">
+    <div class="login-box">
+        <h2>Đăng Nhập</h2>
+        <p class="login-subtitle">Vui lòng nhập thông tin để đăng nhập vào hệ thống.</p>
+
+        @if (session('status'))
+            <div class="alert-success">
+                {{ session('status') }}
+            </div>
+        @endif
+
+        <div class="login-form-container">
+            <div class="login-form-left">
+                <form method="POST" action="{{ route('login') }}" id="login-form">
+                    @csrf
+
+                    <div class="form-group">
+                        <label class="form-label" for="email">Email</label>
+                        <input type="email" id="email" name="email" class="form-control" 
+                               placeholder="Nhập email" value="{{ old('email') }}" required autofocus>
+                        @error('email')
+                            <div class="text-danger">{{ $message }}</div>
+                        @enderror
                     </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="password">Mật khẩu</label>
+                        <input type="password" id="password" name="password" class="form-control" 
+                               placeholder="Nhập mật khẩu" required>
+                        @error('password')
+                            <div class="text-danger">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="remember-forgot">
+                        <label>
+                            <input type="checkbox" name="remember"> Ghi nhớ đăng nhập
+                        </label>
+                        <a href="{{ route('password.request') }}" class="text-link">Quên mật khẩu?</a>
+                    </div>
+                </form>
+            </div>
+
+            <div class="login-form-right">
+                <button type="submit" form="login-form" class="btn btn-primary mb-4">Đăng Nhập</button>
+
+                <div class="divider">
+                    <span class="divider-text">Hoặc đăng nhập bằng</span>
                 </div>
 
-                <!-- Ảnh nền bên phải -->
-                <div class="col-xxl-5 d-none d-xxl-flex">
-                    <div class="card h-100 mb-0 overflow-hidden">
-                        <div class="d-flex flex-column h-100">
-                            <img src="{{ asset('assets/images/small/img-11.jpg') }}" alt="" class="w-100 h-100">
-                        </div>
-                    </div>
+                <div class="flex flex-col gap-2 mt-2 mb-3">
+                    <a href="#" class="social-btn google-btn">
+                        <i class="fab fa-google"></i> Google
+                    </a>
+                    <a href="#" class="social-btn facebook-btn">
+                        <i class="fab fa-facebook-f"></i> Facebook
+                    </a>
                 </div>
 
+                <div class="mt-4 text-center">
+                    <p class="text-sm text-gray-600 dark:text-gray-400">
+                        Chưa có tài khoản?
+                        <a href="{{ route('register') }}" class="text-link">Đăng ký</a>
+                    </p>
+                </div>
             </div>
         </div>
     </div>
-@endsection
+</div>
 
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const loginForm = document.getElementById('login-form');
+        const submitButton = document.querySelector('button[type="submit"]');
+        
+        submitButton.addEventListener('click', function() {
+            loginForm.submit();
+        });
+    });
+</script>
+@endsection

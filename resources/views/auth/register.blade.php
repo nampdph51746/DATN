@@ -1,101 +1,263 @@
-@extends('auth.layouts.auth')
+@extends('layouts.client.client')
+@section('title', 'Đăng ký | CineVN')
+
 @section('content')
-<div class="d-flex flex-column h-100 p-3">
-    <div class="d-flex flex-column flex-grow-1">
-        <div class="row h-100">
-            <div class="col-xxl-7">
-                <div class="row justify-content-center h-100">
-                    <div class="col-lg-6 py-lg-5">
-                        <div class="d-flex flex-column h-100 justify-content-center">
-                            <div class="auth-logo mb-4">
-                                <a href="/" class="logo-dark"><img src="{{ asset('assets/images/logo-dark.png') }}"
-                                        height="24" alt="logo dark"></a>
-                                <a href="/" class="logo-light"><img
-                                        src="{{ asset('assets/images/logo-light.png') }}" height="24"
-                                        alt="logo light"></a>
-                            </div>
+<style>
+    .register-container {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+        padding: 2rem;
+        background-color: #f9fafb;
+        transition: background-color 0.3s;
+    }
 
-                            <h2 class="fw-bold fs-24">Đăng ký tài khoản</h2>
-                            <p class="text-muted mt-1 mb-4">Lần đầu sử dụng CineVN? Hãy tạo tài khoản ngay!</p>
+    [data-theme="dark"] .register-container {
+        background-color: #111827;
+    }
 
-                            <form method="POST" action="{{ route('register') }}">
-                                @csrf
+    .register-box {
+        max-width: 720px;
+        margin: auto;
+        background-color: #ffffff;
+        border-radius: 12px;
+        padding: 2.5rem;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.07);
+        transition: background-color 0.3s, color 0.3s;
+    }
 
-                                <div class="mb-3">
-                                    <label class="form-label" for="name">Họ và tên</label>
-                                    <input type="text" id="name" name="name" class="form-control"
-                                        placeholder="Nhập họ tên của bạn" value="{{ old('name') }}">
-                                    @error('name') <small class="text-danger">{{ $message }}</small> @enderror
-                                </div>
+    [data-theme="dark"] .register-box {
+        background-color: #1f2937;
+        color: #f9fafb;
+    }
 
-                                <div class="mb-3">
-                                    <label class="form-label" for="email">Email</label>
-                                    <input type="email" id="email" name="email" class="form-control"
-                                        placeholder="Nhập địa chỉ email" value="{{ old('email') }}">
-                                    @error('email') <small class="text-danger">{{ $message }}</small> @enderror
-                                </div>
+    .register-box h2 {
+        font-size: 24px;
+        font-weight: bold;
+        color: #1f2937;
+    }
 
-                                <div class="mb-3">
-                                    <label class="form-label" for="phone_number">Số điện thoại</label>
-                                    <input type="text" id="phone_number" name="phone_number" class="form-control"
-                                        placeholder="Nhập số điện thoại" value="{{ old('phone_number') }}">
-                                    @error('phone_number') <small class="text-danger">{{ $message }}</small> @enderror
-                                </div>
+    [data-theme="dark"] .register-box h2 {
+        color: #f9fafb;
+    }
 
-                                <div class="mb-3">
-                                    <label class="form-label" for="date_of_birth">Ngày sinh</label>
-                                    <input type="date" id="date_of_birth" name="date_of_birth" class="form-control"
-                                        value="{{ old('date_of_birth') }}">
-                                    @error('date_of_birth') <small class="text-danger">{{ $message }}</small> @enderror
-                                </div>
+    .form-label {
+        font-size: 14px;
+        color: #374151;
+        margin-bottom: 6px;
+        font-weight: 500;
+    }
 
-                                <div class="mb-3">
-                                    <label class="form-label" for="password">Mật khẩu</label>
-                                    <input type="password" id="password" name="password" class="form-control"
-                                        placeholder="Nhập mật khẩu">
-                                    @error('password') <small class="text-danger">{{ $message }}</small> @enderror
-                                </div>
+    [data-theme="dark"] .form-label {
+        color: #d1d5db;
+    }
 
-                                <div class="mb-3">
-                                    <label class="form-label" for="password_confirmation">Xác nhận mật khẩu</label>
-                                    <input type="password" id="password_confirmation" name="password_confirmation"
-                                        class="form-control" placeholder="Nhập lại mật khẩu">
-                                    @error('password_confirmation') <small class="text-danger">{{ $message }}</small> @enderror
-                                </div>
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border-radius: 8px;
+        border: 1px solid #d1d5db;
+        background-color: #fff;
+        color: #111827;
+        margin-bottom: 10px;
+    }
 
-                                <div class="mb-1 text-center d-grid">
-                                    <button class="btn" type="submit" 
-                                        style="background-color: #007bff; color: #fff; font-weight: bold;">
-                                        Tạo tài khoản
-                                    </button>
-                                </div>
-                            </form>
+    [data-theme="dark"] .form-control {
+        background-color: #374151;
+        color: #f9fafb;
+        border-color: #4b5563;
+    }
 
-                            <p class="mt-3 fw-semibold no-span">Hoặc đăng ký với</p>
-                            <div class="d-grid gap-2">
-                                <a href="#" class="btn" style="background-color: #db4437; color: #fff;">
-                                    <i class="bx bxl-google fs-20 me-1"></i> Google
-                                </a>
-                                <a href="#" class="btn" style="background-color: #4267B2; color: #fff;">
-                                    <i class="bx bxl-facebook fs-20 me-1"></i> Facebook
-                                </a>
-                            </div>
+    .form-control:focus {
+        border-color: #3b82f6;
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+    }
 
-                            <p class="mt-auto text-danger text-center">
-                                Đã có tài khoản?
-                                <a href="{{ route('login') }}" class="fw-bold ms-1" style="color: #007bff;">Đăng nhập</a>
+    .btn-primary {
+        background-color: #3b82f6;
+        color: #fff;
+        font-weight: 600;
+        padding: 0.75rem;
+        border-radius: 8px;
+        border: none;
+        transition: background-color 0.3s;
+        width: 100%;
+    }
+
+    .btn-primary:hover {
+        background-color: #2563eb;
+    }
+
+    .social-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.65rem;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 15px;
+        gap: 8px;
+        transition: background-color 0.3s;
+        width: 100%;
+    }
+
+    .google-btn {
+        background-color: #db4437;
+        color: #fff;
+    }
+
+    .facebook-btn {
+        background-color: #4267B2;
+        color: #fff;
+    }
+
+    .text-link {
+        color: #3b82f6;
+        font-weight: 500;
+    }
+
+    .text-link:hover {
+        text-decoration: underline;
+    }
+
+    .text-danger {
+        font-size: 13px;
+        color: #ef4444;
+    }
+
+    .register-form-container {
+        display: flex;
+        gap: 40px;
+    }
+
+    .register-form-left {
+        flex: 1;
+    }
+
+    .register-form-right {
+        width: 280px;
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .divider {
+        display: flex;
+        align-items: center;
+        margin: 1.5rem 0;
+    }
+
+    .divider::before,
+    .divider::after {
+        content: "";
+        flex: 1;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .divider-text {
+        padding: 0 1rem;
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+
+    [data-theme="dark"] .divider::before,
+    [data-theme="dark"] .divider::after {
+        border-bottom-color: #4b5563;
+    }
+
+    [data-theme="dark"] .divider-text {
+        color: #9ca3af;
+    }
+</style>
+
+
+    <div class="register-container">
+        <div class="register-box">
+            <h2 class="mb-3">Tạo tài khoản mới</h2>
+            <p class="text-sm text-muted dark:text-gray-400 mb-4">Lần đầu sử dụng CineVN? Hãy tạo tài khoản ngay!</p>
+
+            <form method="POST" action="{{ route('register') }}">
+                @csrf
+                <div class="register-form-container">
+                    <div class="register-form-left">
+                        <div class="form-group">
+                            <label class="form-label" for="name">Họ và tên</label>
+                            <input type="text" id="name" name="name" class="form-control" placeholder="Nhập họ tên"
+                                value="{{ old('name') }}" required>
+                            @error('name') <div class="text-danger">{{ $message }}</div> @enderror
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="email">Email</label>
+                            <input type="email" id="email" name="email" class="form-control" placeholder="Nhập email"
+                                value="{{ old('email') }}" required>
+                            @error('email') <div class="text-danger">{{ $message }}</div> @enderror
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="phone_number">Số điện thoại</label>
+                            <input type="text" id="phone_number" name="phone_number" class="form-control"
+                                placeholder="Nhập số điện thoại" value="{{ old('phone_number') }}">
+                            @error('phone_number') <div class="text-danger">{{ $message }}</div> @enderror
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="date_of_birth">Ngày sinh</label>
+                            <input type="date" id="date_of_birth" name="date_of_birth" class="form-control"
+                                value="{{ old('date_of_birth') }}">
+                            @error('date_of_birth') <div class="text-danger">{{ $message }}</div> @enderror
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="password">Mật khẩu</label>
+                            <input type="password" id="password" name="password" class="form-control"
+                                placeholder="Tạo mật khẩu" required>
+                            @error('password') <div class="text-danger">{{ $message }}</div> @enderror
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="password_confirmation">Xác nhận mật khẩu</label>
+                            <input type="password" id="password_confirmation" name="password_confirmation"
+                                class="form-control" placeholder="Nhập lại mật khẩu" required>
+                            @error('password_confirmation') <div class="text-danger">{{ $message }}</div> @enderror
+                        </div>
+                    </div>
+
+                    <div class="register-form-right">
+                        <button type="submit" class="btn btn-primary mb-4">Tạo tài khoản</button>
+
+                        <div class="divider">
+                            <span class="divider-text">Hoặc đăng ký bằng</span>
+                        </div>
+
+                        <div class="flex flex-col gap-2 mt-2 mb-3">
+                            <a href="#" class="social-btn google-btn"><i class="fab fa-google"></i> Google</a>
+                            <a href="#" class="social-btn facebook-btn"><i class="fab fa-facebook-f"></i> Facebook</a>
+                        </div>
+
+                        <div class="mt-4 text-center">
+                            <p class="text-sm text-muted dark:text-gray-400">Đã có tài khoản?
+                                <a href="{{ route('login') }}" class="text-link">Đăng nhập</a>
                             </p>
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <div class="col-xxl-5 d-none d-xxl-flex">
-                <div class="card h-100 mb-0 overflow-hidden">
-                    <img src="{{ asset('assets/images/small/img-11.jpg') }}" alt="Ảnh nền" class="w-100 h-100">
-                </div>
-            </div>
+            </form>
         </div>
     </div>
-</div>
+
+
+    <script>
+        // Make sure the form submission works properly
+        document.addEventListener('DOMContentLoaded', function () {
+            const registerForm = document.querySelector('form[method="POST"]');
+            const submitButton = document.querySelector('button[type="submit"]');
+
+            submitButton.addEventListener('click', function () {
+                registerForm.submit();
+            });
+        });
+    </script>
 @endsection

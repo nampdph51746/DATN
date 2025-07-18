@@ -23,7 +23,7 @@
                                     <select name="role" class="form-select">
                                         <option value="">Tất cả vai trò</option>
                                         @foreach($roles as $role)
-                                            <option value="{{ $role->id }}" {{ request('role') == $role->id ? 'selected' : '' }}>
+                                           <option value="{{ $role->id }}" {{ request('role') == $role->id ? 'selected' : '' }}>
                                                 {{ $role->name }}
                                             </option>
                                         @endforeach
@@ -100,8 +100,8 @@
                                             </td>
                                             <td>{{ $user->name }}</td>
                                             <td>{{ $user->id }}</td>
-                                            <td>{{ $user->customerRank?->name }}</td>
-                                            <td>{{ $user->role->name }}</td>
+                                            <td>{{ $user->customerRank->name }}</td>
+                                            <td>{{ $user->getRoleNames()->first() }}</td>
                                             <td>{{ $user->email }}</td>
                                             <td>{{ $user->address }}</td>
                                             <td>{{ $user->date_of_birth }}</td>

@@ -31,7 +31,7 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-                $request->validate([
+        $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
             'phone_number' => ['required', 'numeric', 'unique:' . User::class],
@@ -52,19 +52,26 @@ class RegisteredUserController extends Controller
             'date_of_birth' => 'Ngày sinh',
         ]);
 
-        $userRole = Role::where('name', 'user')->first();
-        $userRank = CustomerRank::where('name', 'Bạc')->first();
+
+        $userRank = CustomerRank::firstOrCreate(['name' => 'Đồng']);
+
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'phone_number' => $request->phone_number,
-            'role_id' => $userRole->id,
             'date_of_birth' => $request->date_of_birth,
             'status' => \App\Enums\UserStatus::Active,
             'customer_rank_id' => $userRank->id,
         ]);
+
+        if (!Role::where('name', 'user')->exists()) {
+            Role::create(['name' => 'user']);
+        }
+
+        $user->assignRole('user');
+
 
         event(new Registered($user));
 

@@ -72,12 +72,16 @@
                                                 <iconify-icon icon="solar:eye-broken" class="align-middle fs-18"></iconify-icon>
                                             </a>
 
-                                            <a href="{{ route('roles.edit', $role->id) }}" class="btn btn-soft-primary btn-sm"
+                                            @can('edit role')
+                                                <a href="{{ route('roles.edit', $role->id) }}" class="btn btn-soft-primary btn-sm"
                                                 title="Chỉnh sửa">
                                                 <iconify-icon icon="solar:pen-2-broken"
                                                     class="align-middle fs-18"></iconify-icon>
-                                            </a>
+                                                </a>
+                                            @endcan
 
+
+                                            @can('delete role')
                                             <form action="{{ route('roles.softDelete', $role->id) }}" method="POST"
                                                 style="display:inline;">
                                                 @csrf
@@ -89,6 +93,7 @@
                                                         class="align-middle fs-18"></iconify-icon>
                                                 </button>
                                             </form>
+                                            @endcan
                                         </div>
                                     </td>
                                 </tr>
@@ -113,9 +118,19 @@
                         <span class="fw-semibold">{{ $roles->total() }}</span> kết quả
                     </div>
                 </div>
-                <div class="col-sm-auto mt-3 mt-sm-0">
-                    {{ $roles->links('pagination::bootstrap-4') }}
-                </div>
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+
+                        <div>
+                            {{ $roles->links('pagination::bootstrap-4') }}
+                        </div>
+                        <div>
+                            @can('delete role')
+                             <a href="{{ route('roles.deleted') }}" class="btn btn-light btn-sm" title="Xem chi tiết">
+                                <iconify-icon icon="tabler:trash-x" width="24" height="24" title="Vai trò đã xóa"></iconify-icon>
+                             </a>
+                             @endcan
+                        </div>
+                    </div>
             </div>
         </div>
     </div>

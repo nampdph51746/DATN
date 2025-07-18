@@ -44,4 +44,9 @@ class AuthenticatedSessionController extends Controller
 
         return redirect('/');
     }
+
+    public function profile()
+    {
+        return view('client.profile');
+    }
 }

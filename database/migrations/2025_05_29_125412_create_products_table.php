@@ -14,6 +14,7 @@ return new class extends Migration
             $table->foreignId('category_id')->nullable()->constrained('product_categories')->comment('ID danh mục sản phẩm');
             $table->string('name', 255)->comment('Tên sản phẩm');
             $table->text('description')->nullable()->comment('Mô tả sản phẩm');
+            $table->string('sku', 100)->unique()->nullable()->comment('Mã SKU (duy nhất)');
             $table->string('image_url', 255)->nullable()->comment('URL ảnh chung (có thể bị ghi đè bởi biến thể)');
             $table->enum('product_type', array_column(ProductType::cases(), 'value'))->comment('Loại sản phẩm');
             $table->boolean('is_active')->default(true)->comment('Trạng thái sản phẩm');

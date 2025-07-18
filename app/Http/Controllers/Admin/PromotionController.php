@@ -5,14 +5,26 @@ namespace App\Http\Controllers\Admin;
 use App\Enums\PromotionDiscountType;
 use App\Http\Controllers\Controller;
 use App\Models\Promotion;
+use Illuminate\Contracts\Cache\Store;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use App\Http\Requests\Promotions\StorePromotionsRequest;
+use App\Http\Requests\Promotions\UpdatePromotionsRequest;
 
 class PromotionController extends Controller
 {
+
+    public function __construct()
+    {
+        $this->middleware(['auth', 'role:admin,staff']);
+        $this->middleware('can:view promotion')->only('index');
+        $this->middleware('can:create promotion')->only(['create', 'store']);
+        $this->middleware('can:edit promotion')->only(['edit', 'update']);
+        $this->middleware('can:delete promotion')->only('destroy');
+    }
     public function index(Request $request)
     {
-        $query = Promotion::query()
+        $query = Promotion::with('rank')
             ->when($request->filled('search'), function ($q) use ($request) {
                 $q->where('name', 'like', '%' . $request->search . '%')
                     ->orWhere('code', 'like', '%' . $request->search . '%');
@@ -31,35 +43,32 @@ class PromotionController extends Controller
 
     public function show($id)
     {
-        $promotion = Promotion::findOrFail($id);
+        $promotion = Promotion::with('rank')->findOrFail($id);
         return view('admin.promotions.show', compact('promotion'));
     }
 
     public function create()
     {
         $discountTypes = PromotionDiscountType::cases();
-        return view('admin.promotions.create', compact('discountTypes'));
+        $ranks = \App\Models\CustomerRank::pluck('name', 'id'); // Thêm dòng này
+        return view('admin.promotions.create', compact('discountTypes', 'ranks'));
     }
 
-    public function store(Request $request)
+    public function store(StorePromotionsRequest $request)
     {
-        $data = $request->validate([
-            'name' => 'required|string|max:255',
-            'code' => 'required|string|max:50|unique:promotions,code',
-            'description' => 'nullable|string',
-            'discount_type' => ['required', Rule::in(array_column(PromotionDiscountType::cases(), 'value'))],
-            'discount_value' => 'required|numeric|min:0',
-            'max_discount_amount' => 'nullable|numeric|min:0',
-            'min_booking_value' => 'nullable|numeric|min:0',
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
-            'quantity' => 'nullable|integer|min:0',
-            'usage_limit_per_user' => 'nullable|integer|min:0',
-            'applies_to' => 'nullable|string|max:50',
-            'status' => 'nullable|string|max:20|in:active,pending,inactive',
-        ]);
+        $data = $request->validated();
 
-        Promotion::create($data);
+        $promotion = Promotion::create($data);
+        
+        // Nếu có chọn hạng khách hàng, tạo liên kết trong bảng customer_rank_promotions
+        if (!empty($data['rank_id'])) {
+            \App\Models\CustomerRankPromotion::create([
+                'customer_rank_id' => $data['rank_id'],
+                'promotion_id' => $promotion->id,
+                'description' => 'Khuyến mãi dành cho hạng ' . \App\Models\CustomerRank::find($data['rank_id'])->name
+            ]);
+        }
+        
         return redirect()->route('promotions.index')->with('success', 'Khuyến mãi đã được tạo thành công.');
     }
 
@@ -67,31 +76,35 @@ class PromotionController extends Controller
     {
         $promotion = Promotion::findOrFail($id);
         $discountTypes = PromotionDiscountType::cases();
-        return view('admin.promotions.edit', compact('promotion', 'discountTypes'));
+        $ranks = \App\Models\CustomerRank::pluck('name', 'id'); // Thêm dòng này
+        return view('admin.promotions.edit', compact('promotion', 'discountTypes', 'ranks'));
     }
 
-    public function update(Request $request, $id)
+    public function update(UpdatePromotionsRequest $request, $id)
     {
         $promotion = Promotion::findOrFail($id);
 
-        $data = $request->validate([
-            'name' => 'required|string|max:255',
-            'code' => ['required', 'string', 'max:50', Rule::unique('promotions')->ignore($promotion->id)],
-            'description' => 'nullable|string',
-            'discount_type' => ['required', Rule::in(array_column(PromotionDiscountType::cases(), 'value'))],
-            'discount_value' => 'required|numeric|min:0',
-            'max_discount_amount' => 'nullable|numeric|min:0',
-            'min_booking_value' => 'nullable|numeric|min:0',
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
-            'quantity' => 'nullable|integer|min:0',
-            'usage_limit_per_user' => 'nullable|integer|min:0',
-            'applies_to' => 'nullable|string|max:50',
-            'status' => 'nullable|string|max:20|in:active,pending,inactive',
-        ]);
+        $data = $request->validated();
 
         try {
             $promotion->update($data);
+            
+            // Xử lý cập nhật liên kết customer_rank_promotions
+            if (!empty($data['rank_id'])) {
+                // Xóa liên kết cũ nếu có
+                \App\Models\CustomerRankPromotion::where('promotion_id', $id)->delete();
+                
+                // Tạo liên kết mới
+                \App\Models\CustomerRankPromotion::create([
+                    'customer_rank_id' => $data['rank_id'],
+                    'promotion_id' => $promotion->id,
+                    'description' => 'Khuyến mãi dành cho hạng ' . \App\Models\CustomerRank::find($data['rank_id'])->name
+                ]);
+            } else {
+                // Nếu không chọn hạng nào, xóa tất cả liên kết
+                \App\Models\CustomerRankPromotion::where('promotion_id', $id)->delete();
+            }
+            
             return redirect()->route('promotions.index')->with('success', 'Khuyến mãi đã được cập nhật thành công.');
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'Cập nhật thất bại: ' . $e->getMessage()])->withInput();
@@ -101,13 +114,17 @@ class PromotionController extends Controller
     public function destroy($id)
     {
         $promotion = Promotion::findOrFail($id);
+        
+        // Xóa tất cả liên kết trong customer_rank_promotions trước khi xóa promotion
+        \App\Models\CustomerRankPromotion::where('promotion_id', $id)->delete();
+        
         $promotion->delete(); // Soft delete
         return redirect()->route('promotions.trashed')->with('success', 'Khuyến mãi đã được xóa mềm thành công.');
     }
 
     public function trashed()
     {
-        $promotions = Promotion::onlyTrashed()->orderBy('deleted_at', 'desc')->paginate(20);
+        $promotions = Promotion::onlyTrashed()->with('rank')->orderBy('deleted_at', 'desc')->paginate(20);
         $discountTypes = PromotionDiscountType::cases();
         return view('admin.promotions.trashed', compact('promotions', 'discountTypes'));
     }
@@ -122,6 +139,10 @@ class PromotionController extends Controller
     public function forceDelete($id)
     {
         $promotion = Promotion::onlyTrashed()->findOrFail($id);
+        
+        // Xóa tất cả liên kết trong customer_rank_promotions trước khi xóa vĩnh viễn
+        \App\Models\CustomerRankPromotion::where('promotion_id', $id)->delete();
+        
         $promotion->forceDelete();
         return redirect()->route('promotions.trashed')->with('success', 'Đã xóa vĩnh viễn!');
     }

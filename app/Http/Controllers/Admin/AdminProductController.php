@@ -12,6 +12,14 @@ use Illuminate\Support\Facades\Validator;
 
 class AdminProductController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(['auth', 'role:admin,staff']);
+        $this->middleware('can:view customer rank')->only('index');
+        $this->middleware('can:create customer rank')->only(['create', 'store']);
+        $this->middleware('can:edit customer rank')->only(['edit', 'update']);
+        $this->middleware('can:delete customer rank')->only('destroy');
+    }
     public function index()
     {
         $products = Product::with('category')->paginate(10);

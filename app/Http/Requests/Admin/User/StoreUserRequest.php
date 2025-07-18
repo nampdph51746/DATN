@@ -25,13 +25,13 @@ class StoreUserRequest extends FormRequest
         'name' => ['required', 'string', 'max:255'],
         'email' => ['required', 'email', 'max:255', 'unique:users,email'],
         'password' => ['required', 'string', 'min:8'],
-        'role_id' => ['required', 'exists:roles,id'],
         'customer_rank_id' => ['required', 'exists:customer_ranks,id'],
         'phone_number' => ['nullable', 'string', 'max:20'],
         'address' => ['nullable', 'string'],
         'date_of_birth' => ['nullable', 'date'],
         'status' => ['required', 'in:active,inactive,suspended'],
         'avatar_url' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
+        'role' => 'required|exists:roles,name'
     ];
     }
 
@@ -51,8 +51,6 @@ class StoreUserRequest extends FormRequest
         'password.string' => 'Mật khẩu phải là chuỗi ký tự.',
         'password.min' => 'Mật khẩu phải có ít nhất 8 ký tự.',
 
-        'role_id.required' => 'Vui lòng chọn vai trò.',
-        'role_id.exists' => 'Vai trò được chọn không hợp lệ.',
 
         'customer_rank_id.required' => 'Vui lòng chọn hạng khách hàng.',
         'customer_rank_id.exists' => 'Hạng khách hàng được chọn không hợp lệ.',

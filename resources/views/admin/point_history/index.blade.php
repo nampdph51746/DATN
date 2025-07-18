@@ -34,8 +34,7 @@
                                 @forelse ($histories as $history)
                                     <tr>
                                         <td>
-                                            <span class="fw-semibold">{{ $history->user->name ?? 'N/A' }}</span>
-                                            <br>
+                                            <span class="fw-semibold">{{ $history->user->name ?? 'N/A' }}</span><br>
                                             <small class="text-muted">ID: {{ $history->user_id }}</small>
                                         </td>
                                         <td>
@@ -75,12 +74,20 @@
                                         <td>{{ $history->created_at ? $history->created_at->format('d-m-Y H:i') : '-' }}
                                         </td>
                                         <td>
-                                            <div class="d-flex gap-2">
+                                            <div class="d-flex justify-content-center gap-2">
                                                 <a href="{{ route('admin.point_history.show', $history->id) }}"
                                                     class="btn btn-light btn-sm">
-                                                    <iconify-icon icon="solar:eye-broken"
-                                                        class="align-middle fs-18"></iconify-icon>
+                                                    <iconify-icon icon="solar:eye-broken" class="fs-18"></iconify-icon>
                                                 </a>
+
+                                                <form action="{{ route('admin.point_history.toggle', $history->id) }}"
+                                                    method="POST"
+                                                    onsubmit="return confirm('Bạn có chắc chắn muốn chuyển trạng thái điểm của đơn hàng này?')">
+                                                    @csrf
+                                                    @method('PATCH')
+                                                    <button type="submit" class="btn btn-sm btn-warning">↔</button>
+                                                </form>
+
                                             </div>
                                         </td>
                                     </tr>

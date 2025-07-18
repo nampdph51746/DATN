@@ -13,28 +13,43 @@
                     <div class="card-body">
                         <div class="row">
                             <div class="col-lg-6">
-                                <form action="{{ route('roles.store') }}" method="POST" enctype="multipart/form-data">
+                                <form action="{{ route('roles.store') }}" method="POST">
                                     @csrf
                                     <div class="mb-3">
                                         <label for="role-name" class="form-label">Tên Vai trò</label>
-                                        <input type="text" id="role-name" name="name" class="form-control @error('name') is-invalid @enderror"
+                                        <input type="text" id="role-name" name="name"
+                                            class="form-control @error('name') is-invalid @enderror"
                                             placeholder="Nhập tên vai trò" value="{{ old('name') }}">
-                                            @error('name')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
+                                        @error('name')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
                                     </div>
-
                                     <div class="mb-3">
-                                        <label for="description" class="form-label" name="description">Mô tả Vai trò</label>
-                                        <textarea id="role-description" name="description" class="form-control @error('description') is-invalid @enderror"
-                                            placeholder="Nhập mô tả vai trò" rows="5" style="resize: none;">{{ old('description') }}</textarea>
-                                            @error('description')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
-                                    </div>
+                                        <div class="form-check mb-2">
+                                            <input type="checkbox" class="form-check-input" id="check-all-permissions">
+                                            <label class="form-check-label fw-bold" for="check-all-permissions">Chọn tất cả</label>
+                                        </div>
+                                        <label class="form-label">Chọn quyền</label>
+                                        <div class="row">
+                                            @foreach($permissions as $permission)
+                                                <div class="col-md-6">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input permission-checkbox" type="checkbox"
+                                                            name="permissions[]" value="{{ $permission->name }}"
+                                                            id="perm_{{ $permission->id }}">
+                                                        <label class="form-check-label" for="perm_{{ $permission->id }}">
+                                                            {{ $permission->name }}
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            @endforeach
 
+                                        </div>
+                                    </div>
                                     <button type="submit" class="btn btn-primary">Tạo Vai trò</button>
+                                    <a href="{{ route('roles.index') }}" class="btn btn-secondary">Quay lại</a>
                                 </form>
+
                             </div>
                         </div>
 
@@ -44,6 +59,17 @@
         </div>
 
     </div>
+
+    @push('scripts')
+        <script>
+            document.getElementById('check-all-permissions').addEventListener('change', function () {
+                const checked = this.checked;
+                document.querySelectorAll('.permission-checkbox').forEach(function (checkbox) {
+                    checkbox.checked = checked;
+                });
+            });
+        </script>
+    @endpush
     <!-- Kết thúc Container Fluid -->
 
 @endsection

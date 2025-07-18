@@ -283,7 +283,7 @@
         // Lấy tất cả giá trị thuộc tính được chọn
         const attributeRows = document.querySelectorAll('.attribute-row');
         const selectedValues = [];
-        let productSku = "{{ $selectedProduct ? $selectedProduct->sku : 'PRODUCT' }}";
+        let productSku = "{{ isset($selectedProduct) ? $selectedProduct->sku : 'PRODUCT' }}";
 
         attributeRows.forEach(row => {
             const valueSelect = row.querySelector('.value-select');
