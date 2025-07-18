@@ -65,6 +65,7 @@
                             <thead class="bg-light-subtle">
                                 <tr>
                                     <th>ID</th>
+                                    <th>Ảnh</th>
                                     <th>Tên phim</th>
                                     <th>Đạo diễn</th>
                                     <th>Thể loại</th>
@@ -83,6 +84,9 @@
                                 @foreach ($movies as $movie)
                                     <tr>
                                         <td>{{ $movie->id }}</td>
+                                        <td>
+                                            <img src="{{ $movie->image_path ? Storage::url($movie->image_path) : ($movie->poster_url ? $movie->poster_url : asset('client_assets/assets/images/default-movie.jpg')) }}" alt="{{ $movie->name }}" style="width: 100px; height: auto; object-fit: cover; border-radius: 5px;">
+                                        </td>
                                         <td>{{ $movie->name }}</td>
                                         <td>{{ $movie->director ?? 'N/A' }}</td>
                                         <td>{{ $movie->genres->pluck('name')->join(', ') ?: 'N/A' }}</td>
@@ -109,10 +113,10 @@
                                         <td>{{ $movie->created_at->format('d/m/Y H:i') }}</td>
                                         <td>
                                             <div class="d-flex gap-2">
-                                                <a href="{{ route('admin.movies.show', $movie->id) }}" class="btn btn-light btn-sm">
+                                                <a href="{{ route('admin.movies.show', ['id' => $movie->id]) }}" class="btn btn-light btn-sm">
                                                     <iconify-icon icon="solar:eye-broken" class="align-middle fs-18"></iconify-icon>
                                                 </a>
-                                                <a href="{{ route('admin.movies.edit', $movie->id) }}" class="btn btn-soft-primary btn-sm">
+                                                <a href="{{ route('admin.movies.edit', ['id' => $movie->id]) }}" class="btn btn-soft-primary btn-sm">
                                                     <iconify-icon icon="solar:pen-2-broken" class="align-middle fs-18"></iconify-icon>
                                                 </a>
                                             </div>

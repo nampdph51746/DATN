@@ -7,14 +7,19 @@ $(document).ready(function () {
 	setProgressBar(current);
 
 	$(".next-step").click(function () {
+		// Đảm bảo lấy đúng fieldset chứa nút
+		currentGfgStep = $(this).closest("fieldset");
+		nextGfgStep = currentGfgStep.next("fieldset");
 
-		currentGfgStep = $(this).parent();
-		nextGfgStep = $(this).parent().next();
+		if (currentGfgStep.length === 0 || nextGfgStep.length === 0) {
+			console.log("Cannot find fieldset elements for animation");
+			return;
+		}
 
-		$("#progressbar li").eq($("fieldset")
-			.index(nextGfgStep)).addClass("active");
+		$("#progressbar li").eq($("fieldset").index(nextGfgStep)).addClass("active");
 
 		nextGfgStep.show();
+
 		currentGfgStep.animate({
 			opacity: 0
 		}, {
@@ -35,12 +40,15 @@ $(document).ready(function () {
 	});
 
 	$(".previous-step").click(function () {
+		currentGfgStep = $(this).closest("fieldset");
+		previousGfgStep = currentGfgStep.prev("fieldset");
 
-		currentGfgStep = $(this).parent();
-		previousGfgStep = $(this).parent().prev();
+		if (currentGfgStep.length === 0 || previousGfgStep.length === 0) {
+			console.log("Cannot find fieldset elements for animation");
+			return;
+		}
 
-		$("#progressbar li").eq($("fieldset")
-			.index(currentGfgStep)).removeClass("active");
+		$("#progressbar li").eq($("fieldset").index(currentGfgStep)).removeClass("active");
 
 		previousGfgStep.show();
 
