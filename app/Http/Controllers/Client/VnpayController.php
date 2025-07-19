@@ -27,12 +27,17 @@ class VnpayController extends Controller
 {
   public function redirectToVnpay(Request $request)
   {
+    // Log request data để debug
+    Log::info('VNPay Redirect Request:', $request->all());
+    
     // dd($request->all());
     $data = $request->all();
     $final_amount = $data['final_amount'];
     $code_cart = rand(00, 9999);
     $vnp_Url = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
     $vnp_Returnurl = route('vnpay.return'); // Đường dẫn trả về sau khi thanh toán thành công
+    
+    Log::info('VNPay Return URL:', ['return_url' => $vnp_Returnurl]);
     $vnp_TmnCode = "MIXLC4YW"; //Mã website tại VNPAY 
     $vnp_HashSecret = "NX3ZCRHQUHCZZO6CYTWKQG1URUCNBFXW"; //Chuỗi bí mật
 
@@ -103,15 +108,31 @@ class VnpayController extends Controller
 
     public function vnpayReturn(Request $request)
     {
+        // Log toàn bộ request từ VNPay
+        Log::info('VNPay Return Request:', $request->all());
+        
         $vnp_ResponseCode = $request->get('vnp_ResponseCode');
         $vnp_TxnRef = $request->get('vnp_TxnRef');
         $vnp_Amount = $request->get('vnp_Amount') / 100;
         $vnp_TransactionNo = $request->get('vnp_TransactionNo');
 
+        Log::info('VNPay Response Details:', [
+            'response_code' => $vnp_ResponseCode,
+            'txn_ref' => $vnp_TxnRef,
+            'amount' => $vnp_Amount,
+            'transaction_no' => $vnp_TransactionNo
+        ]);
+
         if ($vnp_ResponseCode == '00') {
             DB::beginTransaction();
             try {
                 $bookingData = session('booking_preview');
+
+                // Kiểm tra xem có dữ liệu booking không
+                if (empty($bookingData)) {
+                    Log::error('Booking data not found in session');
+                    throw new \Exception('Không tìm thấy thông tin đặt vé trong session.');
+                }
 
                 // Log bookingData để debug
                 Log::info('Booking data:', $bookingData);
@@ -290,8 +311,13 @@ class VnpayController extends Controller
                 ]);
                 return redirect()->route('client.failed')->with('error', 'Thanh toán không thành công: ' . $e->getMessage());
             }
+        } else {
+            // Log khi response code không phải 00
+            Log::warning('VNPay payment failed with response code: ' . $vnp_ResponseCode, [
+                'all_params' => $request->all()
+            ]);
         }
 
-        return redirect()->route('client.failed')->with('error', 'Thanh toán không thành công!');
+        return redirect()->route('client.failed')->with('error', 'Thanh toán không thành công! Mã lỗi: ' . $vnp_ResponseCode);
     }
 }

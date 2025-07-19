@@ -10,6 +10,14 @@ use Illuminate\Http\Request;
 
 class CustomerRankController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(['auth', 'role:admin,staff']);
+        $this->middleware('can:view customer rank')->only('index');
+        $this->middleware('can:create customer rank')->only(['create', 'store']);
+        $this->middleware('can:edit customer rank')->only(['edit', 'update']);
+        $this->middleware('can:delete customer rank')->only('destroy');
+    }
     public function index(Request $request)
     {
         $query = CustomerRank::query();

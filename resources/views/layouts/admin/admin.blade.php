@@ -61,7 +61,11 @@
 
                               <!-- Menu Toggle Button -->
                               <div class="topbar-item">
-                                   <h4 class="fw-bold topbar-button pe-none text-uppercase mb-0">Welcome!</h4>
+                                   <h4 class="fw-bold topbar-button pe-none text-uppercase mb-0">Xin chào,
+                                    @auth
+                                        {{ Auth::user()->name }} !
+                                    @endauth        
+                                   </h4>
                               </div>
                          </div>
 
@@ -190,13 +194,17 @@
                               <div class="dropdown topbar-item">
                                    <a type="button" class="topbar-button" id="page-header-user-dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                         <span class="d-flex align-items-center">
-                                             <img class="rounded-circle" width="32" src="assets/images/users/avatar-1.jpg" alt="avatar-3">
+                                             <iconify-icon icon="mdi:account-circle" width="24" height="24" class="me-2"></iconify-icon>
                                         </span>
                                    </a>
                                    <div class="dropdown-menu dropdown-menu-end">
                                         <!-- item-->
-                                        <h6 class="dropdown-header">Welcome Gaston!</h6>
-                                        <a class="dropdown-item" href="pages-profile.html">
+                                        <h6 class="dropdown-header">Welcome,
+                                        @auth
+                                        {{ Auth::user()->name }}        
+                                        @endauth!
+                                    </h6>
+                                        <a class="dropdown-item" href="{{ route('profile.edit') }}">
                                              <i class="bx bx-user-circle text-muted fs-18 align-middle me-1"></i><span class="align-middle">Profile</span>
                                         </a>
                                         <a class="dropdown-item" href="apps-chat.html">
@@ -215,9 +223,15 @@
 
                                         <div class="dropdown-divider my-1"></div>
 
-                                        <a class="dropdown-item text-danger" href="auth-signin.html">
-                                             <i class="bx bx-log-out fs-18 align-middle me-1"></i><span class="align-middle">Logout</span>
+                                        <a class="dropdown-item text-danger" href="#"
+                                        onclick="event.preventDefault(); if(confirm('Bạn có chắc muốn đăng xuất không?')) document.getElementById('logout-form').submit();">
+                                            <i class="bx bx-log-out fs-18 align-middle me-1"></i>
+                                            <span class="align-middle">Logout</span>
                                         </a>
+                                        <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+                                            @csrf
+                                        </form>
+
                                    </div>
                               </div>
                          </div>

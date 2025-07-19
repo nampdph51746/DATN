@@ -12,6 +12,14 @@ use Illuminate\Support\Facades\Validator;
 
 class AdminProductController extends Controller
 {
+            public function __construct()
+    {
+        $this->middleware(['auth', 'role:admin,staff']);
+        $this->middleware('can:view product')->only('index');
+        $this->middleware('can:create product')->only(['create', 'store']);
+        $this->middleware('can:edit product')->only(['edit', 'update']);
+        $this->middleware('can:delete product')->only('destroy');
+    }
     public function index()
     {
         $products = Product::with('category')->paginate(10);

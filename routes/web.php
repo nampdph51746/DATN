@@ -72,7 +72,23 @@ Route::get('/user-points', [App\Http\Controllers\Client\HomeController::class, '
 Route::get('/user-point-history', [App\Http\Controllers\Client\HomeController::class, 'getUserPointHistory'])->name('client.getUserPointHistory');
 
 
-Route::prefix('admin')->name('admin.')->group(function () {
+Route::get('/dashboard', function () {
+    return view('dashboard');
+})->middleware(['auth', 'verified'])->name('dashboard');
+
+
+
+Route::middleware(['auth'])->group(function (){
+Route::get('/profile', [App\Http\Controllers\Auth\AuthenticatedSessionController::class, 'profile'])->name('profile.edit');
+Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+Route::middleware(['auth', 'role:admin,staff'])->group(function () {
+
+
+
+    Route::prefix('admin')->name('admin.')->group(function () {
     // Seat routes from HEAD
     Route::get('seats/edit-bulk', [AdminSeatController::class, 'editBulk'])->name('seats.editBulk');
     Route::put('seats/update-bulk', [AdminSeatController::class, 'updateBulk'])->name('seats.bulkUpdate');
@@ -148,7 +164,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 });
 
 // Routes quản lý seat-type từ origin/Giang
-Route::prefix('Admin/seat-type')->name('seat-type.')->group(function () {
+Route::prefix('admin/seat-type')->name('seat-type.')->group(function () {
     Route::get('/', [AdminSeatTypeController::class, 'index'])->name('index'); // Danh sách loại ghế
     Route::get('create', [AdminSeatTypeController::class, 'create'])->name('create'); // Form tạo loại ghế
     Route::post('store', [AdminSeatTypeController::class, 'store'])->name('store'); // Lưu loại ghế mới
@@ -164,7 +180,7 @@ Route::prefix('Admin/seat-type')->name('seat-type.')->group(function () {
 Route::delete('admin/genres/bulk-delete', [\App\Http\Controllers\Admin\GenreController::class, 'bulkDelete'])->name('admin.genres.bulkDelete');
 
 Route::prefix('admin')->name('admin.')->group(function () {
-    Route::resource('genres', App\Http\Controllers\Admin\GenreController::class);
+   Route::resource('genres', App\Http\Controllers\Admin\GenreController::class);
 });
 
 Route::prefix('admin/age-limits')->name('admin.age_limits.')->group(function () {
@@ -180,17 +196,17 @@ Route::post('admin/age-limits/bulk-delete', [AgeLimitController::class, 'bulkDel
 
 Route::resource('admin/users', UserController::class);
 
-Route::prefix('customers-rank')->name('customers-rank.')->group(function () {
+Route::prefix('admin/customers-rank')->name('customers-rank.')->group(function () {
     Route::get('deleted', [CustomerRankController::class, 'deleted'])->name('deleted');
     Route::get('deleted/{id}', [CustomerRankController::class, 'deletedShow'])->name('deleted.show');
     Route::delete('{customerRank}/soft-delete', [CustomerRankController::class, 'softDelete'])->name('softDelete');
     Route::get('deleted/detail/{id}', [CustomerRankController::class, 'deletedShow'])->name('deleted-detail');
     Route::post('deleted/{id}/restore', [CustomerRankController::class, 'restore'])->name('restore');
-    Route::delete('deleted/{id}/force-delete', [CustomerRankController::class, 'forceDelete'])->name('forceDelete');
+    Route::delete('deleted/{id}/force-delete', [CustomerRankController::class, 'forceDelete'])->name('forceDelete');    
 });
 Route::resource('admin/customers-rank', CustomerRankController::class);
 
-Route::prefix('roles')->name('roles.')->group(function () {
+Route::prefix('admin/roles')->name('roles.')->group(function () {
     Route::get('deleted', [RoleController::class, 'deleted'])->name('deleted');
     Route::get('deleted/{id}', [RoleController::class, 'deletedShow'])->name('deleted.show');
     Route::get('deleted/detail/{id}', [RoleController::class, 'deletedShow'])->name('deleted-detail');
@@ -201,8 +217,8 @@ Route::prefix('roles')->name('roles.')->group(function () {
 Route::resource('admin/roles', RoleController::class);
 
 Route::prefix('admin/payment_methods')->group(function () {
-    Route::get('/', [PaymentMethodController::class, 'index'])->name('payment_methods.index');
-    Route::get('/{id}', [PaymentMethodController::class, 'show'])->name('payment_methods.show');
+    Route::get('/', [PaymentMethodController::class, 'index'])->name('payment_methods.index');    
+    Route::get('/{id}', [PaymentMethodController::class, 'show'])->name('payment_methods.show');   
     Route::get('/{paymentMethod}/edit-status', [PaymentMethodController::class, 'editStatus'])->name('payment_methods.editStatus');
     Route::put('/{paymentMethod}/update-status', [PaymentMethodController::class, 'updateStatus'])->name('payment_methods.updateStatus');
 });
@@ -248,15 +264,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('products/{id}/variants', [AdminProductController::class, 'getVariants'])->name('products.variants');
 });
 
-// Breeze routes
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
-
-Route::middleware('auth')->group(function () {
-    Route::get('/profile', [App\Http\Controllers\Auth\AuthenticatedSessionController::class, 'profile'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';

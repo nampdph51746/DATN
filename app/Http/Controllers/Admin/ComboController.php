@@ -12,6 +12,14 @@ use Illuminate\Support\Facades\Log;
 
 class ComboController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(['auth', 'role:admin,staff']);
+        $this->middleware('can:view combo')->only('index');
+        $this->middleware('can:create combo')->only(['create', 'store']);
+        $this->middleware('can:edit combo')->only(['edit', 'update']);
+        $this->middleware('can:delete combo')->only('destroy');
+    }
     public function index(Request $request)
     {
         $products = Product::with('productVariants')->get();

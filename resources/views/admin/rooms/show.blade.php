@@ -34,8 +34,8 @@
                     @endif
                     <h5>Thông tin phòng</h5>
                     <p><strong>Tên phòng:</strong> {{ $room->name }}</p>
-                    <p><strong>Rạp chiếu:</strong> {{ $room->cinema->name }}</p>
-                    <p><strong>Loại phòng:</strong> {{ $room->roomType->name }}</p>
+                    <p><strong>Rạp chiếu:</strong> {{ $room->cinema ? $room->cinema->name : 'Chưa có thông tin rạp' }}</p>
+                    <p><strong>Loại phòng:</strong> {{ $room->roomType ? $room->roomType->name : 'Chưa có thông tin loại phòng' }}</p>
                     <p><strong>Sức chứa:</strong> {{ $room->capacity }}</p>
                     <p><strong>Trạng thái:</strong>
                         @switch($room->status)
@@ -60,7 +60,7 @@
                             $seatType = $seatTypes->where('id', $seatTypeId)->first();
                             $requiredSeats[$seatTypeId] = (int) round(($percentage / 100) * $room->capacity);
                         }
-                        $existingSeatsByType = $seats->groupBy('seat_type_id')->map->count()->toArray();
+                        $existingSeatsByType = $seats->groupBy('seat_type_id')->map(function($group) { return $group->count(); })->toArray();
                     @endphp
                     <ul>
                         @foreach ($seatTypes as $seatType)

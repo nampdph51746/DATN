@@ -12,12 +12,12 @@
         transition: background-color 0.3s;
     }
 
-    .dark .register-container {
+    [data-theme="dark"] .register-container {
         background-color: #111827;
     }
 
     .register-box {
-        max-width: 520px;
+        max-width: 720px;
         margin: auto;
         background-color: #ffffff;
         border-radius: 12px;
@@ -26,7 +26,7 @@
         transition: background-color 0.3s, color 0.3s;
     }
 
-    .dark .register-box {
+    [data-theme="dark"] .register-box {
         background-color: #1f2937;
         color: #f9fafb;
     }
@@ -37,7 +37,7 @@
         color: #1f2937;
     }
 
-    .dark .register-box h2 {
+    [data-theme="dark"] .register-box h2 {
         color: #f9fafb;
     }
 
@@ -45,9 +45,10 @@
         font-size: 14px;
         color: #374151;
         margin-bottom: 6px;
+        font-weight: 500;
     }
 
-    .dark .form-label {
+    [data-theme="dark"] .form-label {
         color: #d1d5db;
     }
 
@@ -61,7 +62,7 @@
         margin-bottom: 10px;
     }
 
-    .dark .form-control {
+    [data-theme="dark"] .form-control {
         background-color: #374151;
         color: #f9fafb;
         border-color: #4b5563;
@@ -81,6 +82,7 @@
         border-radius: 8px;
         border: none;
         transition: background-color 0.3s;
+        width: 100%;
     }
 
     .btn-primary:hover {
@@ -97,6 +99,7 @@
         font-size: 15px;
         gap: 8px;
         transition: background-color 0.3s;
+        width: 100%;
     }
 
     .google-btn {
@@ -120,78 +123,141 @@
 
     .text-danger {
         font-size: 13px;
+        color: #ef4444;
+    }
+
+    .register-form-container {
+        display: flex;
+        gap: 40px;
+    }
+
+    .register-form-left {
+        flex: 1;
+    }
+
+    .register-form-right {
+        width: 280px;
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .divider {
+        display: flex;
+        align-items: center;
+        margin: 1.5rem 0;
+    }
+
+    .divider::before,
+    .divider::after {
+        content: "";
+        flex: 1;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .divider-text {
+        padding: 0 1rem;
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+
+    [data-theme="dark"] .divider::before,
+    [data-theme="dark"] .divider::after {
+        border-bottom-color: #4b5563;
+    }
+
+    [data-theme="dark"] .divider-text {
+        color: #9ca3af;
     }
 </style>
 
-<div class="register-container">
-    <div class="register-box">
-        <h2 class="mb-3">Tạo tài khoản mới</h2>
-        <p class="text-sm text-muted dark:text-gray-400 mb-4">Lần đầu sử dụng CineVN? Hãy tạo tài khoản ngay!</p>
 
-        <form method="POST" action="{{ route('register') }}">
-            @csrf
+    <div class="register-container">
+        <div class="register-box">
+            <h2 class="mb-3">Tạo tài khoản mới</h2>
+            <p class="text-sm text-muted dark:text-gray-400 mb-4">Lần đầu sử dụng CineVN? Hãy tạo tài khoản ngay!</p>
 
-            <div>
-                <label class="form-label" for="name">Họ và tên</label>
-                <input type="text" id="name" name="name" class="form-control" placeholder="Nhập họ tên"
-                    value="{{ old('name') }}" required>
-                @error('name') <div class="text-danger">{{ $message }}</div> @enderror
-            </div>
+            <form method="POST" action="{{ route('register') }}">
+                @csrf
+                <div class="register-form-container">
+                    <div class="register-form-left">
+                        <div class="form-group">
+                            <label class="form-label" for="name">Họ và tên</label>
+                            <input type="text" id="name" name="name" class="form-control" placeholder="Nhập họ tên"
+                                value="{{ old('name') }}" required>
+                            @error('name') <div class="text-danger">{{ $message }}</div> @enderror
+                        </div>
 
-            <div>
-                <label class="form-label" for="email">Email</label>
-                <input type="email" id="email" name="email" class="form-control" placeholder="Nhập email"
-                    value="{{ old('email') }}" required>
-                @error('email') <div class="text-danger">{{ $message }}</div> @enderror
-            </div>
+                        <div class="form-group">
+                            <label class="form-label" for="email">Email</label>
+                            <input type="email" id="email" name="email" class="form-control" placeholder="Nhập email"
+                                value="{{ old('email') }}" required>
+                            @error('email') <div class="text-danger">{{ $message }}</div> @enderror
+                        </div>
 
-            <div>
-                <label class="form-label" for="phone_number">Số điện thoại</label>
-                <input type="text" id="phone_number" name="phone_number" class="form-control"
-                    placeholder="Nhập số điện thoại" value="{{ old('phone_number') }}">
-                @error('phone_number') <div class="text-danger">{{ $message }}</div> @enderror
-            </div>
+                        <div class="form-group">
+                            <label class="form-label" for="phone_number">Số điện thoại</label>
+                            <input type="text" id="phone_number" name="phone_number" class="form-control"
+                                placeholder="Nhập số điện thoại" value="{{ old('phone_number') }}">
+                            @error('phone_number') <div class="text-danger">{{ $message }}</div> @enderror
+                        </div>
 
-            <div>
-                <label class="form-label" for="date_of_birth">Ngày sinh</label>
-                <input type="date" id="date_of_birth" name="date_of_birth" class="form-control"
-                    value="{{ old('date_of_birth') }}">
-                @error('date_of_birth') <div class="text-danger">{{ $message }}</div> @enderror
-            </div>
+                        <div class="form-group">
+                            <label class="form-label" for="date_of_birth">Ngày sinh</label>
+                            <input type="date" id="date_of_birth" name="date_of_birth" class="form-control"
+                                value="{{ old('date_of_birth') }}">
+                            @error('date_of_birth') <div class="text-danger">{{ $message }}</div> @enderror
+                        </div>
 
-            <div>
-                <label class="form-label" for="password">Mật khẩu</label>
-                <input type="password" id="password" name="password" class="form-control"
-                    placeholder="Tạo mật khẩu" required>
-                @error('password') <div class="text-danger">{{ $message }}</div> @enderror
-            </div>
+                        <div class="form-group">
+                            <label class="form-label" for="password">Mật khẩu</label>
+                            <input type="password" id="password" name="password" class="form-control"
+                                placeholder="Tạo mật khẩu" required>
+                            @error('password') <div class="text-danger">{{ $message }}</div> @enderror
+                        </div>
 
-            <div>
-                <label class="form-label" for="password_confirmation">Xác nhận mật khẩu</label>
-                <input type="password" id="password_confirmation" name="password_confirmation" class="form-control"
-                    placeholder="Nhập lại mật khẩu" required>
-                @error('password_confirmation') <div class="text-danger">{{ $message }}</div> @enderror
-            </div>
+                        <div class="form-group">
+                            <label class="form-label" for="password_confirmation">Xác nhận mật khẩu</label>
+                            <input type="password" id="password_confirmation" name="password_confirmation"
+                                class="form-control" placeholder="Nhập lại mật khẩu" required>
+                            @error('password_confirmation') <div class="text-danger">{{ $message }}</div> @enderror
+                        </div>
+                    </div>
 
-            <div class="mt-3">
-                <button type="submit" class="btn btn-primary w-100">Tạo tài khoản</button>
-            </div>
-        </form>
+                    <div class="register-form-right">
+                        <button type="submit" class="btn btn-primary mb-4">Tạo tài khoản</button>
 
-        <div class="mt-4 text-center fw-semibold">
-            <p>Hoặc đăng ký bằng</p>
-        </div>
+                        <div class="divider">
+                            <span class="divider-text">Hoặc đăng ký bằng</span>
+                        </div>
 
-        <div class="d-grid gap-2 mt-2 mb-3">
-            <a href="#" class="social-btn google-btn"><i class="fab fa-google"></i> Google</a>
-            <a href="#" class="social-btn facebook-btn"><i class="fab fa-facebook-f"></i> Facebook</a>
-        </div>
+                        <div class="flex flex-col gap-2 mt-2 mb-3">
+                            <a href="#" class="social-btn google-btn"><i class="fab fa-google"></i> Google</a>
+                            <a href="#" class="social-btn facebook-btn"><i class="fab fa-facebook-f"></i> Facebook</a>
+                        </div>
 
-        <div class="mt-3 text-center">
-            <p class="text-sm text-muted dark:text-gray-400">Đã có tài khoản?
-                <a href="{{ route('login') }}" class="text-link">Đăng nhập</a>
-            </p>
+                        <div class="mt-4 text-center">
+                            <p class="text-sm text-muted dark:text-gray-400">Đã có tài khoản?
+                                <a href="{{ route('login') }}" class="text-link">Đăng nhập</a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
-</div>
+
+
+    <script>
+        // Make sure the form submission works properly
+        document.addEventListener('DOMContentLoaded', function () {
+            const registerForm = document.querySelector('form[method="POST"]');
+            const submitButton = document.querySelector('button[type="submit"]');
+
+            submitButton.addEventListener('click', function () {
+                registerForm.submit();
+            });
+        });
+    </script>
 @endsection

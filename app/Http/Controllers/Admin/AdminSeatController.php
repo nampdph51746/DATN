@@ -14,6 +14,14 @@ use Illuminate\Support\Facades\Validator;
 
 class AdminSeatController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(['auth', 'role:admin,staff']);
+        $this->middleware('can:view role')->only('index');
+        $this->middleware('can:create role')->only(['create', 'store']);
+        $this->middleware('can:edit role')->only(['edit', 'update']);
+        $this->middleware('can:delete role')->only('destroy');
+    }
     public function index(Request $request)
     {
         $query = $request->input('query');

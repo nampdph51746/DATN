@@ -12,41 +12,55 @@
         transition: background-color 0.3s;
     }
 
-    .dark .login-container {
+    [data-theme="dark"] .login-container {
         background-color: #111827;
     }
 
     .login-box {
-        max-width: 480px;
+        max-width: 720px;
         margin: auto;
-        background-color: #fff;
+        background-color: #ffffff;
         border-radius: 12px;
-        padding: 2rem;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        padding: 2.5rem;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.07);
         transition: background-color 0.3s, color 0.3s;
     }
 
-    .dark .login-box {
+    [data-theme="dark"] .login-box {
         background-color: #1f2937;
-        color: #f3f4f6;
+        color: #f9fafb;
     }
 
     .login-box h2 {
         font-size: 24px;
         font-weight: bold;
         color: #1f2937;
+        margin-bottom: 0.5rem;
     }
 
-    .dark .login-box h2 {
+    [data-theme="dark"] .login-box h2 {
         color: #f9fafb;
     }
 
-    .login-box label {
+    .login-subtitle {
         font-size: 14px;
-        color: #374151;
+        color: #6b7280;
+        margin-bottom: 2rem;
     }
 
-    .dark .login-box label {
+    [data-theme="dark"] .login-subtitle {
+        color: #9ca3af;
+    }
+
+    .form-label {
+        font-size: 14px;
+        color: #374151;
+        margin-bottom: 6px;
+        font-weight: 500;
+        display: block;
+    }
+
+    [data-theme="dark"] .form-label {
         color: #d1d5db;
     }
 
@@ -57,9 +71,10 @@
         border: 1px solid #d1d5db;
         background-color: #fff;
         color: #111827;
+        margin-bottom: 10px;
     }
 
-    .dark .form-control {
+    [data-theme="dark"] .form-control {
         background-color: #374151;
         color: #f9fafb;
         border-color: #4b5563;
@@ -68,7 +83,7 @@
     .form-control:focus {
         border-color: #3b82f6;
         outline: none;
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
     }
 
     .btn-primary {
@@ -77,8 +92,9 @@
         font-weight: 600;
         padding: 0.75rem;
         border-radius: 8px;
-        transition: background-color 0.3s;
         border: none;
+        transition: background-color 0.3s;
+        width: 100%;
     }
 
     .btn-primary:hover {
@@ -89,10 +105,13 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 0.75rem;
+        padding: 0.65rem;
         border-radius: 8px;
         font-weight: 500;
+        font-size: 15px;
+        gap: 8px;
         transition: background-color 0.3s;
+        width: 100%;
     }
 
     .google-btn {
@@ -104,92 +123,190 @@
         background-color: #e5e7eb;
     }
 
-    .dark .google-btn {
+    [data-theme="dark"] .google-btn {
         background-color: #4b5563;
         color: #fff;
     }
 
     .facebook-btn {
-        background-color: #1877f2;
+        background-color: #4267B2;
         color: #fff;
     }
 
     .facebook-btn:hover {
-        background-color: #145fbe;
-    }
-
-    .text-sm {
-        font-size: 14px;
+        background-color: #365899;
     }
 
     .text-link {
         color: #3b82f6;
         font-weight: 500;
+        font-size: 14px;
     }
 
     .text-link:hover {
         text-decoration: underline;
     }
+
+    .text-danger {
+        font-size: 13px;
+        color: #ef4444;
+    }
+
+    .login-form-container {
+        display: flex;
+        gap: 40px;
+    }
+
+    .login-form-left {
+        flex: 1;
+    }
+
+    .login-form-right {
+        width: 280px;
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .divider {
+        display: flex;
+        align-items: center;
+        margin: 1.5rem 0;
+    }
+
+    .divider::before,
+    .divider::after {
+        content: "";
+        flex: 1;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .divider-text {
+        padding: 0 1rem;
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+
+    [data-theme="dark"] .divider::before,
+    [data-theme="dark"] .divider::after {
+        border-bottom-color: #4b5563;
+    }
+
+    [data-theme="dark"] .divider-text {
+        color: #9ca3af;
+    }
+
+    .remember-forgot {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .form-check {
+        display: flex;
+        align-items: center;
+    }
+
+    .form-check-input {
+        margin-right: 0.5rem;
+    }
+
+    .alert-success {
+        background-color: #d1fae5;
+        color: #065f46;
+        padding: 0.75rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        font-size: 14px;
+    }
+
+    [data-theme="dark"] .alert-success {
+        background-color: #064e3b;
+        color: #6ee7b7;
+    }
 </style>
+
 
 <div class="login-container">
     <div class="login-box">
-        <!-- Tiêu đề -->
-        <h2 class="mb-3">Đăng Nhập</h2>
-        <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Vui lòng nhập thông tin để đăng nhập vào hệ thống.</p>
+        <h2>Đăng Nhập</h2>
+        <p class="login-subtitle">Vui lòng nhập thông tin để đăng nhập vào hệ thống.</p>
 
-        <!-- Thông báo trạng thái -->
         @if (session('status'))
-            <div class="alert alert-success bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 p-3 rounded mb-3 text-sm">
+            <div class="alert-success">
                 {{ session('status') }}
             </div>
         @endif
 
-        <!-- Form -->
-        <form method="POST" action="{{ route('login') }}">
-            @csrf
+        <div class="login-form-container">
+            <div class="login-form-left">
+                <form method="POST" action="{{ route('login') }}" id="login-form">
+                    @csrf
 
-            <div class="mb-3">
-                <label for="email">Email</label>
-                <input type="email" id="email" name="email" class="form-control mt-1" value="{{ old('email') }}" required autofocus>
-                @error('email')
-                    <div class="text-sm text-red-600 mt-1">{{ $message }}</div>
-                @enderror
+                    <div class="form-group">
+                        <label class="form-label" for="email">Email</label>
+                        <input type="email" id="email" name="email" class="form-control" 
+                               placeholder="Nhập email" value="{{ old('email') }}" required autofocus>
+                        @error('email')
+                            <div class="text-danger">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="password">Mật khẩu</label>
+                        <input type="password" id="password" name="password" class="form-control" 
+                               placeholder="Nhập mật khẩu" required>
+                        @error('password')
+                            <div class="text-danger">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="remember-forgot">
+                        <label>
+                            <input type="checkbox" name="remember"> Ghi nhớ đăng nhập
+                        </label>
+                        <a href="{{ route('password.request') }}" class="text-link">Quên mật khẩu?</a>
+                    </div>
+                </form>
             </div>
 
-            <div class="mb-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <label for="password">Mật khẩu</label>
-                    <a href="{{ route('password.request') }}" class="text-sm text-link">Quên mật khẩu?</a>
+            <div class="login-form-right">
+                <button type="submit" form="login-form" class="btn btn-primary mb-4">Đăng Nhập</button>
+
+                <div class="divider">
+                    <span class="divider-text">Hoặc đăng nhập bằng</span>
                 </div>
-                <input type="password" id="password" name="password" class="form-control mt-1" required>
-                @error('password')
-                    <div class="text-sm text-red-600 mt-1">{{ $message }}</div>
-                @enderror
-            </div>
 
-            <div class="mb-3">
-                <div class="form-check">
-                    <input type="checkbox" class="form-check-input" id="remember_me" name="remember">
-                    <label class="form-check-label text-sm" for="remember_me">Ghi nhớ đăng nhập</label>
+                <div class="flex flex-col gap-2 mt-2 mb-3">
+                    <a href="#" class="social-btn google-btn">
+                        <i class="fab fa-google"></i> Google
+                    </a>
+                    <a href="#" class="social-btn facebook-btn">
+                        <i class="fab fa-facebook-f"></i> Facebook
+                    </a>
+                </div>
+
+                <div class="mt-4 text-center">
+                    <p class="text-sm text-gray-600 dark:text-gray-400">
+                        Chưa có tài khoản?
+                        <a href="{{ route('register') }}" class="text-link">Đăng ký</a>
+                    </p>
                 </div>
             </div>
-
-            <div class="mb-3">
-                <button type="submit" class="btn btn-primary w-100">Đăng Nhập</button>
-            </div>
-        </form>
-
-        <p class="text-sm text-gray-600 dark:text-gray-400 text-center mb-3">Hoặc đăng nhập với</p>
-        <div class="d-grid gap-2 mb-3">
-            <a href="#" class="social-btn google-btn"><i class="bx bxl-google me-2"></i> Google</a>
-            <a href="#" class="social-btn facebook-btn"><i class="bx bxl-facebook me-2"></i> Facebook</a>
         </div>
-
-        <p class="text-sm text-center text-gray-600 dark:text-gray-400 mt-4">
-            Chưa có tài khoản?
-            <a href="{{ route('register') }}" class="text-link">Đăng ký</a>
-        </p>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const loginForm = document.getElementById('login-form');
+        const submitButton = document.querySelector('button[type="submit"]');
+        
+        submitButton.addEventListener('click', function() {
+            loginForm.submit();
+        });
+    });
+</script>
 @endsection
