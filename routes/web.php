@@ -86,8 +86,6 @@ Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.
 
 Route::middleware(['auth', 'role:admin,staff'])->group(function () {
 
-
-
     Route::prefix('admin')->name('admin.')->group(function () {
     // Seat routes from HEAD
     Route::get('seats/edit-bulk', [AdminSeatController::class, 'editBulk'])->name('seats.editBulk');

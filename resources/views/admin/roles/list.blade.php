@@ -2,13 +2,6 @@
 
 @section('content')
     <div class="container-xxl">
-        @if(session('error'))
-            <div class="alert alert-danger">{{ session('error') }}</div>
-        @endif
-        
-        @if(session('success'))
-            <div class="alert alert-success">{{ session('success') }}</div>
-        @endif
 
         <div class="card overflow-hiddenCoupons shadow-sm border-0">
             <div class="card-header bg-light-subtle p-3">

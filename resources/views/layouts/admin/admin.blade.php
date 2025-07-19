@@ -24,6 +24,8 @@
      <link href="{{ asset('assets/css/app.min.css') }}" rel="stylesheet" type="text/css" />
 
      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+     <!-- SweetAlert2 -->
+     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
      <!-- Theme Config js (Require in all Page) -->
      <script src="{{ asset('assets/js/config.js') }}"></script>
@@ -46,7 +48,6 @@
 
      <!-- START Wrapper -->
      <div class="wrapper">
-
           <!-- ========== Topbar Start ========== -->
           <header class="topbar">
                <div class="container-fluid">
@@ -967,6 +968,28 @@
      </div>
      <!-- END Wrapper -->
 
+     <!-- SweetAlert2 hiển thị thông báo flash -->
+     <script>
+     document.addEventListener('DOMContentLoaded', function() {
+         @if(session('success'))
+             Swal.fire({
+                 icon: 'success',
+                 title: 'Thành công',
+                 text: '{{ session('success') }}',
+                 confirmButtonText: 'OK'
+             });
+         @endif
+         @if(session('error'))
+             Swal.fire({
+                 icon: 'error',
+                 title: 'Lỗi',
+                 text: '{{ session('error') }}',
+                 confirmButtonText: 'OK'
+             });
+         @endif
+     });
+     </script>
+
      <!-- Vendor Javascript (Require in all Page) -->
      <script src="assets/js/vendor.js"></script>
 
@@ -982,6 +1005,8 @@
      <script src="assets/js/pages/dashboard.js"></script>
      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     @stack('scripts')
+
+    
 </body>
 <!-- Mirrored from techzaa.in/larkon/admin/index.html by HTTrack Website Copier/3.x [XR&CO'2014], Thu, 29 May 2025 02:26:35 GMT -->
 </html>

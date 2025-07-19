@@ -25,7 +25,6 @@ class UserController extends Controller
     {
         $query = User::with('roles', 'customerRank')->orderBy('id', 'desc');
 
-        // 🔍 Search by name or email
         if ($request->filled('search')) {
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
@@ -114,31 +113,40 @@ class UserController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(User $user)
+    public function edit($id)
     {
-        $roles = Role::all(); // Spatie Role
+        $user = User::findOrFail($id); // dùng đúng tên biến
+
+        $roles = Role::all();
         $customerRanks = CustomerRank::all();
         $statuses = UserStatus::cases();
 
-        $statuses = UserStatus::cases();
+        $selectedRole = $user->roles->pluck('name')->first();
+
         return view('admin.users.edit', [
-        'users' => $user,
-        'roles' => $roles,
-        'customerRanks' => $customerRanks,
-        'statuses' => $statuses,
-        'selectedRole' => $user->getRoleNames()->first(), // ← Thêm dòng này
+            'user' => $user,
+            'roles' => $roles,
+            'customerRanks' => $customerRanks,
+            'statuses' => $statuses,
+            'selectedRole' => $selectedRole,
         ]);
     }
+
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateUserRequest  $request, string $id)
+    public function update(UpdateUserRequest $request, $id)
     {
-        $user = User::findOrFail($id);
+        $user = User::findOrFail($id); // tự lấy model
 
-        $data = $request->validated();
+        $user->update([
+            'customer_rank_id' => $request->customer_rank_id,
+            'status' => $request->status,
+        ]);
 
-        $user->update($data);
-        return redirect()->route('users.index')->with('success', 'User updated successfully.');
+        $user->syncRoles($request->role);
+
+        return redirect()->route('users.index')->with('success', 'Cập nhật người dùng thành công.');
     }
+
 }

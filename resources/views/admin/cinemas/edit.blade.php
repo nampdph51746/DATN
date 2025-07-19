@@ -11,7 +11,7 @@
                         <h4 class="card-title">Sửa rạp chiếu phim</h4>
                     </div>
                     <div class="card-body">
-                        <form method="POST" action="{{ route('admin.cinemas.update', $cinema->id) }}" enctype="multipart/form-data">
+                        <form method="POST" action="{{ route('admin.cinemas.update', ['cinema' => $cinema->id]) }}">
                             @csrf
                             @method('PUT')
 

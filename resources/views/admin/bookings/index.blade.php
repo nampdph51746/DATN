@@ -238,12 +238,6 @@
                                                             <iconify-icon icon="solar:eye-broken"
                                                                 class="align-middle fs-18"></iconify-icon>
                                                         </a>
-                                                        <a href="{{ route('admin.bookings.editStatus', $booking->id) }}"
-                                                            class="btn btn-soft-primary btn-sm"
-                                                            title="Chỉnh sửa trạng thái">
-                                                            <iconify-icon icon="solar:pen-2-broken"
-                                                                class="align-middle fs-18"></iconify-icon>
-                                                        </a>
 
                                                     </div>
                                                 </td>

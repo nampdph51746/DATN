@@ -67,8 +67,11 @@ class CityController extends Controller
     public function destroy($id)
     {
         $city = City::findOrFail($id);
+        $cinemaCount = $city->cinemas()->count();
+        if ($cinemaCount > 0) {
+            return redirect()->route('admin.cities.index')->with('error', 'Không thể xóa thành phố này vì có ' . $cinemaCount . ' rạp chiếu phim liên kết.');
+        }
         $city->delete();
-
         return redirect()->route('admin.cities.trash')->with('success', 'Đã xóa thành phố (tạm thời).');
     }
 
@@ -100,8 +103,11 @@ class CityController extends Controller
     public function forceDelete($id)
     {
         $city = City::onlyTrashed()->findOrFail($id);
+        $cinemaCount = $city->cinemas()->count();
+        if ($cinemaCount > 0) {
+            return redirect()->route('admin.cities.trash')->with('error', 'Không thể xóa vĩnh viễn thành phố này vì có ' . $cinemaCount . ' rạp chiếu phim liên kết.');
+        }
         $city->forceDelete();
-
         return redirect()->route('admin.cities.trash')->with('success', 'Đã xóa vĩnh viễn thành phố.');
     }
 }

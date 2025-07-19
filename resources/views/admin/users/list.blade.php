@@ -1,9 +1,6 @@
 @extends('layouts.admin.admin')
 
 @section('content')
-    @if (session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
     <div class="container-xxl">
         <div class="row">
             <div class="col-xl-12">
@@ -100,7 +97,7 @@
                                             </td>
                                             <td>{{ $user->name }}</td>
                                             <td>{{ $user->id }}</td>
-                                            <td>{{ $user->customerRank->name }}</td>
+                                            <td>{{ optional($user->customerRank)->name }}</td>
                                             <td>{{ $user->getRoleNames()->first() }}</td>
                                             <td>{{ $user->email }}</td>
                                             <td>{{ $user->address }}</td>
@@ -122,18 +119,6 @@
                                                         <iconify-icon icon="solar:pen-2-broken"
                                                             class="align-middle fs-18"></iconify-icon>
                                                     </a>
-                                                    {{-- <form action="{{ route('users.softDelete', $user->id) }}" method="POST"
-                                                        onsubmit="return confirm('Bạn có chắc chắn muốn vô hiệu hóa người dùng này không?')">
-                                                        @csrf
-                                                        @method('DELETE')
-
-                                                        <button type="submit" class="btn btn-soft-danger btn-sm"
-                                                            title="Vô hiệu hóa">
-                                                            <iconify-icon icon="solar:trash-bin-minimalistic-2-broken"
-                                                                class="align-middle fs-18"></iconify-icon>
-                                                        </button>
-
-                                                    </form> --}}
                                                 </div>
                                             </td>
                                         </tr>
