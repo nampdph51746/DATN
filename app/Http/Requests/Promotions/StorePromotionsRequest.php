@@ -30,7 +30,6 @@ class StorePromotionsRequest extends FormRequest
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
             'quantity' => 'nullable|integer|min:0',
-            'usage_limit_per_user' => 'nullable|integer|min:0',
             'applies_to' => 'nullable|string|max:50',
             'status' => 'nullable|string|max:20|in:active,pending,inactive',
             'rank_id' => 'nullable|exists:customer_ranks,id',
@@ -52,8 +51,6 @@ class StorePromotionsRequest extends FormRequest
             'discount_value.min' => 'Giá trị giảm giá phải lớn hơn hoặc bằng 0.',
             'quantity.integer' => 'Số lượng phải là một số nguyên.',
             'quantity.min' => 'Số lượng phải lớn hơn hoặc bằng 0.',
-            'usage_limit_per_user.integer' => 'Giới hạn sử dụng cho mỗi người dùng phải là một số nguyên.',
-            'usage_limit_per_user.min' => 'Giới hạn sử dụng cho mỗi người dùng phải lớn hơn hoặc bằng 0.',
             'rank_id.exists' => 'Hạng khách hàng được chọn không tồn tại.',
         ];
     }

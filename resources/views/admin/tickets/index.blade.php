@@ -90,17 +90,6 @@
                                             <a href="{{ route('tickets.show', $ticket->id) }}" class="btn btn-light btn-sm" title="Xem chi tiết">
                                                 <iconify-icon icon="solar:eye-broken" class="align-middle fs-18"></iconify-icon>
                                             </a>
-                                            <!-- Edit Button -->
-                                            {{-- <a href="{{ route('tickets.edit', $ticket->id) }}" class="btn btn-soft-primary btn-sm" title="Sửa">
-                                                <iconify-icon icon="solar:pen-2-broken" class="align-middle fs-18"></iconify-icon>
-                                            </a> --}}
-                                            <!-- Delete Button -->
-                                            {{-- <form action="{{ route('tickets.destroy', $ticket->id) }}" method="POST" style="display:inline;">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-soft-danger btn-sm" title="Xóa" onclick="return confirm('Bạn có chắc muốn xóa vé này?')">
-                                                    <iconify-icon icon="solar:trash-bin-minimalistic-2-broken" class="align-middle fs-18"></iconify-icon>
-                                                </button> --}}
                                             </form>
                                         </div>
                                     </td>
