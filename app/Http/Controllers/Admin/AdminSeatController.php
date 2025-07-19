@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Models\RoomSeatConfiguration;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class AdminSeatController extends Controller
@@ -74,7 +75,7 @@ class AdminSeatController extends Controller
 
     public function store(Request $request)
     {
-        \Log::info('Request data: ', $request->all());
+        Log::info('Request data: ', $request->all());
 
         $rules = [
             'room_id' => 'required|exists:rooms,id',
@@ -101,7 +102,7 @@ class AdminSeatController extends Controller
         ]);
 
         if ($validator->fails()) {
-            \Log::error('Validation failed: ', $validator->errors()->all());
+            Log::error('Validation failed: ', $validator->errors()->all());
             return redirect()->back()->withErrors($validator)->withInput();
         }
 
@@ -207,7 +208,7 @@ class AdminSeatController extends Controller
                 for ($j = 1; $j <= $optimalSeatsPerRow; $j++) {
                     $seatNumber = str_pad($j, 2, '0', STR_PAD_LEFT);
                     if (isset($existingSeats[$rowChar]) && in_array($seatNumber, $existingSeats[$rowChar])) {
-                        \Log::warning("Seat $rowChar$seatNumber already exists, skipping.");
+                        Log::warning("Seat $rowChar$seatNumber already exists, skipping.");
                         continue;
                     }
                     Seat::create([
@@ -217,7 +218,7 @@ class AdminSeatController extends Controller
                         'seat_number' => $seatNumber,
                         'status' => SeatStatus::Available->value ?? 'available',
                     ]);
-                    \Log::info("Created seat: $rowChar$seatNumber");
+                    Log::info("Created seat: $rowChar$seatNumber");
                     $createdSeats++;
                     if ($existingSeatsCount + $createdSeats > $room->capacity) {
                         throw new \Exception('Số ghế vượt quá sức chứa của phòng (' . $room->capacity . ' ghế).');
@@ -248,7 +249,7 @@ class AdminSeatController extends Controller
                 ->with('next_seat_type_id', $nextSeatTypeId);
 
         } catch (\Exception $e) {
-            \Log::error('Exception during seat creation: ' . $e->getMessage() . ' | Trace: ' . $e->getTraceAsString());
+            Log::error('Exception during seat creation: ' . $e->getMessage() . ' | Trace: ' . $e->getTraceAsString());
             DB::rollBack();
             return redirect()->back()->with('error', 'Lỗi khi thêm ghế: ' . $e->getMessage())->withInput();
         }
