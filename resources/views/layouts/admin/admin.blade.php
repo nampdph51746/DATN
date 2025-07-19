@@ -742,7 +742,7 @@
                         <li class="menu-title mt-3">Quản lý người dùng</li>
 
                         <li class="nav-item">
-                            <a class="nav-link" href="">
+                            <a class="nav-link" href="{{ route('users.index') }}">
                                 <span class="nav-icon">
                                     <iconify-icon icon="solar:user-bold-duotone"></iconify-icon>
                                 </span>
@@ -770,7 +770,7 @@
                         </li>
 
                         <li class="nav-item">
-                            <a class="nav-link" href="">
+                            <a class="nav-link" href="{{ route('roles.index') }}">
                                 <span class="nav-icon">
                                     <iconify-icon icon="solar:key-bold-duotone"></iconify-icon>
                                 </span>
