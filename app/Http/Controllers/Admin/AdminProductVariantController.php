@@ -14,6 +14,14 @@ use Illuminate\Support\Str;
 
 class AdminProductVariantController extends Controller
 {
+        public function __construct()
+    {
+        $this->middleware(['auth', 'role:admin,staff']);
+        $this->middleware('can:view product variant')->only('index');
+        $this->middleware('can:create product variant')->only(['create', 'store']);
+        $this->middleware('can:edit product variant')->only(['edit', 'update']);
+        $this->middleware('can:delete product variant')->only('destroy');
+    }
     public function index()
     {
         $productVariants = ProductVariant::with(['product', 'productVariantOptions.attributeValue.attribute'])->paginate(10);
@@ -145,17 +153,8 @@ class AdminProductVariantController extends Controller
                 ->withErrors(['attribute_values' => 'Tất cả biến thể với thuộc tính đã chọn đã tồn tại.']);
         }
 
-        // Kiểm tra nếu có product_id thì redirect về trang chi tiết sản phẩm
-        if ($request->has('product_id')) {
-            return redirect()->route('admin.products.show', $request->product_id)
-                ->with('success', 'Đã tạo thành công ' . count($createdVariants) . ' biến thể sản phẩm.');
-        }
-
-        // Nếu không có product_id, redirect về trang danh sách
-        return redirect()->route('admin.product-variants.index')
-            ->with('success', 'Đã tạo thành công ' . count($createdVariants) . ' biến thể sản phẩm.');
+        return redirect()->route('admin.product-variants.index')->with('success', 'Đã tạo thành công ' . count($createdVariants) . ' biến thể sản phẩm.');
     }
-    
 
     private function generateCombinations($arrays)
     {

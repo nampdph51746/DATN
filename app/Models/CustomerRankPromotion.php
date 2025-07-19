@@ -14,7 +14,7 @@ class CustomerRankPromotion extends Model
     public $incrementing = false;
     public $timestamps = false;
 
-    protected $fillable = ['customer_rank_id', 'promotion_id', 'description', 'discount_code'];
+    protected $fillable = ['customer_rank_id', 'promotion_id', 'description'];
 
     public function customerRank()
     {

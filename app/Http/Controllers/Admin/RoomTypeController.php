@@ -9,6 +9,14 @@ use Illuminate\Support\Facades\Log;
 
 class RoomTypeController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(['auth', 'role:admin,staff']);
+        $this->middleware('can:view room type')->only('index');
+        $this->middleware('can:create room type')->only(['create', 'store']);
+        $this->middleware('can:edit room type')->only(['edit', 'update']);
+        $this->middleware('can:delete room type')->only('destroy');
+    }
     public function index(Request $request)
     {
         $query = $request->input('query');

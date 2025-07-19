@@ -10,6 +10,14 @@ use Illuminate\Support\Facades\DB;
 
 class CustomerRankPromotionController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(['auth', 'role:admin,staff']);
+        $this->middleware('can:view customer rank promotion')->only('index');
+        $this->middleware('can:create customer rank promotion')->only(['create', 'store']);
+        $this->middleware('can:edit customer rank promotion')->only(['edit', 'update']);
+        $this->middleware('can:delete customer rank promotion')->only('destroy');
+    }
     public function index(Request $request)
     {
         $query = CustomerRankPromotion::query();

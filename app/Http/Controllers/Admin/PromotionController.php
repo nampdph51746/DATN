@@ -13,6 +13,15 @@ use App\Http\Requests\Promotions\UpdatePromotionsRequest;
 
 class PromotionController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(['auth', 'role:admin,staff']);
+        $this->middleware('can:view promotion')->only('index');
+        $this->middleware('can:create promotion')->only(['create', 'store']);
+        $this->middleware('can:edit promotion')->only(['edit', 'update']);
+        $this->middleware('can:delete promotion')->only('destroy');
+    }
+    
     public function index(Request $request)
     {
         $query = Promotion::with('rank')
