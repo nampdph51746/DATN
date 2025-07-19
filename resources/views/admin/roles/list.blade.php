@@ -2,12 +2,18 @@
 
 @section('content')
     <div class="container-xxl">
+        @if(session('error'))
+            <div class="alert alert-danger">{{ session('error') }}</div>
+        @endif
+        
+        @if(session('success'))
+            <div class="alert alert-success">{{ session('success') }}</div>
+        @endif
 
         <div class="card overflow-hiddenCoupons shadow-sm border-0">
             <div class="card-header bg-light-subtle p-3">
                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <h5 class="card-title mb-0">Quản lý Vai trò</h5>
-
                     <form method="GET" action="{{ route('roles.index') }}" class="mb-3">
                         <div class="row g-2 align-items-end">
                             <div class="col-md-3">
@@ -32,6 +38,7 @@
                                 <a href="{{ route('roles.index') }}" class="btn btn-secondary w-100">
                                     <i class="bi bi-arrow-counterclockwise me-1"></i> Đặt lại
                                 </a>
+
                             </div>
                         </div>
                     </form>
@@ -65,12 +72,16 @@
                                                 <iconify-icon icon="solar:eye-broken" class="align-middle fs-18"></iconify-icon>
                                             </a>
 
-                                            <a href="{{ route('roles.edit', $role->id) }}" class="btn btn-soft-primary btn-sm"
+                                            @can('edit role')
+                                                <a href="{{ route('roles.edit', $role->id) }}" class="btn btn-soft-primary btn-sm"
                                                 title="Chỉnh sửa">
                                                 <iconify-icon icon="solar:pen-2-broken"
                                                     class="align-middle fs-18"></iconify-icon>
-                                            </a>
+                                                </a>
+                                            @endcan
 
+
+                                            @can('delete role')
                                             <form action="{{ route('roles.softDelete', $role->id) }}" method="POST"
                                                 style="display:inline;">
                                                 @csrf
@@ -82,6 +93,7 @@
                                                         class="align-middle fs-18"></iconify-icon>
                                                 </button>
                                             </form>
+                                            @endcan
                                         </div>
                                     </td>
                                 </tr>
@@ -106,9 +118,28 @@
                         <span class="fw-semibold">{{ $roles->total() }}</span> kết quả
                     </div>
                 </div>
-                <div class="col-sm-auto mt-3 mt-sm-0">
-                    {{ $roles->links('pagination::bootstrap-4') }}
-                </div>
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+
+                        <div>
+                            {{ $roles->links('pagination::bootstrap-4') }}
+                        </div>
+                        <div>
+                            @can('delete role')
+                             <a href="{{ route('roles.deleted') }}" class="btn btn-light btn-sm" title="Xem chi tiết">
+                                <iconify-icon icon="tabler:trash-x" width="24" height="24" title="Vai trò đã xóa"></iconify-icon>
+                             </a>
+                             @endcan
+                        </div>
+                        <div>
+                            @can('create role')
+                                <a href="{{ route('roles.create') }}" class="btn btn-primary btn-sm" title="Tạo vai trò mới">
+                                    <iconify-icon icon="solar:plus-bold" class="align-middle fs-18"></iconify-icon>
+                                    Tạo Vai Trò
+                                </a>
+                                
+                            @endcan
+                        </div>
+                    </div>
             </div>
         </div>
     </div>

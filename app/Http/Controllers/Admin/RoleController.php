@@ -43,7 +43,12 @@ class RoleController extends Controller
     public function create()
     {
         $permissions = Permission::all();
-        return view('admin.roles.create', compact('permissions'));
+
+        $groupedPermissions = $permissions->groupBy(function ($permission) {
+        return explode('.', $permission->name)[0]; // Lấy phần "role" từ "role.create"
+        });
+
+        return view('admin.roles.create', compact('groupedPermissions'));
     }
 
     public function show($id)
@@ -57,10 +62,15 @@ class RoleController extends Controller
         $role = Role::findById($id);
         $permissions = Permission::all();
 
+
         // Mảng tên quyền để đánh dấu checkbox
         $rolePermissions = $role->permissions->pluck('name')->toArray();
 
-        return view('admin.roles.edit', compact('role', 'permissions', 'rolePermissions'));
+        $groupedPermissions = $permissions->groupBy(function ($permission) {
+        return explode('.', $permission->name)[0];
+        });
+
+        return view('admin.roles.edit', compact('role', 'permissions', 'rolePermissions','groupedPermissions'));
     }
 
 
