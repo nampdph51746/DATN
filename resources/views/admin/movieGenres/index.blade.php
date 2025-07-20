@@ -16,7 +16,9 @@
                                 Xóa đã chọn
                             </button>
                         </form>
+                        @can('create genre')
                         <a href="{{ route('admin.genres.create') }}" class="btn btn-primary btn-sm">Thêm thể loại</a>
+                        @endcan
                     </div>
                 </div>
                 <div class="card-body">
@@ -49,12 +51,16 @@
                                     <td>{{ $genre->name }}</td>
                                     <td>{{ $genre->description }}</td>
                                     <td>
-                                        <a href="{{ route('admin.genres.edit', $genre->id) }}" class="btn btn-warning btn-sm">Sửa</a>
+                                        @can('edit genre')
+                                        <a href="{{ route('admin.genres.edit', $genre->id) }}" class="btn btn-warning btn-sm">Sửa</a>                                            
+                                        @endcan
+                                        @can('delete genre')
                                         <form action="{{ route('admin.genres.destroy', $genre->id) }}" method="POST" style="display:inline;">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Bạn có chắc muốn xóa?')">Xóa</button>
                                         </form>
+                                        @endcan
                                     </td>
                                 </tr>
                             @endforeach

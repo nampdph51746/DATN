@@ -31,31 +31,57 @@
                 @csrf
                 <div class="card">
                     <div class="card-header">
-                        <h4 class="card-title">Biến thể Combo</h4>
+                        <h4 class="card-title">Thông tin Combo</h4>
                     </div>
                     <div class="card-body">
                         <div class="row">
                             <div class="col-lg-6">
                                 <div class="mb-3">
+                                    <label for="name" class="form-label">Tên combo</label>
+                                    <input type="text" class="form-control" id="name" name="name" value="{{ old('name') }}" maxlength="255" required>
+                                    @error('name')
+                                        <span class="text-danger">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                                <div class="mb-3">
                                     <label for="product_id" class="form-label">Sản phẩm</label>
-                                    <select class="form-control" id="product_id" name="product_id" onchange="loadVariants(this)">
+                                    <select class="form-control" id="product_id" name="product_id" required disabled>
                                         <option value="">Chọn sản phẩm</option>
                                         @foreach ($products as $product)
-                                            <option value="{{ $product->id }}">{{ $product->name }}</option>
+                                            <option value="{{ $product->id }}" {{ $selectedProduct && $selectedProduct->id == $product->id ? 'selected' : '' }}>
+                                                {{ $product->name }}
+                                            </option>
                                         @endforeach
                                     </select>
                                     @error('product_id')
                                         <span class="text-danger">{{ $message }}</span>
                                     @enderror
                                 </div>
+                                <div class="mb-3">
+                                    <label for="combo_product_variant_id" class="form-label">Biến thể đại diện Combo</label>
+                                    <select class="form-control" id="combo_product_variant_id" name="combo_product_variant_id" required disabled>
+                                        <option value="">Chọn biến thể</option>
+                                        @if ($selectedVariant)
+                                            <option value="{{ $selectedVariant->id }}" selected>{{ $selectedVariant->sku }}</option>
+                                        @endif
+                                    </select>
+                                    @error('combo_product_variant_id')
+                                        <span class="text-danger">{{ $message }}</span>
+                                    @enderror
+                                </div>
                             </div>
                             <div class="col-lg-6">
                                 <div class="mb-3">
-                                    <label for="combo_product_variant_id" class="form-label">Biến thể đại diện Combo</label>
-                                    <select class="form-control" id="combo_product_variant_id" name="combo_product_variant_id" onchange="updatePreview()" required>
-                                        <option value="">Chọn biến thể</option>
-                                    </select>
-                                    @error('combo_product_variant_id')
+                                    <label for="price" class="form-label">Giá combo</label>
+                                    <input type="number" class="form-control" id="price" name="price" value="{{ old('price') }}" min="0" step="0.01" required>
+                                    @error('price')
+                                        <span class="text-danger">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                                <div class="mb-3">
+                                    <label for="stock_quantity" class="form-label">Tồn kho combo</label>
+                                    <input type="number" class="form-control" id="stock_quantity" name="stock_quantity" value="{{ old('stock_quantity', 1) }}" min="0" required>
+                                    @error('stock_quantity')
                                         <span class="text-danger">{{ $message }}</span>
                                     @enderror
                                 </div>
@@ -82,10 +108,11 @@
                                 <tbody id="items-container">
                                     <tr class="item-row">
                                         <td>
-                                            <select class="form-control product-select" name="items[0][product_id]" onchange="loadItemVariants(this)" required>
+                                            <select class="form-control product-select" name="items[0][product_id]" onchange="loadItemVariants(this)" required
+                                                @if($selectedVariant && $selectedProduct && $selectedProduct->id == $selectedVariant->product_id) disabled @endif>
                                                 <option value="">Chọn sản phẩm</option>
                                                 @foreach ($products as $product)
-                                                    <option value="{{ $product->id }}">{{ $product->name }}</option>
+                                                    <option value="{{ $product->id }}" {{ $selectedProduct && $selectedProduct->id == $product->id ? 'selected' : '' }}>{{ $product->name }}</option>
                                                 @endforeach
                                             </select>
                                             @error('items.0.product_id')
@@ -93,8 +120,12 @@
                                             @enderror
                                         </td>
                                         <td>
-                                            <select class="form-control variant-select" name="items[0][item_product_variant_id]" required>
+                                            <select class="form-control variant-select" name="items[0][item_product_variant_id]" required
+                                                @if($selectedVariant) disabled @endif>
                                                 <option value="">Chọn biến thể</option>
+                                                @if($selectedVariant)
+                                                    <option value="{{ $selectedVariant->id }}" selected>{{ $selectedVariant->sku }}</option>
+                                                @endif
                                             </select>
                                             @error('items.0.item_product_variant_id')
                                                 <span class="text-danger">{{ $message }}</span>
@@ -128,11 +159,73 @@
     <script>
         function submitForm() {
             const comboForm = document.getElementById('comboForm');
-            if (comboForm.checkValidity()) {
-                comboForm.submit();
-            } else {
-                comboForm.reportValidity();
+            // Đảm bảo luôn set lại giá trị combo_product_variant_id đúng trước khi submit
+            const comboProductVariantSelect = document.getElementById('combo_product_variant_id');
+            if (comboProductVariantSelect.disabled) {
+                comboProductVariantSelect.disabled = false;
             }
+            // Nếu không có giá trị, set lại bằng biến thể đại diện nếu có
+            if (!comboProductVariantSelect.value && '{{ $selectedVariant ? $selectedVariant->id : '' }}') {
+                comboProductVariantSelect.value = '{{ $selectedVariant->id }}';
+            }
+            // Validate: combo phải có ít nhất một sản phẩm khác ngoài sản phẩm đại diện
+            const rows = document.getElementsByClassName('item-row');
+            let hasNonRep = false;
+            let comboItems = [];
+            Array.from(rows).forEach(row => {
+                const variantId = row.querySelector('.variant-select').value;
+                const productId = row.querySelector('.product-select').value;
+                const quantity = row.querySelector('input[type="number"]').value;
+                comboItems.push({productId, variantId, quantity});
+                if (variantId != '{{ $selectedVariant ? $selectedVariant->id : '' }}') {
+                    hasNonRep = true;
+                }
+            });
+            console.log('DEBUG comboItems:', comboItems);
+            if (!hasNonRep && rows.length === 1) {
+                alert('Combo phải có ít nhất một sản phẩm khác ngoài sản phẩm đại diện.');
+                return;
+            }
+
+            // Validate: combo trùng với combo đã tồn tại
+            const payload = {
+                product_variant_id: document.getElementById('combo_product_variant_id').value,
+                items: comboItems
+            };
+            console.log('DEBUG payload gửi duplicate:', payload);
+            fetch('/admin/combos/check-duplicate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => {
+                console.log('DEBUG response:', response);
+                return response.json();
+            })
+            .then(data => {
+                console.log('DEBUG data trả về:', data);
+                if (data.duplicate) {
+                    alert('Combo này đã tồn tại. Vui lòng chọn sản phẩm hoặc biến thể khác.');
+                } else {
+                    if (comboForm.checkValidity()) {
+                        comboForm.submit();
+                    } else {
+                        comboForm.reportValidity();
+                    }
+                }
+            })
+            .catch((err) => {
+                console.log('DEBUG lỗi API:', err);
+                // Nếu lỗi API thì vẫn cho submit
+                if (comboForm.checkValidity()) {
+                    comboForm.submit();
+                } else {
+                    comboForm.reportValidity();
+                }
+            });
         }
 
         function loadVariants(select) {
@@ -156,6 +249,9 @@
                             const option = document.createElement('option');
                             option.value = variant.id;
                             option.text = variant.sku;
+                            if (variant.id == '{{ $comboProductVariantId }}') {
+                                option.selected = true;
+                            }
                             variantSelect.appendChild(option);
                         });
                     } else if (data.error) {
@@ -200,6 +296,7 @@
         function addItemRow() {
             const container = document.getElementById('items-container');
             const rows = container.getElementsByClassName('item-row');
+            // Luôn cho phép thêm mục combo, chỉ validate khi submit
             const newRow = rows[0].cloneNode(true);
             const index = rows.length;
 
@@ -209,13 +306,15 @@
             newRow.querySelector('input[type="number"]').value = 1;
 
             newRow.querySelector('.product-select').selectedIndex = 0;
+            newRow.querySelector('.product-select').disabled = false;
             newRow.querySelector('.variant-select').innerHTML = '<option value="">Chọn biến thể</option>';
+            newRow.querySelector('.variant-select').disabled = false;
+            newRow.querySelector('input[type="number"]').disabled = false;
             newRow.querySelector('.btn-remove-item').style.display = 'inline-block';
 
             container.appendChild(newRow);
             updateRemoveButtons();
         }
-
         function removeItemRow(btn) {
             const row = btn.closest('.item-row');
             row.remove();
@@ -226,7 +325,23 @@
             const rows = document.getElementsByClassName('item-row');
             Array.from(rows).forEach((row, idx) => {
                 const btn = row.querySelector('.btn-remove-item');
-                btn.style.display = rows.length > 1 ? 'inline-block' : 'none';
+                // Disable product/variant/quantity if is representative
+                @if ($selectedVariant && $selectedProduct)
+                    if (row.querySelector('.variant-select').value == '{{ $selectedVariant->id }}') {
+                        row.querySelector('.product-select').disabled = true;
+                        row.querySelector('.variant-select').disabled = true;
+                        // Cho phép chỉnh số lượng sản phẩm đại diện
+                        row.querySelector('input[type="number"]').disabled = false;
+                        btn.style.display = 'none';
+                    } else {
+                        row.querySelector('.product-select').disabled = false;
+                        row.querySelector('.variant-select').disabled = false;
+                        row.querySelector('input[type="number"]').disabled = false;
+                        btn.style.display = rows.length > 1 ? 'inline-block' : 'none';
+                    }
+                @else
+                    btn.style.display = rows.length > 1 ? 'inline-block' : 'none';
+                @endif
                 row.querySelector('.product-select').name = `items[${idx}][product_id]`;
                 row.querySelector('.variant-select').name = `items[${idx}][item_product_variant_id]`;
                 row.querySelector('input[type="number"]').name = `items[${idx}][quantity]`;
@@ -262,6 +377,51 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             updateRemoveButtons();
+            const productSelect = document.getElementById('product_id');
+            if (productSelect.value) {
+                loadVariants(productSelect);
+            }
+
+            // Chỉ tự động set sản phẩm đại diện nếu không có lỗi validation (không có old('name'), old('price'), old('stock_quantity'))
+            @if ($selectedVariant && $selectedProduct && !old('name') && !old('price') && !old('stock_quantity'))
+                const container = document.getElementById('items-container');
+                const firstRow = container.querySelector('.item-row');
+
+                // Cập nhật hàng đầu tiên với sản phẩm đại diện
+                firstRow.querySelector('.product-select').value = '{{ $selectedProduct->id }}';
+                firstRow.querySelector('input[type="number"]').value = 1;
+
+                // Tải danh sách biến thể cho sản phẩm đại diện
+                const productSelectElement = firstRow.querySelector('.product-select');
+                fetch(`/admin/products/${productSelectElement.value}/variants`, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                    return response.json();
+                })
+                .then(data => {
+                    const variantSelect = firstRow.querySelector('.variant-select');
+                    variantSelect.innerHTML = '<option value="">Chọn biến thể</option>';
+                    if (Array.isArray(data)) {
+                        data.forEach(variant => {
+                            const option = document.createElement('option');
+                            option.value = variant.id;
+                            option.text = variant.sku;
+                            if (variant.id == '{{ $selectedVariant->id }}') {
+                                option.selected = true;
+                            }
+                            variantSelect.appendChild(option);
+                        });
+                    }
+                    // Đảm bảo biến thể đại diện được chọn
+                    variantSelect.value = '{{ $selectedVariant->id }}';
+                })
+                .catch(error => console.error('Error loading item variants:', error));
+            @endif
         });
     </script>
 @endsection

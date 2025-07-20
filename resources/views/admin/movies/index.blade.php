@@ -18,7 +18,6 @@
                     <a href="{{ route('admin.movies.create') }}" class="btn btn-sm btn-primary">
                         Thêm phim
                     </a>
-
                     <div class="dropdown">
                         <a href="#" class="dropdown-toggle btn btn-sm btn-outline-light" data-bs-toggle="dropdown" aria-expanded="false">
                             Lọc

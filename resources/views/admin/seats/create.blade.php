@@ -18,7 +18,7 @@
                             <button type="submit" form="seatForm" class="btn btn-primary w-100">Thêm ghế</button>
                         </div>
                         <div class="col-lg-6">
-                            <a href="{{ route('admin.rooms.show', $room->id) }}" class="btn btn-outline-secondary w-100">Hủy</a>
+                            <a href="{{ route('admin.rooms.show', ['room' => $room->id ?? old('room_id')]) }}" class="btn btn-outline-secondary w-100">Hủy</a>
                         </div>
                     </div>
                 </div>
@@ -58,19 +58,25 @@
                                     <label for="seat_type_id" class="form-label">Loại ghế</label>
                                     <select name="seat_type_id" id="seat_type_id" class="form-control" required>
                                         <option value="">Chọn loại ghế</option>
-                                        @foreach ($seatTypes as $seatType)
-                                            <option value="{{ $seatType->id }}">{{ $seatType->name }} ({{ $seatType->price_modifier }})</option>
+                                        @foreach ($allowedSeatTypes as $seatType)
+                                            <option value="{{ $seatType->id }}"
+                                                data-suggested="{{ $recommendedConfig[$seatType->id]['suggested_percentage'] ?? '' }}"
+                                                data-min="{{ $recommendedConfig[$seatType->id]['min_percentage'] ?? '' }}"
+                                                data-max="{{ $recommendedConfig[$seatType->id]['max_percentage'] ?? '' }}"
+                                                @if (request()->has('next_seat_type_id') && request('next_seat_type_id') == $seatType->id) selected @endif
+                                            >{{ $seatType->name }} ({{ $seatType->price_modifier }})</option>
                                         @endforeach
                                     </select>
+                                    <div id="suggested-percentage" class="mt-2 text-info"></div>
                                     @error('seat_type_id')
                                         <span class="text-danger">{{ $message }}</span>
-                                    @endfor
+                                    @enderror
                                 </div>
                             </div>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Tỷ lệ loại ghế (%)</label>
-                            @foreach ($seatTypes as $seatType)
+                            @foreach ($allowedSeatTypes as $seatType)
                                 <div class="flex items-center space-x-2 mb-2">
                                     <label for="seat_type_percentages_{{ $seatType->id }}" class="form-label">{{ $seatType->name }}</label>
                                     <input type="number" name="seat_type_percentages[{{ $seatType->id }}]" id="seat_type_percentages_{{ $seatType->id }}" 
@@ -81,7 +87,7 @@
                             @endforeach
                             @error('seat_type_percentages')
                                 <span class="text-danger">{{ $message }}</span>
-                            @endfor
+                            @enderror
                         </div>
                         <div class="row">
                             <div class="col-lg-6">
@@ -90,16 +96,17 @@
                                     <input type="number" name="seats_per_row" id="seats_per_row" class="form-control" min="1" value="1" required>
                                     @error('seats_per_row')
                                         <span class="text-danger">{{ $message }}</span>
-                                    @endfor
+                                    @enderror
                                 </div>
                             </div>
                             <div class="col-lg-6">
                                 <div class="mb-3">
                                     <label for="min_seats_per_row" class="form-label">Số ghế tối thiểu mỗi hàng</label>
                                     <input type="number" name="min_seats_per_row" id="min_seats_per_row" class="form-control" min="1" value="1" required>
+                                    <div id="suggested-seats-per-row" class="mt-2 text-info"></div>
                                     @error('min_seats_per_row')
                                         <span class="text-danger">{{ $message }}</span>
-                                    @endfor
+                                    @enderror
                                 </div>
                             </div>
                         </div>
@@ -148,6 +155,7 @@
                         <div class="mb-3">
                             <label class="form-label">Debug Data</label>
                             <pre>{{ print_r($seatTypes, true) }}</pre>
+                            <pre>{{ print_r($allowedSeatTypes, true) }}</pre>
                             <pre>{{ print_r($seatPercentages, true) }}</pre>
                             <pre>{{ print_r($seats, true) }}</pre>
                         </div>
@@ -209,6 +217,53 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        // Hiển thị đề xuất số ghế cho từng loại khi chọn loại ghế
+        const seatTypeSelect = document.getElementById('seat_type_id');
+        const suggestedDiv = document.getElementById('suggested-percentage');
+        function updateSuggested() {
+            if (!seatTypeSelect) return;
+            const selected = seatTypeSelect.options[seatTypeSelect.selectedIndex];
+            const suggested = selected ? selected.getAttribute('data-suggested') : '';
+            const min = selected ? selected.getAttribute('data-min') : '';
+            const max = selected ? selected.getAttribute('data-max') : '';
+            if (suggested) {
+                suggestedDiv.innerHTML = `Đề xuất tỷ lệ: <strong>${suggested}%</strong> (Tối thiểu: ${min}%, Tối đa: ${max}%)`;
+            } else {
+                suggestedDiv.innerHTML = '';
+            }
+        }
+        seatTypeSelect.addEventListener('change', updateSuggested);
+        // Nếu có next_seat_type_id thì chọn loại đó khi load
+        @if (request()->has('next_seat_type_id'))
+            seatTypeSelect.value = '{{ request('next_seat_type_id') }}';
+        @endif
+        updateSuggested();
+
+        // Đề xuất số ghế mỗi hàng
+        function updateSuggestedSeatsPerRow() {
+            // Lấy giá trị capacity thực tế còn lại từ input hoặc biến PHP
+            let capacity = {{ $room->capacity }};
+            // Nếu đã có ghế, trừ đi số ghế đã có
+            capacity -= {{ $seats->count() }};
+            // Nếu capacity <= 0 thì hiển thị thông báo đã đủ ghế
+            if (capacity <= 0) {
+                document.getElementById('suggested-seats-per-row').innerHTML = '<span class="text-danger">Đã đủ số ghế, không thể thêm nữa.</span>';
+                return;
+            }
+            const seatsPerRow = parseInt(document.getElementById('seats_per_row').value) || 1;
+            if (capacity > 0 && seatsPerRow > 0 && capacity % seatsPerRow === 0) {
+                const numRows = capacity / seatsPerRow;
+                document.getElementById('suggested-seats-per-row').innerHTML =
+                    `Đề xuất số ghế mỗi hàng: <strong>${seatsPerRow}</strong> (chia hết cho ${capacity} ghế, tạo ${numRows} hàng)`;
+            } else if (capacity > 0 && seatsPerRow > 0) {
+                document.getElementById('suggested-seats-per-row').innerHTML =
+                    `<span class="text-warning">Số ghế mỗi hàng không chia hết cho ${capacity} ghế.</span>`;
+            }
+        }
+        document.getElementById('min_seats_per_row').addEventListener('input', updateSuggestedSeatsPerRow);
+        document.getElementById('seats_per_row').addEventListener('input', updateSuggestedSeatsPerRow);
+        updateSuggestedSeatsPerRow();
+
         // Kiểm tra tổng tỷ lệ phần trăm
         document.getElementById('seatForm').addEventListener('submit', function(e) {
             const percentages = document.querySelectorAll('input[name^="seat_type_percentages"]');

@@ -10,6 +10,9 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
+use App\Services\ShowtimeStatusService;
+
+use App\Services\ShowtimePricingService;
 
 class ShowtimeController extends Controller
 {
@@ -20,10 +23,23 @@ class ShowtimeController extends Controller
         $this->middleware('can:create role')->only(['create', 'store']);
         $this->middleware('can:edit role')->only(['edit', 'update']);
         $this->middleware('can:delete role')->only('destroy');
+        $this->middleware('update.showtime.status')->only(['index', 'show']);
     }
     
     public function index(Request $request)
     {
+        // Tự động cập nhật trạng thái suất chiếu khi load trang
+        try {
+            $service = new ShowtimeStatusService();
+            $updatedCount = $service->updateShowtimeStatuses();
+            
+            if ($updatedCount > 0) {
+                Log::info("Tự động cập nhật trạng thái cho {$updatedCount} suất chiếu khi load trang index");
+            }
+        } catch (\Exception $e) {
+            Log::error('Lỗi khi tự động cập nhật trạng thái suất chiếu: ' . $e->getMessage());
+        }
+
         $query = $request->input('query');
         $movieId = $request->input('movie_id');
         $roomId = $request->input('room_id');
@@ -62,6 +78,18 @@ class ShowtimeController extends Controller
 
     public function show($id)
     {
+        // Tự động cập nhật trạng thái suất chiếu khi xem chi tiết
+        try {
+            $service = new ShowtimeStatusService();
+            $updatedCount = $service->updateShowtimeStatuses();
+            
+            if ($updatedCount > 0) {
+                Log::info("Tự động cập nhật trạng thái cho {$updatedCount} suất chiếu khi xem chi tiết");
+            }
+        } catch (\Exception $e) {
+            Log::error('Lỗi khi tự động cập nhật trạng thái suất chiếu: ' . $e->getMessage());
+        }
+
         $showtime = Showtime::with(['movie', 'room'])->findOrFail($id);
         $ticketCount = \App\Models\Ticket::where('showtime_id', $id)->count();
         return view('admin.showtimes.show', compact('showtime', 'ticketCount'));
@@ -249,7 +277,7 @@ class ShowtimeController extends Controller
                 }
 
                 foreach ($roomIds as $roomId) {
-                    $room = Room::findOrFail($roomId);
+                    $room = Room::with('roomType')->findOrFail($roomId);
                     if (!$room) {
                         throw new \Exception('Phòng chiếu ID ' . $roomId . ' không tồn tại.');
                     }
@@ -294,12 +322,16 @@ class ShowtimeController extends Controller
                             continue;
                         }
 
+                        // Lấy base_price từ room type sử dụng PricingService
+                        $pricingService = new ShowtimePricingService();
+                        $basePriceFromRoomType = $pricingService->calculateBasePriceForRoom($room);
+
                         Showtime::create([
                             'movie_id' => $movie->id,
                             'room_id' => $room->id,
                             'start_time' => $startTime,
                             'end_time' => $endTime,
-                            'base_price' => 100000,
+                            'base_price' => $basePriceFromRoomType,
                             'status' => 'scheduled',
                             'created_at' => now($timezone),
                             'updated_at' => now($timezone),
@@ -333,6 +365,65 @@ class ShowtimeController extends Controller
             Log::error('Lỗi khi tạo suất chiếu tự động: ' . $e->getMessage());
             return redirect()->back()
                 ->with('error', 'Có lỗi xảy ra khi tạo suất chiếu: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Cập nhật trạng thái suất chiếu theo thời gian thực
+     */
+    public function updateStatuses()
+    {
+        try {
+            $service = new ShowtimeStatusService();
+            $updatedCount = $service->updateShowtimeStatuses();
+
+            return response()->json([
+                'success' => true,
+                'message' => "Đã cập nhật trạng thái cho {$updatedCount} suất chiếu",
+                'updated_count' => $updatedCount
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Lỗi khi cập nhật trạng thái suất chiếu: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Có lỗi xảy ra khi cập nhật trạng thái suất chiếu',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Cập nhật trạng thái cho một suất chiếu cụ thể
+     */
+    public function updateSingleStatus($id)
+    {
+        try {
+            $showtime = Showtime::findOrFail($id);
+            $service = new ShowtimeStatusService();
+            $updated = $service->updateSingleShowtimeStatus($showtime);
+
+            if ($updated) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Đã cập nhật trạng thái suất chiếu',
+                    'new_status' => $showtime->fresh()->status->value
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Không cần cập nhật trạng thái',
+                    'current_status' => $showtime->status->value
+                ]);
+            }
+
+        } catch (\Exception $e) {
+            Log::error('Lỗi khi cập nhật trạng thái suất chiếu: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Có lỗi xảy ra khi cập nhật trạng thái suất chiếu',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 }

@@ -22,6 +22,7 @@ use App\Enums\PromotionDiscountType;
 use App\Models\Point;
 use App\Models\PointHistory;
 use App\Models\CustomerRank;
+use App\Services\ShowtimeAvailabilityService;
 
 class HomeController extends Controller
 {
@@ -74,12 +75,18 @@ class HomeController extends Controller
         // Lấy ngày được chọn từ request (hoặc mặc định hôm nay)
         $selectedDate = $request->input('date') ?? now()->format('Y-m-d');
 
-        // Truy vấn suất chiếu theo phim và ngày
-        $showtimes = $movie->showtimes()
-            ->with('room')
+        // Truy vấn suất chiếu theo phim và ngày (chỉ lấy những suất chưa đầy)
+        $allShowtimes = $movie->showtimes()
+            ->with(['room.seats', 'showtimeSeatStates'])
             ->whereDate('start_time', $selectedDate)
+            ->where('status', 'scheduled')
+            ->where('start_time', '>=', Carbon::now())
             ->orderBy('start_time')
             ->get();
+
+        // Lọc ra các suất chiếu chưa đầy
+        $availabilityService = new ShowtimeAvailabilityService();
+        $showtimes = $availabilityService->filterAvailableShowtimes($allShowtimes);
 
         return view('client.detailmovie', compact(
             'movie',
@@ -210,10 +217,12 @@ class HomeController extends Controller
         $showtimes = Showtime::where('movie_id', $movieId)
             ->where('status', 'scheduled')
             ->where('start_time', '>=', Carbon::now())
-            ->with('room')
+            ->with(['room.seats', 'showtimeSeatStates'])
             ->get();
 
-        return $showtimes;
+        // Lọc ra các suất chiếu chưa đầy
+        $availabilityService = new ShowtimeAvailabilityService();
+        return $availabilityService->filterAvailableShowtimes($showtimes);
     }
 
     private function getDates($showtimes)
@@ -240,21 +249,30 @@ class HomeController extends Controller
 
     private function getShowtimesData($showtimes)
     {
+        $availabilityService = new ShowtimeAvailabilityService();
+        
         $showtimesByDate = $showtimes->groupBy(function ($showtime) {
             return Carbon::parse($showtime->start_time)->format('Y-m-d');
         });
 
         $showtimesData = [];
         foreach ($showtimesByDate as $date => $showtimes) {
-            $showtimesData[$date] = $showtimes->groupBy('room_id')->map(function ($roomShowtimes) {
+            $showtimesData[$date] = $showtimes->groupBy('room_id')->map(function ($roomShowtimes) use ($availabilityService) {
                 $room = $roomShowtimes->first()->room ?? (object)['name' => 'Unknown Room'];
                 return [
                     'room_name' => $room->name,
-                    'times' => $roomShowtimes->map(function ($showtime) {
+                    'times' => $roomShowtimes->map(function ($showtime) use ($availabilityService) {
+                        $availabilityInfo = $availabilityService->getShowtimeAvailabilityInfo($showtime);
+                        
                         return [
                             'id' => $showtime->id,
                             'time' => Carbon::parse($showtime->start_time)->format('h:i A'),
+                            'end_time' => Carbon::parse($showtime->end_time)->format('h:i A'),
                             'base_price' => $showtime->base_price,
+                            'available_seats' => $availabilityInfo['available_seats'],
+                            'occupancy_rate' => $availabilityInfo['occupancy_rate'],
+                            'is_nearly_full' => $availabilityInfo['is_nearly_full'],
+                            'status_class' => $availabilityInfo['status_class'],
                         ];
                     })->toArray(),
                 ];

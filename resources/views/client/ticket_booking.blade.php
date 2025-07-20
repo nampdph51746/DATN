@@ -3,6 +3,7 @@
             window.userRankDiscountPercentage = {{ (float) $userRank->discount_percentage }};
         </script>
     @endif
+    
     <style>
         .seat-selection-wrapper {
             padding: 20px;
@@ -1701,11 +1702,14 @@
                     if (!seenTimes.has(key)) {
                         seenTimes.add(key);
                         const btn = document.createElement('button');
+                        
+                        // CSS class đơn giản
                         btn.className = 'screen-time';
-                        btn.textContent = time.time;
+                        btn.textContent = `${time.time} - ${time.end_time}`;
                         btn.onclick = function() {
-                            timeFunction(time.id, time.time, time.base_price);
+                            timeFunction(time.id, `${time.time} - ${time.end_time}`, time.base_price);
                         };
+                        
                         timeDiv.appendChild(btn);
                     }
                 });

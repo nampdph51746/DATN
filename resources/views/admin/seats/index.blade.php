@@ -93,9 +93,11 @@
                                                     <a href="{{ route('admin.seats.show', $seat->id) }}" class="btn btn-light btn-sm">
                                                         <iconify-icon icon="solar:eye-broken" class="align-middle fs-18"></iconify-icon>
                                                     </a>
+                                                    @can('edit seat')
                                                     <a href="{{ route('admin.seats.edit', $seat->id) }}" class="btn btn-soft-primary btn-sm">
                                                         <iconify-icon icon="solar:pen-2-broken" class="align-middle fs-18"></iconify-icon>
                                                     </a>
+                                                    @endcan
                                                 </div>
                                             </td>
                                         </tr>
@@ -105,12 +107,14 @@
                             </div>
 
                             <!-- Nút chỉnh sửa nhiều -->
+                            @can('edit seat')
                             <div class="card-footer border-top d-flex justify-content-between align-items-center mt-2">
                                 <button type="submit" class="btn btn-warning btn-sm">
                                     <iconify-icon icon="solar:pen-new-square-bold-duotone" class="me-1"></iconify-icon>
                                     Chỉnh sửa nhiều ghế
                                 </button>
                             </div>
+                            @endcan
                         </form>
                         <!-- end table-responsive -->
                     </div>

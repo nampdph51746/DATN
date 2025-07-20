@@ -353,13 +353,20 @@
             }
         }
 
+        // Đảm bảo timer đồng bộ khi chuyển bước
+window.getTimerEndTime = function() {
+    // Trả về thời gian kết thúc timer (timestamp ms)
+    return countdownEndTime ? countdownEndTime.getTime() : null;
+};
+
+        // Khi gửi timer sang parent, luôn gửi giá trị mới nhất
         function sendTimerToParent() {
             if (window.parent && window.parent.receiveTimer) {
                 try {
                     window.parent.receiveTimer({
-                        endTime: countdownEndTime ? countdownEndTime.getTime() : null
+                        endTime: window.getTimerEndTime()
                     });
-                    console.log('Timer endTime sent to parent:', countdownEndTime);
+                    console.log('Timer endTime sent to parent:', window.getTimerEndTime());
                 } catch (error) {
                     console.error('Error sending timer to parent:', error);
                 }
@@ -369,8 +376,30 @@
         }
 
         function startTimer() {
-            const timerDuration = 600000; // 600 seconds (10 minutes)
+            // Tính khoảng cách thời gian giữa hiện tại và suất chiếu
+            const showtimeStart = new Date("{{ $showtime->start_time->format('Y-m-d H:i:s') }}".replace(/-/g, '/'));
             const now = new Date();
+            const diffMinutes = (showtimeStart - now) / (1000 * 60);
+
+            // Nếu nhỏ hơn hoặc bằng 15 phút thì không cho đặt nữa, hiển thị thông báo nhưng không chuyển trang
+            if (diffMinutes <= 15) {
+                const timerDisplay = document.getElementById('timer-display');
+                if (timerDisplay) {
+                    timerDisplay.innerHTML = `<span style=\"background: #dc3545; color: #fff; padding: 10px 15px; border-radius: 4px; font-size: 1.2em; font-weight: 600;\">Không thể đặt vé khi suất chiếu sắp bắt đầu! Vui lòng chọn suất khác.</span>`;
+                }
+                // Disable tất cả ghế
+                document.querySelectorAll('.seat').forEach(seat => {
+                    seat.style.pointerEvents = 'none';
+                    seat.style.opacity = '0.5';
+                });
+                return;
+            }
+
+            // Nếu nhỏ hơn hoặc bằng 30 phút thì timer chỉ còn 5 phút
+            let timerDuration = 600000; // 10 phút mặc định
+            if (diffMinutes <= 30) {
+                timerDuration = 300000; // 5 phút
+            }
             const endTime = new Date(now.getTime() + timerDuration);
             countdownEndTime = endTime;
 
@@ -387,15 +416,12 @@
                     timerStarted = false;
                     countdownEndTime = null;
                     timerDisplay.innerHTML = `
-                        <span style="background: #dc3545; color: #fff; padding: 10px 15px; border-radius: 4px; font-size: 1.2em; font-weight: 600;">Đơn hàng đã quá hạn</span>
+                        <span style=\"background: #dc3545; color: #fff; padding: 10px 15px; border-radius: 4px; font-size: 1.2em; font-weight: 600;\">Đơn hàng đã quá hạn</span>
                     `;
                     selectedSeats = [];
                     updateSummary();
                     sendSeatsToParent();
                     sendTimerToParent();
-                    setTimeout(() => {
-                        window.top.location.href = '{{ route('movies.show', ['id' => $showtime->movie_id ?? $movie->id]) }}';
-                    }, 2000);
                     return;
                 }
 

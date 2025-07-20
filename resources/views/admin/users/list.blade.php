@@ -100,7 +100,7 @@
                                             </td>
                                             <td>{{ $user->name }}</td>
                                             <td>{{ $user->id }}</td>
-                                            <td>{{ $user->customerRank->name }}</td>
+                                            <td>{{ optional($user->customerRank)->name }}</td>
                                             <td>{{ $user->getRoleNames()->first() }}</td>
                                             <td>{{ $user->email }}</td>
                                             <td>{{ $user->address }}</td>
