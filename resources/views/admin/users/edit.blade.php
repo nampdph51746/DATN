@@ -17,8 +17,6 @@
                         </div>
                         <div class="card-body">
                             <div class="row">
-                                <!-- Customer Rank -->
-                                <!-- Customer Rank -->
                                 <div class="col-lg-6 mb-3">
                                     <label for="customer_rank_id" class="form-label">Customer Rank</label>
                                     <select name="customer_rank_id" id="customer_rank_id"
@@ -52,7 +50,7 @@
                                 </div>
 
                                 <!-- Status -->
-                                <div class="col-lg-6 mb-3">
+<div class="col-lg-6 mb-3">
                                     <label for="status" class="form-label">Status</label>
                                     <select name="status" id="status"
                                         class="form-control @error('status') is-invalid @enderror">

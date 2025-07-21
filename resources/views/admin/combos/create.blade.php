@@ -19,7 +19,7 @@
                             <button type="button" class="btn btn-outline-secondary w-100" onclick="submitForm()">Tạo Combo</button>
                         </div>
                         <div class="col-lg-6">
-                            <a href="{{ route('admin.combos.index') }}" class="btn btn-primary w-100">Hủy</a>
+                            <a href="{{ isset($productId) ? route('admin.products.show', $productId) : route('admin.products.index') }}" class="btn btn-primary w-100">Quay lại</a>
                         </div>
                     </div>
                 </div>

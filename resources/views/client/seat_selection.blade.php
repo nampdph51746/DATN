@@ -422,6 +422,7 @@ window.getTimerEndTime = function() {
                     updateSummary();
                     sendSeatsToParent();
                     sendTimerToParent();
+                    window.top.location.href = '/'; // Chuyển về trang chủ
                     return;
                 }
 

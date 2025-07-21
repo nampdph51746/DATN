@@ -24,6 +24,8 @@
      <link href="{{ asset('assets/css/app.min.css') }}" rel="stylesheet" type="text/css" />
 
      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+     <!-- SweetAlert2 -->
+     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
      <!-- Theme Config js (Require in all Page) -->
      <script src="{{ asset('assets/js/config.js') }}"></script>
@@ -32,13 +34,67 @@
 
      <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+     
+     
 </head>
 
 <style>
-    /* Thêm lớp tùy chỉnh để đảm bảo main-nav có thể cuộn và không bị giới hạn chiều cao */
-    .main-nav-scrollable {
-        overflow-y: auto !important;
-        max-height: none !important;
+
+    /* Animation cho dropdown menu sidebar */
+    .collapse {
+        transition: all 0.35s ease-in-out;
+        overflow: hidden;
+        max-height: 0;
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    /* Animation cho menu arrow (mũi tên xoay) */
+    .nav-link.menu-arrow {
+        position: relative;
+    }
+
+    .nav-link.menu-arrow[aria-expanded="true"]::after {
+        transform: translateY(-50%) rotate(180deg);
+    }
+
+    /* Smooth transition cho sub-menu items */
+    .sub-navbar-nav {
+        transition: all 0.35s ease-in-out;
+    }
+
+    .sub-navbar-nav .sub-nav-item {
+        opacity: 0;
+        transform: translateX(-15px);
+        transition: all 0.25s ease-in-out;
+    }
+
+    .collapse.show .sub-navbar-nav .sub-nav-item {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    .collapse.show .sub-navbar-nav .sub-nav-item:nth-child(1) {
+        transition-delay: 0.1s;
+    }
+
+    .collapse.show .sub-navbar-nav .sub-nav-item:nth-child(2) {
+        transition-delay: 0.15s;
+    }
+
+    .collapse.show .sub-navbar-nav .sub-nav-item:nth-child(3) {
+        transition-delay: 0.2s;
+    }
+
+    .collapse.show .sub-navbar-nav .sub-nav-item:nth-child(4) {
+        transition-delay: 0.25s;
+    }
+
+    /* Hover effect cho menu items */
+    .sub-nav-link:hover {
+        background-color: rgba(var(--bs-primary-rgb), 0.1);
+        padding-left: 20px;
+        transition: all 0.25s ease;
     }
 </style>
 
@@ -46,7 +102,6 @@
 
      <!-- START Wrapper -->
      <div class="wrapper">
-
           <!-- ========== Topbar Start ========== -->
           <header class="topbar">
                <div class="container-fluid">
@@ -507,14 +562,15 @@
                             </a>
                         </li>
 
+                        <!-- Menu Phim -->
                         <li class="nav-item">
-                            <a class="nav-link menu-arrow" href="#sidebarMovies" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarMovies">
+                            <a class="nav-link menu-arrow" href="#sidebarMovies" role="button" aria-expanded="false" aria-controls="sidebarMovies">
                                 <span class="nav-icon">
                                     <iconify-icon icon="solar:clapperboard-bold-duotone"></iconify-icon>
                                 </span>
                                 <span class="nav-text">Phim</span>
                             </a>
-                            <div class="collapse" id="sidebarMovies">
+                            <div class="collapse" id="sidebarMovies" data-bs-parent="#navbar-nav">
                                 <ul class="nav sub-navbar-nav">
                                     <li class="sub-nav-item">
                                         <a class="sub-nav-link" href="{{ route('admin.movies.index') }}">Danh sách</a>
@@ -526,14 +582,15 @@
                             </div>
                         </li>
 
+                        <!-- Menu Thể loại phim -->
                         <li class="nav-item">
-                            <a class="nav-link menu-arrow" href="#sidebarGenres" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarGenres">
+                            <a class="nav-link menu-arrow" href="#sidebarGenres" role="button" aria-expanded="false" aria-controls="sidebarGenres">
                                 <span class="nav-icon">
                                     <iconify-icon icon="solar:tag-bold-duotone"></iconify-icon>
                                 </span>
                                 <span class="nav-text">Thể loại phim</span>
                             </a>
-                            <div class="collapse" id="sidebarGenres">
+                            <div class="collapse" id="sidebarGenres" data-bs-parent="#navbar-nav">
                                 <ul class="nav sub-navbar-nav">
                                     <li class="sub-nav-item">
                                         <a class="sub-nav-link" href="{{ route('admin.genres.index') }}">Danh sách</a>
@@ -545,14 +602,15 @@
                             </div>
                         </li>
 
+                        <!-- Menu Độ tuổi -->
                         <li class="nav-item">
-                            <a class="nav-link menu-arrow" href="#sidebarAgeLimits" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarAgeLimits">
+                            <a class="nav-link menu-arrow" href="#sidebarAgeLimits" role="button" aria-expanded="false" aria-controls="sidebarAgeLimits">
                                 <span class="nav-icon">
                                     <iconify-icon icon="solar:shield-user-bold-duotone"></iconify-icon>
                                 </span>
                                 <span class="nav-text">Độ tuổi</span>
                             </a>
-                            <div class="collapse" id="sidebarAgeLimits">
+                            <div class="collapse" id="sidebarAgeLimits" data-bs-parent="#navbar-nav">
                                 <ul class="nav sub-navbar-nav">
                                     <li class="sub-nav-item">
                                         <a class="sub-nav-link" href="{{ route('admin.age_limits.index') }}">Danh sách</a>
@@ -564,14 +622,15 @@
                             </div>
                         </li>
 
+                        <!-- Menu Quốc gia -->
                         <li class="nav-item">
-                            <a class="nav-link menu-arrow" href="#sidebarCountries" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarCountries">
+                            <a class="nav-link menu-arrow" href="#sidebarCountries" role="button" aria-expanded="false" aria-controls="sidebarCountries">
                                 <span class="nav-icon">
                                     <iconify-icon icon="solar:flag-bold-duotone"></iconify-icon>
                                 </span>
                                 <span class="nav-text">Quốc gia</span>
                             </a>
-                            <div class="collapse" id="sidebarCountries">
+                            <div class="collapse" id="sidebarCountries" data-bs-parent="#navbar-nav">
                                 <ul class="nav sub-navbar-nav">
                                     <li class="sub-nav-item">
                                         <a class="sub-nav-link" href="{{ route('admin.countries.index') }}">Danh sách</a>
@@ -583,14 +642,15 @@
                             </div>
                         </li>
 
+                        <!-- Menu Thành phố -->
                         <li class="nav-item">
-                            <a class="nav-link menu-arrow" href="#sidebarCities" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarCities">
+                            <a class="nav-link menu-arrow" href="#sidebarCities" role="button" aria-expanded="false" aria-controls="sidebarCities">
                                 <span class="nav-icon">
                                     <iconify-icon icon="solar:city-bold-duotone"></iconify-icon>
                                 </span>
                                 <span class="nav-text">Thành phố</span>
                             </a>
-                            <div class="collapse" id="sidebarCities">
+                            <div class="collapse" id="sidebarCities" data-bs-parent="#navbar-nav">
                                 <ul class="nav sub-navbar-nav">
                                     <li class="sub-nav-item">
                                         <a class="sub-nav-link" href="{{ route('admin.cities.index') }}">Danh sách</a>
@@ -602,14 +662,15 @@
                             </div>
                         </li>
 
+                        <!-- Menu Rạp chiếu -->
                         <li class="nav-item">
-                            <a class="nav-link menu-arrow" href="#sidebarCinemas" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarCinemas">
+                            <a class="nav-link menu-arrow" href="#sidebarCinemas" role="button" aria-expanded="false" aria-controls="sidebarCinemas">
                                 <span class="nav-icon">
                                     <iconify-icon icon="solar:buildings-2-bold-duotone"></iconify-icon>
                                 </span>
                                 <span class="nav-text">Rạp chiếu</span>
                             </a>
-                            <div class="collapse" id="sidebarCinemas">
+                            <div class="collapse" id="sidebarCinemas" data-bs-parent="#navbar-nav">
                                 <ul class="nav sub-navbar-nav">
                                     <li class="sub-nav-item">
                                         <a class="sub-nav-link" href="{{ route('admin.cinemas.index') }}">Danh sách</a>
@@ -621,14 +682,15 @@
                             </div>
                         </li>
 
+                        <!-- Menu Phòng chiếu -->
                         <li class="nav-item">
-                            <a class="nav-link menu-arrow" href="#sidebarRooms" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarRooms">
+                            <a class="nav-link menu-arrow" href="#sidebarRooms" role="button" aria-expanded="false" aria-controls="sidebarRooms">
                                 <span class="nav-icon">
                                     <iconify-icon icon="solar:projector-bold-duotone"></iconify-icon>
                                 </span>
                                 <span class="nav-text">Phòng chiếu</span>
                             </a>
-                            <div class="collapse" id="sidebarRooms">
+                            <div class="collapse" id="sidebarRooms" data-bs-parent="#navbar-nav">
                                 <ul class="nav sub-navbar-nav">
                                     <li class="sub-nav-item">
                                         <a class="sub-nav-link" href="{{ route('admin.rooms.index') }}">Danh sách</a>
@@ -640,14 +702,15 @@
                             </div>
                         </li>
 
+                        <!-- Menu Đặt vé -->
                         <li class="nav-item">
-                            <a class="nav-link menu-arrow" href="#sidebarBookings" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarBookings">
+                            <a class="nav-link menu-arrow" href="#sidebarBookings" role="button" aria-expanded="false" aria-controls="sidebarBookings">
                                 <span class="nav-icon">
                                     <iconify-icon icon="solar:ticket-bold-duotone"></iconify-icon>
                                 </span>
                                 <span class="nav-text">Đặt vé</span>
                             </a>
-                            <div class="collapse" id="sidebarBookings">
+                            <div class="collapse" id="sidebarBookings" data-bs-parent="#navbar-nav">
                                 <ul class="nav sub-navbar-nav">
                                     <li class="sub-nav-item">
                                         <a class="sub-nav-link" href="{{ route('admin.bookings.index') }}">Danh sách</a>
@@ -656,14 +719,15 @@
                             </div>
                         </li>
 
+                        <!-- Menu Thanh toán -->
                         <li class="nav-item">
-                            <a class="nav-link menu-arrow" href="#sidebarPayments" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarPayments">
+                            <a class="nav-link menu-arrow" href="#sidebarPayments" role="button" aria-expanded="false" aria-controls="sidebarPayments">
                                 <span class="nav-icon">
                                     <iconify-icon icon="solar:card-bold-duotone"></iconify-icon>
                                 </span>
                                 <span class="nav-text">Thanh toán</span>
                             </a>
-                            <div class="collapse" id="sidebarPayments">
+                            <div class="collapse" id="sidebarPayments" data-bs-parent="#navbar-nav">
                                 <ul class="nav sub-navbar-nav">
                                     <li class="sub-nav-item">
                                         <a class="sub-nav-link" href="{{ route('admin.payments.index') }}">Danh sách</a>
@@ -678,14 +742,15 @@
                             </div>
                         </li>
 
+                        <!-- Menu Loại ghế -->
                         <li class="nav-item">
-                            <a class="nav-link menu-arrow" href="#sidebarSeatTypes" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarSeatTypes">
+                            <a class="nav-link menu-arrow" href="#sidebarSeatTypes" role="button" aria-expanded="false" aria-controls="sidebarSeatTypes">
                                 <span class="nav-icon">
                                     <iconify-icon icon="solar:sofa-2-bold-duotone"></iconify-icon>
                                 </span>
                                 <span class="nav-text">Loại ghế</span>
                             </a>
-                            <div class="collapse" id="sidebarSeatTypes">
+                            <div class="collapse" id="sidebarSeatTypes" data-bs-parent="#navbar-nav">
                                 <ul class="nav sub-navbar-nav">
                                     <li class="sub-nav-item">
                                         <a class="sub-nav-link" href="{{ route('seat-type.index') }}">Danh sách</a>
@@ -697,14 +762,15 @@
                             </div>
                         </li>
 
+                        <!-- Menu Ghế -->
                         <li class="nav-item">
-                            <a class="nav-link menu-arrow" href="#sidebarSeats" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarSeats">
+                            <a class="nav-link menu-arrow" href="#sidebarSeats" role="button" aria-expanded="false" aria-controls="sidebarSeats">
                                 <span class="nav-icon">
                                     <iconify-icon icon="solar:armchair-bold-duotone"></iconify-icon>
                                 </span>
                                 <span class="nav-text">Ghế</span>
                             </a>
-                            <div class="collapse" id="sidebarSeats">
+                            <div class="collapse" id="sidebarSeats" data-bs-parent="#navbar-nav">
                                 <ul class="nav sub-navbar-nav">
                                     <li class="sub-nav-item">
                                         <a class="sub-nav-link" href="{{ route('admin.seats.index') }}">Danh sách</a>
@@ -713,14 +779,15 @@
                             </div>
                         </li>
 
+                        <!-- Menu Vé -->
                         <li class="nav-item">
-                            <a class="nav-link menu-arrow" href="#sidebarTickets" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarTickets">
+                            <a class="nav-link menu-arrow" href="#sidebarTickets" role="button" aria-expanded="false" aria-controls="sidebarTickets">
                                 <span class="nav-icon">
                                     <iconify-icon icon="solar:ticket-sale-bold-duotone"></iconify-icon>
                                 </span>
                                 <span class="nav-text">Vé</span>
                             </a>
-                            <div class="collapse" id="sidebarTickets">
+                            <div class="collapse" id="sidebarTickets" data-bs-parent="#navbar-nav">
                                 <ul class="nav sub-navbar-nav">
                                     <li class="sub-nav-item">
                                         <a class="sub-nav-link" href="{{ route('tickets.index') }}">Danh sách</a>
@@ -741,7 +808,7 @@
                         <li class="menu-title mt-3">Quản lý người dùng</li>
 
                         <li class="nav-item">
-                            <a class="nav-link" href="">
+                            <a class="nav-link" href="{{ route('users.index') }}">
                                 <span class="nav-icon">
                                     <iconify-icon icon="solar:user-bold-duotone"></iconify-icon>
                                 </span>
@@ -749,14 +816,15 @@
                             </a>
                         </li>
 
+                        <!-- Menu Vai trò -->
                         <li class="nav-item">
-                            <a class="nav-link menu-arrow" href="#sidebarRoles" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarRoles">
+                            <a class="nav-link menu-arrow" href="#sidebarRoles" role="button" aria-expanded="false" aria-controls="sidebarRoles">
                                 <span class="nav-icon">
                                     <iconify-icon icon="solar:user-check-bold-duotone"></iconify-icon>
                                 </span>
                                 <span class="nav-text">Vai trò</span>
                             </a>
-                            <div class="collapse" id="sidebarRoles">
+                            <div class="collapse" id="sidebarRoles" data-bs-parent="#navbar-nav">
                                 <ul class="nav sub-navbar-nav">
                                     <li class="sub-nav-item">
                                         <a class="sub-nav-link" href="">Danh sách</a>
@@ -769,7 +837,7 @@
                         </li>
 
                         <li class="nav-item">
-                            <a class="nav-link" href="">
+                            <a class="nav-link" href="{{ route('roles.index') }}">
                                 <span class="nav-icon">
                                     <iconify-icon icon="solar:key-bold-duotone"></iconify-icon>
                                 </span>
@@ -777,14 +845,15 @@
                             </a>
                         </li>
 
+                        <!-- Menu Khách hàng -->
                         <li class="nav-item">
-                            <a class="nav-link menu-arrow" href="#sidebarCustomers" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarCustomers">
+                            <a class="nav-link menu-arrow" href="#sidebarCustomers" role="button" aria-expanded="false" aria-controls="sidebarCustomers">
                                 <span class="nav-icon">
                                     <iconify-icon icon="solar:users-group-rounded-bold-duotone"></iconify-icon>
                                 </span>
                                 <span class="nav-text">Khách hàng</span>
                             </a>
-                            <div class="collapse" id="sidebarCustomers">
+                            <div class="collapse" id="sidebarCustomers" data-bs-parent="#navbar-nav">
                                 <ul class="nav sub-navbar-nav">
                                     <li class="sub-nav-item">
                                         <a class="sub-nav-link" href="">Danh sách</a>
@@ -795,14 +864,15 @@
 
                         <li class="menu-title mt-3">Khác</li>
 
+                        <!-- Menu Khuyến mãi -->
                         <li class="nav-item">
-                            <a class="nav-link menu-arrow" href="#sidebarPromotions" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarPromotions">
+                            <a class="nav-link menu-arrow" href="#sidebarPromotions" role="button" aria-expanded="false" aria-controls="sidebarPromotions">
                                 <span class="nav-icon">
                                     <iconify-icon icon="solar:sale-bold-duotone"></iconify-icon>
                                 </span>
                                 <span class="nav-text">Khuyến mãi</span>
                             </a>
-                            <div class="collapse" id="sidebarPromotions">
+                            <div class="collapse" id="sidebarPromotions" data-bs-parent="#navbar-nav">
                                 <ul class="nav sub-navbar-nav">
                                     <li class="sub-nav-item">
                                         <a class="sub-nav-link" href="{{ route('promotions.index') }}">Danh sách</a>
@@ -892,14 +962,15 @@
 
                         <li class="menu-title mt-3">Tùy chỉnh</li>
 
+                        <!-- Menu Trang -->
                         <li class="nav-item">
-                            <a class="nav-link menu-arrow" href="#sidebarPages" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarPages">
+                            <a class="nav-link menu-arrow" href="#sidebarPages" role="button" aria-expanded="false" aria-controls="sidebarPages">
                                 <span class="nav-icon">
                                     <iconify-icon icon="solar:files-bold-duotone"></iconify-icon>
                                 </span>
                                 <span class="nav-text">Trang</span>
                             </a>
-                            <div class="collapse" id="sidebarPages">
+                            <div class="collapse" id="sidebarPages" data-bs-parent="#navbar-nav">
                                 <ul class="nav sub-navbar-nav">
                                     <li class="sub-nav-item">
                                         <a class="sub-nav-link" href="">Chào mừng</a>
@@ -923,14 +994,15 @@
                             </div>
                         </li>
 
+                        <!-- Menu Xác thực -->
                         <li class="nav-item">
-                            <a class="nav-link menu-arrow" href="#sidebarAuthentication" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarAuthentication">
+                            <a class="nav-link menu-arrow" href="#sidebarAuthentication" role="button" aria-expanded="false" aria-controls="sidebarAuthentication">
                                 <span class="nav-icon">
                                     <iconify-icon icon="solar:lock-keyhole-bold-duotone"></iconify-icon>
                                 </span>
                                 <span class="nav-text">Xác thực</span>
                             </a>
-                            <div class="collapse" id="sidebarAuthentication">
+                            <div class="collapse" id="sidebarAuthentication" data-bs-parent="#navbar-nav">
                                 <ul class="nav sub-navbar-nav">
                                     <li class="sub-nav-item">
                                         <a class="sub-nav-link" href="">Đăng nhập</a>
@@ -967,6 +1039,95 @@
      </div>
      <!-- END Wrapper -->
 
+     <!-- SweetAlert2 hiển thị thông báo flash -->
+          <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const menuLinks = document.querySelectorAll('.nav-link.menu-arrow');
+    
+    menuLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            const targetSelector = this.getAttribute('href');
+            const targetCollapse = document.querySelector(targetSelector);
+            
+            if (targetCollapse) {
+                const isCurrentlyOpen = targetCollapse.classList.contains('show');
+                
+                // Đóng tất cả các menu khác với animation
+                const allCollapses = document.querySelectorAll('.collapse.show');
+                allCollapses.forEach(collapse => {
+                    if (collapse !== targetCollapse) {
+                        // Animation đóng menu
+                        collapse.style.maxHeight = collapse.scrollHeight + 'px';
+                        collapse.offsetHeight; // Force reflow
+                        collapse.style.maxHeight = '0px';
+                        collapse.style.opacity = '0';
+                        collapse.style.transform = 'translateY(-10px)';
+                        
+                        setTimeout(() => {
+                            collapse.classList.remove('show');
+                        }, 350);
+                        
+                        const correspondingLink = document.querySelector(`[href="#${collapse.id}"]`);
+                        if (correspondingLink) {
+                            correspondingLink.setAttribute('aria-expanded', 'false');
+                        }
+                    }
+                });
+                
+                // Toggle menu hiện tại với animation
+                if (isCurrentlyOpen) {
+                    // Đóng menu với animation
+                    targetCollapse.style.maxHeight = targetCollapse.scrollHeight + 'px';
+                    targetCollapse.offsetHeight; // Force reflow
+                    targetCollapse.style.maxHeight = '0px';
+                    targetCollapse.style.opacity = '0';
+                    targetCollapse.style.transform = 'translateY(-10px)';
+                    
+                    setTimeout(() => {
+                        targetCollapse.classList.remove('show');
+                    }, 350);
+                    
+                    this.setAttribute('aria-expanded', 'false');
+                } else {
+                    // Mở menu với animation
+                    targetCollapse.classList.add('show');
+                    targetCollapse.style.maxHeight = '0px';
+                    targetCollapse.style.opacity = '0';
+                    targetCollapse.style.transform = 'translateY(-10px)';
+                    
+                    // Trigger animation
+                    setTimeout(() => {
+                        targetCollapse.style.maxHeight = targetCollapse.scrollHeight + 'px';
+                        targetCollapse.style.opacity = '1';
+                        targetCollapse.style.transform = 'translateY(0)';
+                    }, 10);
+                    
+                    // Reset max-height sau khi animation hoàn thành
+                    setTimeout(() => {
+                        if (targetCollapse.classList.contains('show')) {
+                            targetCollapse.style.maxHeight = 'none';
+                        }
+                    }, 350);
+                    
+                    this.setAttribute('aria-expanded', 'true');
+                }
+            }
+        });
+    });
+    
+    // Reset animation styles khi trang load
+    document.querySelectorAll('.collapse').forEach(collapse => {
+        if (!collapse.classList.contains('show')) {
+            collapse.style.maxHeight = '0px';
+            collapse.style.opacity = '0';
+            collapse.style.transform = 'translateY(-10px)';
+        }
+    });
+});
+     </script>
+
      <!-- Vendor Javascript (Require in all Page) -->
      <script src="assets/js/vendor.js"></script>
 
@@ -982,6 +1143,8 @@
      <script src="assets/js/pages/dashboard.js"></script>
      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     @stack('scripts')
+
+    
 </body>
 <!-- Mirrored from techzaa.in/larkon/admin/index.html by HTTrack Website Copier/3.x [XR&CO'2014], Thu, 29 May 2025 02:26:35 GMT -->
 </html>
