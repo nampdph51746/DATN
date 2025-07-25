@@ -64,7 +64,7 @@ class HomeController extends Controller
     public function show(Request $request, $id)
     {
         // Lấy thông tin phim (kèm quốc gia, giới hạn độ tuổi)
-        $movie = Movie::with(['country', 'ageLimit'])->findOrFail($id);
+        $movie = Movie::with(['country', 'ageLimit', 'genres'])->findOrFail($id);
 
         // Lấy danh sách phòng
         $rooms = Room::all();

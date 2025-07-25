@@ -837,27 +837,6 @@
                         </a>
                     </li>
 
-                    <!-- Menu Vai trò -->
-                    <li class="nav-item">
-                        <a class="nav-link menu-arrow" href="#sidebarRoles" role="button" aria-expanded="false"
-                            aria-controls="sidebarRoles">
-                            <span class="nav-icon">
-                                <iconify-icon icon="solar:user-check-bold-duotone"></iconify-icon>
-                            </span>
-                            <span class="nav-text">Vai trò</span>
-                        </a>
-                        <div class="collapse" id="sidebarRoles" data-bs-parent="#navbar-nav">
-                            <ul class="nav sub-navbar-nav">
-                                <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="">Danh sách</a>
-                                </li>
-                                <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="">Thêm mới</a>
-                                </li>
-                            </ul>
-                        </div>
-                    </li>
-
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('roles.index') }}">
                             <span class="nav-icon">
@@ -865,24 +844,6 @@
                             </span>
                             <span class="nav-text">Quyền hạn</span>
                         </a>
-                    </li>
-
-                    <!-- Menu Khách hàng -->
-                    <li class="nav-item">
-                        <a class="nav-link menu-arrow" href="#sidebarCustomers" role="button" aria-expanded="false"
-                            aria-controls="sidebarCustomers">
-                            <span class="nav-icon">
-                                <iconify-icon icon="solar:users-group-rounded-bold-duotone"></iconify-icon>
-                            </span>
-                            <span class="nav-text">Khách hàng</span>
-                        </a>
-                        <div class="collapse" id="sidebarCustomers" data-bs-parent="#navbar-nav">
-                            <ul class="nav sub-navbar-nav">
-                                <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="">Danh sách</a>
-                                </li>
-                            </ul>
-                        </div>
                     </li>
                 </ul>
             </div>
