@@ -21,6 +21,7 @@ class Promotion extends Model
         'start_date',
         'end_date',
         'quantity',
+        'usage_limit_per_user',
         'applies_to',
         'status',
         'rank_id',

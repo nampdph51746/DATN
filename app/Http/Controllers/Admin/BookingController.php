@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Models\Point;
 use App\Models\Booking;
+use App\Enums\BookingStatus;
+use App\Models\PointHistory;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use App\Http\Controllers\Controller;
-use App\Models\Point;
-use App\Models\PointHistory;
 
 class BookingController extends Controller
 {
@@ -53,4 +54,56 @@ class BookingController extends Controller
         return view('admin.bookings.show', compact('booking'));
     }
 
+
+
+    public function editStatus(Booking $booking)
+    {
+        return view('admin.bookings.edit', compact('booking'));
+    }
+
+    public function updateStatus(Request $request, $id)
+    {
+        $request->validate([
+            'status' => ['required', Rule::in([BookingStatus::Pending->value, BookingStatus::Confirmed->value, BookingStatus::Cancelled->value])],
+        ]);
+
+        $booking = Booking::findOrFail($id);
+        $oldStatus = $booking->status->value; 
+        $booking->status = BookingStatus::from($request->status); 
+        $booking->save();
+
+        if ($oldStatus === BookingStatus::Pending->value && $booking->status->value === BookingStatus::Confirmed->value) {
+            $user = $booking->user;
+            if (!$user) {
+                return redirect()->route('admin.bookings.index')->with('error', 'Không tìm thấy người dùng.');
+            }
+
+            $pointsToAdd = max(1, floor($booking->final_amount / 10000));
+
+            if ($pointsToAdd > 0 && !PointHistory::where('booking_id', $booking->id)->exists()) {
+                try {
+                    $point = Point::firstOrCreate(
+                        ['user_id' => $user->id],
+                        ['points_expiry_date' => now()->addYear(), 'created_at' => now(), 'updated_at' => now()]
+                    );
+                    $point->total_points = ($point->total_points ?? 0) + $pointsToAdd;
+                    $point->save();
+
+                    PointHistory::create([
+                        'user_id' => $user->id,
+                        'booking_id' => $booking->id,
+                        'points_change' => $pointsToAdd,
+                        'reason_type' => 'earned',
+                        'description' => 'Cộng điểm cho đơn hàng #' . $booking->id,
+                        'created_at' => now(),
+                    ]);
+
+                } catch (\Exception $e) {
+                    return redirect()->route('admin.bookings.index')->with('error', 'Lỗi khi cộng điểm thưởng: ' . $e->getMessage());
+                }
+            }
+        }
+
+        return redirect()->route('admin.bookings.index')->with('success', 'Cập nhật trạng thái thành công.');
+    }
 }

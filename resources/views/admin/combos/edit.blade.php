@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="container-xxl">
-        
+        @include('admin.partials.notifications')
 
         <div class="row">
             <div class="col-xl-3 col-lg-4">
@@ -20,7 +20,7 @@
                                 <button type="button" class="btn btn-outline-secondary w-100" onclick="submitForm()">Cập nhật Combo</button>
                             </div>
                             <div class="col-lg-6">
-                                <a href="{{ route('admin.combos.index') }}" class="btn btn-primary w-100">Hủy</a>
+                                <a href="{{ isset($combo->comboProductVariant->product_id) ? route('admin.products.show', $combo->comboProductVariant->product_id) : route('admin.products.index') }}" class="btn btn-primary w-100">Quay lại</a>
                             </div>
                         </div>
                     </div>

@@ -31,6 +31,16 @@ class TicketController extends Controller
             $query->where('status', $request->status);
         }
 
+        // Tự động cập nhật vé chưa sử dụng thành đã sử dụng nếu đã qua thời gian chiếu
+        $ticketsToUpdate = Ticket::where('status', 'valid')
+            ->whereHas('showtime', function($q) {
+                $q->where('start_time', '<=', now());
+            })->get();
+        foreach ($ticketsToUpdate as $ticket) {
+            $ticket->status = 'used';
+            $ticket->save();
+        }
+
         $tickets = $query->paginate(20);
 
         // Danh sách trạng thái có sẵn (có thể lấy từ model hoặc database)

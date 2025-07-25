@@ -6,149 +6,69 @@
         <div class="container-xxl">
 
             <div class="row">
-                <div class="col-md-6 col-xl-3">
+                <div class="col-md-6 col-xl-4">
                     <div class="card">
                         <div class="card-body">
                             <div class="d-flex align-items-center justify-content-between">
                                 <div>
-                                    <h4 class="card-title mb-2">Payment Refund</h4>
-                                    <p class="text-muted fw-medium fs-22 mb-0">490</p>
+                                    <h4 class="card-title mb-2">Chờ xác nhận</h4>
+                                    <p class="text-muted fw-medium fs-22 mb-0">{{ $bookings->where('status', 'pending')->count() }}</p>
                                 </div>
                                 <div>
-                                    <div class="avatar-md bg-primary bg-opacity-10 rounded">
-                                        <iconify-icon icon="solar:chat-round-money-broken"
-                                            class="fs-32 text-primary avatar-title"></iconify-icon>
+                                    <div class="avatar-md bg-warning bg-opacity-10 rounded">
+                                        <iconify-icon icon="solar:clock-circle-broken" class="fs-32 text-warning avatar-title"></iconify-icon>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-6 col-xl-3">
+                <div class="col-md-6 col-xl-4">
                     <div class="card">
                         <div class="card-body">
                             <div class="d-flex align-items-center justify-content-between">
                                 <div>
-                                    <h4 class="card-title mb-2">Order Cancel</h4>
-                                    <p class="text-muted fw-medium fs-22 mb-0">241</p>
+                                    <h4 class="card-title mb-2">Đã xác nhận</h4>
+                                    <p class="text-muted fw-medium fs-22 mb-0">{{ $bookings->where('status', 'confirmed')->count() }}</p>
                                 </div>
                                 <div>
-                                    <div class="avatar-md bg-primary bg-opacity-10 rounded">
-                                        <iconify-icon icon="solar:cart-cross-broken"
-                                            class="fs-32 text-primary avatar-title"></iconify-icon>
+                                    <div class="avatar-md bg-success bg-opacity-10 rounded">
+                                        <iconify-icon icon="solar:clipboard-check-broken" class="fs-32 text-success avatar-title"></iconify-icon>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+                <div class="col-md-6 col-xl-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <h4 class="card-title mb-2">Đã hủy</h4>
+                                    <p class="text-muted fw-medium fs-22 mb-0">{{ $bookings->where('status', 'cancelled')->count() }}</p>
+                                </div>
+                                <div>
+                                    <div class="avatar-md bg-danger bg-opacity-10 rounded">
+                                        <iconify-icon icon="solar:cart-cross-broken" class="fs-32 text-danger avatar-title"></iconify-icon>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                <div class="col-md-6 col-xl-3">
+            <!-- Tổng tiền nằm ngang dưới 3 phần trạng thái -->
+            <div class="row mb-4">
+                <div class="col-12">
                     <div class="card">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div>
-                                    <h4 class="card-title mb-2">Order Shipped</h4>
-                                    <p class="text-muted fw-medium fs-22 mb-0">630</p>
-                                </div>
-                                <div>
-                                    <div class="avatar-md bg-primary bg-opacity-10 rounded">
-                                        <iconify-icon icon="solar:box-broken"
-                                            class="fs-32 text-primary avatar-title"></iconify-icon>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-6 col-xl-3">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div>
-                                    <h4 class="card-title mb-2">Order Delivering</h4>
-                                    <p class="text-muted fw-medium fs-22 mb-0">170</p>
-                                </div>
-                                <div>
-                                    <div class="avatar-md bg-primary bg-opacity-10 rounded">
-                                        <iconify-icon icon="solar:tram-broken"
-                                            class="fs-32 text-primary avatar-title"></iconify-icon>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-6 col-xl-3">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div>
-                                    <h4 class="card-title mb-2">Pending Review</h4>
-                                    <p class="text-muted fw-medium fs-22 mb-0">210</p>
-                                </div>
-                                <div>
-                                    <div class="avatar-md bg-primary bg-opacity-10 rounded">
-                                        <iconify-icon icon="solar:clipboard-remove-broken"
-                                            class="fs-32 text-primary avatar-title"></iconify-icon>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6 col-xl-3">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div>
-                                    <h4 class="card-title mb-2">Pending Payment</h4>
-                                    <p class="text-muted fw-medium fs-22 mb-0">608</p>
-                                </div>
-                                <div>
-                                    <div class="avatar-md bg-primary bg-opacity-10 rounded">
-                                        <iconify-icon icon="solar:clock-circle-broken"
-                                            class="fs-32 text-primary avatar-title"></iconify-icon>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6 col-xl-3">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div>
-                                    <h4 class="card-title mb-2">Delivered</h4>
-                                    <p class="text-muted fw-medium fs-22 mb-0">200</p>
-                                </div>
-                                <div>
-                                    <div class="avatar-md bg-primary bg-opacity-10 rounded">
-                                        <iconify-icon icon="solar:clipboard-check-broken"
-                                            class="fs-32 text-primary avatar-title"></iconify-icon>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6 col-xl-3">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div>
-                                    <h4 class="card-title mb-2">In Progress</h4>
-                                    <p class="text-muted fw-medium fs-22 mb-0">656</p>
-                                </div>
-                                <div>
-                                    <div class="avatar-md bg-primary bg-opacity-10 rounded">
-                                        <iconify-icon icon="solar:inbox-line-broken"
-                                            class="fs-32 text-primary avatar-title"></iconify-icon>
-                                    </div>
-                                </div>
+                        <div class="card-body py-3">
+                            <div class="d-flex justify-content-center align-items-center gap-4">
+                                <span class="fw-bold fs-18">Tổng tiền:</span>
+                                <span class="fs-20 text-primary fw-bold">
+                                    {{ number_format($bookings->where('status', 'confirmed')->sum('final_amount'), 0, ',', '.') }} đ
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -162,21 +82,17 @@
                             <div>
                                 <h4 class="card-title">Danh sách đơn đặt vé</h4>
                             </div>
-                            {{-- Tim kiem va loc --}}
+                            {{-- Tìm kiếm và lọc --}}
                             <form method="GET" class="mb-4 d-flex gap-2">
                                 <input type="text" name="search" class="form-control w-auto"
-                                    placeholder="ID, Mã Booking hoặc User ID" value="{{ request('search') }}">
+                                    placeholder="ID, Mã đặt vé hoặc ID người dùng" value="{{ request('search') }}">
 
                                 <select name="status" class="form-select w-auto">
                                     <option value="">-- Trạng thái --</option>
-                                    <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Chờ xác
-                                        nhận</option>
-                                    <option value="confirmed" {{ request('status') == 'confirmed' ? 'selected' : '' }}>Đã
-                                        xác nhận</option>
-                                    <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>Đã
-                                        hủy</option>
+                                    <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Chờ xác nhận</option>
+                                    <option value="confirmed" {{ request('status') == 'confirmed' ? 'selected' : '' }}>Đã xác nhận</option>
+                                    <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>Đã hủy</option>
                                 </select>
-
 
                                 <button type="submit" class="btn btn-primary">Lọc</button>
                             </form>
@@ -187,7 +103,7 @@
                                     <thead class="bg-light-subtle">
                                         <tr>
                                             <th>ID</th>
-                                            <th>Mã Đặt Vé</th>
+                                            <th>Mã đặt vé</th>
                                             <th>Người dùng</th>
                                             <th>Tổng tiền</th>
                                             <th>Trạng thái</th>
@@ -198,38 +114,27 @@
                                         @foreach ($bookings as $booking)
                                             <tr>
                                                 <td>{{ $booking->id }}</td>
-
                                                 <td>{{ $booking->booking_code }}</td>
-
                                                 <td>
                                                     <a href="#!" class="link-primary fw-medium">
-                                                        {{ $booking->user->name ?? 'User #' . $booking->user_id }}
+                                                        {{ $booking->user->name ?? 'Người dùng #' . $booking->user_id }}
                                                     </a>
                                                 </td>
-
                                                 <td>{{ number_format($booking->final_amount, 0, ',', '.') }} đ</td>
-
                                                 <td>
                                                     @switch($booking->status?->value)
                                                         @case('pending')
-                                                            <span class="badge bg-warning-subtle text-warning px-2 py-1 fs-13">Chờ
-                                                                xác nhận</span>
+                                                            <span class="badge bg-warning-subtle text-warning px-2 py-1 fs-13">Chờ xác nhận</span>
                                                         @break
-
                                                         @case('confirmed')
-                                                            <span class="badge bg-success-subtle text-success px-2 py-1 fs-13">Đã
-                                                                xác nhận</span>
+                                                            <span class="badge bg-success-subtle text-success px-2 py-1 fs-13">Đã xác nhận</span>
                                                         @break
-
                                                         @case('cancelled')
-                                                            <span class="badge bg-danger-subtle text-danger px-2 py-1 fs-13">Đã
-                                                                hủy</span>
+                                                            <span class="badge bg-danger-subtle text-danger px-2 py-1 fs-13">Đã hủy</span>
                                                         @break
-
                                                         @default
-                                                            <span class="badge bg-light text-dark px-2 py-1 fs-13">Không rõ</span>
+                                                            <span class="badge bg-light text-dark px-2 py-1 fs-13">Không xác định</span>
                                                     @endswitch
-
                                                 </td>
                                                 <td>
                                                     <div class="d-flex gap-2">
@@ -238,7 +143,6 @@
                                                             <iconify-icon icon="solar:eye-broken"
                                                                 class="align-middle fs-18"></iconify-icon>
                                                         </a>
-
                                                     </div>
                                                 </td>
                                             </tr>
@@ -253,4 +157,6 @@
                     </div>
                 </div>
             </div>
-        @endsection
+        </div>
+    </div>
+@endsection

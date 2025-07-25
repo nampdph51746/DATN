@@ -8,6 +8,7 @@ use App\Models\Cinema;
 use App\Models\RoomType;
 use App\Models\SeatType;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use App\Models\RoomSeatConfiguration;
 use App\Http\Requests\StoreRoomRequest;
@@ -54,30 +55,17 @@ class AdminRoomController extends Controller
     {
         // Load room với relationships
         $room = Room::with(['cinema', 'roomType'])->findOrFail($id);
-        
-        // Debug để kiểm tra
-        \Log::info('Room data:', [
-            'room_id' => $room->id,
-            'cinema_id' => $room->cinema_id,
-            'room_type_id' => $room->room_type_id,
-            'cinema' => $room->cinema,
-            'roomType' => $room->roomType
-        ]);
-        
-        $seatTypes = SeatType::all();
+        // ...existing code...
+
+        // Chỉ lấy các loại ghế được phép cho phòng này
+        $allowedSeatTypes = $room->allowedSeatTypes(); // Collection of SeatType
         $seats = Seat::with('seatType')
             ->where('room_id', $room->id)
             ->orderBy('row_char')
             ->orderBy('seat_number')
             ->get();
-
-        // Lấy danh sách các hàng ghế (row_char) duy nhất
         $rows = $seats->pluck('row_char')->unique()->sort()->values();
-        
-        // Tính số ghế tối đa mỗi hàng
         $maxSeatsPerRow = $seats->isEmpty() ? 50 : $seats->groupBy('row_char')->map(function($group) { return $group->count(); })->max();
-        
-        // Số hàng tối đa
         $maxRows = 26;
 
         // Lấy tỷ lệ tùy chỉnh từ room_seat_configurations
@@ -86,12 +74,13 @@ class AdminRoomController extends Controller
             ->get()
             ->pluck('percentage', 'seat_type_id')
             ->toArray();
-        
         // Nếu chưa có cấu hình tùy chỉnh, sử dụng tỷ lệ mặc định
         if (empty($seatPercentages)) {
             $seatPercentages = [];
-            foreach ($seatTypes as $seatType) {
-                $seatPercentages[$seatType->id] = config('seat_types.percentages')[$seatType->name] ?? 0;
+            foreach ($allowedSeatTypes as $seatType) {
+                if (isset($seatType->id) && isset($seatType->name)) {
+                    $seatPercentages[$seatType->id] = config('seat_types.percentages')[$seatType->name] ?? 0;
+                }
             }
         }
 
@@ -102,12 +91,29 @@ class AdminRoomController extends Controller
         }
         $existingSeatsByType = $seats->groupBy('seat_type_id')->map(function($group) { return $group->count(); })->toArray();
 
-        // Ghi log dữ liệu
-        \Log::info('Seat Percentages: ', $seatPercentages);
-        \Log::info('Existing Seats by Type: ', $existingSeatsByType);
-        \Log::info('Required Seats: ', $requiredSeats);
+        // Tính thứ tự loại ghế và loại ghế tiếp theo cần thêm
+        $seatTypesOrder = array_keys($seatPercentages);
+        $currentTypeIndex = 0;
+        $next_seat_type_id = null;
+        if (session()->has('next_seat_type_id')) {
+            $currentTypeIndex = array_search(session('next_seat_type_id'), $seatTypesOrder);
+            if ($currentTypeIndex === false) {
+                $currentTypeIndex = 0;
+            }
+        }
+        // Tìm loại ghế tiếp theo còn ghế cần thêm
+        for ($i = $currentTypeIndex; $i < count($seatTypesOrder); $i++) {
+            $typeId = $seatTypesOrder[$i];
+            $remaining = ($requiredSeats[$typeId] ?? 0) - ($existingSeatsByType[$typeId] ?? 0);
+            if ($remaining > 0) {
+                $next_seat_type_id = $typeId;
+                break;
+            }
+        }
+        // Nếu không còn loại nào cần thêm thì lấy null
 
-        return view('admin.rooms.show', compact('room', 'seatTypes', 'seats', 'rows', 'maxSeatsPerRow', 'maxRows', 'seatPercentages', 'existingSeatsByType', 'requiredSeats'));
+
+        return view('admin.rooms.show', compact('room', 'allowedSeatTypes', 'seats', 'rows', 'maxSeatsPerRow', 'maxRows', 'seatPercentages', 'existingSeatsByType', 'requiredSeats', 'next_seat_type_id', 'seatTypesOrder'));
     }
 
     // Hiển thị form chỉnh sửa

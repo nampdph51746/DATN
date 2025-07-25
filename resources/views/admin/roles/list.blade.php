@@ -131,13 +131,9 @@
                              @endcan
                         </div>
                         <div>
-                            @can('create role')
-                                <a href="{{ route('roles.create') }}" class="btn btn-primary btn-sm" title="Tạo vai trò mới">
-                                    <iconify-icon icon="solar:plus-bold" class="align-middle fs-18"></iconify-icon>
-                                    Tạo Vai Trò
+                                <a href="{{ route('roles.create') }}" class="btn btn-primary w-100">
+                                    <i class="bi bi-arrow-counterclockwise me-1"></i> Thêm vai trò
                                 </a>
-                                
-                            @endcan
                         </div>
                     </div>
             </div>

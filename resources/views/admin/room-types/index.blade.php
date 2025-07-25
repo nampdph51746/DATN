@@ -18,6 +18,17 @@
                         <a href="{{ route('admin.room-types.create') }}" class="btn btn-sm btn-primary">
                             Thêm loại phòng
                         </a>
+
+                        <!-- <div class="dropdown">
+                            <a href="#" class="dropdown-toggle btn btn-sm btn-outline-light" data-bs-toggle="dropdown" aria-expanded="false">
+                                Thao tác
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-end">
+                                <a href="#!" class="dropdown-item">Download</a>
+                                <a href="#!" class="dropdown-item">Export</a>
+                                <a href="#!" class="dropdown-item">Import</a>
+                            </div>
+                        </div> -->
                     </div>
 
                     <div>

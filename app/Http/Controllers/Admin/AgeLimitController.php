@@ -59,24 +59,13 @@ class AgeLimitController extends Controller
     public function bulkDelete(Request $request)
     {
         $ids = explode(',', $request->ids);
-        $ageLimitsWithMovies = AgeLimit::whereIn('id', $ids)
-            ->whereHas('movies')
-            ->pluck('id')
-            ->toArray();
-        if (!empty($ageLimitsWithMovies)) {
-            return redirect()->route('admin.age_limits.index')->with('error', 'Một hoặc nhiều giới hạn độ tuổi đang có phim sử dụng, không thể xóa!');
-        }
         AgeLimit::whereIn('id', $ids)->delete();
         return redirect()->route('admin.age_limits.index')->with('success', 'Đã xóa các giới hạn độ tuổi đã chọn!');
     }
 
     public function destroy($id)
     {
-        $ageLimit = AgeLimit::findOrFail($id);
-        if ($ageLimit->movies()->exists()) {
-            return redirect()->route('admin.age_limits.index')->with('error', 'Giới hạn độ tuổi này đang có phim đặt, không thể xóa!');
-        }
-        $ageLimit->delete();
+        AgeLimit::destroy($id);
         return redirect()->route('admin.age_limits.index')->with('success', 'Đã xóa!');
     }
 }

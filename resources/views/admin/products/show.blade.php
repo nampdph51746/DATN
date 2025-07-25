@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="container-fluid">
-        
+        @include('admin.partials.notifications')
 
         <div class="row">
             <div class="col-lg-4">
@@ -127,46 +127,94 @@
                             <table class="table align-middle mb-0 table-hover table-centered">
                                 <thead class="bg-light-subtle">
                                     <tr>
-                                        <th>
-                                            <iconify-icon icon="solar:hashtag-broken"
-                                                class="align-middle fs-16 me-1"></iconify-icon>
-                                            #
-                                        </th>
-                                        <th>
-                                            <iconify-icon icon="solar:text-field-broken"
-                                                class="align-middle fs-16 me-1"></iconify-icon>
-                                            Biến thể
-                                        </th>
-                                        <th>
-                                            <iconify-icon icon="solar:calendar-add-broken"
-                                                class="align-middle fs-16 me-1"></iconify-icon>
-                                            Thời gian tạo
-                                        </th>
-                                        <th>
-                                            <iconify-icon icon="solar:calendar-mark-broken"
-                                                class="align-middle fs-16 me-1"></iconify-icon>
-                                            Thời gian cập nhật
-                                        </th>
+                                        <th>#</th>
+                                        <th>SKU</th>
+                                        <th>Thời gian tạo</th>
+                                        <th>Thời gian cập nhật</th>
+                                        <th>Trạng thái</th>
+                                        <th>Hành động</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @forelse($product->productVariants as $key => $variant)
                                         <tr>
                                             <td>{{ $key + 1 }}</td>
-                                            <td>{{ $variant->name ?? ($variant->sku ?? 'Không có tên') }}</td>
-                                            <td>{{ $variant->created_at ? $variant->created_at->format('d/m/Y H:i') : 'Không xác định' }}
+                                            <td>{{ $variant->sku }}</td>
+                                            <td>{{ $variant->created_at ? $variant->created_at->format('d/m/Y H:i') : 'Không xác định' }}</td>
+                                            <td>{{ $variant->updated_at ? $variant->updated_at->format('d/m/Y H:i') : 'Không xác định' }}</td>
+                                            <td>
+                                                <span class="badge {{ $variant->is_active ? 'bg-success' : 'bg-secondary' }}">
+                                                    {{ $variant->is_active ? 'Hoạt động' : 'Không hoạt động' }}
+                                                </span>
                                             </td>
-                                            <td>{{ $variant->updated_at ? $variant->updated_at->format('d/m/Y H:i') : 'Không xác định' }}
+                                            <td>
+                                                <a href="{{ route('admin.product-variants.edit', $variant->id) }}" class="btn btn-sm btn-warning me-1">
+                                                    <iconify-icon icon="solar:pen-2-broken" class="fs-16"></iconify-icon> Sửa
+                                                </a>
+                                                <a href="{{ route('admin.combos.create', ['product_id' => $product->id, 'combo_product_variant_id' => $variant->id]) }}" class="btn btn-sm btn-info">
+                                                    <iconify-icon icon="solar:add-circle-broken" class="fs-16"></iconify-icon> Tạo combo
+                                                </a>
                                             </td>
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="4" class="text-center text-muted">Không có biến thể sản phẩm
-                                                nào.</td>
+                                            <td colspan="6" class="text-center text-muted">Không có biến thể sản phẩm nào.</td>
                                         </tr>
                                     @endforelse
                                 </tbody>
                             </table>
+                        </div>
+
+                        {{-- Danh sách combo liên quan --}}
+                        <div class="mt-4">
+                            <h4 class="text-dark fw-medium mb-2">
+                                <iconify-icon icon="solar:list-broken" class="align-middle fs-18 me-1"></iconify-icon>
+                                Danh sách combo
+                            </h4>
+                            <div class="table-responsive">
+                                <table class="table align-middle mb-0 table-hover table-centered">
+                                    <thead class="bg-light-subtle">
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Tên combo</th>
+                                            <th>Biến thể đại diện</th>
+                                            <th>Giá</th>
+                                            <th>Tồn kho</th>
+                                            <th>Số lượng mục</th>
+                                            <th>Hành động</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @php
+                                            $combos = \App\Models\Combo::whereIn('combo_product_variant_id', $product->productVariants->pluck('id'))
+                                                ->with(['comboProductVariant', 'comboPackageItems'])
+                                                ->get();
+                                        @endphp
+                                        @forelse($combos as $idx => $combo)
+                                            <tr>
+                                                <td>{{ $idx + 1 }}</td>
+                                                <td>{{ $combo->name }}</td>
+                                                <td>{{ $combo->comboProductVariant ? $combo->comboProductVariant->sku : '-' }}</td>
+                                                <td>{{ number_format($combo->price, 0, ',', '.') }}₫</td>
+                                                <td>{{ $combo->stock_quantity }}</td>
+                                                <td>{{ $combo->comboPackageItems->count() }}</td>
+                                                <td>
+                                                    <a href="{{ route('admin.combos.show', $combo->id) }}" class="btn btn-sm btn-primary">
+                                                        <iconify-icon icon="solar:eye-broken" class="fs-16"></iconify-icon> Xem
+                                                    </a>
+                                                    <a href="{{ route('admin.combos.edit', $combo->id) }}" class="btn btn-sm btn-warning">
+                                                        <iconify-icon icon="solar:pen-2-broken" class="fs-16"></iconify-icon> Sửa
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="7" class="text-center">Chưa có combo nào cho các biến thể này</td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
 
                         <h4 class="text-dark fw-medium mt-4">Ghi chú:</h4>

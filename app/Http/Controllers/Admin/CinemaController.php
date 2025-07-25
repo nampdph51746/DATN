@@ -32,7 +32,7 @@ class CinemaController extends Controller
 {
     $cinema = Cinema::withTrashed()
         ->with(['city' => function ($query) {
-            $query->withTrashed(); // Load cả thành phố đã bị xóa mềm
+            $query->withTrashed(); 
         }])
         ->findOrFail($id);
 

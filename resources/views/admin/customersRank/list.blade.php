@@ -4,6 +4,14 @@
     <!-- Bắt đầu Container Fluid -->
     <div class="container-xxl">
 
+        @if(session('error'))
+            <div class="alert alert-danger">{{ session('error') }}</div>
+        @endif
+
+        @if(session('success'))
+            <div class="alert alert-success">{{ session('success') }}</div>
+        @endif
+
         <div class="card overflow-hiddenCoupons">
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-light-subtle d-flex justify-content-between align-items-center p-3">
@@ -68,13 +76,13 @@
                                                     <iconify-icon icon="solar:eye-broken"
                                                         class="align-middle fs-18"></iconify-icon>
                                                 </a>
-
-                                                <a href="{{ route('customers-rank.edit', $customerRank->id) }}"
-                                                    class="btn btn-soft-primary btn-sm">
-                                                    <iconify-icon icon="solar:pen-2-broken"
-                                                        class="align-middle fs-18"></iconify-icon>
+                                                @can('edit customer rank')
+                                                <a href="{{ route('customers-rank.edit', $customerRank->id) }}" class="btn btn-soft-primary btn-sm">
+                                                    <iconify-icon icon="solar:pen-2-broken" class="align-middle fs-18"></iconify-icon>
                                                 </a>
+                                                @endcan
 
+                                                @can('delete customer rank')
                                                 <form action="{{ route('customers-rank.softDelete', $customerRank->id) }}"
                                                     method="POST" style="display:inline;">
                                                     @csrf
@@ -85,6 +93,7 @@
                                                             class="align-middle fs-18"></iconify-icon>
                                                     </button>
                                                 </form>
+                                                @endcan
                                             </div>
                                         </td>
                                     </tr>

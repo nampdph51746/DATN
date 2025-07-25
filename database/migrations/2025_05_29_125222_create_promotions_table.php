@@ -21,6 +21,7 @@ return new class extends Migration
             $table->timestamp('start_date')->comment('Ngày bắt đầu');
             $table->timestamp('end_date')->comment('Ngày kết thúc');
             $table->integer('quantity')->nullable()->comment('Số lượng mã có thể sử dụng');
+            $table->integer('usage_limit_per_user')->nullable()->comment('Giới hạn sử dụng mỗi người dùng');
             $table->string('applies_to', 50)->nullable()->comment('Áp dụng cho (movies, tickets, products)');
             $table->string('status', 20)->nullable()->comment('Trạng thái khuyến mãi (active, inactive)');
             $table->timestamp('created_at')->nullable()->comment('Thời gian tạo');
