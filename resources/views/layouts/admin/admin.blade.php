@@ -160,89 +160,90 @@
                                     </div>
                                 </div>
                                 <div data-simplebar style="max-height: 280px;">
-                                   
-                                <div class="text-center py-3">
-                                    <a href="javascript:void(0);" class="btn btn-primary btn-sm">View All Notification
-                                        <i class="bx bx-right-arrow-alt ms-1"></i></a>
+
+                                    <div class="text-center py-3">
+                                        <a href="javascript:void(0);" class="btn btn-primary btn-sm">View All
+                                            Notification
+                                            <i class="bx bx-right-arrow-alt ms-1"></i></a>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <!-- Theme Setting -->
-                        <div class="topbar-item d-none d-md-flex">
-                            <button type="button" class="topbar-button" id="theme-settings-btn"
-                                data-bs-toggle="offcanvas" data-bs-target="#theme-settings-offcanvas"
-                                aria-controls="theme-settings-offcanvas">
-                                <iconify-icon icon="solar:settings-bold-duotone"
-                                    class="fs-24 align-middle"></iconify-icon>
-                            </button>
-                        </div>
+                            <!-- Theme Setting -->
+                            <div class="topbar-item d-none d-md-flex">
+                                <button type="button" class="topbar-button" id="theme-settings-btn"
+                                    data-bs-toggle="offcanvas" data-bs-target="#theme-settings-offcanvas"
+                                    aria-controls="theme-settings-offcanvas">
+                                    <iconify-icon icon="solar:settings-bold-duotone"
+                                        class="fs-24 align-middle"></iconify-icon>
+                                </button>
+                            </div>
 
-                        <!-- Activity -->
-                        <div class="topbar-item d-none d-md-flex">
-                            <button type="button" class="topbar-button" id="theme-settings-btn"
-                                data-bs-toggle="offcanvas" data-bs-target="#theme-activity-offcanvas"
-                                aria-controls="theme-settings-offcanvas">
-                                <iconify-icon icon="solar:clock-circle-bold-duotone"
-                                    class="fs-24 align-middle"></iconify-icon>
-                            </button>
-                        </div>
+                            <!-- Activity -->
+                            <div class="topbar-item d-none d-md-flex">
+                                <button type="button" class="topbar-button" id="theme-settings-btn"
+                                    data-bs-toggle="offcanvas" data-bs-target="#theme-activity-offcanvas"
+                                    aria-controls="theme-settings-offcanvas">
+                                    <iconify-icon icon="solar:clock-circle-bold-duotone"
+                                        class="fs-24 align-middle"></iconify-icon>
+                                </button>
+                            </div>
 
-                        <!-- User -->
-                        <div class="dropdown topbar-item">
-                            <a type="button" class="topbar-button" id="page-header-user-dropdown"
-                                data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <span class="d-flex align-items-center">
-                                    <iconify-icon icon="mdi:account-circle" width="24" height="24"
-                                        class="me-2"></iconify-icon>
-                                </span>
-                            </a>
-                            <div class="dropdown-menu dropdown-menu-end">
-                                <!-- item-->
-                                <h6 class="dropdown-header">Welcome,
-                                    @auth
-                                        {{ Auth::user()->name }}
-                                    @endauth!
-                                </h6>
-                                <a class="dropdown-item" href="{{ route('profile.edit') }}">
-                                    <i class="bx bx-user-circle text-muted fs-18 align-middle me-1"></i><span
-                                        class="align-middle">Profile</span>
+                            <!-- User -->
+                            <div class="dropdown topbar-item">
+                                <a type="button" class="topbar-button" id="page-header-user-dropdown"
+                                    data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    <span class="d-flex align-items-center">
+                                        <iconify-icon icon="mdi:account-circle" width="24" height="24"
+                                            class="me-2"></iconify-icon>
+                                    </span>
                                 </a>
-                                <a class="dropdown-item" href="apps-chat.html">
-                                    <i class="bx bx-message-dots text-muted fs-18 align-middle me-1"></i><span
-                                        class="align-middle">Messages</span>
-                                </a>
+                                <div class="dropdown-menu dropdown-menu-end">
+                                    <!-- item-->
+                                    <h6 class="dropdown-header">Welcome,
+                                        @auth
+                                            {{ Auth::user()->name }}
+                                        @endauth!
+                                    </h6>
+                                    <a class="dropdown-item" href="{{ route('profile.edit') }}">
+                                        <i class="bx bx-user-circle text-muted fs-18 align-middle me-1"></i><span
+                                            class="align-middle">Profile</span>
+                                    </a>
+                                    <a class="dropdown-item" href="apps-chat.html">
+                                        <i class="bx bx-message-dots text-muted fs-18 align-middle me-1"></i><span
+                                            class="align-middle">Messages</span>
+                                    </a>
 
-                                <a class="dropdown-item" href="pages-pricing.html">
-                                    <i class="bx bx-wallet text-muted fs-18 align-middle me-1"></i><span
-                                        class="align-middle">Pricing</span>
-                                </a>
-                                <a class="dropdown-item" href="pages-faqs.html">
-                                    <i class="bx bx-help-circle text-muted fs-18 align-middle me-1"></i><span
-                                        class="align-middle">Help</span>
-                                </a>
-                                <a class="dropdown-item" href="auth-lock-screen.html">
-                                    <i class="bx bx-lock text-muted fs-18 align-middle me-1"></i><span
-                                        class="align-middle">Lock screen</span>
-                                </a>
+                                    <a class="dropdown-item" href="pages-pricing.html">
+                                        <i class="bx bx-wallet text-muted fs-18 align-middle me-1"></i><span
+                                            class="align-middle">Pricing</span>
+                                    </a>
+                                    <a class="dropdown-item" href="pages-faqs.html">
+                                        <i class="bx bx-help-circle text-muted fs-18 align-middle me-1"></i><span
+                                            class="align-middle">Help</span>
+                                    </a>
+                                    <a class="dropdown-item" href="auth-lock-screen.html">
+                                        <i class="bx bx-lock text-muted fs-18 align-middle me-1"></i><span
+                                            class="align-middle">Lock screen</span>
+                                    </a>
 
-                                <div class="dropdown-divider my-1"></div>
+                                    <div class="dropdown-divider my-1"></div>
 
-                                <a class="dropdown-item text-danger" href="#"
-                                    onclick="event.preventDefault(); if(confirm('Bạn có chắc muốn đăng xuất không?')) document.getElementById('logout-form').submit();">
-                                    <i class="bx bx-log-out fs-18 align-middle me-1"></i>
-                                    <span class="align-middle">Logout</span>
-                                </a>
-                                <form id="logout-form" action="{{ route('logout') }}" method="POST"
-                                    style="display: none;">
-                                    @csrf
-                                </form>
+                                    <a class="dropdown-item text-danger" href="#"
+                                        onclick="event.preventDefault(); if(confirm('Bạn có chắc muốn đăng xuất không?')) document.getElementById('logout-form').submit();">
+                                        <i class="bx bx-log-out fs-18 align-middle me-1"></i>
+                                        <span class="align-middle">Logout</span>
+                                    </a>
+                                    <form id="logout-form" action="{{ route('logout') }}" method="POST"
+                                        style="display: none;">
+                                        @csrf
+                                    </form>
 
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
         </header>
 
         <!-- Activity Timeline -->
@@ -770,7 +771,7 @@
                         </div>
                     </li>
 
-                     <li class="nav-item">
+                    <li class="nav-item">
                         <a class="nav-link menu-arrow" href="#sidebarPromotions" role="button"
                             aria-expanded="false" aria-controls="sidebarPromotions">
                             <span class="nav-icon">
@@ -845,6 +846,97 @@
                             <span class="nav-text">Quyền hạn</span>
                         </a>
                     </li>
+
+                    <li class="menu-title mt-3">Quản lý Sản phẩm</li>
+
+
+                    {{-- Menu Danh mục sản phẩm --}}
+                    <li class="nav-item">
+                        <a class="nav-link menu-arrow" href="#sidebarProductCategories" role="button"
+                            aria-expanded="false" aria-controls="sidebarProductCategories">
+                            <span class="nav-icon">
+                                <iconify-icon icon="solar:category-bold-duotone"></iconify-icon>
+                            </span>
+                            <span class="nav-text">Danh mục sản phẩm</span>
+                        </a>
+                        <div class="collapse" id="sidebarProductCategories" data-bs-parent="#navbar-nav">
+                            <ul class="nav sub-navbar-nav">
+                                <li class="sub-nav-item">
+                                    <a class="sub-nav-link" href="{{ route('admin.product-categories.index') }}">Danh
+                                        sách</a>
+                                </li>
+                                <li class="sub-nav-item">
+                                    <a class="sub-nav-link"
+                                        href="{{ route('admin.product-categories.create') }}">Thêm mới</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+
+                    {{-- Menu Sản phẩm --}}
+                    <li class="nav-item">
+                        <a class="nav-link menu-arrow" href="#sidebarProducts" role="button" aria-expanded="false"
+                            aria-controls="sidebarProducts">
+                            <span class="nav-icon">
+                                <iconify-icon icon="solar:box-bold-duotone"></iconify-icon>
+                            </span>
+                            <span class="nav-text">Sản phẩm</span>
+                        </a>
+                        <div class="collapse" id="sidebarProducts" data-bs-parent="#navbar-nav">
+                            <ul class="nav sub-navbar-nav">
+                                <li class="sub-nav-item">
+                                    <a class="sub-nav-link" href="{{ route('admin.products.index') }}">Danh sách</a>
+                                </li>
+                                <li class="sub-nav-item">
+                                    <a class="sub-nav-link" href="{{ route('admin.products.create') }}">Thêm mới</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+
+                    {{-- Menu Sản phẩm biến thể --}}
+                    <li class="nav-item">
+                        <a class="nav-link menu-arrow" href="#sidebarProductVariants" role="button"
+                            aria-expanded="false" aria-controls="sidebarProductVariants">
+                            <span class="nav-icon">
+                                <iconify-icon icon="solar:layers-bold-duotone"></iconify-icon>
+                            </span>
+                            <span class="nav-text">Sản phẩm biến thể</span>
+                        </a>
+                        <div class="collapse" id="sidebarProductVariants" data-bs-parent="#navbar-nav">
+                            <ul class="nav sub-navbar-nav">
+                                <li class="sub-nav-item">
+                                    <a class="sub-nav-link" href="{{ route('admin.product-variants.index') }}">Danh
+                                        sách</a>
+                                </li>
+                                <li class="sub-nav-item">
+                                    <a class="sub-nav-link" href="{{ route('admin.product-variants.create') }}">Thêm
+                                        mới</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+
+                    {{-- Menu Combo --}}
+                    <li class="nav-item">
+                        <a class="nav-link menu-arrow" href="#sidebarCombos" role="button" aria-expanded="false"
+                            aria-controls="sidebarCombos">
+                            <span class="nav-icon">
+                                <iconify-icon icon="solar:gift-bold-duotone"></iconify-icon>
+                            </span>
+                            <span class="nav-text">Combo</span>
+                        </a>
+                        <div class="collapse" id="sidebarCombos" data-bs-parent="#navbar-nav">
+                            <ul class="nav sub-navbar-nav">
+                                <li class="sub-nav-item">
+                                    <a class="sub-nav-link" href="{{ route('admin.combos.index') }}">Danh sách</a>
+                                </li>
+                                <li class="sub-nav-item">
+                                    <a class="sub-nav-link" href="{{ route('admin.combos.create') }}">Thêm mới</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
                 </ul>
             </div>
         </div>
@@ -899,7 +991,7 @@
                                     `[href="#${collapse.id}"]`);
                                 if (correspondingLink) {
                                     correspondingLink.setAttribute('aria-expanded',
-                                    'false');
+                                        'false');
                                 }
                             }
                         });
