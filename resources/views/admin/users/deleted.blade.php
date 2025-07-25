@@ -1,9 +1,7 @@
 @extends('layouts.admin.admin')
 
 @section('content')
-    @if (session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
+    
     <div class="container-xxl">
         <div class="row">
             <div class="col-xl-12">
