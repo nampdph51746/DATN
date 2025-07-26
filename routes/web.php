@@ -25,6 +25,7 @@ use App\Http\Controllers\Admin\PromotionController;
 use App\Http\Controllers\Client\CheckoutController;
 use App\Http\Controllers\Admin\AdminProductController;
 use App\Http\Controllers\Admin\CustomerRankController;
+use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\Admin\PointHistoryController;
 use App\Http\Controllers\Admin\AdminSeatTypeController;
 use App\Http\Controllers\Admin\PaymentMethodController;
@@ -264,6 +265,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::resource('combos', ComboController::class)->names('combos');
+    Route::resource('notifications', NotificationController::class)->names('notifications');
+    Route::post('notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.markAsRead');
     Route::post('/admin/combos/check-duplicate', [App\Http\Controllers\Admin\ComboController::class, 'checkDuplicate'])->name('admin.combos.checkDuplicate');
     Route::get('products/{id}/variants', [AdminProductController::class, 'getVariants'])->name('products.variants');
 });

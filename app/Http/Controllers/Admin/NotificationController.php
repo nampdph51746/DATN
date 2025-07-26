@@ -32,4 +32,19 @@ class NotificationController extends Controller
         return view('admin.notifications.index', compact('notifications'));
     }
 
+    /**
+     * Đánh dấu thông báo đã đọc (AJAX)
+     */
+    public function markAsRead(Request $request, $id)
+    {
+        $notification = Notification::where('user_id', Auth::id())->findOrFail($id);
+        if (!$notification->read_at) {
+            $notification->read_at = now();
+            $notification->save();
+        }
+        return response()->json([
+            'success' => true,
+            'read_at' => $notification->read_at ? $notification->read_at->format('H:i d/m/Y') : null,
+        ]);
+    }
 }
