@@ -15,7 +15,6 @@ return new class extends Migration
             $table->string('title', 255)->comment('Tiêu đề thông báo');
             $table->text('message')->comment('Nội dung thông báo');
             $table->enum('type', array_column(NotificationType::cases(), 'value'))->nullable()->comment('Loại thông báo');
-            $table->string('link_url', 255)->nullable()->comment('URL liên kết khi nhấp vào thông báo');
             $table->boolean('is_read')->default(false)->comment('Trạng thái đã đọc');
             $table->timestamp('read_at')->nullable()->comment('Thời gian đọc thông báo');
             $table->timestamp('created_at')->nullable()->comment('Thời gian tạo');
