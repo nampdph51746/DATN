@@ -35,4 +35,3 @@ class Seat extends Model
         return $this->hasMany(Ticket::class);
     }
 }
-

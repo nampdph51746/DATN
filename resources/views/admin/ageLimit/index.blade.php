@@ -2,27 +2,28 @@
 
 @section('content')
 <div class="container-fluid">
-    @include('admin.partials.notifications')
-
     <div class="row">
         <div class="col-xl-12">
             <div class="card mt-3">
                 <div class="card-header d-flex justify-content-between align-items-center gap-2">
                     <h4 class="card-title flex-grow-1">Danh sách giới hạn độ tuổi</h4>
 
-                    <form id="delete-selected-age-limit-form" method="POST" action="{{ route('admin.age_limits.bulkDelete') }}" style="display: none;">
+                   @can('delete age limit')
+                        <form id="delete-selected-age-limit-form" method="POST" action="{{ route('admin.age_limits.bulkDelete') }}">
                         @csrf
-                        @method('DELETE')
                         <input type="hidden" name="ids" id="selected-age-limit-ids">
-                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Bạn có chắc muốn xóa các giới hạn đã chọn?')">
+                        <button type="submit" class="btn btn-danger btn-sm">
                             <iconify-icon icon="solar:trash-bin-trash-bold-duotone" class="me-1"></iconify-icon>
                             Xóa đã chọn
                         </button>
                     </form>
+                   @endcan
 
-                    <a href="{{ route('admin.age_limits.create') }}" class="btn btn-sm btn-primary">
+                    @can('create age limit')
+                        <a href="{{ route('admin.age_limits.create') }}" class="btn btn-sm btn-primary">
                         Thêm mới
-                    </a>
+                        </a>
+                    @endcan
                 </div>
 
                 <div class="table-responsive">
@@ -56,6 +57,7 @@
                                             <a href="{{ route('admin.age_limits.edit', $ageLimit->id) }}" class="btn btn-sm btn-soft-primary">
                                                 <iconify-icon icon="solar:pen-2-broken" class="align-middle fs-18"></iconify-icon>
                                             </a>
+                                            @can('delete age limit')
                                             <form action="{{ route('admin.age_limits.destroy', $ageLimit->id) }}" method="POST" onsubmit="return confirm('Bạn có chắc muốn xóa?')">
                                                 @csrf
                                                 @method('DELETE')
@@ -63,6 +65,7 @@
                                                     <iconify-icon icon="solar:trash-bin-trash-broken" class="align-middle fs-18"></iconify-icon>
                                                 </button>
                                             </form>
+                                            @endcan
                                         </div>
                                     </td>
                                 </tr>
@@ -110,12 +113,20 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     document.getElementById('delete-selected-age-limit-form').addEventListener('submit', function (e) {
+        e.preventDefault(); // Ngăn submit ngay lập tức
+
         const checked = Array.from(document.querySelectorAll('.age-limit-checkbox:checked')).map(cb => cb.value);
+        console.log('IDs được chọn:', checked);
+
         if (checked.length === 0) {
-            e.preventDefault();
-            return false;
+            alert('Bạn chưa chọn mục nào!');
+            return;
         }
-        document.getElementById('selected-age-limit-ids').value = checked.join(',');
+
+        if (confirm('Bạn có chắc muốn xóa các giới hạn đã chọn?')) {
+            document.getElementById('selected-age-limit-ids').value = checked.join(',');
+            this.submit(); // Submit sau khi đã gán
+        }
     });
 });
 </script>

@@ -11,6 +11,7 @@ class Point extends Model
 {
     use HasFactory;
 
+    protected $table = 'points';
     protected $fillable = ['user_id', 'total_points', 'points_expiry_date'];
 
     protected $casts = [
@@ -21,12 +22,9 @@ class Point extends Model
     {
         return $this->belongsTo(User::class);
     }
-<<<<<<< Updated upstream
-=======
 
     public function histories()
     {
         return $this->hasMany(PointHistory::class);
     }
->>>>>>> Stashed changes
 }

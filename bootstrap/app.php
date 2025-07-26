@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\RoleMiddleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -18,8 +19,9 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->alias([
-            'admin.staff' => \App\Http\Middleware\EnsureUserIsAdminOrStaff::class,
-
+            // 'admin.staff' => \App\Http\Middleware\EnsureUserIsAdminOrStaff::class,
+            'role' => RoleMiddleware::class,
+            'update.showtime.status' => \App\Http\Middleware\UpdateShowtimeStatus::class,
         ]);
 
         

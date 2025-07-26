@@ -47,51 +47,63 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // Bảng không có khóa ngoại
-        Role::factory()->count(5)->create();
-        Country::factory()->count(10)->create();
-        AgeLimit::factory()->count(5)->create();
-        Genre::factory()->count(10)->create();
-        ProductCategory::factory()->count(5)->create();
-        Attribute::factory()->count(5)->create();
-        CustomerRank::factory()->count(5)->create();
-        PaymentMethod::factory()->count(5)->create();
-        Promotion::factory()->count(10)->create();
-        RoomType::factory()->count(5)->create();
-        SeatType::factory()->count(5)->create();
-        Config::factory()->count(10)->create();
+        // Role::factory()->count(5)->create();
+        // Country::factory()->count(10)->create();
+        // AgeLimit::factory()->count(5)->create();
+        // Genre::factory()->count(10)->create();
+        // ProductCategory::factory()->count(5)->create();
+        // Attribute::factory()->count(5)->create();
+        // CustomerRank::factory()->count(5)->create();
+        // PaymentMethod::factory()->count(5)->create();
+        // Promotion::factory()->count(10)->create();
+        // RoomType::factory()->count(5)->create();
+        // SeatType::factory()->count(5)->create();
+        // Config::factory()->count(10)->create();
 
-        // Bảng có khóa ngoại
-        City::factory()->count(10)->create();
-        AttributeValue::factory()->count(20)->create();
-        Product::factory()->count(20)->create();
-        User::factory()->count(20)->create();
-        Movie::factory()->count(20)->create();
-        Cinema::factory()->count(10)->create();
+        // // Bảng có khóa ngoại
+        // City::factory()->count(10)->create();
+        // AttributeValue::factory()->count(20)->create();
+        // Product::factory()->count(20)->create();
+        // User::factory()->count(20)->create();
+        // Movie::factory()->count(20)->create();
+        // Cinema::factory()->count(10)->create();
 
-        // Bảng phụ thuộc tiếp theo
-        Room::factory()->count(20)->create();
-        MovieGenre::factory()->count(30)->create();
-        Review::factory()->count(50)->create();
-        ProductVariant::factory()->count(50)->create();
-        Point::factory()->count(20)->create();
-        CustomerRankPromotion::factory()->count(10)->create();
+        // // Bảng phụ thuộc tiếp theo
+        // Room::factory()->count(20)->create();
+        // MovieGenre::factory()->count(30)->create();
+        // Review::factory()->count(50)->create();
+        // ProductVariant::factory()->count(50)->create();
+        // Point::factory()->count(20)->create();
+        // CustomerRankPromotion::factory()->count(10)->create();
 
-        // Bảng phụ thuộc sâu hơn
-        Seat::factory()->count(100)->create();
-        ProductVariantOption::factory()->count(50)->create();
-        ComboPackageItem::factory()->count(20)->create();
-        Showtime::factory()->count(50)->create();
-        Booking::factory()->count(50)->create();
-        PasswordReset::factory()->count(10)->create();
+        // // Bảng phụ thuộc sâu hơn
+        // Seat::factory()->count(100)->create();
+        // ProductVariantOption::factory()->count(50)->create();
+        // ComboPackageItem::factory()->count(20)->create();
+        // Showtime::factory()->count(50)->create();
+        // Booking::factory()->count(50)->create();
+        // PasswordReset::factory()->count(10)->create();
 
-        // Bảng cuối
-        ShowtimeSeatState::factory()->count(200)->create();
-        Ticket::factory()->count(100)->create();
-        BookingItem::factory()->count(50)->create();
-        PointHistory::factory()->count(50)->create();
-        Payment::factory()->count(50)->create();
-        Banner::factory()->count(10)->create();
-        Slider::factory()->count(10)->create();
-        Notification::factory()->count(50)->create();
+        // // Bảng cuối
+        // ShowtimeSeatState::factory()->count(200)->create();
+        // Ticket::factory()->count(100)->create();
+        // BookingItem::factory()->count(50)->create();
+        // PointHistory::factory()->count(50)->create();
+        // Payment::factory()->count(50)->create();
+        // Banner::factory()->count(10)->create();
+        // Slider::factory()->count(10)->create();
+        // Notification::factory()->count(50)->create();
+
+                
+        $this->call([
+        PermissionSeeder::class,
+        // thêm các Seeder khác nếu có
+        ]);
+        
+        $this->call([
+            PermissionSeeder::class,
+            AdminSeeder::class,
+        ]);
+
     }
 }

@@ -63,7 +63,7 @@
                                                              <td class="px-0">
                                                                    <p class="fw-semibold text-dark mb-0">Role ID :</p>
                                                              </td>
-                                                             <td class="text-dark fw-medium px-0">{{ $user->role->id }} ({{ $user->role->name }})</td>
+                                                             <td class="text-dark fw-medium px-0">{{ 	$user->roles->first()->id }} ({{ $user->getRoleNames()->first() }})</td>
                                                        </tr>
                                                        <tr>
                                                              <td class="px-0">

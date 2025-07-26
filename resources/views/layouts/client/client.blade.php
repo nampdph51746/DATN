@@ -59,8 +59,6 @@
         }
     </script>
 <body>
-	@stack('scripts')
-
 	<!-- header -->
 	<header id="site-header" class="w3l-header fixed-top">
 		<!--/nav-->
@@ -135,7 +133,36 @@
 				</div>
 				<!-- toggle switch for light and dark theme -->
 				<div class="mobile-position">
-					<nav class="navigation">
+					<nav class="navigation" style="display: flex; align-items: center; justify-content: flex-end; gap: 30px;">
+						<div class="user-navigation" style="position: relative;">
+							<button onclick="toggleUserDropdown()" class="user-container" style="background: none; border: none; cursor: pointer;">
+								<i class="fa fa-user-circle-o" style="font-size: 30px;"></i>
+							</button>
+
+							<ul id="userDropdown" style=" display: none; position: absolute; right: 0; top: 120%; background-color: white; border: 1px solid #ccc; box-shadow: 0 2px 8px rgba(0,0,0,0.1); list-style: none; padding: 0;
+								margin: 0;
+								min-width: 150px;
+								z-index: 1000;">
+
+								@auth
+								<li><a href="/profile" style="display: block; padding: 10px; text-decoration: none;">Tài khoản</a></li>
+								@hasanyrole(['admin', 'staff'])
+								<li><a href="{{ route('admin.movies.index') }}" style="display: block; padding: 10px; text-decoration: none;">Quản lý</a></li>
+								@endhasanyrole
+								<li>
+									<form method="POST" action="{{ route('logout') }}" style="margin: 0;">
+										@csrf
+										<button type="submit" style="background: none; border: none; padding: 10px; text-align: left; width: 100%; cursor: pointer;">
+											Đăng xuất
+										</button>
+									</form>
+								</li>
+							@else
+								<li><a href="{{ route('login') }}" style="display: block; padding: 10px; text-decoration: none;">Đăng nhập</a></li>
+								<li><a href="{{ route('register') }}" style="display: block; padding: 10px; text-decoration: none;">Đăng ký</a></li>
+							@endauth
+							</ul>
+						</div>
 						<div class="theme-switch-wrapper">
 							<label class="theme-switch" for="checkbox">
 								<input type="checkbox" id="checkbox">
@@ -152,10 +179,25 @@
 	</header>
 	<!-- main-slider -->
 	@yield('content')
-	
 </body>
 
 </html>
+
+<script>
+	function toggleUserDropdown() {
+		const dropdown = document.getElementById('userDropdown');
+		dropdown.style.display = (dropdown.style.display === 'block') ? 'none' : 'block';
+	}
+
+	// Ẩn dropdown khi click ra ngoài
+	document.addEventListener('click', function (e) {
+		const dropdown = document.getElementById('userDropdown');
+		const button = document.querySelector('.user-container');
+		if (!button.contains(e.target) && !dropdown.contains(e.target)) {
+			dropdown.style.display = 'none';
+		}
+	});
+</script>
 <!-- responsive tabs -->
 <script type="text/javascript" src="{{ asset('client_assets/assets/js/as-alert-message.min.js') }}"></script>
 <!-- <script src="client_assets/assets/js/jquery-1.9.1.min.js"></script> -->

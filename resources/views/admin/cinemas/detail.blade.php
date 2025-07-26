@@ -68,10 +68,16 @@
           @endif
           <li class="mb-3">
             <strong>Trạng thái:</strong>
-            @if($cinema->status == 'active')
-            <span class="badge bg-success">Hoạt động</span>
+            @php
+                use App\Enums\CinemaStatus;
+                $status = is_string($cinema->status) ? trim($cinema->status) : ($cinema->status instanceof CinemaStatus ? $cinema->status->value : '');
+            @endphp
+            @if($status == CinemaStatus::Active->value)
+                <span class="badge bg-success">Hoạt động</span>
+            @elseif($status == CinemaStatus::Inactive->value)
+                <span class="badge bg-secondary">Không hoạt động</span>
             @else
-            <span class="badge bg-secondary">Không hoạt động</span>
+                <span class="badge bg-warning">Không xác định</span>
             @endif
           </li>
         </ul>

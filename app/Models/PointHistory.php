@@ -9,10 +9,7 @@ class PointHistory extends Model
 {
     use HasFactory;
 
-<<<<<<< Updated upstream
-=======
     protected $table = 'point_histories';
->>>>>>> Stashed changes
     protected $fillable = ['user_id', 'booking_id', 'points_change', 'reason_type', 'description'];
 
     protected $casts = [

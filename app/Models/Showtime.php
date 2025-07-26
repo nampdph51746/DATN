@@ -37,4 +37,36 @@ class Showtime extends Model
     {
         return $this->hasMany(Ticket::class);
     }
+
+    /**
+     * Kiểm tra và cập nhật trạng thái tự động
+     */
+    public function autoUpdateStatus(): bool
+    {
+        $service = new \App\Services\ShowtimeStatusService();
+        return $service->updateSingleShowtimeStatus($this);
+    }
+
+    /**
+     * Scope để lấy các suất chiếu cần cập nhật trạng thái
+     */
+    public function scopeNeedsStatusUpdate($query)
+    {
+        $now = \Carbon\Carbon::now('Asia/Ho_Chi_Minh');
+        
+        return $query->where(function ($q) use ($now) {
+            // scheduled -> ongoing
+            $q->where('status', \App\Enums\ShowtimeStatus::Scheduled)
+              ->where('start_time', '<=', $now)
+              ->where('end_time', '>', $now);
+        })->orWhere(function ($q) use ($now) {
+            // ongoing -> completed
+            $q->where('status', \App\Enums\ShowtimeStatus::Ongoing)
+              ->where('end_time', '<=', $now);
+        })->orWhere(function ($q) use ($now) {
+            // scheduled -> completed (missed ongoing)
+            $q->where('status', \App\Enums\ShowtimeStatus::Scheduled)
+              ->where('end_time', '<=', $now);
+        });
+    }
 }

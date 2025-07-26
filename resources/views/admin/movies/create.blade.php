@@ -1,9 +1,7 @@
 @extends('layouts.admin.admin')
 
 @section('content')
-<div class="container-xxl">
-    @include('admin.partials.notifications')
-    
+<div class="container-xxl">    
     <div class="row">
         <div class="col-xl-3 col-lg-4">
             <div class="card">
@@ -173,8 +171,6 @@
                                 </div>
                             </div>
                         </div>
-<<<<<<< Updated upstream
-=======
                         <div class="row">
                             <div class="col-lg-6">
                                 <div class="mb-3">
@@ -203,7 +199,6 @@
                                 </div>
                             </div>
                         </div>
->>>>>>> Stashed changes
                         <div class="row">
                             <div class="col-lg-6">
                                 <div class="mb-3">

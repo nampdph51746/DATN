@@ -8,6 +8,14 @@ use App\Models\AgeLimit;
 
 class AgeLimitController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(['auth', 'role:admin,staff']);
+        $this->middleware('can:view age limit')->only('index');
+        $this->middleware('can:create age limit')->only(['create', 'store']);
+        $this->middleware('can:edit age limit')->only(['edit', 'update']);
+        $this->middleware('can:delete age limit')->only('destroy');
+    }
     public function index()
     {
         $ageLimits = AgeLimit::orderBy('min_age')->paginate(10);
