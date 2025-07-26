@@ -582,8 +582,29 @@
             </button>
 
             <div class="scrollbar" data-simplebar>
+
                 <ul class="navbar-nav" id="navbar-nav">
                     <li class="menu-title">Quản lý chung</li>
+
+                    <!-- Menu Điểm -->
+                    <li class="nav-item">
+                        <a class="nav-link menu-arrow" href="#sidebarPoints" role="button" aria-expanded="false" aria-controls="sidebarPoints">
+                            <span class="nav-icon">
+                                <iconify-icon icon="solar:star-bold-duotone"></iconify-icon>
+                            </span>
+                            <span class="nav-text">Quản lý điểm</span>
+                        </a>
+                        <div class="collapse" id="sidebarPoints" data-bs-parent="#navbar-nav">
+                            <ul class="nav sub-navbar-nav">
+                                <li class="sub-nav-item">
+                                    <a class="sub-nav-link" href="{{ route('admin.points.index') }}">Danh sách điểm</a>
+                                </li>
+                                <li class="sub-nav-item">
+                                    <a class="sub-nav-link" href="{{ route('admin.point_history.index') }}">Lịch sử điểm</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
 
                     <li class="nav-item">
                         <a class="nav-link" href="">
