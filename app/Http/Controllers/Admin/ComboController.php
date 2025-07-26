@@ -11,6 +11,10 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 
+use App\Models\Notification;
+use App\Enums\NotificationType;
+use Illuminate\Support\Facades\Auth;
+
 class ComboController extends Controller
 {
     public function __construct()
@@ -125,6 +129,20 @@ class ComboController extends Controller
                 'stock_quantity' => $comboStock ?? $comboVariant->stock_quantity,
             ]);
 
+            // Tạo thông báo khi thêm mới combo
+            Notification::create([
+                'user_id' => Auth::id(),
+                'entity_type' => Combo::class,
+                'entity_id' => $combo->id,
+                'title' => 'Thêm mới combo',
+                'message' => 'Combo "' . $combo->name . '" đã được thêm mới.',
+                'type' => NotificationType::System,
+                'priority' => 'low',
+                'old_status' => null,
+                'new_status' => json_encode($combo->getAttributes()),
+                'event_details' => json_encode(['action' => 'create', 'combo_id' => $combo->id]),
+            ]);
+
 
             // Kiểm tra combo đã tồn tại chưa
             // Chỉ báo lỗi nếu combo mới thực sự trùng với combo đã tồn tại (cùng biến thể đại diện và cùng danh sách mục, số lượng)
@@ -230,12 +248,27 @@ class ComboController extends Controller
             DB::beginTransaction();
 
             $combo = Combo::findOrFail($id);
+            $oldData = $combo->getOriginal();
 
             $combo->update([
                 'name' => $request->input('name'),
                 'combo_product_variant_id' => $request->input('combo_product_variant_id'),
                 'price' => $request->input('price'),
                 'stock_quantity' => $request->input('stock_quantity'),
+            ]);
+
+            // Tạo thông báo khi cập nhật combo
+            Notification::create([
+                'user_id' => Auth::id(),
+                'entity_type' => Combo::class,
+                'entity_id' => $combo->id,
+                'title' => 'Cập nhật combo',
+                'message' => 'Combo "' . $combo->name . '" đã được cập nhật.',
+                'type' => NotificationType::System,
+                'priority' => 'low',
+                'old_status' => json_encode($oldData),
+                'new_status' => json_encode($combo->getAttributes()),
+                'event_details' => json_encode(['action' => 'update', 'combo_id' => $combo->id]),
             ]);
 
             // Xóa các mục cũ
@@ -265,9 +298,24 @@ class ComboController extends Controller
             DB::beginTransaction();
 
             $combo = Combo::findOrFail($id);
+            $oldData = $combo->getOriginal();
 
             ComboPackageItem::where('combo_id', $combo->getKey())->delete();
             $combo->delete();
+
+            // Tạo thông báo khi xóa combo
+            Notification::create([
+                'user_id' => Auth::id(),
+                'entity_type' => Combo::class,
+                'entity_id' => $combo->id,
+                'title' => 'Xóa combo',
+                'message' => 'Combo "' . $combo->name . '" đã bị xóa.',
+                'type' => NotificationType::System,
+                'priority' => 'low',
+                'old_status' => json_encode($oldData),
+                'new_status' => null,
+                'event_details' => json_encode(['action' => 'delete', 'combo_id' => $combo->id]),
+            ]);
 
             DB::commit();
             return redirect()->route('admin.combos.index')->with('success', 'Combo đã được xóa thành công.');

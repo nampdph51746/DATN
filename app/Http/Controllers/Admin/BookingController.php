@@ -10,6 +10,10 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use App\Http\Controllers\Controller;
 
+use App\Models\Notification;
+use App\Enums\NotificationType;
+use Illuminate\Support\Facades\Auth;
+
 class BookingController extends Controller
 {
     public function index(Request $request)
@@ -68,9 +72,27 @@ class BookingController extends Controller
         ]);
 
         $booking = Booking::findOrFail($id);
-        $oldStatus = $booking->status->value; 
-        $booking->status = BookingStatus::from($request->status); 
+        $oldStatus = $booking->status->value;
+        $oldData = $booking->getOriginal();
+        $booking->status = BookingStatus::from($request->status);
         $booking->save();
+
+        // Tạo thông báo khi cập nhật trạng thái booking
+        Notification::create([
+            'user_id' => Auth::id(),
+            'entity_type' => Booking::class,
+            'entity_id' => $booking->id,
+            'title' => 'Cập nhật trạng thái đơn đặt vé',
+            'message' => 'Đơn đặt vé #' . $booking->id . ' đã được cập nhật trạng thái từ "' . $oldStatus . '" sang "' . $booking->status->value . '".',
+            'type' => NotificationType::Booking,
+            'priority' => 'high',
+            'old_status' => $oldStatus,
+            'new_status' => $booking->status->value,
+            'event_details' => json_encode([
+                'old' => $oldData,
+                'new' => $booking->getAttributes(),
+            ]),
+        ]);
 
         if ($oldStatus === BookingStatus::Pending->value && $booking->status->value === BookingStatus::Confirmed->value) {
             $user = $booking->user;

@@ -14,6 +14,10 @@ use App\Models\RoomSeatConfiguration;
 use App\Http\Requests\StoreRoomRequest;
 use App\Http\Requests\UpdateRoomRequest;
 
+use App\Models\Notification;
+use App\Enums\NotificationType;
+use Illuminate\Support\Facades\Auth;
+
 class AdminRoomController extends Controller
 {
     // Danh sách phòng chiếu
@@ -45,7 +49,21 @@ class AdminRoomController extends Controller
     // Lưu phòng chiếu mới
     public function store(StoreRoomRequest $request)
     {
-        Room::create($request->all());
+        $room = Room::create($request->all());
+
+        // Tạo thông báo khi thêm mới phòng chiếu
+        Notification::create([
+            'user_id' => Auth::id(),
+            'entity_type' => 'room',
+            'entity_id' => $room->id,
+            'title' => 'Thêm mới phòng chiếu',
+            'message' => 'Phòng chiếu "' . $room->name . '" đã được thêm mới.',
+            'type' => NotificationType::System,
+            'priority' => 'medium',
+            'old_status' => null,
+            'new_status' => null,
+            'event_details' => json_encode(['action' => 'create', 'room_id' => $room->id]),
+        ]);
 
         return redirect()->route('admin.rooms.index')->with('success', 'Tạo phòng chiếu thành công');
     }
@@ -129,8 +147,25 @@ class AdminRoomController extends Controller
     public function update(UpdateRoomRequest $request, $id)
     {
         $room = Room::findOrFail($id);
+        $oldData = $room->getOriginal();
         $room->update($request->all());
+
+        // Tạo thông báo khi cập nhật phòng chiếu
+        Notification::create([
+            'user_id' => Auth::id(),
+            'entity_type' => 'room',
+            'entity_id' => $room->id,
+            'title' => 'Cập nhật phòng chiếu',
+            'message' => 'Phòng chiếu "' . $room->name . '" đã được cập nhật.',
+            'type' => NotificationType::System,
+            'priority' => 'medium',
+            'old_status' => json_encode($oldData),
+            'new_status' => json_encode($room->getAttributes()),
+            'event_details' => json_encode(['action' => 'update', 'room_id' => $room->id]),
+        ]);
 
         return redirect()->route('admin.rooms.index')->with('success', 'Cập nhật phòng chiếu thành công');
     }
+
+
 }

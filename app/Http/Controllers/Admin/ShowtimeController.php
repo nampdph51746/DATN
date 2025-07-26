@@ -11,8 +11,10 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use App\Services\ShowtimeStatusService;
-
 use App\Services\ShowtimePricingService;
+use \App\Models\Notification;
+use \App\Enums\NotificationType;
+use \Illuminate\Support\Facades\Auth;
 
 class ShowtimeController extends Controller
 {
@@ -106,6 +108,7 @@ class ShowtimeController extends Controller
     public function update(Request $request, $id)
     {
         $showtime = Showtime::findOrFail($id);
+        $oldData = $showtime->getOriginal();
 
         $request->validate([
             'movie_id' => 'required|exists:movies,id',
@@ -179,7 +182,6 @@ class ShowtimeController extends Controller
             $start = \Carbon\Carbon::parse($request->start_time, 'Asia/Ho_Chi_Minh')->setSeconds(0);
             $end = \Carbon\Carbon::parse($request->end_time, 'Asia/Ho_Chi_Minh')->setSeconds(0);
 
-
             $startDate = $start->toDateString();
             $endDate = $end->toDateString();
             if ($end->format('H:i') === '00:30' && $startDate === $endDate) {
@@ -220,6 +222,23 @@ class ShowtimeController extends Controller
                 'end_time' => $end->toDateTimeString(),
                 'base_price' => $request->base_price,
                 'status' => $request->status,
+            ]);
+
+            // Thông báo khi cập nhật suất chiếu
+            Notification::create([
+                'user_id' => Auth::id(),
+                'entity_type' => Showtime::class,
+                'entity_id' => $showtime->id,
+                'title' => 'Cập nhật suất chiếu',
+                'message' => 'Suất chiếu #' . $showtime->id . ' đã được cập nhật.',
+                'type' => NotificationType::System,
+                'priority' => 'high',
+                'old_status' => json_encode($oldData),
+                'new_status' => json_encode($showtime->getAttributes()),
+                'event_details' => json_encode([
+                    'action' => 'update',
+                    'showtime_id' => $showtime->id,
+                ]),
             ]);
 
             return redirect()->route('admin.showtimes.index')->with('success', 'Cập nhật suất chiếu thành công!');

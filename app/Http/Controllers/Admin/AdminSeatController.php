@@ -6,11 +6,15 @@ use App\Models\Room;
 use App\Models\Seat;
 use App\Models\SeatType;
 use App\Enums\SeatStatus;
+use App\Models\Notification;
 use Illuminate\Http\Request;
+use App\Enums\NotificationType;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 use App\Models\RoomSeatConfiguration;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use Illuminate\Support\Facades\Validator;
 
 class AdminSeatController extends Controller
@@ -230,6 +234,7 @@ class AdminSeatController extends Controller
             $startRowIndex = $maxRowChar ? ord(strtoupper($maxRowChar)) - 64 : 0;
             Log::info("maxRowChar=$maxRowChar, startRowIndex=$startRowIndex");
 
+            $createdSeatIds = [];
             for ($i = 0; $i < $rows; $i++) {
                 $rowChar = chr(65 + $startRowIndex + $i);
                 Log::info("Row $i: rowChar=$rowChar");
@@ -256,6 +261,7 @@ class AdminSeatController extends Controller
                     ]);
                     Log::info("Created seat: $rowChar$seatNumber", $seat->toArray());
                     $createdSeats++;
+                    $createdSeatIds[] = $seat->id;
                     $previewSeats[] = [
                         'row_char' => $rowChar,
                         'seat_number' => $seatNumber,
@@ -268,6 +274,26 @@ class AdminSeatController extends Controller
                 }
             }
             Log::info("Total createdSeats=$createdSeats");
+
+            // Tạo thông báo khi thêm ghế
+            if ($createdSeats > 0) {
+                Notification::create([
+                    'user_id' => Auth::id(),
+                    'entity_type' => Seat::class,
+                    'entity_id' => implode(',', $createdSeatIds),
+                    'title' => 'Thêm mới ghế',
+                    'message' => $createdSeats . ' ghế mới đã được thêm vào phòng #' . $room->id,
+                    'type' => NotificationType::System,
+                    'priority' => 'high',
+                    'old_status' => null,
+                    'new_status' => null,
+                    'event_details' => json_encode([
+                        'room_id' => $room->id,
+                        'seat_type_id' => $request->input('seat_type_id'),
+                        'created_seat_ids' => $createdSeatIds,
+                    ]),
+                ]);
+            }
 
             // Cập nhật existingSeatsByType trước khi lưu vào session
             $existingSeatsByType[$request->input('seat_type_id')] = ($existingSeatsByType[$request->input('seat_type_id')] ?? 0) + $createdSeats;
@@ -336,6 +362,7 @@ class AdminSeatController extends Controller
     public function update(Request $request, $id)
     {
         $seat = Seat::findOrFail($id);
+        $oldData = $seat->getOriginal();
 
         $request->validate([
             'seat_type_id' => 'required|exists:seat_types,id',
@@ -347,6 +374,23 @@ class AdminSeatController extends Controller
             'status' => $request->input('status'),
         ]);
 
+        // Tạo thông báo khi cập nhật ghế
+        Notification::create([
+            'user_id' => Auth::id(),
+            'entity_type' => Seat::class,
+            'entity_id' => $seat->id,
+            'title' => 'Cập nhật ghế',
+            'message' => 'Ghế ' . $seat->row_char . $seat->seat_number . ' đã được cập nhật.',
+            'type' => NotificationType::System,
+            'priority' => 'high',
+            'old_status' => $oldData['status'] ?? null,
+            'new_status' => $seat->status,
+            'event_details' => json_encode([
+                'old' => $oldData,
+                'new' => $seat->getAttributes(),
+            ]),
+        ]);
+
         $roomId = $seat->room_id;
         return redirect()->route('admin.rooms.show', $roomId)->with('success', 'Ghế đã được cập nhật thành công!');
     }
@@ -354,11 +398,11 @@ class AdminSeatController extends Controller
     public function show($id)
     {
         Log::info('Session data:', session()->all());
-        $room = \App\Models\Room::with(['cinema', 'roomType'])->findOrFail($id);
+        $room = Room::with(['cinema', 'roomType'])->findOrFail($id);
         Log::info('Room type: ' . get_class($room));
         Log::info('Room value: ', $room->toArray());
         $allowedSeatTypes = method_exists($room, 'allowedSeatTypes') ? $room->allowedSeatTypes() : [];
-        $seats = \App\Models\Seat::with('seatType')
+        $seats = Seat::with('seatType')
             ->where('room_id', $room->id)
             ->orderBy('row_char')
             ->orderBy('seat_number')
@@ -367,7 +411,7 @@ class AdminSeatController extends Controller
         $maxSeatsPerRow = $seats->isEmpty() ? 50 : $seats->groupBy('row_char')->map(function($group) { return $group->count(); })->max();
         $maxRows = 26;
 
-        $seatPercentages = \App\Models\RoomSeatConfiguration::where('room_id', $room->id)
+        $seatPercentages = RoomSeatConfiguration::where('room_id', $room->id)
             ->pluck('percentage', 'seat_type_id')
             ->toArray();
 
@@ -481,7 +525,7 @@ class AdminSeatController extends Controller
             $extension = strtolower($file->getClientOriginalExtension());
             $rows = [];
             if (in_array($extension, ['xlsx', 'xls'])) {
-                $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($filePath);
+                $spreadsheet = IOFactory::load($filePath);
                 $sheet = $spreadsheet->getActiveSheet();
                 $rows = $sheet->toArray();
             } elseif ($extension === 'csv') {
@@ -550,7 +594,7 @@ class AdminSeatController extends Controller
                 ];
             }
 
-            $currentSeatsCount = \App\Models\Seat::where('room_id', $room->id)->count();
+            $currentSeatsCount = Seat::where('room_id', $room->id)->count();
             $roomCapacity = $room->capacity;
             $remainingCapacity = $roomCapacity - $currentSeatsCount;
             if (count($seatsToImport) > $remainingCapacity) {
@@ -558,7 +602,7 @@ class AdminSeatController extends Controller
             }
 
             foreach ($seatsToImport as $seatData) {
-                \App\Models\Seat::create($seatData);
+                Seat::create($seatData);
                 $imported++;
             }
 

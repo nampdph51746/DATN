@@ -7,6 +7,10 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Validator;
 
+use App\Models\Notification;
+use App\Enums\NotificationType;
+use Illuminate\Support\Facades\Auth;
+
 class AdminAttributeController extends Controller
 {
     public function __construct()
@@ -50,10 +54,26 @@ class AdminAttributeController extends Controller
             'name.unique' => 'Tên thuộc tính đã tồn tại.',
         ]);
 
-        Attribute::create([
+        $attribute = Attribute::create([
             'name' => $request->name,
             'created_at' => now(),
             'updated_at' => now(),
+        ]);
+
+        // Tạo thông báo khi thêm mới thuộc tính
+        Notification::create([
+            'user_id' => Auth::id(),
+            'entity_type' => Attribute::class,
+            'entity_id' => $attribute->id,
+            'title' => 'Tạo mới thuộc tính',
+            'message' => 'Thuộc tính #' . $attribute->id . ' đã được tạo mới.',
+            'type' => NotificationType::System,
+            'priority' => 'low',
+            'old_status' => null,
+            'new_status' => $attribute->name,
+            'event_details' => json_encode([
+                'new' => $attribute->getAttributes(),
+            ]),
         ]);
 
         return redirect()->route('admin.attributes.index')->with('success', 'Thuộc tính đã được tạo thành công.');
@@ -83,10 +103,27 @@ class AdminAttributeController extends Controller
         ]);
 
         $attribute = Attribute::findOrFail($id);
-
+        $oldData = $attribute->getOriginal();
         $attribute->update([
             'name' => $request->name,
             'updated_at' => now(),
+        ]);
+
+        // Tạo thông báo mức độ cao khi cập nhật thuộc tính
+        Notification::create([
+            'user_id' => Auth::id(),
+            'entity_type' => Attribute::class,
+            'entity_id' => $attribute->id,
+            'title' => 'Cập nhật thuộc tính',
+            'message' => 'Thuộc tính #' . $attribute->id . ' đã được cập nhật.',
+            'type' => NotificationType::System,
+            'priority' => 'low',
+            'old_status' => $oldData['name'] ?? null,
+            'new_status' => $attribute->name,
+            'event_details' => json_encode([
+                'old' => $oldData,
+                'new' => $attribute->getAttributes(),
+            ]),
         ]);
 
         return redirect()->route('admin.attributes.index')->with('success', 'Thuộc tính đã được cập nhật thành công.');
