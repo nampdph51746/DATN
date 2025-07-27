@@ -525,17 +525,8 @@ class HomeController extends Controller
             return response()->json(['error' => 'Số tiền giảm từ điểm vượt quá tổng đơn hàng.'], 400);
         }
 
-        $user->points->decrement('total_points', $pointsToUse);
-
-        PointHistory::create([
-            'user_id' => $user->id,
-            'booking_id' => null,
-            'points_change' => -$pointsToUse,
-            'reason_type' => PointReasonType::Spent,
-            'description' => "Đổi {$pointsToUse} điểm thành {$pointDiscount} VNĐ (1 điểm = 1,000₫)",
-        ]);
-
-        Log::info('[DEBUG] Đổi điểm thành công:', [
+        // KHÔNG trừ điểm và KHÔNG tạo PointHistory ở đây. Chỉ xác nhận số điểm có thể dùng.
+        Log::info('[DEBUG] Xác nhận số điểm có thể dùng, sẽ trừ sau khi thanh toán thành công:', [
             'user_id' => $user->id,
             'pointsToUse' => $pointsToUse,
             'pointDiscount' => $pointDiscount,
@@ -544,7 +535,7 @@ class HomeController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => "Đổi {$pointsToUse} điểm thành công!",
+            'message' => "Bạn có thể dùng {$pointsToUse} điểm để giảm {$pointDiscount} VNĐ. Điểm sẽ chỉ bị trừ khi thanh toán thành công!",
             'discount' => $pointDiscount,
             'points_used' => $pointsToUse,
             'total_discount' => $totalDiscount,

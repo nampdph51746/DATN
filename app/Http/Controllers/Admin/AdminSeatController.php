@@ -354,11 +354,11 @@ class AdminSeatController extends Controller
     public function show($id)
     {
         Log::info('Session data:', session()->all());
-        $room = \App\Models\Room::with(['cinema', 'roomType'])->findOrFail($id);
+        $room = Room::with(['cinema', 'roomType'])->findOrFail($id);
         Log::info('Room type: ' . get_class($room));
         Log::info('Room value: ', $room->toArray());
         $allowedSeatTypes = method_exists($room, 'allowedSeatTypes') ? $room->allowedSeatTypes() : [];
-        $seats = \App\Models\Seat::with('seatType')
+        $seats = Seat::with('seatType')
             ->where('room_id', $room->id)
             ->orderBy('row_char')
             ->orderBy('seat_number')
@@ -367,7 +367,7 @@ class AdminSeatController extends Controller
         $maxSeatsPerRow = $seats->isEmpty() ? 50 : $seats->groupBy('row_char')->map(function($group) { return $group->count(); })->max();
         $maxRows = 26;
 
-        $seatPercentages = \App\Models\RoomSeatConfiguration::where('room_id', $room->id)
+        $seatPercentages = RoomSeatConfiguration::where('room_id', $room->id)
             ->pluck('percentage', 'seat_type_id')
             ->toArray();
 
@@ -550,7 +550,7 @@ class AdminSeatController extends Controller
                 ];
             }
 
-            $currentSeatsCount = \App\Models\Seat::where('room_id', $room->id)->count();
+            $currentSeatsCount = Seat::where('room_id', $room->id)->count();
             $roomCapacity = $room->capacity;
             $remainingCapacity = $roomCapacity - $currentSeatsCount;
             if (count($seatsToImport) > $remainingCapacity) {
@@ -558,7 +558,7 @@ class AdminSeatController extends Controller
             }
 
             foreach ($seatsToImport as $seatData) {
-                \App\Models\Seat::create($seatData);
+                Seat::create($seatData);
                 $imported++;
             }
 
