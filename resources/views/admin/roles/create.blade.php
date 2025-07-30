@@ -31,19 +31,23 @@
                                         </div>
                                         <label class="form-label">Chọn quyền</label>
                                         <div class="row">
-                                            @foreach($permissions as $permission)
-                                                <div class="col-md-6">
-                                                    <div class="form-check">
-                                                        <input class="form-check-input permission-checkbox" type="checkbox"
-                                                            name="permissions[]" value="{{ $permission->name }}"
-                                                            id="perm_{{ $permission->id }}">
-                                                        <label class="form-check-label" for="perm_{{ $permission->id }}">
-                                                            {{ $permission->name }}
-                                                        </label>
-                                                    </div>
+                                           <div class="row">
+                                            @foreach ($groupedPermissions as $group => $permissions)
+                                                <div class="col-md-3 mb-3">
+                                                    <h6 class="fw-bold text-primary text-uppercase">{{ str_replace('-', ' ', $group) }}</h6>
+                                                    @foreach ($permissions as $permission)
+                                                        <div class="form-check">
+                                                            <input class="form-check-input permission-checkbox" type="checkbox"
+                                                                name="permissions[]" value="{{ $permission->name }}"
+                                                                id="perm_{{ $permission->id }}">
+                                                            <label class="form-check-label" for="perm_{{ $permission->id }}">
+                                                                {{ ucwords(str_replace(['-', '.'], [' ', ' '], Str::after($permission->name, $group.'.'))) }}
+                                                            </label>
+                                                        </div>
+                                                    @endforeach
                                                 </div>
                                             @endforeach
-
+                                        </div>
                                         </div>
                                     </div>
                                     <button type="submit" class="btn btn-primary">Tạo Vai trò</button>

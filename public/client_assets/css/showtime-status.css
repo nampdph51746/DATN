@@ -1,0 +1,121 @@
+/* Styling cho trạng thái suất chiếu */
+.showtime-status {
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.showtime-status.available {
+    background-color: #28a745;
+    color: white;
+    border-color: #28a745;
+}
+
+.showtime-status.available:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+}
+
+.showtime-status.half-full {
+    background-color: #ffc107;
+    color: #212529;
+    border-color: #ffc107;
+}
+
+.showtime-status.half-full:hover {
+    background-color: #e0a800;
+    border-color: #d39e00;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(255, 193, 7, 0.3);
+}
+
+.showtime-status.nearly-full {
+    background-color: #fd7e14;
+    color: white;
+    border-color: #fd7e14;
+}
+
+.showtime-status.nearly-full:hover {
+    background-color: #e8690b;
+    border-color: #dc5f02;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(253, 126, 20, 0.3);
+}
+
+.showtime-status.nearly-full::after {
+    content: "Gần đầy";
+    position: absolute;
+    top: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #fd7e14;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 0.7rem;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.showtime-status.nearly-full:hover::after {
+    opacity: 1;
+}
+
+.showtime-status.sold-out {
+    background-color: #dc3545;
+    color: white;
+    border-color: #dc3545;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.showtime-status.sold-out:hover {
+    background-color: #dc3545;
+    border-color: #dc3545;
+    transform: none;
+    box-shadow: none;
+}
+
+.showtime-status.sold-out::after {
+    content: "Hết vé";
+    position: absolute;
+    top: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #dc3545;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 0.7rem;
+    white-space: nowrap;
+}
+
+/* Indicator cho số ghế còn lại */
+.available-seats-indicator {
+    position: absolute;
+    bottom: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.7rem;
+    color: #6c757d;
+    background-color: white;
+    padding: 1px 4px;
+    border-radius: 2px;
+    border: 1px solid #dee2e6;
+    white-space: nowrap;
+}
+
+.showtime-button {
+    position: relative;
+    margin-bottom: 25px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 2px solid;
+    text-decoration: none;
+    display: inline-block;
+    min-width: 80px;
+    text-align: center;
+    font-weight: 500;
+}

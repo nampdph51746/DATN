@@ -7,6 +7,10 @@ use App\Models\City;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
+use App\Models\Notification;
+use App\Enums\NotificationType;
+use Illuminate\Support\Facades\Auth;
+
 use function Laravel\Prompts\alert;
 
 class CinemaController extends Controller
@@ -32,7 +36,7 @@ class CinemaController extends Controller
 {
     $cinema = Cinema::withTrashed()
         ->with(['city' => function ($query) {
-            $query->withTrashed(); // Load cả thành phố đã bị xóa mềm
+            $query->withTrashed(); 
         }])
         ->findOrFail($id);
 
@@ -83,20 +87,36 @@ class CinemaController extends Controller
             $validated['image_url'] = null;
         }
 
-        Cinema::create($validated);
+        $cinema = Cinema::create($validated);
+
+        // Tạo thông báo khi thêm mới rạp
+        Notification::create([
+            'user_id' => Auth::id(),
+            'entity_type' => Cinema::class,
+            'entity_id' => $cinema->id,
+            'title' => 'Thêm mới rạp chiếu phim',
+            'message' => 'Rạp "' . $cinema->name . '" đã được thêm mới.',
+            'type' => NotificationType::System,
+            'priority' => 'medium',
+            'old_status' => null,
+            'new_status' => json_encode($cinema->getAttributes()),
+            'event_details' => json_encode(['action' => 'create', 'cinema_id' => $cinema->id]),
+        ]);
 
         return redirect()->route('admin.cinemas.index')->with('success', 'Đã thêm rạp chiếu phim mới thành công.');
     }
 
-    public function edit(Cinema $cinema)
+    public function edit($id)
     {
         $cities = City::orderBy('created_at', 'asc')->get()->reverse();
+        $cinema = Cinema::withTrashed()->findOrFail($id);
         return view('admin.cinemas.edit', compact('cinema', 'cities'));
     }
 
     // Cập nhật rạp
-    public function update(Request $request, Cinema $cinema)
+    public function update(Request $request, $id)
     {
+        $cinema = Cinema::withTrashed()->findOrFail($id);
         $validated = $request->validate([
             'name'          => 'required|string|max:255',
             'address'       => 'required|string',
@@ -132,7 +152,22 @@ class CinemaController extends Controller
             $validated['image_url'] = $cinema->image_url;
         }
 
+        $oldData = $cinema->getOriginal();
         $cinema->update($validated);
+
+        // Tạo thông báo khi cập nhật rạp
+        Notification::create([
+            'user_id' => Auth::id(),
+            'entity_type' => Cinema::class,
+            'entity_id' => $cinema->id,
+            'title' => 'Cập nhật rạp chiếu phim',
+            'message' => 'Rạp "' . $cinema->name . '" đã được cập nhật.',
+            'type' => NotificationType::System,
+            'priority' => 'medium',
+            'old_status' => json_encode($oldData),
+            'new_status' => json_encode($cinema->getAttributes()),
+            'event_details' => json_encode(['action' => 'update', 'cinema_id' => $cinema->id]),
+        ]);
 
         return redirect()->route('admin.cinemas.index')->with('success', 'Đã cập nhật rạp chiếu phim thành công.');
     }
@@ -140,7 +175,22 @@ class CinemaController extends Controller
     public function destroy(Cinema $cinema)
     {
         // Xóa mềm, không xóa ảnh luôn
+        $oldData = $cinema->getOriginal();
         $cinema->delete();
+
+        // Tạo thông báo khi xóa mềm rạp
+        Notification::create([
+            'user_id' => Auth::id(),
+            'entity_type' => Cinema::class,
+            'entity_id' => $cinema->id,
+            'title' => 'Xóa rạp chiếu phim',
+            'message' => 'Rạp "' . $cinema->name . '" đã bị xóa (tạm thời).',
+            'type' => NotificationType::System,
+            'priority' => 'medium',
+            'old_status' => json_encode($oldData),
+            'new_status' => null,
+            'event_details' => json_encode(['action' => 'delete', 'cinema_id' => $cinema->id]),
+        ]);
 
         return redirect()->route('admin.cinemas.index')->with('success', 'Đã chuyển rạp vào thùng rác.');
     }
@@ -165,6 +215,20 @@ class CinemaController extends Controller
         $cinema = Cinema::onlyTrashed()->findOrFail($id);
         $cinema->restore();
 
+        // Tạo thông báo khi khôi phục rạp
+        Notification::create([
+            'user_id' => Auth::id(),
+            'entity_type' => Cinema::class,
+            'entity_id' => $cinema->id,
+            'title' => 'Khôi phục rạp chiếu phim',
+            'message' => 'Rạp "' . $cinema->name . '" đã được khôi phục.',
+            'type' => NotificationType::System,
+            'priority' => 'medium',
+            'old_status' => null,
+            'new_status' => json_encode($cinema->getAttributes()),
+            'event_details' => json_encode(['action' => 'restore', 'cinema_id' => $cinema->id]),
+        ]);
+
         return redirect()->route('admin.cinemas.trash')->with('success', 'Đã khôi phục rạp.');
     }
 
@@ -172,6 +236,7 @@ class CinemaController extends Controller
     public function forceDelete($id)
     {
         $cinema = Cinema::onlyTrashed()->findOrFail($id);
+        $oldData = $cinema->getOriginal();
 
         // Xóa ảnh nếu có
         if ($cinema->image_url && file_exists(public_path('assets/' . $cinema->image_url))) {
@@ -179,6 +244,20 @@ class CinemaController extends Controller
         }
 
         $cinema->forceDelete();
+
+        // Tạo thông báo khi xóa vĩnh viễn rạp
+        Notification::create([
+            'user_id' => Auth::id(),
+            'entity_type' => Cinema::class,
+            'entity_id' => $cinema->id,
+            'title' => 'Xóa vĩnh viễn rạp chiếu phim',
+            'message' => 'Rạp "' . $cinema->name . '" đã bị xóa vĩnh viễn.',
+            'type' => NotificationType::System,
+            'priority' => 'medium',
+            'old_status' => json_encode($oldData),
+            'new_status' => null,
+            'event_details' => json_encode(['action' => 'force_delete', 'cinema_id' => $cinema->id]),
+        ]);
 
         return redirect()->route('admin.cinemas.trash')->with('success', 'Đã xóa vĩnh viễn rạp.');
     }

@@ -7,7 +7,6 @@
             <div class="card">
 
                 {{-- Thông báo  --}}
-                @include('admin.partials.alert')
                 <div class="card-header d-flex justify-content-between align-items-center gap-1">
                     <h4 class="card-title flex-grow-1">Danh sách khuyến mãi</h4>
                     <div class="d-flex gap-2 align-items-center">
@@ -15,12 +14,8 @@
                             <input type="text" name="search" placeholder="Tìm kiếm tên hoặc mã KM" value="{{ request('search') }}" class="form-control form-control-sm" style="width: 200px;">
                             <button type="submit" class="btn btn-sm btn-primary">Tìm</button>
                         </form>
-                        @can('create promotion')
-                            <a href="{{ route('promotions.create') }}" class="btn btn-sm btn-primary">Thêm mới</a>
-                        @endcan
-                        @can('delete promotion')
-                            <a href="{{ route('promotions.trashed') }}" class="btn btn-outline-danger btn-sm">Xem đã xoá mềm</a>
-                        @endcan
+                        <a href="{{ route('promotions.create') }}" class="btn btn-sm btn-primary">Thêm mới</a>
+                        <a href="{{ route('promotions.trashed') }}" class="btn btn-outline-danger btn-sm">Xem đã xoá mềm</a>
                         <div class="dropdown">
                             <a href="#" class="dropdown-toggle btn btn-sm btn-outline-light" data-bs-toggle="dropdown" aria-expanded="false">
                                 Lọc
@@ -123,20 +118,16 @@
                                             <a href="{{ route('promotions.show', $promotion->id) }}" class="btn btn-light btn-sm">
                                                 <iconify-icon icon="solar:eye-broken" class="align-middle fs-18"></iconify-icon>
                                             </a>
-                                            @can('edit promotion')
                                             <a href="{{ route('promotions.edit', $promotion->id) }}" class="btn btn-soft-primary btn-sm">
                                                 <iconify-icon icon="solar:pen-2-broken" class="align-middle fs-18"></iconify-icon>
                                             </a>
-                                            @endcan
-                                            @can('delete promotion')
-                                                <form action="{{ route('promotions.destroy', $promotion->id) }}" method="POST" style="display:inline;">
+                                            <form action="{{ route('promotions.destroy', $promotion->id) }}" method="POST" style="display:inline;">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="btn btn-soft-danger btn-sm" onclick="return confirm('Xoá mềm?')">
                                                     <iconify-icon icon="solar:trash-bin-minimalistic-2-broken" class="align-middle fs-18"></iconify-icon>
                                                 </button>
                                             </form>
-                                            @endcan
                                         </div>
                                     </td>
                                 </tr>

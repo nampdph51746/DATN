@@ -12,6 +12,7 @@ use App\Http\Controllers\Client\HomeController;
 use App\Http\Controllers\Client\SeatController;
 use App\Http\Controllers\Admin\CinemaController;
 use App\Http\Controllers\Admin\TicketController;
+use App\Http\Controllers\Client\VnpayController;
 use App\Http\Controllers\Admin\BookingController;
 use App\Http\Controllers\Admin\CountryController;
 use App\Http\Controllers\Admin\PaymentController;
@@ -21,17 +22,26 @@ use App\Http\Controllers\Admin\ShowtimeController;
 use App\Http\Controllers\Admin\AdminRoomController;
 use App\Http\Controllers\Admin\AdminSeatController;
 use App\Http\Controllers\Admin\PromotionController;
+use App\Http\Controllers\Client\CheckoutController;
 use App\Http\Controllers\Admin\AdminProductController;
 use App\Http\Controllers\Admin\CustomerRankController;
+use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\Admin\PointHistoryController;
 use App\Http\Controllers\Admin\AdminSeatTypeController;
 use App\Http\Controllers\Admin\PaymentMethodController;
 use App\Http\Controllers\Admin\AdminAttributeController;
+use App\Http\Controllers\Client\ClientPaymentController;
+use App\Http\Controllers\Client\PaymentSuccessController;
 use App\Http\Controllers\Admin\AdminAttributeValueController;
 use App\Http\Controllers\Admin\AdminProductVariantController;
 use App\Http\Controllers\Admin\CustomerRankPromotionController;
 use App\Http\Controllers\Admin\AdminProductCategoriesController;
-use App\Http\Controllers\Client\ClientPaymentController;
+
+use App\Mail\TestMail;
+use App\Mail\TicketPurchasedMail;
+use App\Models\Ticket;
+use Illuminate\Support\Facades\Mail;
+
 
 Route::get('/', [HomeController::class, 'index'])->name('client.home');
 Route::get('/movies', [HomeController::class, 'movies'])->name('client.movies');
@@ -41,6 +51,22 @@ Route::get('/showtimes/{showtimeId}/seat-map', [SeatController::class, 'showSeat
 Route::post('/showtimes/{showtimeId}/reserve', [SeatController::class, 'reserveSeat'])->name('client.seats.reserve');
 Route::get('/api/seats/status/{showtimeId}', [SeatController::class, 'getSeatStatus']);
 Route::post('/apply-promotion-auto', [App\Http\Controllers\Client\HomeController::class, 'applyDiscountCodeAutomatically'])->name('client.applyPromotionAuto');
+
+Route::post('/checkout/vnpay', [VnpayController::class, 'redirectToVnpay'])->name('checkout.vnpay');
+Route::get('/checkout/confirmation', [CheckoutController::class, 'showConfirmation'])->name('checkout.confirmation');
+
+
+Route::get('/checkout/vnpay_return', [VnpayController::class, 'vnpayReturn'])->name('vnpay.return');
+
+Route::post('/checkout/preview', [CheckoutController::class, 'previewBooking'])->name('checkout.preview');
+
+
+Route::get('/payment-success', [PaymentSuccessController::class, 'show'])->name('client.success');
+
+Route::get('/payment-failed', function () {
+    return 'Thanh toán thất bại!';
+})->name('client.failed');
+
 
 Route::post('/apply-promotion', [App\Http\Controllers\Client\HomeController::class, 'applyDiscountCode'])->name('client.applyPromotion');
 
@@ -52,7 +78,6 @@ Route::get('/user-points', [App\Http\Controllers\Client\HomeController::class, '
 Route::get('/user-point-history', [App\Http\Controllers\Client\HomeController::class, 'getUserPointHistory'])->name('client.getUserPointHistory');
 
 
-
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
@@ -62,6 +87,7 @@ Route::get('/dashboard', function () {
 Route::middleware(['auth'])->group(function (){
 Route::get('/profile', [App\Http\Controllers\Auth\AuthenticatedSessionController::class, 'profile'])->name('profile.edit');
 Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+Route::post('/profile/change-password', [ProfileController::class, 'changePassword'])->name('profile.changePassword');
 Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
@@ -115,6 +141,10 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
 
     // Tạo suất chiếu tự động (HEAD)
     Route::post('/showtimes', [ShowtimeController::class, 'storeAuto'])->name('showtimes.storeAuto');
+    
+    // Cập nhật trạng thái suất chiếu
+    Route::post('/showtimes/update-statuses', [ShowtimeController::class, 'updateStatuses'])->name('showtimes.updateStatuses');
+    Route::post('/showtimes/{id}/update-status', [ShowtimeController::class, 'updateSingleStatus'])->name('showtimes.updateSingleStatus');
 
     //Room
     Route::resource('rooms', AdminRoomController::class);
@@ -158,6 +188,8 @@ Route::prefix('admin/seat-type')->name('seat-type.')->group(function () {
 });
 
 // Route::delete('admin/movies/bulk-delete', [AdminMovieController::class, 'bulkDelete'])->name('admin.movies.bulkDelete');
+// Route import ghế từ Excel
+Route::post('admin/seats/import', [App\Http\Controllers\Admin\AdminSeatController::class, 'importExcel'])->name('admin.seats.import');
 Route::delete('admin/genres/bulk-delete', [\App\Http\Controllers\Admin\GenreController::class, 'bulkDelete'])->name('admin.genres.bulkDelete');
 
 Route::prefix('admin')->name('admin.')->group(function () {
@@ -206,8 +238,6 @@ Route::prefix('admin/payment_methods')->group(function () {
 
 Route::get('admin/bookings', [BookingController::class, 'index'])->name('admin.bookings.index');
 Route::get('admin/bookingShow/{id}', [BookingController::class, 'show'])->name('admin.bookings.show');
-Route::get('admin/bookings/{booking}/edit-status', [BookingController::class, 'editStatus'])->name('admin.bookings.editStatus');
-Route::put('admin/bookings/{booking}/update-status', [BookingController::class, 'updateStatus'])->name('admin.bookings.updateStatus');
 
 
 
@@ -241,10 +271,13 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::resource('combos', ComboController::class)->names('combos');
-
+    Route::resource('notifications', NotificationController::class)->names('notifications');
+    Route::post('notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.markAsRead');
+    Route::post('/admin/combos/check-duplicate', [App\Http\Controllers\Admin\ComboController::class, 'checkDuplicate'])->name('admin.combos.checkDuplicate');
     Route::get('products/{id}/variants', [AdminProductController::class, 'getVariants'])->name('products.variants');
 });
 
 });
+
 
 require __DIR__.'/auth.php';

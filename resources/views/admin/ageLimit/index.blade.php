@@ -2,8 +2,6 @@
 
 @section('content')
 <div class="container-fluid">
-    @include('admin.partials.notifications')
-
     <div class="row">
         <div class="col-xl-12">
             <div class="card mt-3">

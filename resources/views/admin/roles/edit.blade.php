@@ -29,20 +29,33 @@
                                     </div>
 
                                     <div class="mb-3">
-                                        <label class="form-label">Chọn quyền</label>
                                         <div class="row">
-                                            @foreach($permissions as $permission)
-                                                <div class="form-check">
-                                                    <input type="checkbox" name="permissions[]" value="{{ $permission->name }}"
-                                                        class="form-check-input" {{ in_array($permission->name, $rolePermissions) ? 'checked' : '' }}>
-                                                    <label class="form-check-label">{{ $permission->name }}</label>
+                                            @foreach ($groupedPermissions as $group => $permissions)
+                                                <div class="col-md-3 mb-3">
+                                                    <h6 class="fw-bold text-primary text-uppercase">
+                                                        {{ str_replace(['-', '_'], ' ', $group) }}</h6>
+                                                    @foreach ($permissions as $permission)
+                                                        @php
+                                                            $parts = explode('.', $permission->name);
+                                                            $action = $parts[1] ?? $permission->name;
+                                                        @endphp
+                                                        <div class="form-check">
+                                                            <input class="form-check-input permission-checkbox" type="checkbox"
+                                                                name="permissions[]" value="{{ $permission->name }}"
+                                                                id="perm_{{ $permission->id }}" {{ in_array($permission->name, $rolePermissions) ? 'checked' : '' }}>
+                                                            <label class="form-check-label" for="perm_{{ $permission->id }}">
+                                                                {{ $action }}
+                                                            </label>
+                                                        </div>
+                                                    @endforeach
                                                 </div>
                                             @endforeach
                                         </div>
                                     </div>
 
+
                                     <button type="submit" class="btn btn-primary">Chỉnh sửa Vai trò</button>
-                                                                        <a href="{{ route('roles.index') }}" class="btn btn-secondary">Quay lại</a>
+                                    <a href="{{ route('roles.index') }}" class="btn btn-secondary">Quay lại</a>
 
                                 </form>
                             </div>

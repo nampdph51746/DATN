@@ -2,8 +2,6 @@
 
 @section('content')
     <div class="container-xxl">
-        @include('admin.partials.notifications')
-
         <div class="row">
             <div class="col-xl-12">
                 <div class="card">
@@ -19,11 +17,13 @@
                                     Thêm danh mục
                                 </a>
                             @endcan
-                            <a href="{{ route('admin.product-categories.trash') }}" class="btn btn-sm btn-outline-danger"
-                                title="Thùng rác">
-                                <iconify-icon icon="solar:trash-bin-minimalistic-2-broken"
-                                    class="align-middle fs-18"></iconify-icon>
-                            </a>
+                            @can('delete product category')
+                                <a href="{{ route('admin.product-categories.trash') }}" class="btn btn-sm btn-outline-danger"
+                                    title="Thùng rác">
+                                    <iconify-icon icon="solar:trash-bin-minimalistic-2-broken"
+                                        class="align-middle fs-18"></iconify-icon>
+                                </a>
+                            @endcan
                         </div>
                     </div>
                     <div>

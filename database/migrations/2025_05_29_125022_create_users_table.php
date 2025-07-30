@@ -11,6 +11,7 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id()->comment('ID người dùng');
+            $table->foreignId('role_id')->constrained()->comment('ID vai trò của người dùng');
             $table->string('name', 255)->comment('Họ và tên');
             $table->string('email', 255)->unique()->comment('Email người dùng (duy nhất)');
             $table->string('password', 255)->comment('Mật khẩu đã mã hóa');

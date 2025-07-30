@@ -4,9 +4,6 @@
     <!-- Bắt đầu Container Fluid -->
     <div class="container-xxl">
 
-        @if(session('success'))
-            <div class="alert alert-success">{{ session('success') }}</div>
-        @endif
 
 
         <div class="card overflow-hiddenCoupons">
@@ -91,18 +88,9 @@
                             <span class="fw-semibold">{{ $roles->total() }}</span> kết quả
                         </div>
                     </div>
-
-                    <div class="d-flex justify-content-between align-items-center mt-3">
-
-                        <div>
-                            {{ $roles->links('pagination::bootstrap-4') }}
-                        </div>
-
-                        <a href="{{ route('roles.index') }}" class="btn btn-light btn-sm" title="Xem chi tiết">
-                                <iconify-icon icon="heroicons:arrow-left" width="24" height="24" title="Quay lại"></iconify-icon>
-                        </a>
+                    <div class="col-sm-auto mt-3 mt-sm-0">
+                        {{ $roles->links('pagination::bootstrap-4') }}
                     </div>
-
                 </div>
             </div>
             <!-- Kết thúc Container Fluid -->

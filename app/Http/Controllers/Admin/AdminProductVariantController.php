@@ -4,13 +4,17 @@ namespace App\Http\Controllers\Admin;
 
 use App\Models\Product;
 use App\Models\Attribute;
+use Illuminate\Support\Str;
+use Illuminate\Http\Request;
 use App\Models\AttributeValue;
 use App\Models\ProductVariant;
-use App\Models\ProductVariantOption;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Models\ProductVariantOption;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
+
+use App\Models\Notification;
+use App\Enums\NotificationType;
+use Illuminate\Support\Facades\Auth;
 
 class AdminProductVariantController extends Controller
 {
@@ -18,9 +22,9 @@ class AdminProductVariantController extends Controller
     {
         $this->middleware(['auth', 'role:admin,staff']);
         $this->middleware('can:view product variant')->only('index');
-        $this->middleware('can:create product category')->only(['create', 'store']);
-        $this->middleware('can:edit product category')->only(['edit', 'update']);
-        $this->middleware('can:delete product category')->only('destroy');
+        $this->middleware('can:create product variant')->only(['create', 'store']);
+        $this->middleware('can:edit product variant')->only(['edit', 'update']);
+        $this->middleware('can:delete product variant')->only('destroy');
     }
     public function index()
     {
@@ -144,6 +148,22 @@ class AdminProductVariantController extends Controller
                 }
             }
 
+            // Tạo thông báo khi tạo mới biến thể sản phẩm
+            Notification::create([
+                'user_id' => Auth::id(),
+                'entity_type' => ProductVariant::class,
+                'entity_id' => $productVariant->id,
+                'title' => 'Tạo mới biến thể sản phẩm',
+                'message' => 'Biến thể sản phẩm #' . $productVariant->id . ' đã được tạo mới.',
+                'type' => NotificationType::System,
+                'priority' => 'low',
+                'old_status' => null,
+                'new_status' => $productVariant->sku,
+                'event_details' => json_encode([
+                    'new' => $productVariant->getAttributes(),
+                ]),
+            ]);
+
             $createdVariants[] = $productVariant;
         }
 
@@ -153,17 +173,8 @@ class AdminProductVariantController extends Controller
                 ->withErrors(['attribute_values' => 'Tất cả biến thể với thuộc tính đã chọn đã tồn tại.']);
         }
 
-        // Kiểm tra nếu có product_id thì redirect về trang chi tiết sản phẩm
-        if ($request->has('product_id')) {
-            return redirect()->route('admin.products.show', $request->product_id)
-                ->with('success', 'Đã tạo thành công ' . count($createdVariants) . ' biến thể sản phẩm.');
-        }
-
-        // Nếu không có product_id, redirect về trang danh sách
-        return redirect()->route('admin.product-variants.index')
-            ->with('success', 'Đã tạo thành công ' . count($createdVariants) . ' biến thể sản phẩm.');
+        return redirect()->route('admin.product-variants.index')->with('success', 'Đã tạo thành công ' . count($createdVariants) . ' biến thể sản phẩm.');
     }
-    
 
     private function generateCombinations($arrays)
     {
@@ -283,6 +294,7 @@ class AdminProductVariantController extends Controller
             $imageUrl = $request->file('image')->store('product_variants', 'public');
         }
 
+        $oldData = $productVariant->getOriginal();
         $productVariant->update([
             'product_id' => $request->product_id,
             'sku' => $sku,
@@ -309,6 +321,23 @@ class AdminProductVariantController extends Controller
                 'attribute_value_id' => $attributeValueId,
             ]);
         }
+
+        // Tạo thông báo khi cập nhật biến thể sản phẩm
+        Notification::create([
+            'user_id' => Auth::id(),
+            'entity_type' => ProductVariant::class,
+            'entity_id' => $productVariant->id,
+            'title' => 'Cập nhật biến thể sản phẩm',
+            'message' => 'Biến thể sản phẩm #' . $productVariant->id . ' đã được cập nhật.',
+            'type' => NotificationType::System,
+            'priority' => 'low',
+            'old_status' => $oldData['sku'] ?? null,
+            'new_status' => $productVariant->sku,
+            'event_details' => json_encode([
+                'old' => $oldData,
+                'new' => $productVariant->getAttributes(),
+            ]),
+        ]);
 
         return redirect()->route('admin.product-variants.index')->with('success', 'Biến thể sản phẩm đã được cập nhật thành công.');
     }

@@ -2,15 +2,20 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
-use App\Models\CustomerRankPromotion;
+use App\Models\Promotion;
+use App\Models\CustomerRank;
+use App\Models\Notification;
 use Illuminate\Http\Request;
-use Illuminate\Validation\ValidationException;
+use App\Enums\NotificationType;
 use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
+use App\Models\CustomerRankPromotion;
+use Illuminate\Validation\ValidationException;
 
 class CustomerRankPromotionController extends Controller
 {
-        public function __construct()
+    public function __construct()
     {
         $this->middleware(['auth', 'role:admin,staff']);
         $this->middleware('can:view customer rank promotion')->only('index');
@@ -52,8 +57,8 @@ class CustomerRankPromotionController extends Controller
 
     public function create()
     {
-        $ranks = \App\Models\CustomerRank::pluck('name', 'id');
-        $promotions = \App\Models\Promotion::pluck('code', 'id');
+        $ranks = CustomerRank::pluck('name', 'id');
+        $promotions = Promotion::pluck('code', 'id');
         return view('admin.customer_rank_promotions.create', compact('ranks', 'promotions'));
     }
 
@@ -73,7 +78,18 @@ class CustomerRankPromotionController extends Controller
             ]);
         }
 
-        CustomerRankPromotion::create($data);
+        $item = CustomerRankPromotion::create($data);
+        // Notification for create
+        Notification::create([
+            'user_id' => Auth::id(),
+            'entity_type' => 'customer_rank_promotion',
+            'entity_id' => $item->id ?? null,
+            'title' => 'Thêm khuyến mãi theo hạng khách hàng',
+            'message' => 'Đã thêm khuyến mãi cho hạng khách hàng ID: ' . $data['customer_rank_id'] . ', khuyến mãi ID: ' . $data['promotion_id'],
+            'type' => NotificationType::System,
+            'priority' => 'low',
+            'event_details' => json_encode(['action' => 'create', 'data' => $data]),
+        ]);
         return redirect()->route('customer_rank_promotions.index')->with('success', 'Thêm khuyến mãi theo hạng khách hàng thành công.');
     }
 
@@ -98,13 +114,24 @@ class CustomerRankPromotionController extends Controller
         ]);
 
         // Cập nhật thủ công bằng query builder
+        $oldData = $item->toArray();
         DB::table('customer_rank_promotions')
             ->where('customer_rank_id', $customer_rank_id)
             ->where('promotion_id', $promotion_id)
             ->update([
                 'description' => $data['description'],
             ]);
-
+        // Notification for update
+        Notification::create([
+            'user_id' => Auth::id(),
+            'entity_type' => 'customer_rank_promotion',
+            'entity_id' => $item->id ?? null,
+            'title' => 'Cập nhật khuyến mãi theo hạng khách hàng',
+            'message' => 'Đã cập nhật khuyến mãi cho hạng khách hàng ID: ' . $customer_rank_id . ', khuyến mãi ID: ' . $promotion_id,
+            'type' => NotificationType::System,
+            'priority' => 'low',
+            'event_details' => json_encode(['action' => 'update', 'old' => $oldData, 'new' => $data]),
+        ]);
         return redirect()->route('customer_rank_promotions.index')->with('success', 'Cập nhật khuyến mãi theo hạng khách hàng thành công.');
     }
 
@@ -114,11 +141,22 @@ class CustomerRankPromotionController extends Controller
             ->where('promotion_id', $promotion_id)
             ->firstOrFail();
 
+        $oldData = $item->toArray();
         DB::table('customer_rank_promotions')
             ->where('customer_rank_id', $customer_rank_id)
             ->where('promotion_id', $promotion_id)
             ->delete();
-
+        // Notification for delete
+        Notification::create([
+            'user_id' => Auth::id(),
+            'entity_type' => 'customer_rank_promotion',
+            'entity_id' => $item->id ?? null,
+            'title' => 'Xóa khuyến mãi theo hạng khách hàng',
+            'message' => 'Đã xóa khuyến mãi cho hạng khách hàng ID: ' . $customer_rank_id . ', khuyến mãi ID: ' . $promotion_id,
+            'type' => NotificationType::System,
+            'priority' => 'low',
+            'event_details' => json_encode(['action' => 'delete', 'old' => $oldData]),
+        ]);
         return redirect()->route('customer_rank_promotions.index')->with('success', 'Xóa khuyến mãi theo hạng khách hàng thành công.');
     }
 }

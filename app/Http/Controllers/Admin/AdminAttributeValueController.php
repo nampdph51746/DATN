@@ -7,15 +7,19 @@ use Illuminate\Http\Request;
 use App\Models\AttributeValue;
 use App\Http\Controllers\Controller;
 
+use App\Models\Notification;
+use App\Enums\NotificationType;
+use Illuminate\Support\Facades\Auth;
+
 class AdminAttributeValueController extends Controller
 {
-        public function __construct()
+            public function __construct()
     {
         $this->middleware(['auth', 'role:admin,staff']);
-        $this->middleware('can:view role')->only('index');
-        $this->middleware('can:create role')->only(['create', 'store']);
-        $this->middleware('can:edit role')->only(['edit', 'update']);
-        $this->middleware('can:delete role')->only('destroy');
+        $this->middleware('can:view attribute value')->only('index');
+        $this->middleware('can:create attribute value')->only(['create', 'store']);
+        $this->middleware('can:edit attribute value')->only(['edit', 'update']);
+        $this->middleware('can:delete attribute value')->only('destroy');
     }
     public function index(Request $request)
     {
@@ -55,11 +59,27 @@ class AdminAttributeValueController extends Controller
             'value.max' => 'Giá trị thuộc tính không được vượt quá 100 ký tự.',
         ]);
 
-        AttributeValue::create([
+        $attributeValue = AttributeValue::create([
             'attribute_id' => $request->attribute_id,
             'value' => $request->value,
             'created_at' => now(),
             'updated_at' => now(),
+        ]);
+
+        // Tạo thông báo khi thêm mới giá trị thuộc tính
+        Notification::create([
+            'user_id' => Auth::id(),
+            'entity_type' => AttributeValue::class,
+            'entity_id' => $attributeValue->id,
+            'title' => 'Tạo mới giá trị thuộc tính',
+            'message' => 'Giá trị thuộc tính #' . $attributeValue->id . ' đã được tạo mới.',
+            'type' => NotificationType::System,
+            'priority' => 'low',
+            'old_status' => null,
+            'new_status' => $attributeValue->value,
+            'event_details' => json_encode([
+                'new' => $attributeValue->getAttributes(),
+            ]),
         ]);
 
         return redirect()->route('admin.attribute-values.index')->with('success', 'Giá trị thuộc tính đã được tạo thành công.');
@@ -92,11 +112,28 @@ class AdminAttributeValueController extends Controller
         ]);
 
         $attributeValue = AttributeValue::findOrFail($id);
-
+        $oldData = $attributeValue->getOriginal();
         $attributeValue->update([
             'attribute_id' => $request->attribute_id,
             'value' => $request->value,
             'updated_at' => now(),
+        ]);
+
+        // Tạo thông báo mức độ cao khi cập nhật giá trị thuộc tính
+        Notification::create([
+            'user_id' => Auth::id(),
+            'entity_type' => AttributeValue::class,
+            'entity_id' => $attributeValue->id,
+            'title' => 'Cập nhật giá trị thuộc tính',
+            'message' => 'Giá trị thuộc tính #' . $attributeValue->id . ' đã được cập nhật.',
+            'type' => NotificationType::System,
+            'priority' => 'low',
+            'old_status' => $oldData['value'] ?? null,
+            'new_status' => $attributeValue->value,
+            'event_details' => json_encode([
+                'old' => $oldData,
+                'new' => $attributeValue->getAttributes(),
+            ]),
         ]);
 
         return redirect()->route('admin.attribute-values.index')->with('success', 'Giá trị thuộc tính đã được cập nhật thành công.');
