@@ -233,7 +233,7 @@
                         </div>
 
                         <div class="flex flex-col gap-2 mt-2 mb-3">
-                            <a href="#" class="social-btn google-btn"><i class="fab fa-google"></i> Google</a>
+                        <a href="{{ route('auth.google') }}" class="btn btn-primary">Đăng nhập bằng Google</a>
                             <a href="#" class="social-btn facebook-btn"><i class="fab fa-facebook-f"></i> Facebook</a>
                         </div>
 
