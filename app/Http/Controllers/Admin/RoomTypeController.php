@@ -6,9 +6,20 @@ use App\Http\Controllers\Controller;
 use App\Models\RoomType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use \App\Models\Notification;
+use \App\Enums\NotificationType;
+use \Illuminate\Support\Facades\Auth;
 
 class RoomTypeController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(['auth', 'role:admin,staff']);
+        $this->middleware('can:view room type')->only('index');
+        $this->middleware('can:create room type')->only(['create', 'store']);
+        $this->middleware('can:edit room type')->only(['edit', 'update']);
+        $this->middleware('can:delete room type')->only('destroy');
+    }
     public function index(Request $request)
     {
         $query = $request->input('query');
@@ -37,9 +48,23 @@ class RoomTypeController extends Controller
         ]);
 
         try {
-            RoomType::create([
+            $roomType = RoomType::create([
                 'name' => $request->name,
                 'description' => $request->description,
+            ]);
+
+            // Thông báo khi thêm loại phòng
+            Notification::create([
+                'user_id' => Auth::id(),
+                'entity_type' => RoomType::class,
+                'entity_id' => $roomType->id,
+                'title' => 'Thêm loại phòng',
+                'message' => 'Loại phòng "' . $roomType->name . '" đã được thêm mới.',
+                'type' => NotificationType::System,
+                'priority' => 'low',
+                'old_status' => null,
+                'new_status' => json_encode($roomType->getAttributes()),
+                'event_details' => json_encode(['action' => 'create', 'room_type_id' => $roomType->id]),
             ]);
 
             return redirect()->route('admin.room-types.index')->with('success', 'Thêm loại phòng thành công!');
@@ -79,6 +104,7 @@ class RoomTypeController extends Controller
         ]);
 
         try {
+            $oldData = $roomType->getOriginal();
             if ($roomType->rooms()->exists()) {
                 if ($request->name !== $roomType->name) {
                     return redirect()->back()->with('error', 'Không thể thay đổi tên loại phòng vì đang được sử dụng trong các phòng hiện tại.');
@@ -92,6 +118,20 @@ class RoomTypeController extends Controller
                 'name' => $request->name,
                 'description' => $request->description,
                 'status' => $request->status,
+            ]);
+
+            // Thông báo khi cập nhật loại phòng
+            Notification::create([
+                'user_id' => Auth::id(),
+                'entity_type' => RoomType::class,
+                'entity_id' => $roomType->id,
+                'title' => 'Cập nhật loại phòng',
+                'message' => 'Loại phòng "' . $roomType->name . '" đã được cập nhật.',
+                'type' => NotificationType::System,
+                'priority' => 'low',
+                'old_status' => json_encode($oldData),
+                'new_status' => json_encode($roomType->getAttributes()),
+                'event_details' => json_encode(['action' => 'update', 'room_type_id' => $roomType->id]),
             ]);
 
             return redirect()->route('admin.room-types.index')->with('success', 'Cập nhật loại phòng thành công!');

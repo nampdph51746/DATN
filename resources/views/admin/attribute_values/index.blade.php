@@ -27,10 +27,12 @@
                             </button>
                         </form>
 
+                        @can('attribute value')
                         <a href="{{ route('admin.attribute-values.create') }}" class="btn btn-sm btn-primary">
                             <iconify-icon icon="solar:add-circle-broken" class="align-middle fs-16 me-1"></iconify-icon>
                             Thêm Giá Trị Thuộc Tính
                         </a>
+                        @endcan
                     </div>
 
                     <div>

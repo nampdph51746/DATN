@@ -1,15 +1,70 @@
 @extends('layouts.admin.admin')
 
+@php
+    use App\Enums\TicketStatus;
+@endphp
 @section('content')
+    <div class="container">
+        <div class="container-xxl">
+            <div class="row">
+                <div class="col-md-6 col-xl-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <h4 class="card-title mb-2">Vé chưa sử dụng</h4>
+                                    <p class="text-muted fw-medium fs-22 mb-0">{{ $tickets->where('status', 'valid')->count() }}</p>
+                                </div>
+                                <div>
+                                    <div class="avatar-md bg-success bg-opacity-10 rounded">
+                                        <iconify-icon icon="solar:ticket-broken" class="fs-32 text-success avatar-title"></iconify-icon>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-xl-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <h4 class="card-title mb-2">Vé đã sử dụng</h4>
+                                    <p class="text-muted fw-medium fs-22 mb-0">{{ $tickets->where('status', 'used')->count() }}</p>
+                                </div>
+                                <div>
+                                    <div class="avatar-md bg-primary bg-opacity-10 rounded">
+                                        <iconify-icon icon="solar:clipboard-check-broken" class="fs-32 text-primary avatar-title"></iconify-icon>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-xl-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <h4 class="card-title mb-2">Vé đã hủy</h4>
+                                    <p class="text-muted fw-medium fs-22 mb-0">{{ $tickets->where('status', 'cancelled')->count() }}</p>
+                                </div>
+                                <div>
+                                    <div class="avatar-md bg-danger bg-opacity-10 rounded">
+                                        <iconify-icon icon="solar:cart-cross-broken" class="fs-32 text-danger avatar-title"></iconify-icon>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 <div class="container-xxl">
     <div class="row">
         <div class="col-xl-12">
             <div class="card">
-
-                {{-- Thông báo  --}}
-                @include('admin.partials.alert')
-
-
                 <div class="card-header d-flex justify-content-between align-items-center gap-1">
                     <h4 class="card-title flex-grow-1">Danh sách vé</h4>
                     <div class="d-flex gap-2 align-items-center">
@@ -87,7 +142,24 @@
                                     <td>{{ $ticket->showtime_id }}</td>
                                     <td>{{ $ticket->booking_id }}</td>
                                     <td>{{ $ticket->seat_id ?? '-' }}</td>
-                                    <td>{{ $ticket->status }}</td>
+                                    <td>
+                                        @php
+                                            $status = $ticket->status instanceof TicketStatus ? $ticket->status->value : $ticket->status;
+                                        @endphp
+                                        @switch($status)
+                                            @case('valid')
+                                                <span class="badge bg-success">Chưa sử dụng</span>
+                                                @break
+                                            @case('used')
+                                                <span class="badge bg-primary">Đã sử dụng</span>
+                                                @break
+                                            @case('cancelled')
+                                                <span class="badge bg-danger">Đã hủy</span>
+                                                @break
+                                            @default
+                                                <span class="badge bg-secondary">Không xác định</span>
+                                        @endswitch
+                                    </td>
                                     <td>{{ $ticket->created_at ? $ticket->created_at->format('d/m/Y H:i') : '-' }}</td>
                                     <td>
                                         <div class="d-flex gap-2">
@@ -99,13 +171,6 @@
                                             {{-- <a href="{{ route('tickets.edit', $ticket->id) }}" class="btn btn-soft-primary btn-sm" title="Sửa">
                                                 <iconify-icon icon="solar:pen-2-broken" class="align-middle fs-18"></iconify-icon>
                                             </a> --}}
-                                            <!-- Delete Button -->
-                                            {{-- <form action="{{ route('tickets.destroy', $ticket->id) }}" method="POST" style="display:inline;">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-soft-danger btn-sm" title="Xóa" onclick="return confirm('Bạn có chắc muốn xóa vé này?')">
-                                                    <iconify-icon icon="solar:trash-bin-minimalistic-2-broken" class="align-middle fs-18"></iconify-icon>
-                                                </button> --}}
                                             </form>
                                         </div>
                                     </td>

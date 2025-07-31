@@ -2,8 +2,6 @@
 
 @section('content')
 <div class="container-xxl">
-    @include('admin.partials.notifications')
-
     <div class="row">
         <div class="col-xl-3 col-lg-4">
             <div class="card">
@@ -19,7 +17,7 @@
                             <button type="button" class="btn btn-outline-secondary w-100" onclick="submitForm()">Tạo biến thể</button>
                         </div>
                         <div class="col-lg-6">
-                            <a href="{{ route('admin.product-variants.index') }}" class="btn btn-primary w-100">Hủy</a>
+                            <a href="{{ isset($selectedProductId) ? route('admin.products.show', $selectedProductId) : route('admin.products.index') }}" class="btn btn-primary w-100">Quay lại</a>
                         </div>
                     </div>
                 </div>

@@ -1,9 +1,7 @@
 @extends('layouts.admin.admin')
 
 @section('content')
-    <div class="container-xxl">
-        @include('admin.partials.notifications')
-        
+    <div class="container-xxl">        
         <div class="row">
             <div class="col-lg-12">
                 <div class="card">

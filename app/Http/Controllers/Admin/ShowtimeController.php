@@ -10,11 +10,38 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
+use App\Services\ShowtimeStatusService;
+use App\Services\ShowtimePricingService;
+use \App\Models\Notification;
+use \App\Enums\NotificationType;
+use \Illuminate\Support\Facades\Auth;
 
 class ShowtimeController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(['auth', 'role:admin,staff']);
+        $this->middleware('can:view role')->only('index');
+        $this->middleware('can:create role')->only(['create', 'store']);
+        $this->middleware('can:edit role')->only(['edit', 'update']);
+        $this->middleware('can:delete role')->only('destroy');
+        $this->middleware('update.showtime.status')->only(['index', 'show']);
+    }
+    
     public function index(Request $request)
     {
+        // Tự động cập nhật trạng thái suất chiếu khi load trang
+        try {
+            $service = new ShowtimeStatusService();
+            $updatedCount = $service->updateShowtimeStatuses();
+            
+            if ($updatedCount > 0) {
+                Log::info("Tự động cập nhật trạng thái cho {$updatedCount} suất chiếu khi load trang index");
+            }
+        } catch (\Exception $e) {
+            Log::error('Lỗi khi tự động cập nhật trạng thái suất chiếu: ' . $e->getMessage());
+        }
+
         $query = $request->input('query');
         $movieId = $request->input('movie_id');
         $roomId = $request->input('room_id');
@@ -53,6 +80,18 @@ class ShowtimeController extends Controller
 
     public function show($id)
     {
+        // Tự động cập nhật trạng thái suất chiếu khi xem chi tiết
+        try {
+            $service = new ShowtimeStatusService();
+            $updatedCount = $service->updateShowtimeStatuses();
+            
+            if ($updatedCount > 0) {
+                Log::info("Tự động cập nhật trạng thái cho {$updatedCount} suất chiếu khi xem chi tiết");
+            }
+        } catch (\Exception $e) {
+            Log::error('Lỗi khi tự động cập nhật trạng thái suất chiếu: ' . $e->getMessage());
+        }
+
         $showtime = Showtime::with(['movie', 'room'])->findOrFail($id);
         $ticketCount = \App\Models\Ticket::where('showtime_id', $id)->count();
         return view('admin.showtimes.show', compact('showtime', 'ticketCount'));
@@ -61,14 +100,15 @@ class ShowtimeController extends Controller
     public function edit($id)
     {
         $showtime = Showtime::findOrFail($id);
-        $movies = \App\Models\Movie::all();
-        $rooms = \App\Models\Room::all();
+        $movies = Movie::all();
+        $rooms = Room::all();
         return view('admin.showtimes.edit', compact('showtime', 'movies', 'rooms'));
     }
 
     public function update(Request $request, $id)
     {
         $showtime = Showtime::findOrFail($id);
+        $oldData = $showtime->getOriginal();
 
         $request->validate([
             'movie_id' => 'required|exists:movies,id',
@@ -138,12 +178,9 @@ class ShowtimeController extends Controller
         ]);
 
         try {
-            Log::info('Raw Start Time: ' . $request->start_time . ', Raw End Time: ' . $request->end_time);
 
             $start = \Carbon\Carbon::parse($request->start_time, 'Asia/Ho_Chi_Minh')->setSeconds(0);
             $end = \Carbon\Carbon::parse($request->end_time, 'Asia/Ho_Chi_Minh')->setSeconds(0);
-
-            Log::info('Start Timezone: ' . $start->timezone->getName() . ', End Timezone: ' . $end->timezone->getName());
 
             $startDate = $start->toDateString();
             $endDate = $end->toDateString();
@@ -152,13 +189,12 @@ class ShowtimeController extends Controller
             }
 
             $duration = abs($end->diffInMinutes($start));
-            Log::info('Start Time: ' . $start->toDateTimeString() . ', End Time: ' . $end->toDateTimeString() . ', Duration: ' . $duration . ' minutes');
 
             if ($end->lessThan($start)) {
                 return redirect()->back()->with('error', 'Thời gian kết thúc phải sau thời gian bắt đầu.');
             }
 
-            $movie = \App\Models\Movie::findOrFail($request->movie_id);
+            $movie = Movie::findOrFail($request->movie_id);
             $movieDuration = $movie->duration_minutes; // Đồng bộ với duration_minutes
             $minDuration = $movieDuration + 15; 
 
@@ -188,9 +224,25 @@ class ShowtimeController extends Controller
                 'status' => $request->status,
             ]);
 
+            // Thông báo khi cập nhật suất chiếu
+            Notification::create([
+                'user_id' => Auth::id(),
+                'entity_type' => Showtime::class,
+                'entity_id' => $showtime->id,
+                'title' => 'Cập nhật suất chiếu',
+                'message' => 'Suất chiếu #' . $showtime->id . ' đã được cập nhật.',
+                'type' => NotificationType::System,
+                'priority' => 'high',
+                'old_status' => json_encode($oldData),
+                'new_status' => json_encode($showtime->getAttributes()),
+                'event_details' => json_encode([
+                    'action' => 'update',
+                    'showtime_id' => $showtime->id,
+                ]),
+            ]);
+
             return redirect()->route('admin.showtimes.index')->with('success', 'Cập nhật suất chiếu thành công!');
         } catch (\Exception $e) {
-            Log::error('Lỗi khi cập nhật suất chiếu: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Có lỗi xảy ra khi cập nhật suất chiếu. Vui lòng thử lại.');
         }
     }
@@ -240,7 +292,7 @@ class ShowtimeController extends Controller
                 }
 
                 foreach ($roomIds as $roomId) {
-                    $room = Room::findOrFail($roomId);
+                    $room = Room::with('roomType')->findOrFail($roomId);
                     if (!$room) {
                         throw new \Exception('Phòng chiếu ID ' . $roomId . ' không tồn tại.');
                     }
@@ -285,12 +337,16 @@ class ShowtimeController extends Controller
                             continue;
                         }
 
+                        // Lấy base_price từ room type sử dụng PricingService
+                        $pricingService = new ShowtimePricingService();
+                        $basePriceFromRoomType = $pricingService->calculateBasePriceForRoom($room);
+
                         Showtime::create([
                             'movie_id' => $movie->id,
                             'room_id' => $room->id,
                             'start_time' => $startTime,
                             'end_time' => $endTime,
-                            'base_price' => 100000,
+                            'base_price' => $basePriceFromRoomType,
                             'status' => 'scheduled',
                             'created_at' => now($timezone),
                             'updated_at' => now($timezone),
@@ -324,6 +380,65 @@ class ShowtimeController extends Controller
             Log::error('Lỗi khi tạo suất chiếu tự động: ' . $e->getMessage());
             return redirect()->back()
                 ->with('error', 'Có lỗi xảy ra khi tạo suất chiếu: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Cập nhật trạng thái suất chiếu theo thời gian thực
+     */
+    public function updateStatuses()
+    {
+        try {
+            $service = new ShowtimeStatusService();
+            $updatedCount = $service->updateShowtimeStatuses();
+
+            return response()->json([
+                'success' => true,
+                'message' => "Đã cập nhật trạng thái cho {$updatedCount} suất chiếu",
+                'updated_count' => $updatedCount
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Lỗi khi cập nhật trạng thái suất chiếu: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Có lỗi xảy ra khi cập nhật trạng thái suất chiếu',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Cập nhật trạng thái cho một suất chiếu cụ thể
+     */
+    public function updateSingleStatus($id)
+    {
+        try {
+            $showtime = Showtime::findOrFail($id);
+            $service = new ShowtimeStatusService();
+            $updated = $service->updateSingleShowtimeStatus($showtime);
+
+            if ($updated) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Đã cập nhật trạng thái suất chiếu',
+                    'new_status' => $showtime->fresh()->status->value
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Không cần cập nhật trạng thái',
+                    'current_status' => $showtime->status->value
+                ]);
+            }
+
+        } catch (\Exception $e) {
+            Log::error('Lỗi khi cập nhật trạng thái suất chiếu: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Có lỗi xảy ra khi cập nhật trạng thái suất chiếu',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 }

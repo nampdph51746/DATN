@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\Client\CheckoutController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\CityController;
@@ -13,6 +12,7 @@ use App\Http\Controllers\Client\HomeController;
 use App\Http\Controllers\Client\SeatController;
 use App\Http\Controllers\Admin\CinemaController;
 use App\Http\Controllers\Admin\TicketController;
+use App\Http\Controllers\Client\VnpayController;
 use App\Http\Controllers\Admin\BookingController;
 use App\Http\Controllers\Admin\CountryController;
 use App\Http\Controllers\Admin\PaymentController;
@@ -22,19 +22,20 @@ use App\Http\Controllers\Admin\ShowtimeController;
 use App\Http\Controllers\Admin\AdminRoomController;
 use App\Http\Controllers\Admin\AdminSeatController;
 use App\Http\Controllers\Admin\PromotionController;
+use App\Http\Controllers\Client\CheckoutController;
 use App\Http\Controllers\Admin\AdminProductController;
 use App\Http\Controllers\Admin\CustomerRankController;
+use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\Admin\PointHistoryController;
 use App\Http\Controllers\Admin\AdminSeatTypeController;
 use App\Http\Controllers\Admin\PaymentMethodController;
 use App\Http\Controllers\Admin\AdminAttributeController;
+use App\Http\Controllers\Client\ClientPaymentController;
+use App\Http\Controllers\Client\PaymentSuccessController;
 use App\Http\Controllers\Admin\AdminAttributeValueController;
 use App\Http\Controllers\Admin\AdminProductVariantController;
 use App\Http\Controllers\Admin\CustomerRankPromotionController;
 use App\Http\Controllers\Admin\AdminProductCategoriesController;
-use App\Http\Controllers\Client\ClientPaymentController;
-use App\Http\Controllers\Client\VnpayController;
-
 
 Route::get('/', [HomeController::class, 'index'])->name('client.home');
 Route::get('/movies', [HomeController::class, 'movies'])->name('client.movies');
@@ -53,9 +54,8 @@ Route::get('/checkout/vnpay_return', [VnpayController::class, 'vnpayReturn'])->n
 
 Route::post('/checkout/preview', [CheckoutController::class, 'previewBooking'])->name('checkout.preview');
 
-Route::get('/payment-success', function () {
-    return 'Thanh toán thành công!';
-})->name('client.success');
+
+Route::get('/payment-success', [PaymentSuccessController::class, 'show'])->name('client.success');
 
 Route::get('/payment-failed', function () {
     return 'Thanh toán thất bại!';
@@ -72,7 +72,24 @@ Route::get('/user-points', [App\Http\Controllers\Client\HomeController::class, '
 Route::get('/user-point-history', [App\Http\Controllers\Client\HomeController::class, 'getUserPointHistory'])->name('client.getUserPointHistory');
 
 
-Route::prefix('admin')->name('admin.')->group(function () {
+Route::get('/dashboard', function () {
+    return view('dashboard');
+})->middleware(['auth', 'verified'])->name('dashboard');
+
+
+
+Route::middleware(['auth'])->group(function (){
+Route::get('/profile', [App\Http\Controllers\Auth\AuthenticatedSessionController::class, 'profile'])->name('profile.edit');
+Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+Route::post('/profile/change-password', [ProfileController::class, 'changePassword'])->name('profile.changePassword');
+Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+Route::middleware(['auth', 'role:admin,staff'])->group(function () {
+
+
+
+    Route::prefix('admin')->name('admin.')->group(function () {
     // Seat routes from HEAD
     Route::get('seats/edit-bulk', [AdminSeatController::class, 'editBulk'])->name('seats.editBulk');
     Route::put('seats/update-bulk', [AdminSeatController::class, 'updateBulk'])->name('seats.bulkUpdate');
@@ -103,10 +120,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::delete('room-types/{id}/deactivate', [RoomTypeController::class, 'deactivate'])->name('room-types.deactivate');
     Route::resource('room-types', RoomTypeController::class)->except(['destroy']);
 
-    // Showtimes routes from HEAD
-    Route::delete('showtimes/{id}/deactivate', [ShowtimeController::class, 'deactivate'])->name('showtimes.deactivate');
-    Route::resource('showtimes', ShowtimeController::class)->except(['destroy']);
-
     // Movies routes from HEAD
     Route::get('/movies', [MovieController::class, 'index'])->name('movies.index');
     Route::get('/movies/create', [MovieController::class, 'create'])->name('movies.create');
@@ -118,6 +131,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
     // Tạo suất chiếu tự động (HEAD)
     Route::post('/showtimes', [ShowtimeController::class, 'storeAuto'])->name('showtimes.storeAuto');
+    
+    // Cập nhật trạng thái suất chiếu
+    Route::post('/showtimes/update-statuses', [ShowtimeController::class, 'updateStatuses'])->name('showtimes.updateStatuses');
+    Route::post('/showtimes/{id}/update-status', [ShowtimeController::class, 'updateSingleStatus'])->name('showtimes.updateSingleStatus');
 
     //Room
     Route::resource('rooms', AdminRoomController::class);
@@ -148,7 +165,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 });
 
 // Routes quản lý seat-type từ origin/Giang
-Route::prefix('Admin/seat-type')->name('seat-type.')->group(function () {
+Route::prefix('admin/seat-type')->name('seat-type.')->group(function () {
     Route::get('/', [AdminSeatTypeController::class, 'index'])->name('index'); // Danh sách loại ghế
     Route::get('create', [AdminSeatTypeController::class, 'create'])->name('create'); // Form tạo loại ghế
     Route::post('store', [AdminSeatTypeController::class, 'store'])->name('store'); // Lưu loại ghế mới
@@ -161,10 +178,12 @@ Route::prefix('Admin/seat-type')->name('seat-type.')->group(function () {
 });
 
 // Route::delete('admin/movies/bulk-delete', [AdminMovieController::class, 'bulkDelete'])->name('admin.movies.bulkDelete');
+// Route import ghế từ Excel
+Route::post('admin/seats/import', [App\Http\Controllers\Admin\AdminSeatController::class, 'importExcel'])->name('admin.seats.import');
 Route::delete('admin/genres/bulk-delete', [\App\Http\Controllers\Admin\GenreController::class, 'bulkDelete'])->name('admin.genres.bulkDelete');
 
 Route::prefix('admin')->name('admin.')->group(function () {
-    Route::resource('genres', App\Http\Controllers\Admin\GenreController::class);
+   Route::resource('genres', App\Http\Controllers\Admin\GenreController::class);
 });
 
 Route::prefix('admin/age-limits')->name('admin.age_limits.')->group(function () {
@@ -180,17 +199,17 @@ Route::post('admin/age-limits/bulk-delete', [AgeLimitController::class, 'bulkDel
 
 Route::resource('admin/users', UserController::class);
 
-Route::prefix('customers-rank')->name('customers-rank.')->group(function () {
+Route::prefix('admin/customers-rank')->name('customers-rank.')->group(function () {
     Route::get('deleted', [CustomerRankController::class, 'deleted'])->name('deleted');
     Route::get('deleted/{id}', [CustomerRankController::class, 'deletedShow'])->name('deleted.show');
     Route::delete('{customerRank}/soft-delete', [CustomerRankController::class, 'softDelete'])->name('softDelete');
     Route::get('deleted/detail/{id}', [CustomerRankController::class, 'deletedShow'])->name('deleted-detail');
     Route::post('deleted/{id}/restore', [CustomerRankController::class, 'restore'])->name('restore');
-    Route::delete('deleted/{id}/force-delete', [CustomerRankController::class, 'forceDelete'])->name('forceDelete');
+    Route::delete('deleted/{id}/force-delete', [CustomerRankController::class, 'forceDelete'])->name('forceDelete');    
 });
 Route::resource('admin/customers-rank', CustomerRankController::class);
 
-Route::prefix('roles')->name('roles.')->group(function () {
+Route::prefix('admin/roles')->name('roles.')->group(function () {
     Route::get('deleted', [RoleController::class, 'deleted'])->name('deleted');
     Route::get('deleted/{id}', [RoleController::class, 'deletedShow'])->name('deleted.show');
     Route::get('deleted/detail/{id}', [RoleController::class, 'deletedShow'])->name('deleted-detail');
@@ -201,16 +220,14 @@ Route::prefix('roles')->name('roles.')->group(function () {
 Route::resource('admin/roles', RoleController::class);
 
 Route::prefix('admin/payment_methods')->group(function () {
-    Route::get('/', [PaymentMethodController::class, 'index'])->name('payment_methods.index');
-    Route::get('/{id}', [PaymentMethodController::class, 'show'])->name('payment_methods.show');
+    Route::get('/', [PaymentMethodController::class, 'index'])->name('payment_methods.index');    
+    Route::get('/{id}', [PaymentMethodController::class, 'show'])->name('payment_methods.show');   
     Route::get('/{paymentMethod}/edit-status', [PaymentMethodController::class, 'editStatus'])->name('payment_methods.editStatus');
     Route::put('/{paymentMethod}/update-status', [PaymentMethodController::class, 'updateStatus'])->name('payment_methods.updateStatus');
 });
 
 Route::get('admin/bookings', [BookingController::class, 'index'])->name('admin.bookings.index');
 Route::get('admin/bookingShow/{id}', [BookingController::class, 'show'])->name('admin.bookings.show');
-Route::get('admin/bookings/{booking}/edit-status', [BookingController::class, 'editStatus'])->name('admin.bookings.editStatus');
-Route::put('admin/bookings/{booking}/update-status', [BookingController::class, 'updateStatus'])->name('admin.bookings.updateStatus');
 
 
 
@@ -244,19 +261,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::resource('combos', ComboController::class)->names('combos');
-
+    Route::resource('notifications', NotificationController::class)->names('notifications');
+    Route::post('notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.markAsRead');
+    Route::post('/admin/combos/check-duplicate', [App\Http\Controllers\Admin\ComboController::class, 'checkDuplicate'])->name('admin.combos.checkDuplicate');
     Route::get('products/{id}/variants', [AdminProductController::class, 'getVariants'])->name('products.variants');
 });
 
-// Breeze routes
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
-
-Route::middleware('auth')->group(function () {
-    Route::get('/profile', [App\Http\Controllers\Auth\AuthenticatedSessionController::class, 'profile'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';

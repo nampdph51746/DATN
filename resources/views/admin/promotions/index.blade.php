@@ -7,7 +7,6 @@
             <div class="card">
 
                 {{-- Thông báo  --}}
-                @include('admin.partials.alert')
                 <div class="card-header d-flex justify-content-between align-items-center gap-1">
                     <h4 class="card-title flex-grow-1">Danh sách khuyến mãi</h4>
                     <div class="d-flex gap-2 align-items-center">

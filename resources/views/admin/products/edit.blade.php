@@ -2,7 +2,6 @@
 
 @section('content')
     <div class="container-xxl">
-        @include('admin.partials.notifications')
         <div class="row">
             <div class="col-xl-3 col-lg-4">
                 <div class="card">

@@ -2,7 +2,6 @@
 
 @section('content')
     <div class="container-fluid">
-        @include('admin.partials.notifications')
 
         <div class="row">
             <div class="col-lg-4">
@@ -34,7 +33,7 @@
                                 </a>
                             </div>
                             <div class="col-lg-6">
-                                <a href="{{ route('admin.combos.index') }}"
+                                <a href="{{ isset($combo->comboProductVariant->product_id) ? route('admin.products.show', $combo->comboProductVariant->product_id) : route('admin.products.index') }}"
                                     class="btn btn-outline-secondary d-flex align-items-center justify-content-center gap-2 w-100">
                                     <iconify-icon icon="solar:arrow-left-broken" class="fs-18"></iconify-icon> Quay lại
                                 </a>

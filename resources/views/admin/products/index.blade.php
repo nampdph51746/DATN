@@ -2,7 +2,6 @@
 
 @section('content')
     <div class="container-xxl">
-        @include('admin.partials.notifications')
 
         <div class="row">
             <div class="col-xl-12">
@@ -13,10 +12,12 @@
                             Danh sách sản phẩm
                         </h4>
                         <div class="d-flex gap-2">
-                            <a href="{{ route('admin.products.create') }}" class="btn btn-sm btn-primary">
+                           @can('create product')
+                                <a href="{{ route('admin.products.create') }}" class="btn btn-sm btn-primary">
                                 <iconify-icon icon="solar:add-circle-broken" class="align-middle fs-18 me-1"></iconify-icon>
                                 Thêm sản phẩm
-                            </a>
+                                </a>
+                           @endcan
                         </div>
                     </div>
                     <div>

@@ -2,16 +2,17 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Models\Point;
 use App\Models\Booking;
+use App\Enums\BookingStatus;
+use App\Models\PointHistory;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use App\Http\Controllers\Controller;
-use App\Models\Point;
-use App\Models\PointHistory;
-use App\Enums\BookingStatus;
-use Illuminate\Support\Facades\Log;
-use App\Enums\PointReasonType;
 
+use App\Models\Notification;
+use App\Enums\NotificationType;
+use Illuminate\Support\Facades\Auth;
 
 class BookingController extends Controller
 {
@@ -67,71 +68,64 @@ class BookingController extends Controller
     public function updateStatus(Request $request, $id)
     {
         $request->validate([
-            'status' => ['required', Rule::in([
-                BookingStatus::Pending->value,
-                BookingStatus::Confirmed->value,
-                BookingStatus::Cancelled->value
-            ])],
+            'status' => ['required', Rule::in([BookingStatus::Pending->value, BookingStatus::Confirmed->value, BookingStatus::Cancelled->value])],
         ]);
 
         $booking = Booking::findOrFail($id);
         $oldStatus = $booking->status->value;
-        $newStatus = $request->status;
-
-        if ($oldStatus === $newStatus) {
-            return redirect()->route('admin.bookings.index')->with('info', 'Trạng thái không thay đổi.');
-        }
-
-        $booking->status = BookingStatus::from($newStatus);
+        $oldData = $booking->getOriginal();
+        $booking->status = BookingStatus::from($request->status);
         $booking->save();
 
-        $user = $booking->user;
-        if (!$user) {
-            return redirect()->route('admin.bookings.index')->with('error', 'Không tìm thấy người dùng.');
-        }
+        // Tạo thông báo khi cập nhật trạng thái booking
+        Notification::create([
+            'user_id' => Auth::id(),
+            'entity_type' => Booking::class,
+            'entity_id' => $booking->id,
+            'title' => 'Cập nhật trạng thái đơn đặt vé',
+            'message' => 'Đơn đặt vé #' . $booking->id . ' đã được cập nhật trạng thái từ "' . $oldStatus . '" sang "' . $booking->status->value . '".',
+            'type' => NotificationType::Booking,
+            'priority' => 'high',
+            'old_status' => $oldStatus,
+            'new_status' => $booking->status->value,
+            'event_details' => json_encode([
+                'old' => $oldData,
+                'new' => $booking->getAttributes(),
+            ]),
+        ]);
 
-        $existingHistory = PointHistory::where('booking_id', $booking->id)->latest()->first();
+        if ($oldStatus === BookingStatus::Pending->value && $booking->status->value === BookingStatus::Confirmed->value) {
+            $user = $booking->user;
+            if (!$user) {
+                return redirect()->route('admin.bookings.index')->with('error', 'Không tìm thấy người dùng.');
+            }
 
-        // ✅ CỘNG điểm khi từ Pending → Confirmed
-        if ($oldStatus === BookingStatus::Pending->value && $newStatus === BookingStatus::Confirmed->value) {
             $pointsToAdd = max(1, floor($booking->final_amount / 10000));
 
-            if ($pointsToAdd > 0 && !$existingHistory) {
-                $point = Point::firstOrCreate(
-                    ['user_id' => $user->id],
-                    ['points_expiry_date' => now()->addYear()]
-                );
-                $point->total_points += $pointsToAdd;
-                $point->save();
+            if ($pointsToAdd > 0 && !PointHistory::where('booking_id', $booking->id)->exists()) {
+                try {
+                    $point = Point::firstOrCreate(
+                        ['user_id' => $user->id],
+                        ['points_expiry_date' => now()->addYear(), 'created_at' => now(), 'updated_at' => now()]
+                    );
+                    $point->total_points = ($point->total_points ?? 0) + $pointsToAdd;
+                    $point->save();
 
-                PointHistory::create([
-                    'user_id'       => $user->id,
-                    'booking_id'    => $booking->id,
-                    'points_change' => $pointsToAdd,
-                    'reason_type'   => PointReasonType::Earned->value,
-                    'description'   => 'Cộng điểm cho đơn hàng #' . $booking->id,
-                ]);
+                    PointHistory::create([
+                        'user_id' => $user->id,
+                        'booking_id' => $booking->id,
+                        'points_change' => $pointsToAdd,
+                        'reason_type' => 'earned',
+                        'description' => 'Cộng điểm cho đơn hàng #' . $booking->id,
+                        'created_at' => now(),
+                    ]);
+
+                } catch (\Exception $e) {
+                    return redirect()->route('admin.bookings.index')->with('error', 'Lỗi khi cộng điểm thưởng: ' . $e->getMessage());
+                }
             }
         }
 
-        // ✅ TRỪ điểm khi từ Confirmed → Pending (nếu đã từng cộng)
-        if ($oldStatus === BookingStatus::Confirmed->value && $newStatus === BookingStatus::Pending->value && $existingHistory && $existingHistory->points_change > 0) {
-            $point = Point::firstOrCreate(
-                ['user_id' => $user->id],
-                ['points_expiry_date' => now()->addYear()]
-            );
-            $point->total_points = max(0, $point->total_points - $existingHistory->points_change);
-            $point->save();
-
-            PointHistory::create([
-                'user_id'       => $user->id,
-                'booking_id'    => $booking->id,
-                'points_change' => -$existingHistory->points_change,
-                'reason_type'   => PointReasonType::Spent->value,
-                'description'   => 'Trừ điểm do thay đổi trạng thái đơn hàng #' . $booking->id,
-            ]);
-        }
-
-        return redirect()->route('admin.bookings.index')->with('success', 'Cập nhật trạng thái đơn hàng thành công.');
+        return redirect()->route('admin.bookings.index')->with('success', 'Cập nhật trạng thái thành công.');
     }
 }

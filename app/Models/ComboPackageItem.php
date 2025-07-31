@@ -9,7 +9,11 @@ class ComboPackageItem extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['combo_product_variant_id', 'item_product_variant_id', 'quantity'];
+    protected $fillable = ['combo_id', 'combo_product_variant_id', 'item_product_variant_id', 'quantity'];
+    public function combo()
+    {
+        return $this->belongsTo(Combo::class, 'combo_id');
+    }
 
     public function comboProductVariant()
     {

@@ -3,14 +3,15 @@
 namespace App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasFactory;
+    use HasFactory, HasRoles, Notifiable;
 
     protected $fillable = [
-        'role_id',
         'name',
         'email',
         'password',
@@ -22,6 +23,7 @@ class User extends Authenticatable
         'email_verified_at',
         'last_login_at',
         'customer_rank_id',
+        'google_id'
     ];
 
     protected $casts = [
