@@ -2,13 +2,15 @@
 
 namespace App\Models;
 
+use App\Notifications\CustomResetPassword;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasFactory,HasRoles;
+    use HasFactory, HasRoles, Notifiable;
 
     protected $fillable = [
         'name',
@@ -22,6 +24,7 @@ class User extends Authenticatable
         'email_verified_at',
         'last_login_at',
         'customer_rank_id',
+        'google_id'
     ];
 
     protected $casts = [
@@ -65,4 +68,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Notification::class);
     }
+
+    public function sendPasswordResetNotification($token)
+{
+    $this->notify(new CustomResetPassword($token));
+}
 }

@@ -128,15 +128,16 @@
 						<!-- /search popup -->
 					</div>
 					<div class="Login_SignUp" id="login" style="font-size: 2rem ; display: inline-block; position: relative;">
-						<a class="nav-link" href="sign_in.html"><i class="far fa-user-circle"></i></a>
+						<a class="nav-link" href="sign_in.html"><i class="fa fa-user-circle-o"></i></a>
 					</div>
 				</div>
 				<!-- toggle switch for light and dark theme -->
 				<div class="mobile-position">
+					
 					<nav class="navigation" style="display: flex; align-items: center; justify-content: flex-end; gap: 30px;">
 						<div class="user-navigation" style="position: relative;">
 							<button onclick="toggleUserDropdown()" class="user-container" style="background: none; border: none; cursor: pointer;">
-								<i class="fas fa-user-circle"></i>
+								<i class="fa fa-user-circle-o" style="font-size: 30px;"></i>
 							</button>
 
 							<ul id="userDropdown" style=" display: none; position: absolute; right: 0; top: 120%; background-color: white; border: 1px solid #ccc; box-shadow: 0 2px 8px rgba(0,0,0,0.1); list-style: none; padding: 0;

@@ -36,12 +36,8 @@ use App\Http\Controllers\Admin\AdminAttributeValueController;
 use App\Http\Controllers\Admin\AdminProductVariantController;
 use App\Http\Controllers\Admin\CustomerRankPromotionController;
 use App\Http\Controllers\Admin\AdminProductCategoriesController;
-
-use App\Mail\TestMail;
-use App\Mail\TicketPurchasedMail;
-use App\Models\Ticket;
-use Illuminate\Support\Facades\Mail;
-
+use App\Http\Controllers\Auth\NewPasswordController;
+use App\Http\Controllers\Auth\PasswordResetLinkController;
 
 Route::get('/', [HomeController::class, 'index'])->name('client.home');
 Route::get('/movies', [HomeController::class, 'movies'])->name('client.movies');
@@ -68,6 +64,21 @@ Route::get('/payment-failed', function () {
 })->name('client.failed');
 
 
+
+Route::middleware('guest')->group(function () {
+    Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])
+        ->name('password.request');
+
+    Route::post('forgot-password', [PasswordResetLinkController::class, 'store'])
+        ->name('password.email');
+
+    Route::get('reset-password/{token}', [NewPasswordController::class, 'create'])
+        ->name('password.reset');
+
+    Route::put('reset-password', [NewPasswordController::class, 'store'])
+        ->name('password.reset.submit');
+});
+
 Route::post('/apply-promotion', [App\Http\Controllers\Client\HomeController::class, 'applyDiscountCode'])->name('client.applyPromotion');
 
 
@@ -81,6 +92,8 @@ Route::get('/user-point-history', [App\Http\Controllers\Client\HomeController::c
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
+
+Route::middleware(['auth'])->get('/my-tickets', [TicketController::class, 'ticketInfo'])->name('client.tickets');
 
 
 
@@ -125,10 +138,6 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
     // Room-types routes from HEAD
     Route::delete('room-types/{id}/deactivate', [RoomTypeController::class, 'deactivate'])->name('room-types.deactivate');
     Route::resource('room-types', RoomTypeController::class)->except(['destroy']);
-
-    // Showtimes routes from HEAD
-    Route::delete('showtimes/{id}/deactivate', [ShowtimeController::class, 'deactivate'])->name('showtimes.deactivate');
-    Route::resource('showtimes', ShowtimeController::class)->except(['destroy']);
 
     // Movies routes from HEAD
     Route::get('/movies', [MovieController::class, 'index'])->name('movies.index');
@@ -278,6 +287,5 @@ Route::prefix('admin')->name('admin.')->group(function () {
 });
 
 });
-
 
 require __DIR__.'/auth.php';

@@ -1,59 +1,58 @@
 @extends('layouts.client.client')
-@section('title', 'Quên mật khẩu | CineVN')
+
 
 @section('content')
-    <div class="d-flex flex-column h-100 p-3">
-        <div class="d-flex flex-column flex-grow-1">
-            <div class="row h-100">
-                <div class="col-xxl-7">
-                    <div class="row justify-content-center h-100">
-                        <div class="col-lg-6 py-lg-5">
-                            <div class="d-flex flex-column h-100 justify-content-center">
-                                <div class="auth-logo mb-4">
-                                    <a href="{{ url('/') }}" class="logo-dark">
-                                        <img src="{{ asset('assets/images/logo-dark.png') }}" height="24" alt="logo dark">
-                                    </a>
-                                    <a href="{{ url('/') }}" class="logo-light">
-                                        <img src="{{ asset('assets/images/logo-light.png') }}" height="24" alt="logo light">
-                                    </a>
-                                </div>
+<div class="min-h-screen flex items-center justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-lg">
+        <div>
+            <h2 class="text-center text-3xl font-extrabold text-gray-900">Đặt lại mật khẩu</h2>
+            <p class="mt-2 text-center text-sm text-gray-600">
+                Vui lòng nhập email của bạn, mình sẽ gửi cho bạn đường link để reset mật khẩu.
+            </p>
+        </div>
 
-                                <h2 class="fw-bold fs-24">Quên Mật Khẩu</h2>
-                                <p class="text-muted mt-1 mb-4">Nhập email của bạn để nhận liên kết đặt lại mật khẩu.</p>
+        @if (session('status'))
+            <div class="mt-4 p-4 bg-green-100 text-green-700 rounded-lg text-center">
+                {{ session('status') }}
+            </div>
+        @endif
 
-                                @if (session('status'))
-                                    <div class="alert alert-success">{{ session('status') }}</div>
-                                @endif
+        <form method="POST" action="{{ route('password.email') }}" class="mt-8 space-y-6">
+            @csrf
 
-                                <form method="POST" action="{{ route('password.email') }}">
-                                    @csrf
-                                    <div class="mb-3">
-                                        <label for="email" class="form-label">Email</label>
-                                        <input type="email" name="email" id="email" class="form-control" placeholder="Nhập địa chỉ email" value="{{ old('email') }}" required autofocus>
-                                        @error('email')
-                                            <span class="text-danger">{{ $message }}</span>
-                                        @enderror
-                                    </div>
-
-                                    <div class="mb-1 text-center d-grid">
-                                        <button class="btn btn-soft-primary" type="submit">Gửi Liên Kết Đặt Lại</button>
-                                    </div>
-                                </form>
-
-                                <p class="mt-4 text-center">
-                                    <a href="{{ route('login') }}" class="text-dark fw-bold">Quay lại Đăng Nhập</a>
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-xxl-5 d-none d-xxl-flex">
-                    <div class="card h-100 mb-0 overflow-hidden">
-                        <img src="{{ asset('assets/images/small/img-11.jpg') }}" alt="" class="w-100 h-100">
-                    </div>
+            <div class="rounded-md shadow-sm -space-y-px">
+                <div>
+                    <label for="email" class="sr-only">Email address</label>
+                    <input 
+                        id="email" 
+                        type="email" 
+                        name="email" 
+                        placeholder="Email của bạn" 
+                        required 
+                        class="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                        value="{{ old('email') }}"
+                    >
+                    @error('email')
+                        <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
                 </div>
             </div>
+
+            <div>
+                <button 
+                    type="submit" 
+                    class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out"
+                >
+                    Gửi đường link
+                </button>
+            </div>
+        </form>
+
+        <div class="text-center">
+            <a href="{{ route('login') }}" class="font-medium text-indigo-600 hover:text-indigo-500">
+                Quay lại login
+            </a>
         </div>
     </div>
+</div>
 @endsection
