@@ -36,6 +36,29 @@
 			font-size: 12px; /* Giảm kích thước biểu tượng tìm kiếm */
 			margin-left: 8px; /* Giảm khoảng cách bên trái */
 		}
+
+		@media (max-width: 991.98px) {
+  .navbar-collapse {
+    display: none;
+  }
+
+  .navbar-collapse.show {
+    display: block;
+    animation: fadeInDown 0.3s ease;
+  }
+
+  @keyframes fadeInDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
 	</style>
 
 	 <!-- JavaScript cho kiểm tra đăng nhập và hiển thị popup -->
@@ -59,8 +82,6 @@
         }
     </script>
 <body>
-	@stack('scripts')
-
 	<!-- header -->
 	<header id="site-header" class="w3l-header fixed-top">
 		<!--/nav-->
@@ -71,11 +92,14 @@
 				<a class="navbar-brand" href="#index.html">
 					<img src="image-path" alt="Your logo" title="Your logo" style="height:35px;" />
 				</a> -->
-				<button class="navbar-toggler collapsed" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-					<!-- <span class="navbar-toggler-icon"></span> -->
-					<span class="fa icon-expand fa-bars"></span>
-					<span class="fa icon-close fa-times"></span>
-				</button>
+				<button id="menuToggleBtn" class="navbar-toggler collapsed" type="button"
+	aria-controls="navbarSupportedContent"
+	aria-expanded="false"
+	aria-label="Toggle navigation">
+	<span class="fa icon-expand fa-bars"></span>
+	<span class="fa icon-close fa-times"></span>
+</button>
+
 
 				<div class="navbar-collapse" id="navbarSupportedContent">
 					<ul class="navbar-nav ml-auto">
@@ -129,13 +153,39 @@
 						</div>
 						<!-- /search popup -->
 					</div>
-					<div class="Login_SignUp" id="login" style="font-size: 2rem ; display: inline-block; position: relative;">
-						<a class="nav-link" href="sign_in.html"><i class="fa fa-user-circle-o"></i></a>
-					</div>
 				</div>
 				<!-- toggle switch for light and dark theme -->
 				<div class="mobile-position">
-					<nav class="navigation">
+					<nav class="navigation" style="display: flex; align-items: center; justify-content: flex-end; gap: 30px;">
+						<div class="user-navigation" style="position: relative;">
+							<button onclick="toggleUserDropdown()" class="user-container" style="background: none; border: none; cursor: pointer;">
+								<i class="fa fa-user-circle-o" style="font-size: 30px;"></i>
+							</button>
+
+							<ul id="userDropdown" style=" display: none; position: absolute; right: 0; top: 120%; background-color: white; border: 1px solid #ccc; box-shadow: 0 2px 8px rgba(0,0,0,0.1); list-style: none; padding: 0;
+								margin: 0;
+								min-width: 150px;
+								z-index: 1000;">
+
+								@auth
+								<li><a href="/profile" style="display: block; padding: 10px; text-decoration: none;">Tài khoản</a></li>
+								@hasanyrole(['admin', 'staff'])
+								<li><a href="{{ route('admin.movies.index') }}" style="display: block; padding: 10px; text-decoration: none;">Quản lý</a></li>
+								@endhasanyrole
+								<li>
+									<form method="POST" action="{{ route('logout') }}" style="margin: 0;">
+										@csrf
+										<button type="submit" style="background: none; border: none; padding: 10px; text-align: left; width: 100%; cursor: pointer;">
+											Đăng xuất
+										</button>
+									</form>
+								</li>
+							@else
+								<li><a href="{{ route('login') }}" style="display: block; padding: 10px; text-decoration: none;">Đăng nhập</a></li>
+								<li><a href="{{ route('register') }}" style="display: block; padding: 10px; text-decoration: none;">Đăng ký</a></li>
+							@endauth
+							</ul>
+						</div>
 						<div class="theme-switch-wrapper">
 							<label class="theme-switch" for="checkbox">
 								<input type="checkbox" id="checkbox">
@@ -152,10 +202,50 @@
 	</header>
 	<!-- main-slider -->
 	@yield('content')
-	
 </body>
 
 </html>
+
+<script>
+	function toggleUserDropdown() {
+		const dropdown = document.getElementById('userDropdown');
+		dropdown.style.display = (dropdown.style.display === 'block') ? 'none' : 'block';
+	}
+
+	// Ẩn dropdown khi click ra ngoài
+	document.addEventListener('click', function (e) {
+		const dropdown = document.getElementById('userDropdown');
+		const button = document.querySelector('.user-container');
+		if (!button.contains(e.target) && !dropdown.contains(e.target)) {
+			dropdown.style.display = 'none';
+		}
+	});
+
+	// Toggle menu mobile
+	const toggleBtn = document.getElementById('menuToggleBtn');
+	const nav = document.getElementById('navbarSupportedContent');
+
+	toggleBtn.addEventListener('click', function () {
+		nav.classList.toggle('show');
+
+		// Nếu đang mở menu => chặn cuộn
+		if (nav.classList.contains('show')) {
+			document.body.style.overflow = 'hidden';
+		} else {
+			document.body.style.overflow = ''; // hoặc 'auto'
+		}
+	});
+
+	// Reset khi resize về màn hình PC
+	window.addEventListener('resize', () => {
+		if (window.innerWidth >= 992) {
+			document.body.style.overflow = ''; // Cho phép cuộn lại
+			nav.classList.remove('show');     // Đảm bảo menu đóng
+		}
+	});
+</script>
+
+
 <!-- responsive tabs -->
 <script type="text/javascript" src="{{ asset('client_assets/assets/js/as-alert-message.min.js') }}"></script>
 <!-- <script src="client_assets/assets/js/jquery-1.9.1.min.js"></script> -->
