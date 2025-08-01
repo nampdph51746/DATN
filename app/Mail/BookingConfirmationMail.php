@@ -29,12 +29,6 @@ class BookingConfirmationMail extends Mailable
         $barcodeService = new BarcodeService();
         $this->barcode = $barcodeService->generateBarcode($booking->booking_code);
         
-        // Debug log
-        \Log::info('BookingConfirmationMail - Barcode generated', [
-            'booking_code' => $booking->booking_code,
-            'barcode_length' => strlen($this->barcode ?? ''),
-            'barcode_starts_with' => substr($this->barcode ?? '', 0, 20)
-        ]);
     }
 
     /**

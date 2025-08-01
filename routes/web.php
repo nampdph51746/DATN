@@ -35,7 +35,7 @@ use App\Http\Controllers\Admin\AdminAttributeValueController;
 use App\Http\Controllers\Admin\AdminProductVariantController;
 use App\Http\Controllers\Admin\CustomerRankPromotionController;
 use App\Http\Controllers\Admin\AdminProductCategoriesController;
-
+use App\Http\Controllers\Admin\NotificationController;
 
 Route::get('/', [HomeController::class, 'index'])->name('client.home');
 Route::get('/movies', [HomeController::class, 'movies'])->name('client.movies');
@@ -61,19 +61,7 @@ Route::get('/payment-failed', function () {
     return 'Thanh toán thất bại!';
 })->name('client.failed');
 
-// Route::middleware('guest')->group(function () {
-//     Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])
-//         ->name('password.request');
 
-//     Route::post('forgot-password', [PasswordResetLinkController::class, 'store'])
-//         ->name('password.email');
-
-//     Route::get('reset-password/{token}', [NewPasswordController::class, 'create'])
-//         ->name('password.reset');
-
-//     Route::put('reset-password', [NewPasswordController::class, 'store'])
-//         ->name('password.reset.submit');
-// });
 
 Route::post('/apply-promotion', [App\Http\Controllers\Client\HomeController::class, 'applyDiscountCode'])->name('client.applyPromotion');
 
@@ -110,7 +98,7 @@ Route::post('seats/edit-bulk', [AdminSeatController::class, 'editBulk'])->name('
     Route::post('product-categories/{id}/restore', [AdminProductCategoriesController::class, 'restore'])->name('product-categories.restore');
     Route::delete('product-categories/{id}/force-delete', [AdminProductCategoriesController::class, 'forceDelete'])->name('product-categories.forceDelete');
     Route::resource('product-categories', AdminProductCategoriesController::class);
-
+    Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::resource('seats', AdminSeatController::class);
     Route::resource('attributes', AdminAttributeController::class);
     Route::resource('attribute-values', AdminAttributeValueController::class);
@@ -285,15 +273,15 @@ Route::prefix('admin')->name('admin.')->group(function () {
 });
 
 // Test route for barcode
-Route::get('/test-barcode-api', function () {
-    $barcodeService = new \App\Services\BarcodeService();
-    $barcode = $barcodeService->generateBarcode('BK1754063915');
+// Route::get('/test-barcode-api', function () {
+//     $barcodeService = new \App\Services\BarcodeService();
+//     $barcode = $barcodeService->generateBarcode('BK1754063915');
     
-    return response()->json([
-        'barcode' => $barcode,
-        'booking_code' => 'BK1754063915'
-    ]);
-});
+//     return response()->json([
+//         'barcode' => $barcode,
+//         'booking_code' => 'BK1754063915'
+//     ]);
+// });
 
 // Barcode scanning routes
 Route::prefix('api/barcode')->group(function () {

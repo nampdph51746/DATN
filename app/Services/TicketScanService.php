@@ -2,12 +2,13 @@
 
 namespace App\Services;
 
+use Carbon\Carbon;
 use App\Models\Booking;
-use App\Models\BookingItem;
 use App\Enums\TicketStatus;
+use App\Models\BookingItem;
 use App\Enums\BookingStatus;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class TicketScanService
 {
@@ -89,7 +90,7 @@ class TicketScanService
                 $ticket->update([
                     'status' => TicketStatus::Used,
                     'used_at' => now(),
-                    'scanned_by' => auth()->id() ?? null // Nếu có hệ thống auth cho nhân viên
+                    'scanned_by' => Auth::user()->id ?? null // Nếu có hệ thống auth cho nhân viên
                 ]);
                 
                 // Reload ticket với relationships để hiển thị trong response
@@ -108,7 +109,6 @@ class TicketScanService
 
         } catch (\Exception $e) {
             DB::rollback();
-            \Log::error('Ticket scan error: ' . $e->getMessage());
             
             return [
                 'success' => false,
@@ -157,8 +157,8 @@ class TicketScanService
                     'booking_status' => $booking->status,
                     'total_amount' => $booking->total_amount,
                     'booking_date' => $booking->created_at,
-                    'customer_name' => $booking->customer_name ?? $booking->user->name ?? 'N/A',
-                    'customer_phone' => $booking->customer_phone ?? $booking->user->phone ?? 'N/A',
+                    'customer_name' => $booking->user->name ?? 'N/A',
+                    'customer_phone' => $booking->user->phone_number ?? 'N/A',
                     'showtime' => $showtime ? [
                         'movie_name' => $showtime->movie->name,
                         'cinema_name' => $showtime->cinema->name ?? 'N/A',
@@ -169,9 +169,7 @@ class TicketScanService
                 ]
             ];
 
-        } catch (\Exception $e) {
-            \Log::error('Get ticket status error: ' . $e->getMessage());
-            
+        } catch (\Exception $e) {            
             return [
                 'success' => false,
                 'message' => 'Có lỗi xảy ra khi lấy thông tin vé'

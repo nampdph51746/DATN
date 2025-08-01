@@ -53,7 +53,6 @@ class BarcodeController extends Controller
                 'errors' => $e->errors()
             ], 422);
         } catch (\Exception $e) {
-            \Log::error('Barcode scan error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Có lỗi xảy ra khi quét mã'
@@ -88,7 +87,6 @@ class BarcodeController extends Controller
             }
 
         } catch (\Exception $e) {
-            \Log::error('Ticket status check error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Có lỗi xảy ra khi kiểm tra trạng thái vé'
