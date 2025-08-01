@@ -103,7 +103,13 @@ class TicketScanService
             return [
                 'success' => true,
                 'message' => 'Quét vé thành công! Đã cập nhật ' . count($updatedTickets) . ' vé.',
-                'booking' => $booking,
+                 'booking' => [
+        'booking_code' => $booking->booking_code,
+        'customer_name' => $booking->customer_name ?? ($booking->user->name ?? 'N/A'),
+        'customer_phone' => $booking->customer_phone ?? ($booking->user->phone_number ?? 'N/A'),
+        'total_amount' => $booking->total_amount ?? 0,
+        // thêm các trường khác nếu cần
+    ],
                 'updated_tickets' => $updatedTickets
             ];
 
@@ -157,8 +163,8 @@ class TicketScanService
                     'booking_status' => $booking->status,
                     'total_amount' => $booking->total_amount,
                     'booking_date' => $booking->created_at,
-                    'customer_name' => $booking->user->name ?? 'N/A',
-                    'customer_phone' => $booking->user->phone_number ?? 'N/A',
+                    'customer_name' => $booking->customer_name ?? ($booking->user->name ?? 'N/A'),
+                    'customer_phone' => $booking->customer_phone ?? ($booking->user->phone_number ?? 'N/A'),
                     'showtime' => $showtime ? [
                         'movie_name' => $showtime->movie->name,
                         'cinema_name' => $showtime->cinema->name ?? 'N/A',

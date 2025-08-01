@@ -133,9 +133,9 @@
                     <div>
                         <h3 class="font-semibold text-lg">Thông Tin Đơn Hàng</h3>
                         <p><strong>Mã booking:</strong> ${booking.booking_code}</p>
-                        <p><strong>Khách hàng:</strong> ${booking.customer_name}</p>
-                        <p><strong>Số điện thoại:</strong> ${booking.customer_phone}</p>
-                        <p><strong>Tổng tiền:</strong> ${formatCurrency(booking.total_amount)}</p>
+                        <p><strong>Khách hàng:</strong> ${booking.customer_name || 'N/A'}</p>
+                        <p><strong>Số điện thoại:</strong> ${booking.customer_phone || 'N/A'}</p>
+                        <p><strong>Tổng tiền:</strong> ${formatCurrency(booking.total_amount || 0)}</p>
                     </div>
                     <div>
                         <h3 class="font-semibold text-lg">Vé Đã Quét (${tickets.length})</h3>

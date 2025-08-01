@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Models\Role;
 use App\Models\User;
+use App\Models\CustomerRank;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
@@ -23,6 +24,8 @@ class GoogleController extends Controller
             // Lấy thông tin người dùng từ Google
             $googleUser = Socialite::driver('google')->user();
 
+            $userRank = CustomerRank::firstOrCreate(['name' => 'Đồng']);
+
             // Tìm hoặc tạo người dùng trong cơ sở dữ liệu
             $user = User::updateOrCreate(
                 ['email' => $googleUser->email],
@@ -30,6 +33,7 @@ class GoogleController extends Controller
                     'name' => $googleUser->name,
                     'google_id' => $googleUser->id,
                     'password' => bcrypt('password_dummy'),
+                    'customer_rank_id' => $userRank->id,
                 ]
             );
 
