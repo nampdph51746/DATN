@@ -111,8 +111,6 @@
                     </div>
                 </div>
             </div>
-
-
             {{-- Thống kê Thanh toán --}}
             <div class="col-xl-4">
                 <div class="card card-height-100">
@@ -158,8 +156,6 @@
                     </div>
                 </div>
             </div>
-
-
             {{-- Thống kê Phim --}}
             <div class="col-xl-4">
                 <div class="card card-height-100 shadow-sm">

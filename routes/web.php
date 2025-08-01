@@ -72,8 +72,8 @@ Route::get('/checkout/vnpay_return', [VnpayController::class, 'vnpayReturn'])->n
 Route::post('/checkout/preview', [CheckoutController::class, 'previewBooking'])->name('checkout.preview');
 Route::get('/payment-success', [PaymentSuccessController::class, 'show'])->name('client.success');
 Route::get('/payment-failed', function () {
-    return 'Thanh toán thất bại!';
-})->name('client.failed');
+    return view('client.failed');
+})->name('client.failed');  
 
 // Dashboard
 Route::get('/dashboard', function () {
