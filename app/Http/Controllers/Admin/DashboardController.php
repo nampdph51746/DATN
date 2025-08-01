@@ -24,7 +24,8 @@ class DashboardController extends Controller
         $bookingData = [];
         $revenueData = [];
         $monthsLabel = [];
-
+        $yearlyRevenue = 0;
+        $yearlyAmount = 0;
         if ($type === 'day') {
             // Lấy ngày từ request, mặc định là hôm nay
             $today = $request->get('date') ? Carbon::parse($request->get('date')) : Carbon::today();
@@ -229,42 +230,56 @@ class DashboardController extends Controller
             }
             $monthsLabel = $months;
 
-            // Thống kê đặt vé, thanh toán, phim theo năm đã chọn
-            $totalBookings = Booking::whereYear('created_at', $year)->count();
-            $totalRevenue = Payment::where('status', 'completed')->whereYear('paid_at', $year)->sum('amount');
-            $totalPayments = Payment::whereYear('paid_at', $year)->count();
-            $totalAmountPaid = Payment::where('status', 'completed')->whereYear('paid_at', $year)->sum('amount');
+            // Tổng doanh thu và thanh toán theo năm được chọn
+            $totalRevenue = Payment::where('status', 'completed')
+                ->whereYear('paid_at', $year)
+                ->sum('amount');
 
+            $totalBookings = Booking::whereYear('created_at', $year)->count();
+            $totalPayments = Payment::whereYear('paid_at', $year)->count();
+            $totalAmountPaid = $totalRevenue;
+
+            // Gán biến đồng nhất cho hiển thị view
+            $yearlyRevenue = $totalRevenue;
+            $yearlyAmount = $totalRevenue;
+
+            // Doanh thu tuần hiện tại
             $weeklyRevenue = Payment::where('status', 'completed')
                 ->whereBetween('paid_at', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()])
                 ->sum('amount');
+            $weeklyAmount = $weeklyRevenue;
+
+            // Doanh thu tháng hiện tại
             $monthlyRevenue = Payment::where('status', 'completed')
                 ->whereYear('paid_at', $year)
                 ->whereMonth('paid_at', Carbon::now()->month)
                 ->sum('amount');
-            $weeklyAmount = $weeklyRevenue;
             $monthlyAmount = $monthlyRevenue;
 
+            // Thống kê trạng thái đặt vé và thanh toán
             $bookingsByStatus = Booking::whereYear('created_at', $year)
                 ->select('status', DB::raw('COUNT(*) as total'))
                 ->groupBy('status')->pluck('total', 'status');
+
             $paymentsByStatus = Payment::whereYear('paid_at', $year)
                 ->select('status', DB::raw('COUNT(*) as total'))
                 ->groupBy('status')->pluck('total', 'status');
 
+            // Thống kê phim
             $totalMovies = Movie::whereYear('created_at', $year)->count();
             $nowShowing = Movie::where('status', 'showing')->whereYear('created_at', $year)->count();
             $upcoming = Movie::where('status', 'upcoming')->whereYear('created_at', $year)->count();
             $ended = Movie::where('status', 'ended')->whereYear('created_at', $year)->count();
             $averageDuration = Movie::whereYear('created_at', $year)->avg('duration_minutes');
             $averageRating = Movie::whereYear('created_at', $year)->avg('average_rating');
+
             $moviesByStatus = [
                 'showing' => $nowShowing,
                 'upcoming' => $upcoming,
                 'ended' => $ended,
             ];
 
-            // Top 10 phim hot nhất theo năm
+            // Top 10 phim hot theo số vé bán trong năm
             $hotMovies = Movie::select('movies.*', DB::raw('COUNT(tickets.id) as total_tickets_sold'))
                 ->leftJoin('showtimes', 'movies.id', '=', 'showtimes.movie_id')
                 ->leftJoin('tickets', function ($join) use ($year) {
@@ -276,6 +291,7 @@ class DashboardController extends Controller
                 ->limit(10)
                 ->get();
         }
+
         $movieStats = DB::table('movies')
             ->select(
                 'movies.name as movie',
@@ -296,10 +312,6 @@ class DashboardController extends Controller
             ->orderByDesc('total_tickets')
             ->paginate(10);
 
-
-        $yearlyRevenue = Payment::where('status', 'completed')
-            ->whereYear('paid_at', $today->year)
-            ->sum('amount');
 
         $selectedYear = $request->get('year', Carbon::now()->year);
         $yearlyAmount = Payment::whereYear('paid_at', $selectedYear)->sum('amount');

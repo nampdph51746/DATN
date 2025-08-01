@@ -87,7 +87,7 @@
                                         <td><strong>{{ number_format($totalRevenue ?? 0, 0) }} VNĐ</strong></td>
                                     </tr>
                                 @endif
-                                @if (request('type') == 'month' || request('type') == 'year')
+                                @if (request('type') == 'month')
                                     <tr>
                                         <td>Doanh thu tháng</td>
                                         <td><strong>{{ number_format($monthlyRevenue, 0) }} VNĐ</strong></td>
