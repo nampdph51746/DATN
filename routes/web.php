@@ -25,7 +25,6 @@ use App\Http\Controllers\Admin\PromotionController;
 use App\Http\Controllers\Client\CheckoutController;
 use App\Http\Controllers\Admin\AdminProductController;
 use App\Http\Controllers\Admin\CustomerRankController;
-use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\Admin\PointHistoryController;
 use App\Http\Controllers\Admin\AdminSeatTypeController;
 use App\Http\Controllers\Admin\PaymentMethodController;
@@ -36,6 +35,7 @@ use App\Http\Controllers\Admin\AdminAttributeValueController;
 use App\Http\Controllers\Admin\AdminProductVariantController;
 use App\Http\Controllers\Admin\CustomerRankPromotionController;
 use App\Http\Controllers\Admin\AdminProductCategoriesController;
+
 
 Route::get('/', [HomeController::class, 'index'])->name('client.home');
 Route::get('/movies', [HomeController::class, 'movies'])->name('client.movies');
@@ -61,6 +61,19 @@ Route::get('/payment-failed', function () {
     return 'Thanh toán thất bại!';
 })->name('client.failed');
 
+// Route::middleware('guest')->group(function () {
+//     Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])
+//         ->name('password.request');
+
+//     Route::post('forgot-password', [PasswordResetLinkController::class, 'store'])
+//         ->name('password.email');
+
+//     Route::get('reset-password/{token}', [NewPasswordController::class, 'create'])
+//         ->name('password.reset');
+
+//     Route::put('reset-password', [NewPasswordController::class, 'store'])
+//         ->name('password.reset.submit');
+// });
 
 Route::post('/apply-promotion', [App\Http\Controllers\Client\HomeController::class, 'applyDiscountCode'])->name('client.applyPromotion');
 
@@ -81,7 +94,6 @@ Route::get('/dashboard', function () {
 Route::middleware(['auth'])->group(function (){
 Route::get('/profile', [App\Http\Controllers\Auth\AuthenticatedSessionController::class, 'profile'])->name('profile.edit');
 Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-Route::post('/profile/change-password', [ProfileController::class, 'changePassword'])->name('profile.changePassword');
 Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
@@ -91,8 +103,8 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
 
     Route::prefix('admin')->name('admin.')->group(function () {
     // Seat routes from HEAD
-    Route::get('seats/edit-bulk', [AdminSeatController::class, 'editBulk'])->name('seats.editBulk');
-    Route::put('seats/update-bulk', [AdminSeatController::class, 'updateBulk'])->name('seats.bulkUpdate');
+Route::post('seats/edit-bulk', [AdminSeatController::class, 'editBulk'])->name('seats.edit-bulk');
+    Route::post('seats/update-bulk', [AdminSeatController::class, 'updateBulk'])->name('seats.update-bulk');
 
     Route::get('product-categories/trash', [AdminProductCategoriesController::class, 'trash'])->name('product-categories.trash');
     Route::post('product-categories/{id}/restore', [AdminProductCategoriesController::class, 'restore'])->name('product-categories.restore');
@@ -110,7 +122,6 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
     Route::delete('product-categories/{id}/force-delete', [AdminProductCategoriesController::class, 'forceDelete'])->name('product-categories.forceDelete');
     Route::resource('product-categories', AdminProductCategoriesController::class);
 
-    Route::resource('seats', AdminSeatController::class);
     Route::resource('attributes', AdminAttributeController::class);
     Route::resource('attribute-values', AdminAttributeValueController::class);
     Route::resource('product-variants', AdminProductVariantController::class);
@@ -120,6 +131,10 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
     Route::delete('room-types/{id}/deactivate', [RoomTypeController::class, 'deactivate'])->name('room-types.deactivate');
     Route::resource('room-types', RoomTypeController::class)->except(['destroy']);
 
+    // Showtimes routes from HEAD
+    Route::delete('showtimes/{id}/deactivate', [ShowtimeController::class, 'deactivate'])->name('showtimes.deactivate');
+    Route::resource('showtimes', ShowtimeController::class)->except(['destroy']);
+
     // Movies routes from HEAD
     Route::get('/movies', [MovieController::class, 'index'])->name('movies.index');
     Route::get('/movies/create', [MovieController::class, 'create'])->name('movies.create');
@@ -128,7 +143,6 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
     Route::get('/movies/{id}/edit', [MovieController::class, 'edit'])->name('movies.edit');
     Route::put('/movies/{id}', [MovieController::class, 'update'])->name('movies.update');
     Route::delete('/movies/{id}', [MovieController::class, 'destroy'])->name('movies.destroy');
-    Route::resource('showtimes', ShowtimeController::class)->except(['destroy']);
 
     // Tạo suất chiếu tự động (HEAD)
     Route::post('/showtimes', [ShowtimeController::class, 'storeAuto'])->name('showtimes.storeAuto');
@@ -229,6 +243,8 @@ Route::prefix('admin/payment_methods')->group(function () {
 
 Route::get('admin/bookings', [BookingController::class, 'index'])->name('admin.bookings.index');
 Route::get('admin/bookingShow/{id}', [BookingController::class, 'show'])->name('admin.bookings.show');
+Route::get('admin/bookings/{booking}/edit-status', [BookingController::class, 'editStatus'])->name('admin.bookings.editStatus');
+Route::put('admin/bookings/{booking}/update-status', [BookingController::class, 'updateStatus'])->name('admin.bookings.updateStatus');
 
 
 
@@ -262,12 +278,32 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::resource('combos', ComboController::class)->names('combos');
-    Route::resource('notifications', NotificationController::class)->names('notifications');
-    Route::post('notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.markAsRead');
     Route::post('/admin/combos/check-duplicate', [App\Http\Controllers\Admin\ComboController::class, 'checkDuplicate'])->name('admin.combos.checkDuplicate');
     Route::get('products/{id}/variants', [AdminProductController::class, 'getVariants'])->name('products.variants');
 });
 
 });
+
+// Test route for barcode
+Route::get('/test-barcode-api', function () {
+    $barcodeService = new \App\Services\BarcodeService();
+    $barcode = $barcodeService->generateBarcode('BK1754063915');
+    
+    return response()->json([
+        'barcode' => $barcode,
+        'booking_code' => 'BK1754063915'
+    ]);
+});
+
+// Barcode scanning routes
+Route::prefix('api/barcode')->group(function () {
+    Route::post('/scan', [App\Http\Controllers\BarcodeController::class, 'scanBarcode'])->name('barcode.scan');
+    Route::post('/check-status', [App\Http\Controllers\BarcodeController::class, 'checkTicketStatus'])->name('barcode.check');
+});
+
+// Trang quét barcode cho nhân viên
+Route::get('/barcode-scanner', function () {
+    return view('barcode-scanner');
+})->name('barcode.scanner');
 
 require __DIR__.'/auth.php';

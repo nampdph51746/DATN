@@ -6,15 +6,10 @@ use App\Models\Room;
 use App\Models\Seat;
 use App\Models\SeatType;
 use App\Enums\SeatStatus;
-use App\Models\Notification;
 use Illuminate\Http\Request;
-use App\Enums\NotificationType;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Auth;
 use App\Models\RoomSeatConfiguration;
-use PhpOffice\PhpSpreadsheet\IOFactory;
 use Illuminate\Support\Facades\Validator;
 
 class AdminSeatController extends Controller
@@ -87,8 +82,8 @@ class AdminSeatController extends Controller
 
     public function store(Request $request)
     {
-        Log::info('---[START STORE SEAT]---');
-        Log::info('Request data: ', $request->all());
+        \Log::info('---[START STORE SEAT]---');
+        \Log::info('Request data: ', $request->all());
 
         $rules = [
             'seat_type_id' => 'required|exists:seat_types,id',
@@ -119,22 +114,22 @@ class AdminSeatController extends Controller
         ]);
 
         if ($validator->fails()) {
-            Log::error('Validation failed: ', $validator->errors()->all());
+            \Log::error('Validation failed: ', $validator->errors()->all());
             return redirect()->back()->withErrors($validator)->withInput();
         }
 
         $room = Room::findOrFail($request->input('room_id')); // Sử dụng findOrFail
-        Log::info('Room: ', $room->toArray());
+        \Log::info('Room: ', $room->toArray());
         if ($room->status !== 'active') {
             $validator->errors()->add('room_id', 'Phòng chiếu không ở trạng thái hoạt động.');
             return redirect()->back()->withErrors($validator)->withInput();
         }
 
         $roomSeatValidation = new \App\Services\RoomSeatValidationService();
-        Log::info('RoomSeatValidationService created');
+        \Log::info('RoomSeatValidationService created');
         
         $isAllowed = $roomSeatValidation->isSeatTypeAllowedInRoom($room, $request->input('seat_type_id'));
-        Log::info('isSeatTypeAllowedInRoom: ', [$request->input('seat_type_id'), $isAllowed]);
+        \Log::info('isSeatTypeAllowedInRoom: ', [$request->input('seat_type_id'), $isAllowed]);
         if (!$isAllowed) {
             $seatType = SeatType::find($request->input('seat_type_id'));
             $validator->errors()->add('seat_type_id', 
@@ -143,7 +138,7 @@ class AdminSeatController extends Controller
         }
 
         $percentageErrors = $roomSeatValidation->validateSeatPercentages($room, $request->input('seat_type_percentages'));
-        Log::info('validateSeatPercentages errors: ', $percentageErrors);
+        \Log::info('validateSeatPercentages errors: ', $percentageErrors);
         if (!empty($percentageErrors)) {
             foreach ($percentageErrors as $error) {
                 $validator->errors()->add('seat_type_percentages', $error);
@@ -152,36 +147,36 @@ class AdminSeatController extends Controller
         }
 
         $existingSeatsCount = Seat::where('room_id', $room->id)->count();
-        Log::info('existingSeatsCount: ' . $existingSeatsCount);
+        \Log::info('existingSeatsCount: ' . $existingSeatsCount);
         if ($existingSeatsCount >= $room->capacity) {
             $validator->errors()->add('room_id', 'Phòng đã đầy ghế.');
             return redirect()->back()->withErrors($validator)->withInput();
         }
 
         DB::beginTransaction();
-        Log::info('Begin DB transaction');
+        \Log::info('Begin DB transaction');
         try {
             RoomSeatConfiguration::where('room_id', $room->id)->delete();
-            Log::info('Deleted old RoomSeatConfiguration');
+            \Log::info('Deleted old RoomSeatConfiguration');
             foreach ($request->input('seat_type_percentages') as $seatTypeId => $percentage) {
-                Log::info("Config seatTypeId=$seatTypeId, percentage=$percentage");
+                \Log::info("Config seatTypeId=$seatTypeId, percentage=$percentage");
                 if ($percentage > 0) {
                     RoomSeatConfiguration::create([
                         'room_id' => $room->id,
                         'seat_type_id' => $seatTypeId,
                         'percentage' => $percentage,
                     ]);
-                    Log::info("Created RoomSeatConfiguration for seatTypeId=$seatTypeId");
+                    \Log::info("Created RoomSeatConfiguration for seatTypeId=$seatTypeId");
                 }
             }
 
             $seatTypes = SeatType::all()->keyBy('id');
-            Log::info('seatTypes: ', $seatTypes->map(function($seatType) { return ['id' => $seatType->id, 'name' => $seatType->name]; })->toArray());
+            \Log::info('seatTypes: ', $seatTypes->map(function($seatType) { return ['id' => $seatType->id, 'name' => $seatType->name]; })->toArray());
             $requiredSeats = [];
             $totalSeats = $room->capacity;
             foreach ($request->input('seat_type_percentages') as $seatTypeId => $percentage) {
                 $requiredSeats[$seatTypeId] = (int) round(($percentage / 100) * $totalSeats);
-                Log::info("Required seats for seatTypeId=$seatTypeId: " . $requiredSeats[$seatTypeId]);
+                \Log::info("Required seats for seatTypeId=$seatTypeId: " . $requiredSeats[$seatTypeId]);
             }
 
             $existingSeatsByType = Seat::where('room_id', $room->id)
@@ -189,13 +184,13 @@ class AdminSeatController extends Controller
                 ->groupBy('seat_type_id')
                 ->pluck('count', 'seat_type_id')
                 ->toArray();
-            Log::info('existingSeatsByType: ', $existingSeatsByType);
+            \Log::info('existingSeatsByType: ', $existingSeatsByType);
 
             $currentTypeSeats = $existingSeatsByType[$request->input('seat_type_id')] ?? 0;
             $requiredTypeSeats = $requiredSeats[$request->input('seat_type_id')] ?? 0;
             $remainingCapacity = $room->capacity - $existingSeatsCount;
             $totalSeatsToAdd = min($requiredTypeSeats - $currentTypeSeats, $remainingCapacity);
-            Log::info("currentTypeSeats=$currentTypeSeats, requiredTypeSeats=$requiredTypeSeats, remainingCapacity=$remainingCapacity, totalSeatsToAdd=$totalSeatsToAdd");
+            \Log::info("currentTypeSeats=$currentTypeSeats, requiredTypeSeats=$requiredTypeSeats, remainingCapacity=$remainingCapacity, totalSeatsToAdd=$totalSeatsToAdd");
 
             $maxRows = 26;
             $maxSeatsPerRow = 50;
@@ -205,19 +200,19 @@ class AdminSeatController extends Controller
                 return redirect()->back()->withErrors($validator)->withInput();
             }
             $rows = ceil($totalSeatsToAdd / $seatsPerRow);
-            Log::info("seatsPerRow=$seatsPerRow, rows=$rows");
+            \Log::info("seatsPerRow=$seatsPerRow, rows=$rows");
 
             $totalSeatsProposed = $rows * $seatsPerRow;
-            Log::info("totalSeatsProposed=$totalSeatsProposed");
+            \Log::info("totalSeatsProposed=$totalSeatsProposed");
             $excessSeats = 0;
             $warningMsg = '';
             if ($totalSeatsProposed > $totalSeatsToAdd) {
                 $excessSeats = $totalSeatsProposed - $totalSeatsToAdd;
-                Log::warning("Excess seats: $excessSeats");
+                \Log::warning("Excess seats: $excessSeats");
                 $warningMsg = "Cảnh báo: Số ghế/hàng bạn chọn sẽ dư $excessSeats ghế so với số ghế cần thêm cho loại này. Hệ thống chỉ thêm đúng số ghế cần thiết.";
             }
             if ($totalSeatsProposed > $remainingCapacity) {
-                Log::warning("Seats to add exceed remainingCapacity");
+                \Log::warning("Seats to add exceed remainingCapacity");
                 $warningMsg .= " Số ghế muốn thêm vượt quá sức chứa còn lại ($remainingCapacity ghế). Hệ thống chỉ thêm đúng số ghế còn lại.";
             }
 
@@ -226,20 +221,19 @@ class AdminSeatController extends Controller
                 ->groupBy('row_char')
                 ->map->pluck('seat_number')
                 ->toArray();
-            Log::info('existingSeats: ', $existingSeats);
+            \Log::info('existingSeats: ', $existingSeats);
 
             $previewSeats = [];
             $createdSeats = 0;
             $maxRowChar = Seat::where('room_id', $room->id)->max('row_char');
             $startRowIndex = $maxRowChar ? ord(strtoupper($maxRowChar)) - 64 : 0;
-            Log::info("maxRowChar=$maxRowChar, startRowIndex=$startRowIndex");
+            \Log::info("maxRowChar=$maxRowChar, startRowIndex=$startRowIndex");
 
-            $createdSeatIds = [];
             for ($i = 0; $i < $rows; $i++) {
                 $rowChar = chr(65 + $startRowIndex + $i);
-                Log::info("Row $i: rowChar=$rowChar");
+                \Log::info("Row $i: rowChar=$rowChar");
                 if (strlen($rowChar) > 5) {
-                    Log::error('Row char length exceeded: ' . $rowChar);
+                    \Log::error('Row char length exceeded: ' . $rowChar);
                     throw new \Exception('Số hàng vượt quá giới hạn ký tự cho phép.');
                 }
                 for ($j = 1; $j <= $seatsPerRow; $j++) {
@@ -247,9 +241,9 @@ class AdminSeatController extends Controller
                         break 2;
                     }
                     $seatNumber = str_pad($j, 2, '0', STR_PAD_LEFT);
-                    Log::info("Trying seat $rowChar$seatNumber");
+                    \Log::info("Trying seat $rowChar$seatNumber");
                     if (isset($existingSeats[$rowChar]) && in_array($seatNumber, $existingSeats[$rowChar])) {
-                        Log::warning("Seat $rowChar$seatNumber already exists, skipping.");
+                        \Log::warning("Seat $rowChar$seatNumber already exists, skipping.");
                         continue;
                     }
                     $seat = Seat::create([
@@ -259,41 +253,20 @@ class AdminSeatController extends Controller
                         'seat_number' => $seatNumber,
                         'status' => SeatStatus::Available->value ?? 'available',
                     ]);
-                    Log::info("Created seat: $rowChar$seatNumber", $seat->toArray());
+                    \Log::info("Created seat: $rowChar$seatNumber", $seat->toArray());
                     $createdSeats++;
-                    $createdSeatIds[] = $seat->id;
                     $previewSeats[] = [
                         'row_char' => $rowChar,
                         'seat_number' => $seatNumber,
                         'seat_type_id' => $request->input('seat_type_id'),
                     ];
                     if ($existingSeatsCount + $createdSeats > $room->capacity) {
-                        Log::error('Số ghế vượt quá sức chứa của phòng!');
+                        \Log::error('Số ghế vượt quá sức chứa của phòng!');
                         throw new \Exception('Số ghế vượt quá sức chứa của phòng (' . $room->capacity . ' ghế).');
                     }
                 }
             }
-            Log::info("Total createdSeats=$createdSeats");
-
-            // Tạo thông báo khi thêm ghế
-            if ($createdSeats > 0) {
-                Notification::create([
-                    'user_id' => Auth::id(),
-                    'entity_type' => Seat::class,
-                    'entity_id' => implode(',', $createdSeatIds),
-                    'title' => 'Thêm mới ghế',
-                    'message' => $createdSeats . ' ghế mới đã được thêm vào phòng #' . $room->id,
-                    'type' => NotificationType::System,
-                    'priority' => 'high',
-                    'old_status' => null,
-                    'new_status' => null,
-                    'event_details' => json_encode([
-                        'room_id' => $room->id,
-                        'seat_type_id' => $request->input('seat_type_id'),
-                        'created_seat_ids' => $createdSeatIds,
-                    ]),
-                ]);
-            }
+            \Log::info("Total createdSeats=$createdSeats");
 
             // Cập nhật existingSeatsByType trước khi lưu vào session
             $existingSeatsByType[$request->input('seat_type_id')] = ($existingSeatsByType[$request->input('seat_type_id')] ?? 0) + $createdSeats;
@@ -304,7 +277,7 @@ class AdminSeatController extends Controller
             if ($currentTypeIndex !== false && $currentTypeIndex + 1 < count($seatTypesOrder)) {
                 $nextSeatTypeId = $seatTypesOrder[$currentTypeIndex + 1];
             }
-            Log::info("nextSeatTypeId=$nextSeatTypeId");
+            \Log::info("nextSeatTypeId=$nextSeatTypeId");
 
             $nextSuggestedSeatsPerRow = null;
             $nextTotalSeatsToAdd = null;
@@ -325,7 +298,7 @@ class AdminSeatController extends Controller
 
             DB::commit();
 
-            Log::info('---[END STORE SEAT]---');
+            \Log::info('---[END STORE SEAT]---');
             session([
                 'success' => "$createdSeats ghế loại '{$seatTypes[$request->input('seat_type_id')]->name}' đã được thêm thành công! $suggestionMsg" . ($warningMsg ? "\n$warningMsg" : ''),
                 'next_seat_type_id' => $nextSeatTypeId,
@@ -344,7 +317,7 @@ class AdminSeatController extends Controller
             return redirect()->route('admin.rooms.show', ['room' => $room->id]);
 
         } catch (\Exception $e) {
-            Log::error('Exception during seat creation: ' . $e->getMessage() . ' | Trace: ' . $e->getTraceAsString());
+            \Log::error('Exception during seat creation: ' . $e->getMessage() . ' | Trace: ' . $e->getTraceAsString());
             DB::rollBack();
             return redirect()->back()->with('error', 'Lỗi khi thêm ghế: ' . $e->getMessage())->withInput();
         }
@@ -362,47 +335,31 @@ class AdminSeatController extends Controller
     public function update(Request $request, $id)
     {
         $seat = Seat::findOrFail($id);
-        $oldData = $seat->getOriginal();
 
         $request->validate([
-            'seat_type_id' => 'required|exists:seat_types,id',
-            'status' => 'required|in:available,reserved,booked',
+            'status' => 'required|in:' . implode(',', array_column(SeatStatus::cases(), 'value')),
         ]);
 
+        \Log::info('Updating seat ' . $id . ' with status: ' . $request->input('status'));
+
         $seat->update([
-            'seat_type_id' => $request->input('seat_type_id'),
             'status' => $request->input('status'),
         ]);
 
-        // Tạo thông báo khi cập nhật ghế
-        Notification::create([
-            'user_id' => Auth::id(),
-            'entity_type' => Seat::class,
-            'entity_id' => $seat->id,
-            'title' => 'Cập nhật ghế',
-            'message' => 'Ghế ' . $seat->row_char . $seat->seat_number . ' đã được cập nhật.',
-            'type' => NotificationType::System,
-            'priority' => 'high',
-            'old_status' => $oldData['status'] ?? null,
-            'new_status' => $seat->status,
-            'event_details' => json_encode([
-                'old' => $oldData,
-                'new' => $seat->getAttributes(),
-            ]),
-        ]);
+        \Log::info('Saved seat status: ' . $seat->status->value);
 
         $roomId = $seat->room_id;
-        return redirect()->route('admin.rooms.show', $roomId)->with('success', 'Ghế đã được cập nhật thành công!');
+        return redirect()->route('admin.rooms.show', $roomId)->with('success', 'Trạng thái ghế đã được cập nhật thành công!');
     }
 
     public function show($id)
     {
-        Log::info('Session data:', session()->all());
-        $room = Room::with(['cinema', 'roomType'])->findOrFail($id);
-        Log::info('Room type: ' . get_class($room));
-        Log::info('Room value: ', $room->toArray());
+        \Log::info('Session data:', session()->all());
+        $room = \App\Models\Room::with(['cinema', 'roomType'])->findOrFail($id);
+        \Log::info('Room type: ' . get_class($room));
+        \Log::info('Room value: ', $room->toArray());
         $allowedSeatTypes = method_exists($room, 'allowedSeatTypes') ? $room->allowedSeatTypes() : [];
-        $seats = Seat::with('seatType')
+        $seats = \App\Models\Seat::with('seatType')
             ->where('room_id', $room->id)
             ->orderBy('row_char')
             ->orderBy('seat_number')
@@ -411,7 +368,7 @@ class AdminSeatController extends Controller
         $maxSeatsPerRow = $seats->isEmpty() ? 50 : $seats->groupBy('row_char')->map(function($group) { return $group->count(); })->max();
         $maxRows = 26;
 
-        $seatPercentages = RoomSeatConfiguration::where('room_id', $room->id)
+        $seatPercentages = \App\Models\RoomSeatConfiguration::where('room_id', $room->id)
             ->pluck('percentage', 'seat_type_id')
             ->toArray();
 
@@ -463,53 +420,49 @@ class AdminSeatController extends Controller
     public function editBulk(Request $request)
     {
         $seatIds = $request->input('seat_ids', []);
+        $roomId = $request->input('room_id');
         
         if (empty($seatIds)) {
-            return redirect()->route('admin.seats.index')->with('error', 'Vui lòng chọn ít nhất một ghế để chỉnh sửa.');
+            return redirect()->route('admin.rooms.show', $roomId)->with('error', 'Vui lòng chọn ít nhất một ghế để chỉnh sửa.');
         }
 
         $seats = Seat::with('room', 'seatType')->whereIn('id', $seatIds)->get();
         $seatTypes = SeatType::all();
+        $room = Room::findOrFail($roomId);
+        $allowedSeatTypes = $room->allowedSeatTypes();
 
-        return view('admin.seats.edit-bulk', compact('seats', 'seatTypes'));
+        return view('admin.seats.edit-bulk', compact('seats', 'seatTypes', 'room', 'allowedSeatTypes'));
     }
 
     public function updateBulk(Request $request)
     {
-        $request->validate([
-            'status' => 'nullable|string|in:available,booked,sold,broken',
-        ]);
-        $seatIds = $request->input('seat_ids', []);
-        $seatTypeId = $request->input('seat_type_id');
-        $status = $request->input('status');
+    $request->validate([
+        'seat_ids' => 'required|array',
+        'seat_ids.*' => 'exists:seats,id',
+        'status' => 'nullable|string|in:' . implode(',', array_column(\App\Enums\SeatStatus::cases(), 'value')),
+        'room_id' => 'required|exists:rooms,id',
+    ], [
+        'seat_ids.required' => 'Vui lòng chọn ít nhất một ghế.',
+        'seat_ids.*.exists' => 'Một hoặc nhiều ghế không tồn tại.',
+        'status.in' => 'Trạng thái không hợp lệ.',
+        'room_id.required' => 'Phòng chiếu là bắt buộc.',
+        'room_id.exists' => 'Phòng chiếu không tồn tại.',
+    ]);
 
-        if (empty($seatIds)) {
-            return redirect()->route('admin.seats.index')->with('error', 'Không có ghế nào được chọn để cập nhật.');
-        }
+    $seatIds = $request->input('seat_ids', []);
+    $status = $request->input('status');
+    $roomId = $request->input('room_id');
 
-        DB::transaction(function () use ($seatIds, $seatTypeId, $status) {
-            foreach ($seatIds as $seatId) {
-                $seat = Seat::find($seatId);
-                if ($seat) {
-                    if ($seatTypeId) {
-                        $seat->seat_type_id = $seatTypeId;
-                    }
-                    if ($status) {
-                        $seat->status = $status;
-                    }
-                    $seat->save();
-                }
-            }
-        });
+    $room = Room::findOrFail($roomId);
 
-        $firstSeat = Seat::find($seatIds[0]);
-        $roomId = ($firstSeat && !empty($firstSeat->room_id)) ? $firstSeat->room_id : null;
-        Log::info('Redirect roomId: ' . print_r($roomId, true));
-        if ($roomId && is_numeric($roomId) && $roomId > 0) {
-            return redirect()->route('admin.rooms.show', ['room' => $roomId])->with('success', 'Cập nhật hàng loạt ghế thành công!');
-        }
-        return redirect()->route('admin.seats.index')->with('success', 'Cập nhật hàng loạt ghế thành công!');
-    }
+    DB::transaction(function () use ($seatIds, $status) {
+        Seat::whereIn('id', $seatIds)->update(array_filter([
+            'status' => $status,
+        ]));
+    });
+
+    return redirect()->route('admin.rooms.show', ['room' => $roomId])->with('success', 'Cập nhật hàng loạt ' . count($seatIds) . ' ghế thành công!');
+}
 
     public function importExcel(Request $request)
     {
@@ -525,7 +478,7 @@ class AdminSeatController extends Controller
             $extension = strtolower($file->getClientOriginalExtension());
             $rows = [];
             if (in_array($extension, ['xlsx', 'xls'])) {
-                $spreadsheet = IOFactory::load($filePath);
+                $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($filePath);
                 $sheet = $spreadsheet->getActiveSheet();
                 $rows = $sheet->toArray();
             } elseif ($extension === 'csv') {
@@ -594,7 +547,7 @@ class AdminSeatController extends Controller
                 ];
             }
 
-            $currentSeatsCount = Seat::where('room_id', $room->id)->count();
+            $currentSeatsCount = \App\Models\Seat::where('room_id', $room->id)->count();
             $roomCapacity = $room->capacity;
             $remainingCapacity = $roomCapacity - $currentSeatsCount;
             if (count($seatsToImport) > $remainingCapacity) {
@@ -602,7 +555,7 @@ class AdminSeatController extends Controller
             }
 
             foreach ($seatsToImport as $seatData) {
-                Seat::create($seatData);
+                \App\Models\Seat::create($seatData);
                 $imported++;
             }
 
