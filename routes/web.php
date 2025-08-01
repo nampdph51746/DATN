@@ -128,6 +128,7 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
     Route::get('/movies/{id}/edit', [MovieController::class, 'edit'])->name('movies.edit');
     Route::put('/movies/{id}', [MovieController::class, 'update'])->name('movies.update');
     Route::delete('/movies/{id}', [MovieController::class, 'destroy'])->name('movies.destroy');
+    Route::resource('showtimes', ShowtimeController::class)->except(['destroy']);
 
     // Tạo suất chiếu tự động (HEAD)
     Route::post('/showtimes', [ShowtimeController::class, 'storeAuto'])->name('showtimes.storeAuto');
