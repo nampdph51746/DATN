@@ -68,35 +68,137 @@
             <!-- Nút quay lại đã được chuyển xuống dưới, xóa nút cũ này -->
         </div>
         <div class="col-lg-5 col-md-12 d-flex flex-column align-items-center">
+            <!-- Thêm dropdown chọn suất chiếu -->
+            <div class="mb-3 w-100">
+                <form method="GET" action="{{ route('admin.rooms.show', $room->id) }}">
+                    <!-- <label for="showtime_id" class="form-label">Chọn suất chiếu</label> -->
+                    <select name="showtime_id" id="showtime_id" class="form-control" onchange="this.form.submit()">
+                        <option value="">-- Chọn suất chiếu --</option>
+                        @foreach ($showtimes as $showtime)
+                            <option value="{{ $showtime->id }}" {{ $showtime_id == $showtime->id ? 'selected' : '' }}>
+                                {{ htmlspecialchars($showtime->movie->name, ENT_QUOTES, 'UTF-8') }} - {{ $showtime->start_time->format('d/m/Y H:i') }}
+                            </option>
+                        @endforeach
+                    </select>
+                </form>
+            </div>
+
             @if ($seats->count() > 0)
-                <div class="seat-map mb-3" style="display: grid; gap: 5px; grid-template-columns: repeat({{ $maxSeatsPerRow + 1 }}, 40px); max-width: {{ ($maxSeatsPerRow + 1) * 45 }}px;">
-                    <div class="seat"></div>
-                    @for ($i = 1; $i <= $maxSeatsPerRow; $i++)
-                        <div class="seat seat-number-label">{{ str_pad($i, 2, '0', STR_PAD_LEFT) }}</div>
-                    @endfor
-                    @foreach ($rows as $row)
-                        <div class="seat seat-row-label">{{ $row }}</div>
+                <form id="bulkEditForm" action="{{ route('admin.seats.edit-bulk') }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="room_id" value="{{ $room->id }}">
+                    <div class="seat-map mb-3" style="display: grid; gap: 5px; grid-template-columns: repeat({{ $maxSeatsPerRow + 1 }}, 40px); max-width: {{ ($maxSeatsPerRow + 1) * 45 }}px;">
+                        <div class="seat"></div>
                         @for ($i = 1; $i <= $maxSeatsPerRow; $i++)
+                            <div class="seat seat-number-label">{{ str_pad($i, 2, '0', STR_PAD_LEFT) }}</div>
+                        @endfor
+                        @foreach ($rows as $row)
+                            <div class="seat seat-row-label">{{ $row }}</div>
+                            @for ($i = 1; $i <= $maxSeatsPerRow; $i++)
                             @php
                                 $seatNumber = str_pad($i, 2, '0', STR_PAD_LEFT);
                                 $seat = $seats->where('row_char', $row)->where('seat_number', $seatNumber)->first();
+                                if (!$seat) continue;
+                                $displayStatus = $showtime_id ? ($seat->showtimeSeatStates()->where('showtime_id', $showtime_id)->first()?->status?->value ?? $seat->status->value) : $seat->status->value;
+                                $seatTypeName = $seat->seatType->name ?? 'Chưa có loại';
+                                $backgroundColor = $seat->seatType->color_code ?? '#28a745';
+                                $textColor = (isset($seat->seatType->color_code) && strtolower($seat->seatType->color_code) == '#ffd700') ? 'black' : 'white';
+                                $isBooked = $displayStatus === 'booked';
                             @endphp
-                            @if ($seat)
-                                <div class="seat"
-                                     style="background-color: {{ $seat->seatType->color_code ?? '#28a745' }}; color: {{ (isset($seat->seatType->color_code) && strtolower($seat->seatType->color_code) == '#ffd700') ? 'black' : 'white' }};"
-                                     data-seat-id="{{ $seat->id }}"
-                                     title="{{ $seat->row_char }}{{ $seat->seat_number }} ({{ $seat->seatType->name }}, {{ ucfirst($seat->status->value) }})"
-                                     data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true"
-                                     data-bs-title="Ghế: {{ $seat->row_char }}{{ $seat->seat_number }}<br>Loại: {{ $seat->seatType->name }}<br>Trạng thái: {{ ucfirst($seat->status->value) }}">
-                                    {{ $seat->row_char }}{{ $seat->seat_number }}
-                                </div>
-                            @else
-                                <div class="seat seat-empty"></div>
-                            @endif
-                        @endfor
-                    @endforeach
-                </div>
-                <p class="mt-2">Số ghế hiện có: {{ $seats->count() }} / {{ $room->capacity }} (Còn lại: {{ $room->capacity - $seats->count() }})</p>
+                            <div class="seat
+                                @if ($displayStatus == 'booked') seat-booked
+                                @elseif ($displayStatus == 'reserved') seat-reserved
+                                @else
+                                @endif"
+                                @if ($displayStatus == 'available')
+                                    style="background-color: {{ $backgroundColor }}; color: {{ $textColor }}"
+                                @endif
+                                data-seat-id="{{ $seat->id }}"
+                                title="{{ $row }}{{ $seatNumber }} ({{ htmlspecialchars($seatTypeName, ENT_QUOTES, 'UTF-8') }}, {{ ucfirst($displayStatus) }})"
+                                data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true"
+                                data-bs-title="Ghế: {{ $row }}{{ $seatNumber }}<br>Loại: {{ htmlspecialchars($seatTypeName, ENT_QUOTES, 'UTF-8') }}<br>Trạng thái: {{ ucfirst($displayStatus) }}"
+                                style="cursor: {{ $isBooked ? 'not-allowed' : 'pointer' }}; position: relative;"
+                                @if ($isBooked) onclick="event.preventDefault(); return false;" @endif>
+                                <input type="checkbox" name="seat_ids[]" value="{{ $seat->id }}" class="seat-checkbox" style="position: absolute; top: 5px; left: 5px; z-index: 10;" @if ($isBooked) disabled @endif>
+                                {{ $row }}{{ $seatNumber }}
+                            </div>
+                            @endfor
+                        @endforeach
+                    </div>
+                    <p class="mt-2">Số ghế hiện có: {{ $seats->count() }} / {{ $room->capacity }} (Còn lại: {{ $room->capacity - $seats->count() }})</p>
+                    <button type="submit" class="btn btn-warning mt-2" id="bulkEditBtn" disabled>Chỉnh sửa hàng loạt</button>
+                </form>
+                <script>
+                    console.log('Seat script loaded');
+                    try {
+                        document.addEventListener('DOMContentLoaded', function () {
+                            console.log('DOM fully loaded - Seat script');
+                            const seats = document.querySelectorAll('.seat');
+                            const seatCheckboxes = document.querySelectorAll('.seat-checkbox');
+                            const bulkEditBtn = document.getElementById('bulkEditBtn');
+                            console.log('Found seats:', seats.length, 'Found checkboxes:', seatCheckboxes.length);
+
+                            // Cập nhật trạng thái nút "Chỉnh sửa hàng loạt"
+                            function updateBulkEditButton() {
+                                const checkedCount = document.querySelectorAll('.seat-checkbox:checked').length;
+                                bulkEditBtn.disabled = checkedCount === 0;
+                                console.log('Checked seats:', checkedCount, 'Bulk edit button disabled:', bulkEditBtn.disabled);
+                            }
+
+                            // Gắn sự kiện change cho checkbox
+                            seatCheckboxes.forEach(checkbox => {
+                                checkbox.addEventListener('change', function () {
+                                    console.log('Checkbox changed, ID:', this.value, 'Checked:', this.checked);
+                                    updateBulkEditButton();
+                                });
+                            });
+
+                            // Gắn sự kiện click cho ghế (chỉ redirect nếu không click vào checkbox)
+                            seats.forEach(seat => {
+                                if (seat.dataset.seatId) {
+                                    console.log('Attaching click event to seat with ID:', seat.dataset.seatId);
+                                    seat.addEventListener('click', function (e) {
+                                        const checkbox = this.querySelector('.seat-checkbox');
+                                        const isBooked = this.classList.contains('seat-booked');
+                                        if (e.target !== checkbox && !checkbox.checked && !isBooked) {
+                                            console.log('Seat clicked (not checkbox), ID:', this.dataset.seatId);
+                                            console.log('Redirecting to:', '/admin/seats/' + this.dataset.seatId + '/edit');
+                                            window.location.href = '/admin/seats/' + this.dataset.seatId + '/edit';
+                                        } else if (e.target === checkbox) {
+                                            console.log('Checkbox clicked directly, ID:', checkbox.value);
+                                        }
+                                    });
+                                } else {
+                                    console.log('No seatId found for seat:', seat.outerHTML);
+                                }
+                            });
+
+                            // Gắn sự kiện submit cho form
+                            const bulkEditForm = document.getElementById('bulkEditForm');
+                            if (bulkEditForm) {
+                                bulkEditForm.addEventListener('submit', function (e) {
+                                    const checkedCount = document.querySelectorAll('.seat-checkbox:checked').length;
+                                    if (checkedCount === 0) {
+                                        e.preventDefault();
+                                        console.log('No seats selected for bulk edit');
+                                        alert('Vui lòng chọn ít nhất một ghế để chỉnh sửa.');
+                                    }
+                                });
+                            } else {
+                                console.warn('bulkEditForm not found in DOM');
+                            }
+
+                            document.addEventListener('click', function (e) {
+                                console.log('Document click - Seat script, target:', e.target.outerHTML);
+                            });
+
+                            // Khởi tạo trạng thái nút
+                            updateBulkEditButton();
+                        });
+                    } catch (error) {
+                        console.error('Error in seat script:', error);
+                    }
+                </script>
             @else
                 <p class="text-success">Phòng chưa có ghế nào. Số ghế có thể thêm: {{ $room->capacity }}</p>
             @endif
@@ -283,6 +385,8 @@
         color: white;
         cursor: pointer;
         transition: transform 0.2s;
+        position: relative; /* Đảm bảo là container cho checkbox */
+        pointer-events: auto; /* Cho phép xử lý sự kiện */
     }
     .seat:hover {
         transform: scale(1.1);
@@ -307,237 +411,307 @@
         color: black;
     }
     .seat-booked {
-        background-color: #dc3545;
+        background-color: #c82333; /* Updated color for booked seats */
         color: white;
     }
     .seat-reserved {
         background-color: #ffc107;
         color: black;
     }
+    .seat[data-seat-id] {
+        pointer-events: auto !important;
+    }
+    .seat-checkbox {
+        cursor: pointer;
+        position: absolute;
+        top: 5px;
+        left: 5px;
+        z-index: 10;
+        width: 20px;
+        height: 20px;
+    }
+    .seat-checkbox:checked ~ * {
+        /* Thay đổi style của .seat khi checkbox được checked */
+        background-color: #007bff; /* Màu xanh khi chọn */
+        color: white;
+    }
+    .seat-checkbox:focus + * {
+        /* Highlight nhẹ khi focus vào checkbox */
+        outline: 2px solid #007bff;
+        outline-offset: 2px;
+    }
 </style>
 
 @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-            return new bootstrap.Tooltip(tooltipTriggerEl);
-        });
+    console.log('Form script loaded');
+    try {
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('DOM fully loaded - Form script');
 
-        const seatForm = document.getElementById('seatForm');
-        const percentageInputs = document.querySelectorAll('input[name^="seat_type_percentages"]');
-        const seatsPerRowInput = document.getElementById('seats_per_row');
-        const minSeatsPerRowInput = document.getElementById('min_seats_per_row');
-        const percentageWarning = document.getElementById('percentageWarning');
-        const seatsPerRowSuggestion = document.getElementById('seatsPerRowSuggestion');
-        const minSeatsPerRowSuggestion = document.getElementById('minSeatsPerRowSuggestion');
-        const remainingSeatsWarning = document.getElementById('remainingSeatsWarning');
-        const seatTypeSelect = document.getElementById('seat_type_id');
-        const roomCapacity = {{ $room->capacity }};
-        const existingSeats = {{ $seats->count() }};
-        const remainingCapacity = roomCapacity - existingSeats;
-        const existingSeatsByType = {{ json_encode($existingSeatsByType) }};
-        const maxSeatsPerRow = {{ $maxSeatsPerRow }};
-        const maxRows = {{ $maxRows }};
-
-        function updateCalculations() {
-            let totalPercentage = 0;
-            percentageInputs.forEach(input => {
-                totalPercentage += parseFloat(input.value) || 0;
-            });
-
-            // Cảnh báo tổng % ghế
-            if (Math.abs(totalPercentage - 100) > 0.01) {
-                percentageWarning.innerHTML = '<span class="text-danger">Tổng tỷ lệ phải bằng 100%. Hiện tại: ' + totalPercentage.toFixed(2) + '%</span>';
-            } else {
-                percentageWarning.innerHTML = '<span class="text-success">Tổng tỷ lệ hợp lệ: ' + totalPercentage.toFixed(2) + '%</span>';
+            // Kiểm tra các phần tử DOM
+            const seatForm = document.getElementById('seatForm');
+            if (!seatForm) {
+                console.warn('seatForm not found in DOM');
+                return;
             }
-
-            // Lấy loại ghế được chọn
-            const seatTypeId = seatTypeSelect.value;
-            const percentageInput = document.getElementById('seat_type_percentages_' + seatTypeId);
-            if (!percentageInput) {
-                seatsPerRowSuggestion.innerHTML = '';
-                remainingSeatsWarning.innerHTML = '';
-                minSeatsPerRowSuggestion.innerHTML = '';
+            const percentageInputs = document.querySelectorAll('input[name^="seat_type_percentages"]');
+            if (percentageInputs.length === 0) {
+                console.warn('No percentageInputs found in DOM');
+                return;
+            }
+            const seatsPerRowInput = document.getElementById('seats_per_row');
+            if (!seatsPerRowInput) {
+                console.warn('seatsPerRowInput not found in DOM');
+                return;
+            }
+            const minSeatsPerRowInput = document.getElementById('min_seats_per_row');
+            if (!minSeatsPerRowInput) {
+                console.warn('minSeatsPerRowInput not found in DOM');
+                return;
+            }
+            const percentageWarning = document.getElementById('percentageWarning');
+            if (!percentageWarning) {
+                console.warn('percentageWarning not found in DOM');
+                return;
+            }
+            const seatsPerRowSuggestion = document.getElementById('seatsPerRowSuggestion');
+            if (!seatsPerRowSuggestion) {
+                console.warn('seatsPerRowSuggestion not found in DOM');
+                return;
+            }
+            const minSeatsPerRowSuggestion = document.getElementById('minSeatsPerRowSuggestion');
+            if (!minSeatsPerRowSuggestion) {
+                console.warn('minSeatsPerRowSuggestion not found in DOM');
+                return;
+            }
+            const remainingSeatsWarning = document.getElementById('remainingSeatsWarning');
+            if (!remainingSeatsWarning) {
+                console.warn('remainingSeatsWarning not found in DOM');
+                return;
+            }
+            const seatTypeHidden = document.querySelector('input[name="seat_type_id"]');
+            if (!seatTypeHidden) {
+                console.warn('seatTypeHidden (input[name="seat_type_id"]) not found in DOM');
                 return;
             }
 
-            const percentage = parseFloat(percentageInput.value) || 0;
-            const requiredSeats = Math.round((percentage / 100) * roomCapacity);
-            const currentTypeSeats = existingSeatsByType[seatTypeId] || 0;
-            const seatsToAdd = Math.min(requiredSeats - currentTypeSeats, remainingCapacity);
+            const roomCapacity = {{ json_encode($room->capacity, JSON_HEX_AMP) }};
+            const existingSeats = {{ json_encode($seats->count(), JSON_HEX_AMP) }};
+            const remainingCapacity = roomCapacity - existingSeats;
+            const existingSeatsByType = {{ json_encode($existingSeatsByType, JSON_HEX_AMP) }};
+            const maxSeatsPerRow = {{ json_encode($maxSeatsPerRow, JSON_HEX_AMP) }};
+            const maxRows = {{ json_encode($maxRows, JSON_HEX_AMP) }};
 
-            const seatsPerRow = parseInt(seatsPerRowInput.value) || 1;
-            const minSeatsPerRow = parseInt(minSeatsPerRowInput.value) || 1;
-            const rows = Math.ceil(seatsToAdd / seatsPerRow);
-            const totalSeatsProposed = rows * seatsPerRow;
-            const excessSeats = totalSeatsProposed - seatsToAdd;
-
-            // Cảnh báo dư ghế
-            if (excessSeats > 0) {
-                remainingSeatsWarning.innerHTML = '<span class="text-warning">Cảnh báo: Sẽ có ' + excessSeats + ' ghế dư do không chia hết số hàng.</span>';
-            } else {
-                remainingSeatsWarning.innerHTML = '';
-            }
-
-            // Chỉ hiển thị gợi ý, KHÔNG tự động thay đổi số ghế mỗi hàng
-            if (seatsToAdd > 0) {
-                let optimalSeatsPerRow = seatsPerRow; // Giữ nguyên giá trị người dùng nhập
-                let found = false;
-                for (let i = minSeatsPerRow; i <= maxSeatsPerRow; i++) {
-                    if (seatsToAdd % i === 0 && seatsToAdd / i <= maxRows) {
-                        optimalSeatsPerRow = i;
-                        found = true;
-                        break;
-                    }
-                }
-                if (found && optimalSeatsPerRow !== seatsPerRow) {
-                    seatsPerRowSuggestion.innerHTML = 'Đề xuất số ghế mỗi hàng: ' + optimalSeatsPerRow + ' (chia hết cho ' + seatsToAdd + ' ghế, tạo ' + Math.ceil(seatsToAdd / optimalSeatsPerRow) + ' hàng)';
-                } else {
-                    seatsPerRowSuggestion.innerHTML = 'Bạn đã chọn số ghế mỗi hàng: ' + seatsPerRow + ' (sẽ tạo ' + rows + ' hàng, có thể dư ghế nếu không chia hết)';
-                }
-            } else {
-                seatsPerRowSuggestion.innerHTML = 'Không cần thêm ghế cho loại này.';
-            }
-
-            // Cảnh báo nếu < số ghế tối thiểu mỗi hàng
-            if (seatsPerRow < minSeatsPerRow) {
-                minSeatsPerRowSuggestion.innerHTML = '<span class="text-danger">Số ghế mỗi hàng phải ≥ số tối thiểu (' + minSeatsPerRow + ').</span>';
-            } else {
-                minSeatsPerRowSuggestion.innerHTML = '';
-            }
-        }
-
-        // Gắn sự kiện
-        percentageInputs.forEach(input => input.addEventListener('input', updateCalculations));
-        seatsPerRowInput.addEventListener('input', updateCalculations);
-        minSeatsPerRowInput.addEventListener('input', updateCalculations);
-        seatTypeSelect.addEventListener('change', () => setTimeout(updateCalculations, 10));
-
-        // Click ghế để chỉnh sửa
-        document.querySelectorAll('.seat').forEach(seat => {
-            if (seat.dataset.seatId) {
-                seat.addEventListener('click', function () {
-                    window.location.href = '{{ route("admin.seats.edit", ":id") }}'.replace(':id', this.dataset.seatId);
+            function updateCalculations() {
+                console.log('Running updateCalculations');
+                let totalPercentage = 0;
+                percentageInputs.forEach(input => {
+                    totalPercentage += parseFloat(input.value) || 0;
                 });
-            }
-        });
 
-        // Modal xác nhận import ghế
-        const importSeatsBtn = document.getElementById('importSeatsBtn');
-        if (importSeatsBtn) {
-            importSeatsBtn.addEventListener('click', function(e) {
-                if (importSeatsBtn.disabled) {
+                if (Math.abs(totalPercentage - 100) > 0.01) {
+                    percentageWarning.innerHTML = '<span class="text-danger">Tổng tỷ lệ phải bằng 100%. Hiện tại: ' + totalPercentage.toFixed(2) + '%</span>';
+                } else {
+                    percentageWarning.innerHTML = '<span class="text-success">Tổng tỷ lệ hợp lệ: ' + totalPercentage.toFixed(2) + '%</span>';
+                }
+
+                const seatTypeId = seatTypeHidden.value;
+                console.log('seatTypeId from hidden input:', seatTypeId);
+                const percentageInput = document.getElementById('seat_type_percentages_' + seatTypeId);
+                if (!percentageInput) {
+                    console.warn('percentageInput not found for seatTypeId:', seatTypeId);
+                    seatsPerRowSuggestion.innerHTML = '';
+                    remainingSeatsWarning.innerHTML = '';
+                    minSeatsPerRowSuggestion.innerHTML = '';
+                    return;
+                }
+
+                const percentage = parseFloat(percentageInput.value) || 0;
+                const requiredSeats = Math.round((percentage / 100) * roomCapacity);
+                const currentTypeSeats = existingSeatsByType[seatTypeId] || 0;
+                const seatsToAdd = Math.min(requiredSeats - currentTypeSeats, remainingCapacity);
+
+                const seatsPerRow = parseInt(seatsPerRowInput.value) || 1;
+                const minSeatsPerRow = parseInt(minSeatsPerRowInput.value) || 1;
+                const rows = Math.ceil(seatsToAdd / seatsPerRow);
+                const totalSeatsProposed = rows * seatsPerRow;
+                const excessSeats = totalSeatsProposed - seatsToAdd;
+
+                if (excessSeats > 0) {
+                    remainingSeatsWarning.innerHTML = '<span class="text-warning">Cảnh báo: Sẽ có ' + excessSeats + ' ghế dư do không chia hết số hàng.</span>';
+                } else {
+                    remainingSeatsWarning.innerHTML = '';
+                }
+
+                if (seatsToAdd > 0) {
+                    let optimalSeatsPerRow = seatsPerRow;
+                    let found = false;
+                    for (let i = minSeatsPerRow; i <= maxSeatsPerRow; i++) {
+                        if (seatsToAdd % i === 0 && seatsToAdd / i <= maxRows) {
+                            optimalSeatsPerRow = i;
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (found && optimalSeatsPerRow !== seatsPerRow) {
+                        seatsPerRowSuggestion.innerHTML = 'Đề xuất số ghế mỗi hàng: ' + optimalSeatsPerRow + ' (chia hết cho ' + seatsToAdd + ' ghế, tạo ' + Math.ceil(seatsToAdd / optimalSeatsPerRow) + ' hàng)';
+                    } else {
+                        seatsPerRowSuggestion.innerHTML = 'Bạn đã chọn số ghế mỗi hàng: ' + seatsPerRow + ' (sẽ tạo ' + rows + ' hàng, có thể dư ghế nếu không chia hết)';
+                    }
+                } else {
+                    seatsPerRowSuggestion.innerHTML = 'Không cần thêm ghế cho loại này.';
+                }
+
+                if (seatsPerRow < minSeatsPerRow) {
+                    minSeatsPerRowSuggestion.innerHTML = '<span class="text-danger">Số ghế mỗi hàng phải ≥ số tối thiểu (' + minSeatsPerRow + ').</span>';
+                } else {
+                    minSeatsPerRowSuggestion.innerHTML = '';
+                }
+            }
+
+            // Gắn sự kiện cho inputs
+            percentageInputs.forEach(input => {
+                input.addEventListener('input', () => {
+                    console.log('Percentage input changed:', input.id, input.value);
+                    updateCalculations();
+                });
+            });
+            seatsPerRowInput.addEventListener('input', () => {
+                console.log('seatsPerRowInput changed:', seatsPerRowInput.value);
+                updateCalculations();
+            });
+            minSeatsPerRowInput.addEventListener('input', () => {
+                console.log('minSeatsPerRowInput changed:', minSeatsPerRowInput.value);
+                updateCalculations();
+            });
+
+            const importSeatsBtn = document.getElementById('importSeatsBtn');
+            if (importSeatsBtn) {
+                importSeatsBtn.addEventListener('click', function(e) {
+                    if (importSeatsBtn.disabled) {
+                        e.preventDefault();
+                        console.log('Import button disabled, showing alert');
+                        alert('Phòng đã đầy ghế, không thể import thêm!');
+                        return false;
+                    }
                     e.preventDefault();
-                    alert('Phòng đã đầy ghế, không thể import thêm!');
+                    console.log('Opening importSeatsConfirmModal');
+                    var modal = new bootstrap.Modal(document.getElementById('importSeatsConfirmModal'));
+                    modal.show();
+                    document.getElementById('confirmImportSeatsBtn').onclick = function() {
+                        console.log('Confirm import clicked');
+                        modal.hide();
+                        importSeatsBtn.form.submit();
+                    };
                     return false;
+                });
+            } else {
+                console.warn('importSeatsBtn not found in DOM');
+            }
+
+            seatForm.addEventListener('submit', function(e) {
+                console.log('seatForm submitted');
+                let totalPercentage = 0;
+                percentageInputs.forEach(input => {
+                    totalPercentage += parseFloat(input.value) || 0;
+                });
+                if (Math.abs(totalPercentage - 100) > 0.01) {
+                    e.preventDefault();
+                    console.log('Invalid total percentage:', totalPercentage);
+                    alert('Tổng tỷ lệ loại ghế phải bằng 100%.');
+                    return;
+                }
+                let seatTypeId = seatTypeHidden.value;
+                let percentageInput = document.getElementById('seat_type_percentages_' + seatTypeId);
+                let percentage = parseFloat(percentageInput.value) || 0;
+                let requiredSeats = Math.round((percentage / 100) * roomCapacity);
+                let currentTypeSeats = existingSeatsByType[seatTypeId] || 0;
+                let seatsToAdd = Math.min(requiredSeats - currentTypeSeats, remainingCapacity);
+                let seatsPerRow = parseInt(seatsPerRowInput.value) || 1;
+                let minSeatsPerRow = parseInt(minSeatsPerRowInput.value) || 1;
+                let rows = Math.ceil(seatsToAdd / seatsPerRow);
+                if (seatsPerRow < minSeatsPerRow) {
+                    e.preventDefault();
+                    console.log('seatsPerRow < minSeatsPerRow:', seatsPerRow, minSeatsPerRow);
+                    alert('Số ghế mỗi hàng phải ≥ số tối thiểu (' + minSeatsPerRow + ').');
+                    return;
+                }
+                if (seatsToAdd <= 0) {
+                    e.preventDefault();
+                    console.log('No seats to add:', seatsToAdd);
+                    alert('Không còn ghế cần thêm cho loại này.');
+                    return;
                 }
                 e.preventDefault();
-                var modal = new bootstrap.Modal(document.getElementById('importSeatsConfirmModal'));
-                modal.show();
-                document.getElementById('confirmImportSeatsBtn').onclick = function() {
-                    modal.hide();
-                    importSeatsBtn.form.submit();
-                };
-                return false;
-            });
-        }
-
-        // Modal xác nhận thêm ghế
-        seatForm.addEventListener('submit', function(e) {
-            let totalPercentage = 0;
-            percentageInputs.forEach(input => {
-                totalPercentage += parseFloat(input.value) || 0;
-            });
-            if (Math.abs(totalPercentage - 100) > 0.01) {
-                e.preventDefault();
-                alert('Tổng tỷ lệ loại ghế phải bằng 100%.');
-                return;
-            }
-            // Lấy lại dữ liệu mới nhất từ input khi mở modal xác nhận
-            let seatTypeId = seatTypeSelect.value;
-            let percentageInput = document.getElementById('seat_type_percentages_' + seatTypeId);
-            let percentage = parseFloat(percentageInput.value) || 0;
-            let requiredSeats = Math.round((percentage / 100) * roomCapacity);
-            let currentTypeSeats = existingSeatsByType[seatTypeId] || 0;
-            let seatsToAdd = Math.min(requiredSeats - currentTypeSeats, remainingCapacity);
-            let seatsPerRow = parseInt(seatsPerRowInput.value) || 1;
-            let minSeatsPerRow = parseInt(minSeatsPerRowInput.value) || 1;
-            let rows = Math.ceil(seatsToAdd / seatsPerRow);
-            // Chỉ chặn nếu số ghế mỗi hàng < tối thiểu hoặc seatsToAdd <= 0
-            if (seatsPerRow < minSeatsPerRow) {
-                e.preventDefault();
-                alert('Số ghế mỗi hàng phải ≥ số tối thiểu (' + minSeatsPerRow + ').');
-                return;
-            }
-            if (seatsToAdd <= 0) {
-                e.preventDefault();
-                alert('Không còn ghế cần thêm cho loại này.');
-                return;
-            }
-            // Cho phép thêm với mọi số ghế/hàng hợp lệ, chỉ cảnh báo dư ghế
-            e.preventDefault();
-            let previewHtml = '<p>Số ghế sẽ thêm: <strong>' + seatsToAdd + '</strong></p>';
-            previewHtml += '<p>Số ghế mỗi hàng: <strong>' + seatsPerRow + '</strong></p>';
-            previewHtml += '<p>Số hàng: <strong>' + rows + '</strong></p>';
-            let excessSeats = (rows * seatsPerRow) - seatsToAdd;
-            if (excessSeats > 0) {
-                previewHtml += '<p class="text-warning">Cảnh báo: Sẽ có ' + excessSeats + ' ghế dư do không chia hết số hàng.</p>';
-            }
-            previewHtml += '<div style="max-height:200px;overflow:auto;border:1px solid #eee;padding:8px;margin-top:8px;">';
-            for (let r = 1; r <= rows; r++) {
-                previewHtml += '<div>Hàng ' + r + ': ';
-                for (let s = 1; s <= seatsPerRow; s++) {
-                    let seatNum = (r - 1) * seatsPerRow + s;
-                    if (seatNum > seatsToAdd) break;
-                    previewHtml += '<span class="badge bg-primary mx-1">' + seatNum + '</span>';
+                let previewHtml = '<p>Số ghế sẽ thêm: <strong>' + seatsToAdd + '</strong></p>';
+                previewHtml += '<p>Số ghế mỗi hàng: <strong>' + seatsPerRow + '</strong></p>';
+                previewHtml += '<p>Số hàng: <strong>' + rows + '</strong></p>';
+                let excessSeats = (rows * seatsPerRow) - seatsToAdd;
+                if (excessSeats > 0) {
+                    previewHtml += '<p class="text-warning">Cảnh báo: Sẽ có ' + excessSeats + ' ghế dư do không chia hết số hàng.</p>';
+                }
+                previewHtml += '<div style="max-height:200px;overflow:auto;border:1px solid #eee;padding:8px;margin-top:8px;">';
+                for (let r = 1; r <= rows; r++) {
+                    previewHtml += '<div>Hàng ' + r + ': ';
+                    for (let s = 1; s <= seatsPerRow; s++) {
+                        let seatNum = (r - 1) * seatsPerRow + s;
+                        if (seatNum > seatsToAdd) break;
+                        previewHtml += '<span class="badge bg-primary mx-1">' + seatNum + '</span>';
+                    }
+                    previewHtml += '</div>';
                 }
                 previewHtml += '</div>';
-            }
-            previewHtml += '</div>';
-            document.getElementById('addSeatsPreview').innerHTML = previewHtml;
-            var modal = new bootstrap.Modal(document.getElementById('addSeatsConfirmModal'));
-            modal.show();
-            document.getElementById('confirmAddSeatsBtn').onclick = function() {
-                modal.hide();
-                seatForm.submit();
-            };
-        });
-
-        // Hiển thị modal thành công nếu có session
-        @if(session('import_success'))
-        setTimeout(function() {
-            document.getElementById('successModalBody').innerHTML = '{{ session('import_success') }}';
-            var modal = new bootstrap.Modal(document.getElementById('successModal'));
-            modal.show();
-        }, 300);
-        @endif
-        @if(session('add_success'))
-        setTimeout(function() {
-            document.getElementById('successModalBody').innerHTML = '{{ session('add_success') }}';
-            var modal = new bootstrap.Modal(document.getElementById('successModal'));
-            modal.show();
-        }, 300);
-        @endif
-        // Khởi động tính toán ban đầu
-        updateCalculations();
-
-        // Khi modal thành công đóng lại, luôn gọi lại updateCalculations để cập nhật đề xuất cho loại ghế tiếp theo
-        var successModalEl = document.getElementById('successModal');
-        if (successModalEl) {
-            successModalEl.addEventListener('hidden.bs.modal', function () {
-                setTimeout(function() {
-                    try {
-                        updateCalculations();
-                    } catch (e) {
-                        console.error('Lỗi updateCalculations:', e);
-                    }
-                }, 10);
+                document.getElementById('addSeatsPreview').innerHTML = previewHtml;
+                console.log('Opening addSeatsConfirmModal');
+                var modal = new bootstrap.Modal(document.getElementById('addSeatsConfirmModal'));
+                modal.show();
+                document.getElementById('confirmAddSeatsBtn').onclick = function() {
+                    console.log('Confirm add seats clicked');
+                    modal.hide();
+                    seatForm.submit();
+                };
             });
-        }
-    });
+
+            @if(session('import_success'))
+            setTimeout(function() {
+                console.log('Showing import_success modal');
+                document.getElementById('successModalBody').innerHTML = '{{ addslashes(session('import_success')) }}';
+                var modal = new bootstrap.Modal(document.getElementById('successModal'));
+                modal.show();
+            }, 300);
+            @endif
+            @if(session('add_success'))
+            setTimeout(function() {
+                console.log('Showing add_success modal');
+                document.getElementById('successModalBody').innerHTML = '{{ addslashes(session('add_success')) }}';
+                var modal = new bootstrap.Modal(document.getElementById('successModal'));
+                modal.show();
+            }, 300);
+            @endif
+
+            var successModalEl = document.getElementById('successModal');
+            if (successModalEl) {
+                successModalEl.addEventListener('hidden.bs.modal', function () {
+                    console.log('successModal hidden, running updateCalculations');
+                    setTimeout(function() {
+                        try {
+                            updateCalculations();
+                        } catch (e) {
+                            console.error('Lỗi updateCalculations:', e);
+                        }
+                    }, 10);
+                });
+            } else {
+                console.warn('successModal not found in DOM');
+            }
+
+            console.log('Calling initial updateCalculations');
+            updateCalculations();
+        });
+    } catch (error) {
+        console.error('Error in form script:', error);
+    }
 </script>
 @endpush
 

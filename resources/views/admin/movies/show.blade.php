@@ -118,12 +118,12 @@
                             </p>
                         </div>
                         <div class="col-lg-6">
-                            <p class="mb-0 fw-medium text-dark fs-16">Thời gian tạo: <span class="text-muted">{{ $movie->created_at->tz('Asia/Ho_Chi_Minh')->format('d/m/Y H:i') }}</span></p>
+                            <p class="mb-0 fw-medium text-dark fs-16">Thời gian tạo: <span class="text-muted">{{ $movie->created_at ? $movie->created_at->tz('Asia/Ho_Chi_Minh')->format('d/m/Y H:i') : 'N/A' }}</span></p>
                         </div>
                     </div>
                     <div class="row align-items-center g-2 mt-3">
                         <div class="col-lg-6">
-                            <p class="mb-0 fw-medium text-dark fs-16">Thời gian cập nhật: <span class="text-muted">{{ $movie->updated_at->tz('Asia/Ho_Chi_Minh')->format('d/m/Y H:i') }}</span></p>
+                            <p class="mb-0 fw-medium text-dark fs-16">Thời gian cập nhật: <span class="text-muted">{{ $movie->updated_at ? $movie->updated_at->tz('Asia/Ho_Chi_Minh')->format('d/m/Y H:i') : 'N/A' }}</span></p>
                         </div>
                     </div>
                     <h4 class="text-dark fw-medium mt-4">Mô tả:</h4>
@@ -357,7 +357,7 @@
                                                 {{ ucfirst($statusValue) }}
                                             </span>
                                         </td>
-                                        <td>{{ $showtime->created_at->tz('Asia/Ho_Chi_Minh')->format('d/m/Y H:i') }}</td>
+                                        <td>{{ $showtime->created_at ? $showtime->created_at->tz('Asia/Ho_Chi_Minh')->format('d/m/Y H:i') : 'N/A' }}</td>
                                         <td>
                                             <a href="{{ route('admin.showtimes.edit', $showtime->id) }}" class="btn btn-sm btn-outline-primary">
                                                 <i class="bx bx-edit fs-16"></i>

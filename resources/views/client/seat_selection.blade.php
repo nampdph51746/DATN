@@ -70,40 +70,40 @@
                 <div class="info-line text-gray-light"><strong>Tiền vé:</strong> <span id="total-ticket-price-summary">0 ₫</span></div>
 
                 <!-- Timer Section -->
-<div class="timer-section" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #333333;" id="timer-section">
-    <div style="text-align: center;">
-        <h2 style="color: #ffffff; font-size: 1.4em; margin-bottom: 16px; font-weight: bold;">Time Remaining</h2>
+                <div class="timer-section" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #333333;" id="timer-section">
+                    <div style="text-align: center;">
+                        <h2 style="color: #ffffff; font-size: 1.4em; margin-bottom: 16px; font-weight: bold;">Time Remaining</h2>
 
-        <div style="display: flex; justify-content: center; gap: 16px; margin-bottom: 10px;" id="timer-display">
-            <!-- Giờ -->
-            <div style="display: flex; flex-direction: column; align-items: center;">
-                <span id="hours-seat"
-                    style="background: #e5006e; color: #fff; padding: 10px 10px; border-radius: 6px; font-size: 1.6em; font-weight: bold; min-width: 45px; text-align: center;">
-                    00
-                </span>
-                <span style="margin-top: 6px; font-size: 0.95em; color: #ffffff;">Giờ</span>
-            </div>
+                        <div style="display: flex; justify-content: center; gap: 16px; margin-bottom: 10px;" id="timer-display">
+                            <!-- Giờ -->
+                            <div style="display: flex; flex-direction: column; align-items: center;">
+                                <span id="hours-seat"
+                                    style="background: #e5006e; color: #fff; padding: 10px 10px; border-radius: 6px; font-size: 1.6em; font-weight: bold; min-width: 45px; text-align: center;">
+                                    00
+                                </span>
+                                <span style="margin-top: 6px; font-size: 0.95em; color: #ffffff;">Giờ</span>
+                            </div>
 
-            <!-- Phút -->
-            <div style="display: flex; flex-direction: column; align-items: center;">
-                <span id="minutes-seat"
-                    style="background: #e5006e; color: #fff; padding: 10px 10px; border-radius: 6px; font-size: 1.6em; font-weight: bold; min-width: 45px; text-align: center;">
-                    09
-                </span>
-                <span style="margin-top: 6px; font-size: 0.95em; color: #ffffff;">Phút</span>
-            </div>
+                            <!-- Phút -->
+                            <div style="display: flex; flex-direction: column; align-items: center;">
+                                <span id="minutes-seat"
+                                    style="background: #e5006e; color: #fff; padding: 10px 10px; border-radius: 6px; font-size: 1.6em; font-weight: bold; min-width: 45px; text-align: center;">
+                                    09
+                                </span>
+                                <span style="margin-top: 6px; font-size: 0.95em; color: #ffffff;">Phút</span>
+                            </div>
 
-            <!-- Giây -->
-            <div style="display: flex; flex-direction: column; align-items: center;">
-                <span id="seconds-seat"
-                    style="background: #e5006e; color: #fff; padding: 10px 10px; border-radius: 6px; font-size: 1.6em; font-weight: bold; min-width: 45px; text-align: center;">
-                    19
-                </span>
-                <span style="margin-top: 6px; font-size: 0.95em; color: #ffffff;">Giây</span>
-            </div>
-        </div>
-    </div>
-</div>
+                            <!-- Giây -->
+                            <div style="display: flex; flex-direction: column; align-items: center;">
+                                <span id="seconds-seat"
+                                    style="background: #e5006e; color: #fff; padding: 10px 10px; border-radius: 6px; font-size: 1.6em; font-weight: bold; min-width: 45px; text-align: center;">
+                                    19
+                                </span>
+                                <span style="margin-top: 6px; font-size: 0.95em; color: #ffffff;">Giây</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
             </div>
         </div>

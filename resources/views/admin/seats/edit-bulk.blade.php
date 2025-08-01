@@ -15,12 +15,12 @@
                 </div>
                 <div class="card-footer bg-light-subtle">
                     <div class="row g-2">
-                        <div class="col-6">
-                            <button type="submit" form="bulkSeatForm" class="btn btn-primary w-100" {{ $seats->isEmpty() ? 'disabled' : '' }}>Lưu</button>
-                        </div>
-                        <div class="col-6">
-                            <a href="{{ route('admin.seats.index') }}" class="btn btn-outline-secondary w-100">Hủy</a>
-                        </div>
+                <div class="col-6">
+                    <button type="submit" form="bulkSeatForm" class="btn btn-primary w-100">Lưu</button>
+                </div>
+                <div class="col-6">
+                    <a href="{{ route('admin.rooms.show', $room->id) }}" class="btn btn-outline-secondary w-100">Hủy</a>
+                </div>
                     </div>
                 </div>
             </div>
@@ -43,32 +43,18 @@
                         </div>
                     @endif
 
-                    @if ($seats->isEmpty())
-                        <div class="alert alert-warning">
-                            Không có ghế nào được chọn để chỉnh sửa.
-                        </div>
-                    @else
-                        <form id="bulkSeatForm" action="{{ route('admin.seats.bulkUpdate') }}" method="POST">
+                        @if ($seats->isEmpty())
+                            <div class="alert alert-warning">
+                                Không có ghế nào được chọn. Vui lòng quay lại và chọn ít nhất một ghế.
+                            </div>
+                        @else
+                        <form id="bulkSeatForm" action="{{ route('admin.seats.update-bulk') }}" method="POST">
                             @csrf
-                            @method('PUT')
+                            <input type="hidden" name="room_id" value="{{ $room->id }}">
 
                             <div class="mb-4">
                                 <h5 class="text-dark fw-semibold">Tùy chọn áp dụng cho tất cả ghế</h5>
                                 <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label class="form-label">Loại ghế mới</label>
-                                            <select name="seat_type_id" class="form-control">
-                                                <option value="">-- Không thay đổi --</option>
-                                                @foreach ($seatTypes as $seatType)
-                                                    <option value="{{ $seatType->id }}">{{ $seatType->name }}</option>
-                                                @endforeach
-                                            </select>
-                                            @error('seat_type_id')
-                                                <span class="text-danger">{{ $message }}</span>
-                                            @enderror
-                                        </div>
-                                    </div>
                                     <div class="col-md-6">
                                         <div class="mb-3">
                                             <label class="form-label">Trạng thái mới</label>
@@ -76,8 +62,7 @@
                                                 <option value="">-- Không thay đổi --</option>
                                                 <option value="available">Available</option>
                                                 <option value="booked">Booked</option>
-                                                <option value="sold">Sold</option>
-                                                <option value="broken">Broken</option>
+                                                <option value="maintenance">Maintenance</option>
                                             </select>
                                             @error('status')
                                                 <span class="text-danger">{{ $message }}</span>
@@ -90,19 +75,18 @@
                             <hr class="my-4">
 
                             <h5 class="text-dark fw-medium">Danh sách ghế được cập nhật</h5>
-                            <div class="row">
-                                @foreach ($seats as $index => $seat)
-                                    <input type="hidden" name="seat_ids[]" value="{{ $seat->id }}">
-                                    <div class="col-md-6 mb-3">
-                                        <div class="border rounded p-3">
-                                            <strong>{{ $seat->row_char }}{{ $seat->seat_number }}</strong><br>
-                                            Phòng: {{ $seat->room->name ?? 'N/A' }}<br>
-                                            Hiện tại: 
-                                            <span class="badge bg-info">{{ $seat->seatType->name ?? 'Không rõ' }}</span>, 
-                                            <span class="badge bg-secondary">{{ ucfirst($seat->status->value) }}</span>
+                            <div class="mb-3">
+                                <p><strong>Số ghế được chọn:</strong> {{ $seats->count() }}</p>
+                                <div class="seat-preview" style="max-height: 200px; overflow: auto; border: 1px solid #eee; padding: 8px;">
+                                    @foreach ($seats->groupBy('row_char') as $rowChar => $seatsInRow)
+                                        <div><strong>Hàng {{ $rowChar }}:</strong>
+                                            @foreach ($seatsInRow as $seat)
+                                                <input type="hidden" name="seat_ids[]" value="{{ $seat->id }}">
+                                                <span class="badge bg-primary mx-1">{{ $seat->row_char }}{{ $seat->seat_number }}</span>
+                                            @endforeach
                                         </div>
-                                    </div>
-                                @endforeach
+                                    @endforeach
+                                </div>
                             </div>
                         </form>
                     @endif

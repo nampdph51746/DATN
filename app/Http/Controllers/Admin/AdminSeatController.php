@@ -337,17 +337,19 @@ class AdminSeatController extends Controller
         $seat = Seat::findOrFail($id);
 
         $request->validate([
-            'seat_type_id' => 'required|exists:seat_types,id',
-            'status' => 'required|in:available,reserved,booked',
+            'status' => 'required|in:' . implode(',', array_column(SeatStatus::cases(), 'value')),
         ]);
 
+        \Log::info('Updating seat ' . $id . ' with status: ' . $request->input('status'));
+
         $seat->update([
-            'seat_type_id' => $request->input('seat_type_id'),
             'status' => $request->input('status'),
         ]);
 
+        \Log::info('Saved seat status: ' . $seat->status->value);
+
         $roomId = $seat->room_id;
-        return redirect()->route('admin.rooms.show', $roomId)->with('success', 'Ghế đã được cập nhật thành công!');
+        return redirect()->route('admin.rooms.show', $roomId)->with('success', 'Trạng thái ghế đã được cập nhật thành công!');
     }
 
     public function show($id)
@@ -418,53 +420,49 @@ class AdminSeatController extends Controller
     public function editBulk(Request $request)
     {
         $seatIds = $request->input('seat_ids', []);
+        $roomId = $request->input('room_id');
         
         if (empty($seatIds)) {
-            return redirect()->route('admin.seats.index')->with('error', 'Vui lòng chọn ít nhất một ghế để chỉnh sửa.');
+            return redirect()->route('admin.rooms.show', $roomId)->with('error', 'Vui lòng chọn ít nhất một ghế để chỉnh sửa.');
         }
 
         $seats = Seat::with('room', 'seatType')->whereIn('id', $seatIds)->get();
         $seatTypes = SeatType::all();
+        $room = Room::findOrFail($roomId);
+        $allowedSeatTypes = $room->allowedSeatTypes();
 
-        return view('admin.seats.edit-bulk', compact('seats', 'seatTypes'));
+        return view('admin.seats.edit-bulk', compact('seats', 'seatTypes', 'room', 'allowedSeatTypes'));
     }
 
     public function updateBulk(Request $request)
     {
-        $request->validate([
-            'status' => 'nullable|string|in:available,booked,sold,broken',
-        ]);
-        $seatIds = $request->input('seat_ids', []);
-        $seatTypeId = $request->input('seat_type_id');
-        $status = $request->input('status');
+    $request->validate([
+        'seat_ids' => 'required|array',
+        'seat_ids.*' => 'exists:seats,id',
+        'status' => 'nullable|string|in:' . implode(',', array_column(\App\Enums\SeatStatus::cases(), 'value')),
+        'room_id' => 'required|exists:rooms,id',
+    ], [
+        'seat_ids.required' => 'Vui lòng chọn ít nhất một ghế.',
+        'seat_ids.*.exists' => 'Một hoặc nhiều ghế không tồn tại.',
+        'status.in' => 'Trạng thái không hợp lệ.',
+        'room_id.required' => 'Phòng chiếu là bắt buộc.',
+        'room_id.exists' => 'Phòng chiếu không tồn tại.',
+    ]);
 
-        if (empty($seatIds)) {
-            return redirect()->route('admin.seats.index')->with('error', 'Không có ghế nào được chọn để cập nhật.');
-        }
+    $seatIds = $request->input('seat_ids', []);
+    $status = $request->input('status');
+    $roomId = $request->input('room_id');
 
-        DB::transaction(function () use ($seatIds, $seatTypeId, $status) {
-            foreach ($seatIds as $seatId) {
-                $seat = Seat::find($seatId);
-                if ($seat) {
-                    if ($seatTypeId) {
-                        $seat->seat_type_id = $seatTypeId;
-                    }
-                    if ($status) {
-                        $seat->status = $status;
-                    }
-                    $seat->save();
-                }
-            }
-        });
+    $room = Room::findOrFail($roomId);
 
-        $firstSeat = Seat::find($seatIds[0]);
-        $roomId = ($firstSeat && !empty($firstSeat->room_id)) ? $firstSeat->room_id : null;
-        \Log::info('Redirect roomId: ' . print_r($roomId, true));
-        if ($roomId && is_numeric($roomId) && $roomId > 0) {
-            return redirect()->route('admin.rooms.show', ['room' => $roomId])->with('success', 'Cập nhật hàng loạt ghế thành công!');
-        }
-        return redirect()->route('admin.seats.index')->with('success', 'Cập nhật hàng loạt ghế thành công!');
-    }
+    DB::transaction(function () use ($seatIds, $status) {
+        Seat::whereIn('id', $seatIds)->update(array_filter([
+            'status' => $status,
+        ]));
+    });
+
+    return redirect()->route('admin.rooms.show', ['room' => $roomId])->with('success', 'Cập nhật hàng loạt ' . count($seatIds) . ' ghế thành công!');
+}
 
     public function importExcel(Request $request)
     {
