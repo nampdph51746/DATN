@@ -73,17 +73,15 @@ Route::post('/checkout/preview', [CheckoutController::class, 'previewBooking'])-
 Route::get('/payment-success', [PaymentSuccessController::class, 'show'])->name('client.success');
 Route::get('/payment-failed', function () {
     return view('client.failed');
-})->name('client.failed');  
+})->name('client.failed');
 
 // Dashboard
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/admin/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
 
 // =======================
 // PROFILE ROUTES
 // =======================
-Route::middleware(['auth'])->group(function (){
+Route::middleware(['auth'])->group(function () {
     Route::get('/profile', [App\Http\Controllers\Auth\AuthenticatedSessionController::class, 'profile'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
@@ -301,9 +299,6 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
         Route::resource('combos', ComboController::class)->names('combos');
         Route::get('products/{id}/variants', [AdminProductController::class, 'getVariants'])->name('products.variants');
     });
-
-    Route::get('/admin/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
-
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

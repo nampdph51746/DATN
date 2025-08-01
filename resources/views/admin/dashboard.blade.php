@@ -45,14 +45,16 @@
     <p class="mb-3">
         <strong>
             @if (request('type', 'day') == 'day')
-                Thống kê hôm nay ({{ now()->format('d/m/Y') }})
+                Thống kê hôm nay ({{ request('date', now()->format('d/m/Y')) }})
             @elseif(request('type') == 'month')
-                Thống kê tháng {{ now()->format('m/Y') }}
+                Thống kê tháng {{ request('month', now()->format('m')) }}/{{ request('year', now()->format('Y')) }}
             @else
-                Thống kê năm {{ now()->format('Y') }}
+                Thống kê năm {{ request('year', now()->format('Y')) }}
             @endif
         </strong>
     </p>
+
+
 
     <div class="container-fluid">
         <div class="card mt-4">
@@ -79,7 +81,12 @@
                                     <td>Tổng số đơn</td>
                                     <td><strong>{{ number_format($totalBookings) }}</strong></td>
                                 </tr>
-
+                                @if (request('type', 'day') == 'day')
+                                    <tr>
+                                        <td>Doanh thu ngày</td>
+                                        <td><strong>{{ number_format($totalRevenue ?? 0, 0) }} VNĐ</strong></td>
+                                    </tr>
+                                @endif
                                 @if (request('type') == 'month' || request('type') == 'year')
                                     <tr>
                                         <td>Doanh thu tháng</td>
@@ -125,7 +132,12 @@
                                     <td>Tổng số thanh toán</td>
                                     <td><strong>{{ number_format($totalPayments) }}</strong></td>
                                 </tr>
-
+                                @if (request('type', 'day') == 'day')
+                                    <tr>
+                                        <td>Thanh toán trong ngày</td>
+                                        <td><strong>{{ number_format($totalAmountPaid, 0) }} VNĐ</strong></td>
+                                    </tr>
+                                @endif
                                 @if (request('type') == 'month')
                                     <tr>
                                         <td>Thanh toán trong tháng</td>
