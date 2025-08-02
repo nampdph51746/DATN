@@ -231,10 +231,13 @@ Route::prefix('admin/payment_methods')->group(function () {
     Route::put('/{paymentMethod}/update-status', [PaymentMethodController::class, 'updateStatus'])->name('payment_methods.updateStatus');
 });
 
+
 Route::get('admin/bookings', [BookingController::class, 'index'])->name('admin.bookings.index');
 Route::get('admin/bookingShow/{id}', [BookingController::class, 'show'])->name('admin.bookings.show');
 Route::get('admin/bookings/{booking}/edit-status', [BookingController::class, 'editStatus'])->name('admin.bookings.editStatus');
 Route::put('admin/bookings/{booking}/update-status', [BookingController::class, 'updateStatus'])->name('admin.bookings.updateStatus');
+// Route in vé PDF cho booking
+Route::get('admin/bookings/{id}/print', [BookingController::class, 'print'])->name('admin.bookings.print');
 
 
 

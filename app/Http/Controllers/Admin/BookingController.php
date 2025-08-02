@@ -5,13 +5,14 @@ namespace App\Http\Controllers\Admin;
 use App\Models\Point;
 use App\Models\Booking;
 use App\Enums\BookingStatus;
+use App\Models\Notification;
 use App\Models\PointHistory;
 use Illuminate\Http\Request;
+use App\Enums\NotificationType;
+use App\Services\QrcodeService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Validation\Rule;
 use App\Http\Controllers\Controller;
-
-use App\Models\Notification;
-use App\Enums\NotificationType;
 use Illuminate\Support\Facades\Auth;
 
 class BookingController extends Controller
@@ -127,5 +128,45 @@ class BookingController extends Controller
         }
 
         return redirect()->route('admin.bookings.index')->with('success', 'Cập nhật trạng thái thành công.');
+    }
+    public function print($id)
+    {
+        $booking = Booking::with([
+            'tickets.showtime.movie',
+            'tickets.showtime.room',
+            'tickets.seat',
+            'bookingItems.productVariant.product',
+            'user',
+        ])->findOrFail($id);
+
+        $tickets = $booking->tickets;
+        $foodDrinks = $booking->bookingItems;
+
+        // Sinh QR code cho từng vé
+        $qrService = app(QrcodeService::class);
+        $ticketQRCodes = [];
+        foreach ($tickets as $ticket) {
+            $qrText = 'TICKET|' . $ticket->id . '|' . $ticket->seat_id . '|' . $ticket->ticket_code;
+            $qrCodeRaw = $qrService->generateQrCode($qrText, 120);
+            $ticketQRCodes[$ticket->id] = $qrCodeRaw ? 'data:image/png;base64,' . $qrCodeRaw : null;
+        }
+
+        // QR code cho food/drink chung
+        $foodDrinksQRCode = null;
+        if ($foodDrinks && $foodDrinks->count() > 0) {
+            $qrText = 'FOOD|' . $booking->id . '|' . json_encode($foodDrinks->toArray());
+            $qrCodeRaw = $qrService->generateQrCode($qrText, 120);
+            $foodDrinksQRCode = $qrCodeRaw ? 'data:image/png;base64,' . $qrCodeRaw : null;
+        }
+
+        $pdf = PDF::loadView('admin.bookings.print', [
+            'booking' => $booking,
+            'tickets' => $tickets,
+            'foodDrinks' => $foodDrinks,
+            'ticketQRCodes' => $ticketQRCodes,
+            'foodDrinksQRCode' => $foodDrinksQRCode,
+        ]);
+
+        return $pdf->stream('ve-dat-'. $booking->booking_code .'.pdf');
     }
 }
