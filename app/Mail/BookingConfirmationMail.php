@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+
 use App\Models\Booking;
 use App\Services\QrcodeService;
 use Illuminate\Bus\Queueable;
@@ -21,14 +22,28 @@ class BookingConfirmationMail extends Mailable
     /**
      * Create a new message instance.
      */
+    public $ticketQrs = [];
+    public $foodQr = null;
+
     public function __construct(Booking $booking)
     {
         $this->booking = $booking;
-        
-        // Tạo QR code cho booking
         $qrcodeService = new QrcodeService();
         $this->qrcode = $qrcodeService->generateQrCode($booking->booking_code);
-        
+
+        // QR cho từng vé (ghế)
+        if (method_exists($booking, 'tickets')) {
+            foreach ($booking->tickets as $ticket) {
+                $qrText = 'TICKET|' . $ticket->id . '|' . $ticket->seat_id . '|' . $ticket->ticket_code;
+                $this->ticketQrs[$ticket->id] = $qrcodeService->generateQrCode($qrText);
+            }
+        }
+
+        // QR cho combo đồ ăn/uống
+        if (method_exists($booking, 'bookingItems') && $booking->bookingItems->count() > 0) {
+            $foodText = 'FOOD|' . $booking->id . '|' . json_encode($booking->bookingItems->toArray());
+            $this->foodQr = $qrcodeService->generateQrCode($foodText);
+        }
     }
 
     /**
@@ -51,6 +66,8 @@ class BookingConfirmationMail extends Mailable
             with: [
                 'booking' => $this->booking,
                 'qrcode' => $this->qrcode,
+                'ticketQrs' => $this->ticketQrs,
+                'foodQr' => $this->foodQr,
             ]
         );
     }

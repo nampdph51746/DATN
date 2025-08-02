@@ -179,9 +179,6 @@
                 <h3 class="mb-3 text-primary">📋 Thông tin đặt vé</h3>
                 
 
-                @php
-                use App\Services\QrcodeService;
-                @endphp
                 @foreach($booking->tickets as $ticket)
                 <div class="ticket-card" style="position:relative;">
                     <h4 class="mb-3 text-dark">{{ $ticket->showtime->movie->name }}</h4>
@@ -210,12 +207,8 @@
                         <span class="value">{{ number_format($ticket->price_at_purchase, 0, ',', '.') }} VNĐ</span>
                     </div>
                     <div style="position:absolute; bottom:12px; right:12px; text-align:right;">
-                        @php
-                            $qrText = 'TICKET|' . $ticket->id . '|' . $ticket->seat_id . '|' . $ticket->ticket_code;
-                            $qrBase64 = (new QrcodeService())->generateQrCode($qrText);
-                        @endphp
-                        @if($qrBase64)
-                        <img src="data:image/png;base64,{{ $qrBase64 }}" alt="QR Vé" style="width:80px; height:80px; border:1px solid #e2e8f0; border-radius:6px; background:#fff;">
+                        @if(!empty($ticketQrs[$ticket->id]))
+                        <img src="data:image/png;base64,{{ $ticketQrs[$ticket->id] }}" alt="QR Vé" style="width:80px; height:80px; border:1px solid #e2e8f0; border-radius:6px; background:#fff;">
                         <div style="font-size:10px; color:#888;">Vé #{{ $ticket->id }}</div>
                         @endif
                     </div>
@@ -234,12 +227,8 @@
                     </div>
                     @endforeach
                     <div style="position:absolute; bottom:12px; right:12px; text-align:right;">
-                        @php
-                            $foodText = 'FOOD|' . $booking->id . '|' . json_encode($booking->bookingItems->toArray());
-                            $foodQrBase64 = (new QrcodeService())->generateQrCode($foodText);
-                        @endphp
-                        @if($foodQrBase64)
-                        <img src="data:image/png;base64,{{ $foodQrBase64 }}" alt="QR Combo" style="width:80px; height:80px; border:1px solid #e2e8f0; border-radius:6px; background:#fff;">
+                        @if(!empty($foodQr))
+                        <img src="data:image/png;base64,{{ $foodQr }}" alt="QR Combo" style="width:80px; height:80px; border:1px solid #e2e8f0; border-radius:6px; background:#fff;">
                         <div style="font-size:10px; color:#888;">Combo</div>
                         @endif
                     </div>
