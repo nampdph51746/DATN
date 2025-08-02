@@ -3,45 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quét Mã Barcode - Hệ Thống Rạp Chiếu Phim</title>
+    <title>Quét QR Code - Hệ Thống Rạp Chiếu Phim</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://rawgit.com/schmich/instascan-builds/master/instascan.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
 </head>
 <body class="bg-gray-100">
-    <div class="container mx-auto px-4 py-8">
-        <div class="max-w-2xl mx-auto">
-            <h1 class="text-3xl font-bold text-center mb-8 text-gray-800">Quét Mã Vé</h1>
-            
+    <div class="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-green-100 py-8 px-2">
+        <div class="w-full max-w-xl bg-white rounded-2xl shadow-2xl p-8 relative">
+            <h1 class="text-4xl font-extrabold text-center mb-8 text-blue-700 tracking-tight">Quét QR Code Vé Xem Phim</h1>
+            <!-- Toast thông báo -->
+            <div id="toast" class="hidden fixed top-6 left-1/2 transform -translate-x-1/2 z-50 px-6 py-3 rounded-lg font-semibold shadow-lg text-white bg-green-600 animate-fade-in"></div>
             <!-- Form nhập mã -->
-            <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
-                <h2 class="text-xl font-semibold mb-4">Nhập Mã Booking</h2>
-                <div class="flex gap-4">
-                    <input type="text" 
-                           id="bookingCode" 
-                           placeholder="Nhập mã booking (VD: BK1754063915)"
-                           class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <button onclick="scanBarcode()" 
-                            class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        Quét Vé
-                    </button>
+            <div class="flex flex-col gap-4 mb-6">
+                <label for="bookingCode" class="text-lg font-medium text-gray-700">Nhập mã booking hoặc quét QR</label>
+                <div class="flex gap-2">
+                    <input type="text" id="bookingCode" placeholder="VD: BK1754063915" class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-lg">
+                    <button onclick="scanBarcode()" class="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold shadow hover:bg-blue-700 transition">Quét Vé</button>
                 </div>
-                <button onclick="checkStatus()" 
-                        class="mt-3 px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500">
-                    Kiểm Tra Trạng Thái
-                </button>
+                <div class="flex gap-2">
+                    <button onclick="openQrModal()" class="flex-1 px-6 py-3 bg-green-500 text-white rounded-lg font-semibold shadow hover:bg-green-600 transition">Quét QR Code</button>
+                    <button onclick="downloadQrImage()" class="flex-1 px-6 py-3 bg-purple-500 text-white rounded-lg font-semibold shadow hover:bg-purple-600 transition">Tải Ảnh QR</button>
+                </div>
+                <button onclick="checkStatus()" class="w-full px-6 py-3 bg-gray-500 text-white rounded-lg font-semibold shadow hover:bg-gray-600 transition">Kiểm Tra Trạng Thái</button>
             </div>
-
             <!-- Kết quả -->
-            <div id="result" class="hidden bg-white rounded-lg shadow-lg p-6">
-                <h2 class="text-xl font-semibold mb-4">Kết Quả</h2>
+            <div id="result" class="hidden bg-gray-50 rounded-xl shadow-inner p-6 mt-4">
+                <h2 class="text-2xl font-bold mb-4 text-blue-700">Kết Quả</h2>
                 <div id="resultContent"></div>
             </div>
-
             <!-- Thông báo lỗi -->
-            <div id="error" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+            <div id="error" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mt-4">
                 <div id="errorContent"></div>
             </div>
+        </div>
+    </div>
+
+    <!-- Modal quét QR -->
+    <div id="qrModal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 relative w-full max-w-md border-2 border-blue-200">
+            <button onclick="closeQrModal()" class="absolute top-3 right-3 text-gray-400 hover:text-red-500 text-3xl font-bold">&times;</button>
+            <h2 class="text-2xl font-bold mb-4 text-blue-700 text-center">Quét QR Code</h2>
+            <div id="qr-reader" class="rounded-lg overflow-hidden border border-blue-200 mx-auto" style="width: 320px"></div>
+            <p class="mt-4 text-center text-gray-500 text-sm">Đưa mã QR vào khung camera để quét tự động</p>
         </div>
     </div>
 
@@ -68,7 +74,7 @@
             $('#result').removeClass('hidden').html('<div class="flex items-center justify-center"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div><span class="ml-2">Đang xử lý...</span></div>');
 
             $.ajax({
-                url: '/api/barcode/scan',
+                url: '/api/qr/scan',
                 method: 'POST',
                 data: {
                     booking_code: bookingCode
@@ -102,7 +108,7 @@
             $('#result').removeClass('hidden').html('<div class="flex items-center justify-center"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div><span class="ml-2">Đang kiểm tra...</span></div>');
 
             $.ajax({
-                url: '/api/barcode/check-status',
+                url: '/api/qr/check-status',
                 method: 'POST',
                 data: {
                     booking_code: bookingCode
@@ -247,6 +253,60 @@
                 scanBarcode();
             }
         });
+
+        // QR Modal functions
+        function showToast(message, color = 'bg-green-600') {
+            const toast = $('#toast');
+            toast.removeClass().addClass(`fixed top-6 left-1/2 transform -translate-x-1/2 z-50 px-6 py-3 rounded-lg font-semibold shadow-lg text-white ${color}`)
+                .text(message).fadeIn(200);
+            setTimeout(() => toast.fadeOut(400), 1800);
+        }
+
+        function openQrModal() {
+            $('#qrModal').removeClass('hidden');
+            if (!window.html5QrCode) {
+                window.html5QrCode = new Html5Qrcode("qr-reader");
+            }
+            window.html5QrCode.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: 250 },
+                qrCodeMessage => {
+                    showToast('Đã quét QR thành công!');
+                    $('#bookingCode').val(qrCodeMessage);
+                    setTimeout(() => {
+                        closeQrModal();
+                        scanBarcode();
+                    }, 900);
+                },
+                errorMessage => {
+                    // ignore scan errors
+                }
+            );
+        }
+
+        function closeQrModal() {
+            $('#qrModal').addClass('hidden');
+            if (window.html5QrCode) {
+                window.html5QrCode.stop().catch(() => {});
+            }
+        }
+
+        // Tải ảnh QR code cho bookingCode hiện tại
+        function downloadQrImage() {
+            const bookingCode = $('#bookingCode').val().trim();
+            if (!bookingCode) {
+                showError('Vui lòng nhập mã booking để tạo QR');
+                return;
+            }
+            // Sử dụng API miễn phí để tạo QR code
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(bookingCode)}`;
+            const link = document.createElement('a');
+            link.href = qrUrl;
+            link.download = `qr_${bookingCode}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
     </script>
 </body>
 </html>

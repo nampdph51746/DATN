@@ -2,12 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\BarcodeService;
 use App\Services\TicketScanService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
-class BarcodeController extends Controller
+class QrCodeController extends Controller
 {
     protected $ticketScanService;
 
@@ -17,9 +16,9 @@ class BarcodeController extends Controller
     }
 
     /**
-     * Quét mã barcode và cập nhật trạng thái vé
+     * Quét mã QR và cập nhật trạng thái vé
      */
-    public function scanBarcode(Request $request): JsonResponse
+    public function scanQr(Request $request): JsonResponse
     {
         try {
             $request->validate([

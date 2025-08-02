@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\QrCodeController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\CityController;
 use App\Http\Controllers\Admin\RoleController;
@@ -25,6 +26,7 @@ use App\Http\Controllers\Admin\PromotionController;
 use App\Http\Controllers\Client\CheckoutController;
 use App\Http\Controllers\Admin\AdminProductController;
 use App\Http\Controllers\Admin\CustomerRankController;
+use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\Admin\PointHistoryController;
 use App\Http\Controllers\Admin\AdminSeatTypeController;
 use App\Http\Controllers\Admin\PaymentMethodController;
@@ -35,7 +37,6 @@ use App\Http\Controllers\Admin\AdminAttributeValueController;
 use App\Http\Controllers\Admin\AdminProductVariantController;
 use App\Http\Controllers\Admin\CustomerRankPromotionController;
 use App\Http\Controllers\Admin\AdminProductCategoriesController;
-use App\Http\Controllers\Admin\NotificationController;
 
 Route::get('/', [HomeController::class, 'index'])->name('client.home');
 Route::get('/movies', [HomeController::class, 'movies'])->name('client.movies');
@@ -283,15 +284,15 @@ Route::prefix('admin')->name('admin.')->group(function () {
 //     ]);
 // });
 
-// Barcode scanning routes
-Route::prefix('api/barcode')->group(function () {
-    Route::post('/scan', [App\Http\Controllers\BarcodeController::class, 'scanBarcode'])->name('barcode.scan');
-    Route::post('/check-status', [App\Http\Controllers\BarcodeController::class, 'checkTicketStatus'])->name('barcode.check');
+// QR code scanning routes
+Route::prefix('api/qr')->group(function () {
+    Route::post('/scan', [QrCodeController::class, 'scanQr'])->name('qr.scan');
+    Route::post('/check-status', [QrCodeController::class, 'checkTicketStatus'])->name('qr.check');
 });
 
-// Trang quét barcode cho nhân viên
-Route::get('/barcode-scanner', function () {
-    return view('barcode-scanner');
-})->name('barcode.scanner');
+// Trang quét QR code cho nhân viên
+Route::get('/qr-scanner', function () {
+    return view('Qrcode-scanner'); // Nếu bạn đổi tên view thành qr-scanner thì sửa lại ở đây
+})->name('qr.scanner');
 
 require __DIR__.'/auth.php';
