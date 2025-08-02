@@ -104,20 +104,29 @@
                                 $backgroundColor = $seat->seatType->color_code ?? '#28a745';
                                 $textColor = (isset($seat->seatType->color_code) && strtolower($seat->seatType->color_code) == '#ffd700') ? 'black' : 'white';
                                 $isBooked = $displayStatus === 'booked';
+                                
+                                // Determine CSS classes
+                                $cssClasses = 'seat';
+                                if ($displayStatus == 'booked') {
+                                    $cssClasses .= ' seat-booked';
+                                } elseif ($displayStatus == 'reserved') {
+                                    $cssClasses .= ' seat-reserved';
+                                }
+                                
+                                // Determine inline styles
+                                $inlineStyles = 'cursor: ' . ($isBooked ? 'not-allowed' : 'pointer') . '; position: relative;';
+                                if ($displayStatus == 'available') {
+                                    $inlineStyles .= ' background-color: ' . $backgroundColor . '; color: ' . $textColor . ';';
+                                }
                             @endphp
-                            <div class="seat
-                                @if ($displayStatus == 'booked') seat-booked
-                                @elseif ($displayStatus == 'reserved') seat-reserved
-                                @else
-                                @endif"
-                                @if ($displayStatus == 'available')
-                                    style="background-color: {{ $backgroundColor }}; color: {{ $textColor }}"
-                                @endif
+                            <div class="{{ $cssClasses }}"
+                                style="{{ $inlineStyles }}"
                                 data-seat-id="{{ $seat->id }}"
+                                data-row-char="{{ $row }}"
+                                data-seat-number="{{ $i }}"
                                 title="{{ $row }}{{ $seatNumber }} ({{ htmlspecialchars($seatTypeName, ENT_QUOTES, 'UTF-8') }}, {{ ucfirst($displayStatus) }})"
                                 data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true"
                                 data-bs-title="Ghế: {{ $row }}{{ $seatNumber }}<br>Loại: {{ htmlspecialchars($seatTypeName, ENT_QUOTES, 'UTF-8') }}<br>Trạng thái: {{ ucfirst($displayStatus) }}"
-                                style="cursor: {{ $isBooked ? 'not-allowed' : 'pointer' }}; position: relative;"
                                 @if ($isBooked) onclick="event.preventDefault(); return false;" @endif>
                                 <input type="checkbox" name="seat_ids[]" value="{{ $seat->id }}" class="seat-checkbox" style="position: absolute; top: 5px; left: 5px; z-index: 10;" @if ($isBooked) disabled @endif>
                                 {{ $row }}{{ $seatNumber }}
@@ -128,8 +137,25 @@
                     <p class="mt-2">Số ghế hiện có: {{ $seats->count() }} / {{ $room->capacity }} (Còn lại: {{ $room->capacity - $seats->count() }})</p>
                     <button type="submit" class="btn btn-warning mt-2" id="bulkEditBtn" disabled>Chỉnh sửa hàng loạt</button>
                 </form>
+
+                @php
+                    // Xử lý dữ liệu ghế đôi trước khi truyền vào JavaScript
+                    $coupleSeatsIds = $seats->filter(function($seat) {
+                        return $seat->seatType && (str_contains(strtolower($seat->seatType->name), 'couple') || 
+                               str_contains(strtolower($seat->seatType->name), 'sweetbox') || 
+                               str_contains(strtolower($seat->seatType->name), 'bed') ||
+                               str_contains(strtolower($seat->seatType->name), 'sofa'));
+                    })->pluck('id')->toArray();
+                @endphp
+
                 <script>
                     console.log('Seat script loaded');
+                    
+                    // Dữ liệu ghế đôi từ server
+                    const coupleSeatsData = @json($coupleSeatsIds);
+                    
+                    console.log('Couple seats data:', coupleSeatsData);
+                    
                     try {
                         document.addEventListener('DOMContentLoaded', function () {
                             console.log('DOM fully loaded - Seat script');
@@ -138,6 +164,43 @@
                             const bulkEditBtn = document.getElementById('bulkEditBtn');
                             console.log('Found seats:', seats.length, 'Found checkboxes:', seatCheckboxes.length);
 
+                            // Thêm CSS cho animation
+                            const style = document.createElement('style');
+                            style.textContent = `
+                                .couple-auto-selected {
+                                    animation: pulseCouple 1s ease-in-out;
+                                    border: 2px solid #f39c12 !important;
+                                }
+                                @keyframes pulseCouple {
+                                    0% { transform: scale(1); }
+                                    50% { transform: scale(1.1); box-shadow: 0 0 15px rgba(243, 156, 18, 0.7); }
+                                    100% { transform: scale(1); }
+                                }
+                            `;
+                            document.head.appendChild(style);
+
+                            // Map ghế theo cặp đôi (A1-A2, A3-A4, etc.)
+                            const couplePairs = {};
+                            coupleSeatsData.forEach(seatId => {
+                                const seatElement = document.querySelector(`[data-seat-id="${seatId}"]`);
+                                if (seatElement) {
+                                    const rowChar = seatElement.dataset.rowChar;
+                                    const seatNumber = parseInt(seatElement.dataset.seatNumber);
+                                    
+                                    if (seatNumber % 2 === 1) {
+                                        // Ghế lẻ, tìm ghế chẵn kế tiếp
+                                        const partnerSeatNumber = seatNumber + 1;
+                                        const partnerElement = document.querySelector(`[data-row-char="${rowChar}"][data-seat-number="${partnerSeatNumber}"]`);
+                                        if (partnerElement && coupleSeatsData.includes(parseInt(partnerElement.dataset.seatId))) {
+                                            couplePairs[seatId] = parseInt(partnerElement.dataset.seatId);
+                                            couplePairs[partnerElement.dataset.seatId] = seatId;
+                                        }
+                                    }
+                                }
+                            });
+                            
+                            console.log('Couple pairs mapping:', couplePairs);
+
                             // Cập nhật trạng thái nút "Chỉnh sửa hàng loạt"
                             function updateBulkEditButton() {
                                 const checkedCount = document.querySelectorAll('.seat-checkbox:checked').length;
@@ -145,10 +208,37 @@
                                 console.log('Checked seats:', checkedCount, 'Bulk edit button disabled:', bulkEditBtn.disabled);
                             }
 
+                            // Xử lý chọn ghế đôi tự động
+                            function handleCoupleSelection(checkbox, isChecked) {
+                                const seatId = parseInt(checkbox.value);
+                                const partnerId = couplePairs[seatId];
+                                
+                                if (partnerId) {
+                                    const partnerCheckbox = document.querySelector(`.seat-checkbox[value="${partnerId}"]`);
+                                    if (partnerCheckbox && partnerCheckbox.checked !== isChecked) {
+                                        partnerCheckbox.checked = isChecked;
+                                        console.log(`Auto-${isChecked ? 'selected' : 'deselected'} couple partner seat ${partnerId} for seat ${seatId}`);
+                                        
+                                        // Thêm visual feedback
+                                        const partnerSeat = partnerCheckbox.closest('.seat');
+                                        if (partnerSeat) {
+                                            if (isChecked) {
+                                                partnerSeat.classList.add('couple-auto-selected');
+                                                setTimeout(() => partnerSeat.classList.remove('couple-auto-selected'), 1000);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
                             // Gắn sự kiện change cho checkbox
                             seatCheckboxes.forEach(checkbox => {
                                 checkbox.addEventListener('change', function () {
                                     console.log('Checkbox changed, ID:', this.value, 'Checked:', this.checked);
+                                    
+                                    // Xử lý chọn ghế đôi tự động
+                                    handleCoupleSelection(this, this.checked);
+                                    
                                     updateBulkEditButton();
                                 });
                             });
@@ -177,20 +267,32 @@
                             const bulkEditForm = document.getElementById('bulkEditForm');
                             if (bulkEditForm) {
                                 bulkEditForm.addEventListener('submit', function (e) {
-                                    const checkedCount = document.querySelectorAll('.seat-checkbox:checked').length;
-                                    if (checkedCount === 0) {
+                                    const checkedSeats = document.querySelectorAll('.seat-checkbox:checked');
+                                    if (checkedSeats.length === 0) {
                                         e.preventDefault();
                                         console.log('No seats selected for bulk edit');
                                         alert('Vui lòng chọn ít nhất một ghế để chỉnh sửa.');
+                                        return;
+                                    }
+                                    
+                                    // Hiển thị thông báo xác nhận với thông tin ghế đôi
+                                    const selectedSeatIds = Array.from(checkedSeats).map(cb => parseInt(cb.value));
+                                    const coupleSeatsInSelection = selectedSeatIds.filter(id => coupleSeatsData.includes(id));
+                                    
+                                    let message = `Bạn đã chọn ${checkedSeats.length} ghế để chỉnh sửa hàng loạt.`;
+                                    if (coupleSeatsInSelection.length > 0) {
+                                        message += `\n\nLưu ý: Có ${coupleSeatsInSelection.length} ghế đôi trong lựa chọn của bạn.`;
+                                        message += `\nHệ thống sẽ tự động cập nhật cả cặp ghế đôi liên quan.`;
+                                    }
+                                    message += `\n\nTiếp tục?`;
+                                    
+                                    if (!confirm(message)) {
+                                        e.preventDefault();
                                     }
                                 });
                             } else {
                                 console.warn('bulkEditForm not found in DOM');
                             }
-
-                            document.addEventListener('click', function (e) {
-                                console.log('Document click - Seat script, target:', e.target.outerHTML);
-                            });
 
                             // Khởi tạo trạng thái nút
                             updateBulkEditButton();
@@ -226,7 +328,26 @@
                             @error('seat_type_percentages')
                                 <span class="text-danger">{{ $message }}</span>
                             @enderror
+                            
+                            <!-- Checkbox bỏ qua ràng buộc -->
+                            <div class="form-check mt-3 mb-3">
+                                <input class="form-check-input" type="checkbox" id="ignoreConstraints" name="ignore_constraints" value="1">
+                                <label class="form-check-label" for="ignoreConstraints">
+                                    <i class="fas fa-unlock"></i> Bỏ qua ràng buộc hệ thống (cho phép tỷ lệ tùy chỉnh)
+                                </label>
+                                <small class="form-text text-muted d-block">
+                                    Chọn tùy chọn này nếu bạn muốn sử dụng tỷ lệ khác với đề xuất của hệ thống
+                                </small>
+                            </div>
+                            
                             <p class="text-muted mt-2" id="percentageWarning"></p>
+                            
+                            <!-- Nút cập nhật tỷ lệ -->
+                            <div class="d-grid gap-2">
+                                <button type="button" class="btn btn-outline-primary btn-sm" id="updatePercentagesBtn">
+                                    <i class="fas fa-save"></i> Cập nhật tỷ lệ
+                                </button>
+                            </div>
                         </div>
                         <div class="mb-3">
                             <label for="seat_type_id" class="form-label">Loại ghế</label>
@@ -259,6 +380,18 @@
                             <input type="number" name="min_seats_per_row" id="min_seats_per_row" class="form-control" min="1" value="1" required>
                             <p class="text-info mt-2" id="minSeatsPerRowSuggestion"></p>
                         </div>
+                        
+                        <!-- Checkbox bỏ qua ràng buộc cho việc tạo ghế -->
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="ignoreConstraintsCreate" name="ignore_constraints" value="1">
+                            <label class="form-check-label" for="ignoreConstraintsCreate">
+                                <i class="fas fa-unlock"></i> Bỏ qua ràng buộc khi tạo ghế
+                            </label>
+                            <small class="form-text text-muted d-block">
+                                Cho phép tạo ghế với tỷ lệ tùy chỉnh (không theo constraints của hệ thống)
+                            </small>
+                        </div>
+                        
                         <div class="mb-3">
                             <p><strong>Sức chứa phòng:</strong> {{ $room->capacity }}</p>
                             <p><strong>Ghế hiện có:</strong> {{ $seats->count() }}</p>
@@ -267,6 +400,65 @@
                         </div>
                         <button type="submit" class="btn btn-primary w-100" @if($seats->count() >= $room->capacity) disabled @endif>Thêm ghế</button>
                     </form>
+                    
+                    {{-- Layout Optimization Suggestions --}}
+                    @if(isset($layoutSuggestions))
+                    <div class="mt-3 p-3 bg-info-subtle rounded">
+                        <h6 class="text-primary mb-2">
+                            <i class="fas fa-lightbulb"></i> Gợi ý bố trí tối ưu
+                        </h6>
+                        
+                        <div class="small mb-2">
+                            <strong>{{ $layoutSuggestions['room_info']['type'] }}</strong> - {{ $layoutSuggestions['room_info']['capacity'] }} ghế
+                        </div>
+                        
+                        <div class="small mb-2">
+                            <strong>Loại ghế được phép:</strong><br>
+                            @foreach($layoutSuggestions['room_info']['allowed_seat_types'] as $seatTypeName)
+                                <span class="badge bg-secondary me-1">{{ $seatTypeName }}</span>
+                            @endforeach
+                        </div>
+                        
+                        @if(!empty($layoutSuggestions['recommended_percentages']))
+                        <div class="small mb-2">
+                            <strong>💡 Tỷ lệ đề xuất:</strong><br>
+                            @foreach($allowedSeatTypes as $seatType)
+                                @if(isset($layoutSuggestions['recommended_percentages'][$seatType->id]))
+                                    • {{ $seatType->name }}: {{ $layoutSuggestions['recommended_percentages'][$seatType->id] }}%<br>
+                                @endif
+                            @endforeach
+                        </div>
+                        @endif
+                        
+                        <div class="small mb-2">
+                            📊 <strong>Layout tổng thể:</strong><br>
+                            • Số hàng: {{ $layoutSuggestions['optimal_layout']['optimal_rows'] }} hàng<br>
+                            • Ghế/hàng: {{ $layoutSuggestions['optimal_layout']['seats_per_row_range']['optimal'] }} ghế
+                            ({{ $layoutSuggestions['optimal_layout']['seats_per_row_range']['min'] }}-{{ $layoutSuggestions['optimal_layout']['seats_per_row_range']['max'] }})
+                        </div>
+                        
+                        @if(!empty($layoutSuggestions['individual_seat_layouts']))
+                        <div class="small mb-2">
+                            <strong>🎯 Đề xuất chi tiết từng loại:</strong><br>
+                            @foreach($layoutSuggestions['individual_seat_layouts'] as $seatLayout)
+                                <div class="border-start border-primary ps-2 mb-2">
+                                    <strong>{{ $seatLayout['seat_type_name'] }}</strong> ({{ $seatLayout['seat_count'] }} ghế):<br>
+                                    • Layout: {{ $seatLayout['layout_suggestion'] }}<br>
+                                    • Vị trí: {{ $seatLayout['position_recommendation'] }}
+                                </div>
+                            @endforeach
+                        </div>
+                        @endif
+                        
+                        @if(!$layoutSuggestions['has_configuration'])
+                        <div class="small text-warning mt-2">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>Lưu ý:</strong> Chưa có cấu hình tỷ lệ ghế. Hãy nhập tỷ lệ phù hợp trước khi tạo ghế.
+                        </div>
+                        @endif
+                    </div>
+                    @endif
+                    
                     <hr>
                     <form action="{{ route('admin.seats.import') }}" method="POST" enctype="multipart/form-data" class="mt-3">
                         @csrf
@@ -341,6 +533,32 @@
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
         <button type="button" class="btn btn-success" id="confirmImportSeatsBtn">Xác nhận import</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal xác nhận cập nhật tỷ lệ -->
+<div class="modal fade" id="updatePercentagesModal" tabindex="-1" aria-labelledby="updatePercentagesLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="updatePercentagesLabel">Xác nhận cập nhật tỷ lệ</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Bạn có chắc chắn muốn cập nhật tỷ lệ loại ghế cho phòng này không?</p>
+        <div id="percentagePreview" class="mt-3 p-3 bg-light rounded">
+          <!-- Preview tỷ lệ sẽ được render bằng JS -->
+        </div>
+        <div class="alert alert-warning mt-3">
+          <i class="fas fa-exclamation-triangle"></i>
+          <strong>Lưu ý:</strong> Việc thay đổi tỷ lệ sẽ ảnh hưởng đến việc tính toán số ghế cần thêm cho từng loại.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+        <button type="button" class="btn btn-primary" id="confirmUpdatePercentagesBtn">Xác nhận cập nhật</button>
       </div>
     </div>
   </div>
@@ -608,6 +826,115 @@
                 });
             } else {
                 console.warn('importSeatsBtn not found in DOM');
+            }
+
+            // Xử lý nút cập nhật tỷ lệ
+            const updatePercentagesBtn = document.getElementById('updatePercentagesBtn');
+            console.log('updatePercentagesBtn found:', updatePercentagesBtn);
+            console.log('percentageInputs found:', percentageInputs.length);
+            
+            if (updatePercentagesBtn) {
+                updatePercentagesBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    console.log('Update percentages button clicked');
+                    
+                    // Kiểm tra tổng tỷ lệ
+                    let totalPercentage = 0;
+                    const percentages = {};
+                    const seatTypeNames = {};
+                    
+                    console.log('Processing percentage inputs:', percentageInputs.length);
+                    
+                    percentageInputs.forEach(input => {
+                        console.log('Processing input:', input.name, input.value);
+                        const value = parseFloat(input.value) || 0;
+                        totalPercentage += value;
+                        const seatTypeId = input.name.match(/\[(\d+)\]/)[1];
+                        percentages[seatTypeId] = value;
+                        const label = document.querySelector(`label[for="${input.id}"]`);
+                        seatTypeNames[seatTypeId] = label ? label.textContent.trim() : 'Unknown';
+                    });
+                    
+                    console.log('Total percentage:', totalPercentage);
+                    console.log('Percentages:', percentages);
+                    
+                    if (Math.abs(totalPercentage - 100) > 0.01) {
+                        alert('Tổng tỷ lệ phải bằng 100%. Hiện tại: ' + totalPercentage.toFixed(2) + '%');
+                        return;
+                    }
+                    
+                    // Tạo preview tỷ lệ
+                    let previewHtml = '<h6>Tỷ lệ mới:</h6><ul>';
+                    for (const seatTypeId in percentages) {
+                        previewHtml += '<li><strong>' + seatTypeNames[seatTypeId] + ':</strong> ' + percentages[seatTypeId] + '%</li>';
+                    }
+                    previewHtml += '</ul>';
+                    
+                    document.getElementById('percentagePreview').innerHTML = previewHtml;
+                    
+                    // Hiển thị modal xác nhận
+                    var modal = new bootstrap.Modal(document.getElementById('updatePercentagesModal'));
+                    modal.show();
+                    
+                    document.getElementById('confirmUpdatePercentagesBtn').onclick = function() {
+                        console.log('Confirm update percentages clicked');
+                        modal.hide();
+                        
+                        // Tìm form hoặc tạo form mới nếu cần
+                        let form = document.getElementById('updatePercentagesForm');
+                        if (!form) {
+                            console.log('Creating new form');
+                            form = document.createElement('form');
+                            form.method = 'POST';
+                            form.action = '{{ route('admin.rooms.update-seat-percentages', $room->id) }}';
+                            
+                            // Thêm CSRF token
+                            const csrfInput = document.createElement('input');
+                            csrfInput.type = 'hidden';
+                            csrfInput.name = '_token';
+                            csrfInput.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                            form.appendChild(csrfInput);
+                            
+                            document.body.appendChild(form);
+                        }
+                        
+                        // Xóa các input cũ (nếu có)
+                        const oldInputs = form.querySelectorAll('input[name^="percentages"]');
+                        oldInputs.forEach(input => input.remove());
+                        
+                        // Thêm percentages
+                        for (const seatTypeId in percentages) {
+                            const input = document.createElement('input');
+                            input.type = 'hidden';
+                            input.name = `percentages[${seatTypeId}]`;
+                            input.value = percentages[seatTypeId];
+                            form.appendChild(input);
+                        }
+                        
+                        // Thêm ignore constraints
+                        const ignoreConstraints = document.getElementById('ignoreConstraints').checked;
+                        const ignoreInput = form.querySelector('input[name="ignore_constraints"]');
+                        if (ignoreInput) {
+                            ignoreInput.value = ignoreConstraints ? '1' : '0';
+                        } else {
+                            const newIgnoreInput = document.createElement('input');
+                            newIgnoreInput.type = 'hidden';
+                            newIgnoreInput.name = 'ignore_constraints';
+                            newIgnoreInput.value = ignoreConstraints ? '1' : '0';
+                            form.appendChild(newIgnoreInput);
+                        }
+                        
+                        console.log('Submitting form with data:', {
+                            percentages: percentages,
+                            ignore_constraints: ignoreConstraints
+                        });
+                        
+                        // Submit form
+                        form.submit();
+                    };
+                });
+            } else {
+                console.warn('updatePercentagesBtn not found in DOM');
             }
 
             seatForm.addEventListener('submit', function(e) {

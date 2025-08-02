@@ -21,6 +21,7 @@ use App\Http\Controllers\Admin\RoomTypeController;
 use App\Http\Controllers\Admin\ShowtimeController;
 use App\Http\Controllers\Admin\AdminRoomController;
 use App\Http\Controllers\Admin\AdminSeatController;
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\PromotionController;
 use App\Http\Controllers\Client\CheckoutController;
 use App\Http\Controllers\Admin\AdminProductController;
@@ -61,6 +62,19 @@ Route::get('/payment-failed', function () {
     return 'Thanh toán thất bại!';
 })->name('client.failed');
 
+// Route::middleware('guest')->group(function () {
+//     Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])
+//         ->name('password.request');
+
+//     Route::post('forgot-password', [PasswordResetLinkController::class, 'store'])
+//         ->name('password.email');
+
+//     Route::get('reset-password/{token}', [NewPasswordController::class, 'create'])
+//         ->name('password.reset');
+
+//     Route::put('reset-password', [NewPasswordController::class, 'store'])
+//         ->name('password.reset.submit');
+// });
 
 Route::post('/apply-promotion', [App\Http\Controllers\Client\HomeController::class, 'applyDiscountCode'])->name('client.applyPromotion');
 
@@ -72,9 +86,9 @@ Route::get('/user-points', [App\Http\Controllers\Client\HomeController::class, '
 Route::get('/user-point-history', [App\Http\Controllers\Client\HomeController::class, 'getUserPointHistory'])->name('client.getUserPointHistory');
 
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+// Route::get('/dashboard', function () {
+//     return view('dashboard');
+// })->middleware(['auth', 'verified'])->name('dashboard');
 
 
 
@@ -90,8 +104,11 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
 
     Route::prefix('admin')->name('admin.')->group(function () {
     // Seat routes from HEAD
-Route::post('seats/edit-bulk', [AdminSeatController::class, 'editBulk'])->name('seats.edit-bulk');
+    Route::post('seats/edit-bulk', [AdminSeatController::class, 'editBulk'])->name('seats.edit-bulk');
     Route::post('seats/update-bulk', [AdminSeatController::class, 'updateBulk'])->name('seats.update-bulk');
+
+    // Dashboard
+    Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::get('product-categories/trash', [AdminProductCategoriesController::class, 'trash'])->name('product-categories.trash');
     Route::post('product-categories/{id}/restore', [AdminProductCategoriesController::class, 'restore'])->name('product-categories.restore');
@@ -140,6 +157,8 @@ Route::post('seats/edit-bulk', [AdminSeatController::class, 'editBulk'])->name('
 
     //Room
     Route::resource('rooms', AdminRoomController::class);
+    Route::patch('rooms/{id}/update-percentages', [AdminRoomController::class, 'updateSeatPercentages'])->name('rooms.updatePercentages');
+    Route::post('rooms/{room}/update-seat-percentages', [AdminRoomController::class, 'updateSeatPercentages'])->name('rooms.update-seat-percentages');
 
     //Son
     Route::get('countries', [CountryController::class, 'index'])->name('countries.index');
@@ -270,5 +289,27 @@ Route::prefix('admin')->name('admin.')->group(function () {
 });
 
 });
+
+// Test route for barcode
+Route::get('/test-barcode-api', function () {
+    $barcodeService = new \App\Services\BarcodeService();
+    $barcode = $barcodeService->generateBarcode('BK1754063915');
+    
+    return response()->json([
+        'barcode' => $barcode,
+        'booking_code' => 'BK1754063915'
+    ]);
+});
+
+// Barcode scanning routes
+Route::prefix('api/barcode')->group(function () {
+    Route::post('/scan', [App\Http\Controllers\BarcodeController::class, 'scanBarcode'])->name('barcode.scan');
+    Route::post('/check-status', [App\Http\Controllers\BarcodeController::class, 'checkTicketStatus'])->name('barcode.check');
+});
+
+// Trang quét barcode cho nhân viên
+Route::get('/barcode-scanner', function () {
+    return view('barcode-scanner');
+})->name('barcode.scanner');
 
 require __DIR__.'/auth.php';

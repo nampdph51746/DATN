@@ -43,6 +43,22 @@
                                     @enderror
                                 </div>
                             </div>
+
+                            <div class="col-lg-6">
+                                    <div class="mb-3">
+                                        <label for="rank_id" class="form-label">Hạng khách hàng</label>
+                                        <select name="rank_id" id="rank_id" class="form-control">
+                                            <option value="">-- Chọn hạng --</option>
+                                            @foreach ($ranks as $id => $name)
+                                                <option value="{{ $id }}"
+                                                    {{ old('rank_id', $promotion->rank_id ?? '') == $id ? 'selected' : '' }}>
+                                                    {{ $name }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+
                             <div class="col-lg-6">
                                 <div class="mb-3">
                                     <label for="promotion-discount-type" class="form-label">Loại giảm giá</label>
@@ -106,29 +122,6 @@
                                     <label for="promotion-quantity" class="form-label">Số lượng mã</label>
                                     <input type="number" id="promotion-quantity" name="quantity" class="form-control" placeholder="Nhập số lượng mã" value="{{ old('quantity') }}">
                                     @error('quantity')
-                                        <span class="text-danger fs-13">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                            </div>
-                            <div class="col-lg-6">
-                                <div class="mb-3">
-                                    <label for="promotion-usage-limit" class="form-label">Giới hạn sử dụng mỗi người dùng</label>
-                                    <input type="number" id="promotion-usage-limit" name="usage_limit_per_user" class="form-control" placeholder="Nhập giới hạn sử dụng" value="{{ old('usage_limit_per_user') }}">
-                                    @error('usage_limit_per_user')
-                                        <span class="text-danger fs-13">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                            </div>
-                            <div class="col-lg-6">
-                                <div class="mb-3">
-                                    <label for="promotion-applies-to" class="form-label">Áp dụng cho</label>
-                                    <select class="form-control" id="promotion-applies-to" name="applies_to" data-choices data-choices-groups data-placeholder="Chọn đối tượng áp dụng">
-                                        <option value="">Chọn đối tượng áp dụng</option>
-                                        <option value="movies" {{ old('applies_to') == 'movies' ? 'selected' : '' }}>Movies</option>
-                                        <option value="tickets" {{ old('applies_to') == 'tickets' ? 'selected' : '' }}>Tickets</option>
-                                        {{-- <option value="products" {{ old('applies_to') == 'products' ? 'selected' : '' }}>Products</option> --}}
-                                    </select>
-                                    @error('applies_to')
                                         <span class="text-danger fs-13">{{ $message }}</span>
                                     @enderror
                                 </div>
