@@ -3,7 +3,7 @@
 namespace App\Mail;
 
 use App\Models\Booking;
-use App\Services\BarcodeService;
+use App\Services\QrcodeService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -16,7 +16,7 @@ class BookingConfirmationMail extends Mailable
     use Queueable, SerializesModels;
 
     public $booking;
-    public $barcode;
+    public $qrcode;
 
     /**
      * Create a new message instance.
@@ -25,9 +25,9 @@ class BookingConfirmationMail extends Mailable
     {
         $this->booking = $booking;
         
-        // Tạo barcode cho booking
-        $barcodeService = new BarcodeService();
-        $this->barcode = $barcodeService->generateBarcode($booking->booking_code);
+        // Tạo QR code cho booking
+        $qrcodeService = new QrcodeService();
+        $this->qrcode = $qrcodeService->generateQrCode($booking->booking_code);
         
     }
 
@@ -50,7 +50,7 @@ class BookingConfirmationMail extends Mailable
             view: 'emails.booking-confirmation',
             with: [
                 'booking' => $this->booking,
-                'barcode' => $this->barcode,
+                'qrcode' => $this->qrcode,
             ]
         );
     }
@@ -64,16 +64,14 @@ class BookingConfirmationMail extends Mailable
     {
         $attachments = [];
         
-        // Tạo barcode file attachment nếu cần
-        if ($this->barcode) {
-            $barcodeService = new BarcodeService();
-            $fileName = $this->booking->booking_code . '_barcode.png';
+        // Tạo QR code file attachment nếu cần
+        if ($this->qrcode) {
+            $qrcodeService = new QrcodeService();
+            $fileName = $this->booking->booking_code . '_qrcode.png';
             $filePath = storage_path('app/temp/' . $fileName);
-            
-            $barcodeFilePath = $barcodeService->generateBarcodeFile($this->booking->booking_code, $filePath);
-            
-            if ($barcodeFilePath && file_exists($barcodeFilePath)) {
-                $attachments[] = \Illuminate\Mail\Mailables\Attachment::fromPath($barcodeFilePath)
+            $qrcodeFilePath = $qrcodeService->generateQrCodeFile($this->booking->booking_code, $filePath);
+            if ($qrcodeFilePath && file_exists($qrcodeFilePath)) {
+                $attachments[] = \Illuminate\Mail\Mailables\Attachment::fromPath($qrcodeFilePath)
                     ->as($fileName)
                     ->withMime('image/png');
             }
