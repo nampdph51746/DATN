@@ -26,7 +26,8 @@
                                     <button onclick="openQrModal()" class="btn btn-success w-100">Quét QR Code</button>
                                 </div>
                                 <div class="col-md-2">
-                                    <button onclick="downloadQrImage()" class="btn btn-purple w-100">Tải Ảnh QR</button>
+                                    <input type="file" id="qrImageUpload" accept="image/*" class="d-none" onchange="scanQrFromImage()">
+                                    <button onclick="document.getElementById('qrImageUpload').click()" class="btn btn-purple w-100">Tải Ảnh QR</button>
                                 </div>
                                 <div class="col-md-2">
                                     <button onclick="checkStatus()" class="btn btn-secondary w-100">Kiểm Tra Trạng Thái</button>
@@ -110,7 +111,7 @@
             );
 
             $.ajax({
-                url: '/api/qr/scan',
+                url: '/admin/api/qr/scan',
                 method: 'POST',
                 data: {
                     booking_code: bookingCode
@@ -144,7 +145,7 @@
             );
 
             $.ajax({
-                url: '/api/qr/check-status',
+                url: '/admin/api/qr/check-status',
                 method: 'POST',
                 data: {
                     booking_code: bookingCode
@@ -161,6 +162,38 @@
                     showError(errorMsg);
                 }
             });
+        }
+
+        function scanQrFromImage() {
+            const fileInput = document.getElementById('qrImageUpload');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                showError('Vui lòng chọn một ảnh QR để quét');
+                return;
+            }
+
+            hideMessages();
+
+            $('#result').removeClass('d-none').find('#resultContent').html(
+                '<tr><td colspan="4" class="text-center"><div class="spinner-border text-primary" role="status"></div><span class="ms-3 text-muted">Đang xử lý ảnh QR...</span></td></tr>'
+            );
+
+            const html5QrCode = new Html5Qrcode("qr-reader");
+            html5QrCode.scanFile(file, true)
+                .then(qrCodeMessage => {
+                    showToast('Đã quét ảnh QR thành công!');
+                    $('#bookingCode').val(qrCodeMessage);
+                    setTimeout(() => {
+                        scanBarcode();
+                    }, 900);
+                })
+                .catch(err => {
+                    showError('Không thể quét mã QR từ ảnh. Vui lòng thử lại.');
+                })
+                .finally(() => {
+                    fileInput.value = ''; // Reset input file
+                });
         }
 
         function showSuccess(response) {
@@ -345,21 +378,6 @@
             if (window.html5QrCode) {
                 window.html5QrCode.stop().catch(() => {});
             }
-        }
-
-        function downloadQrImage() {
-            const bookingCode = $('#bookingCode').val().trim();
-            if (!bookingCode) {
-                showError('Vui lòng nhập mã booking để tạo QR');
-                return;
-            }
-            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(bookingCode)}`;
-            const link = document.createElement('a');
-            link.href = qrUrl;
-            link.download = `qr_${bookingCode}.png`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
         }
     </script>
 @endsection
