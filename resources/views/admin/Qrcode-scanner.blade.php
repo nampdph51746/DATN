@@ -13,14 +13,13 @@
                     <div class="card-body">
                         <!-- Form input -->
                         <div class="mb-4">
-                            <label for="bookingCode" class="form-label h5 text-dark">Nhập mã booking hoặc quét QR</label>
+                            <label for="codeInput" class="form-label h5 text-dark">Nhập mã vé (Booking Code hoặc Ticket Code) hoặc quét QR</label>
                             <div class="row g-2 align-items-end mb-3">
-                                <div class="col-md-3">
-                                    <input type="text" id="bookingCode" placeholder="VD: BK1754063915"
-                                        class="form-control form-control-lg" value="{{ request('booking_code') }}">
+                                <div class="col-md-4">
+                                    <input type="text" id="codeInput" placeholder="VD: BK1754063915 hoặc TICKET123456" class="form-control form-control-lg">
                                 </div>
                                 <div class="col-md-2">
-                                    <button onclick="scanBarcode()" class="btn btn-primary w-100">Quét Vé</button>
+                                    <button onclick="scanCode()" class="btn btn-primary w-100">Quét Vé</button>
                                 </div>
                                 <div class="col-md-2">
                                     <button onclick="openQrModal()" class="btn btn-success w-100">Quét QR Code</button>
@@ -28,9 +27,6 @@
                                 <div class="col-md-2">
                                     <input type="file" id="qrImageUpload" accept="image/*" class="d-none" onchange="scanQrFromImage()">
                                     <button onclick="document.getElementById('qrImageUpload').click()" class="btn btn-purple w-100">Tải Ảnh QR</button>
-                                </div>
-                                <div class="col-md-2">
-                                    <button onclick="checkStatus()" class="btn btn-secondary w-100">Kiểm Tra Trạng Thái</button>
                                 </div>
                             </div>
                         </div>
@@ -96,29 +92,45 @@
             }
         });
 
-        function scanBarcode() {
-            const bookingCode = $('#bookingCode').val().trim();
-
-            if (!bookingCode) {
-                showError('Vui lòng nhập mã booking');
+        function scanCode() {
+            const code = $('#codeInput').val().trim();
+            if (!code) {
+                showError('Vui lòng nhập mã vé (booking code hoặc ticket code)');
                 return;
             }
-
             hideMessages();
-
             $('#result').removeClass('d-none').find('#resultContent').html(
                 '<tr><td colspan="4" class="text-center"><div class="spinner-border text-primary" role="status"></div><span class="ms-3 text-muted">Đang xử lý...</span></td></tr>'
             );
-
+            // Nhận diện code: nếu bắt đầu bằng BK hoặc có độ dài lớn hơn 8 và toàn số => booking code, còn lại là ticket code
+            let isBookingCode = false;
+            if (/^BK\d{6,}$/.test(code)) {
+                isBookingCode = true;
+            } else if (/^\d{8,}$/.test(code)) {
+                isBookingCode = true;
+            } else if (/^TICKET/i.test(code)) {
+                isBookingCode = false;
+            }
+            let url = '';
+            let data = {};
+            if (isBookingCode) {
+                url = '/admin/api/qr/scan';
+                data = { booking_code: code };
+            } else {
+                url = '/admin/api/qr/scan-ticket';
+                data = { ticket_code: code };
+            }
             $.ajax({
-                url: '/admin/api/qr/scan',
+                url: url,
                 method: 'POST',
-                data: {
-                    booking_code: bookingCode
-                },
+                data: data,
                 success: function(response) {
                     if (response.success) {
-                        showSuccess(response);
+                        if (isBookingCode) {
+                            showSuccess(response);
+                        } else {
+                            showTicketResultByTicketCode(response);
+                        }
                     } else {
                         showError(response.message);
                     }
@@ -167,32 +179,28 @@
         function scanQrFromImage() {
             const fileInput = document.getElementById('qrImageUpload');
             const file = fileInput.files[0];
-
             if (!file) {
                 showError('Vui lòng chọn một ảnh QR để quét');
                 return;
             }
-
             hideMessages();
-
             $('#result').removeClass('d-none').find('#resultContent').html(
                 '<tr><td colspan="4" class="text-center"><div class="spinner-border text-primary" role="status"></div><span class="ms-3 text-muted">Đang xử lý ảnh QR...</span></td></tr>'
             );
-
             const html5QrCode = new Html5Qrcode("qr-reader");
             html5QrCode.scanFile(file, true)
                 .then(qrCodeMessage => {
                     showToast('Đã quét ảnh QR thành công!');
-                    $('#bookingCode').val(qrCodeMessage);
+                    $('#codeInput').val(qrCodeMessage);
                     setTimeout(() => {
-                        scanBarcode();
+                        scanCode();
                     }, 900);
                 })
                 .catch(err => {
                     showError('Không thể quét mã QR từ ảnh. Vui lòng thử lại.');
                 })
                 .finally(() => {
-                    fileInput.value = ''; // Reset input file
+                    fileInput.value = '';
                 });
         }
 
@@ -336,9 +344,9 @@
             }
         }
 
-        $('#bookingCode').keypress(function(e) {
+        $('#codeInput').keypress(function(e) {
             if (e.which == 13) {
-                scanBarcode();
+                scanCode();
             }
         });
 
@@ -363,14 +371,72 @@
             },
             qrCodeMessage => {
                 showToast('Đã quét QR thành công!');
-                $('#bookingCode').val(qrCodeMessage);
+                $('#codeInput').val(qrCodeMessage);
                 setTimeout(() => {
                     closeQrModal();
-                    scanBarcode();
+                    scanCode();
                 }, 900);
             },
             errorMessage => {}
             );
+        }
+        // Hiển thị kết quả khi quét ticket code
+        function showTicketResultByTicketCode(response) {
+            const data = response.data;
+            let html = `<tr><td colspan="4">
+                <div class="d-flex flex-column align-items-center">
+                    <div class="alert alert-success mb-4 w-75 text-center">
+                        <h3 class="h5 font-weight-bold mb-0">✅ ${response.message}</h3>
+                    </div>
+                    <div class="card mb-4 w-75 shadow-sm">
+                        <div class="card-header bg-primary text-white text-center">
+                            <h5 class="mb-0">Thông Tin Vé</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-2">
+                                <div class="col-6"><strong>Mã vé:</strong></div>
+                                <div class="col-6">${data?.ticket_code || ''}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-6"><strong>Ghế:</strong></div>
+                                <div class="col-6">${data?.seat_name || ''}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-6"><strong>Trạng thái:</strong></div>
+                                <div class="col-6"><span class="badge bg-success">Đã sử dụng</span></div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-6"><strong>Thời gian quét:</strong></div>
+                                <div class="col-6">${data?.used_at ? new Date(data.used_at).toLocaleString('vi-VN') : ''}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card w-75 shadow-sm">
+                        <div class="card-header bg-info text-white text-center">
+                            <h5 class="mb-0">Thông Tin Đơn Hàng</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-2">
+                                <div class="col-6"><strong>Mã booking:</strong></div>
+                                <div class="col-6">${data?.booking_code || ''}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-6"><strong>Khách hàng:</strong></div>
+                                <div class="col-6">${data?.customer_name || ''}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-6"><strong>Số điện thoại:</strong></div>
+                                <div class="col-6">${data?.customer_phone || ''}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-6"><strong>Tổng tiền:</strong></div>
+                                <div class="col-6">${formatCurrency(data?.total_amount || 0)}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </td></tr>`;
+            $('#result').removeClass('d-none').find('#resultContent').html(html);
         }
 
         function closeQrModal() {

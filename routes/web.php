@@ -281,6 +281,7 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
     Route::prefix('api/qr')->group(function () {
         Route::post('/scan', [QrCodeController::class, 'scanQr'])->name('qr.scan');
         Route::post('/check-status', [QrCodeController::class, 'checkTicketStatus'])->name('qr.check');
+        Route::post('/scan-ticket', [QrCodeController::class, 'scanTicketByCode'])->name('qr.scanTicket');
     });
     // Route in vé riêng theo ticket_code
     Route::get('/tickets/{ticket_code}/print', [TicketPrintController::class, 'printTicket'])->name('tickets.print');

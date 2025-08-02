@@ -21,7 +21,7 @@ class TicketPrintController extends Controller
         // Sinh QR code base64
         $qrCodeBase64 = null;
         if ($ticket) {
-            $qrText = 'TICKET|' . $ticket->id . '|' . $ticket->seat_id . '|' . $ticket->ticket_code;
+            $qrText = $ticket->ticket_code;
             $qrService = app(QrcodeService::class);
             $qrCodeRaw = $qrService->generateQrCode($qrText, 120);
             if ($qrCodeRaw) {
@@ -50,7 +50,7 @@ class TicketPrintController extends Controller
         // Sinh QR code cho booking items
         $qrCodeBase64 = null;
         if ($booking && $bookingItems->count() > 0) {
-            $qrText = 'FOOD|' . $booking->id . '|' . json_encode($bookingItems->toArray());
+            $qrText = json_encode($bookingItems->toArray());
             $qrService = app(QrcodeService::class);
             $qrCodeRaw = $qrService->generateQrCode($qrText, 120);
             if ($qrCodeRaw) {

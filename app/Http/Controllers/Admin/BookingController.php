@@ -146,7 +146,7 @@ class BookingController extends Controller
         $qrService = app(QrcodeService::class);
         $ticketQRCodes = [];
         foreach ($tickets as $ticket) {
-            $qrText = 'TICKET|' . $ticket->id . '|' . $ticket->seat_id . '|' . $ticket->ticket_code;
+            $qrText = $ticket->ticket_code;
             $qrCodeRaw = $qrService->generateQrCode($qrText, 120);
             $ticketQRCodes[$ticket->id] = $qrCodeRaw ? 'data:image/png;base64,' . $qrCodeRaw : null;
         }
@@ -154,7 +154,7 @@ class BookingController extends Controller
         // QR code cho food/drink chung
         $foodDrinksQRCode = null;
         if ($foodDrinks && $foodDrinks->count() > 0) {
-            $qrText = 'FOOD|' . $booking->id . '|' . json_encode($foodDrinks->toArray());
+            $qrText =  json_encode($foodDrinks->toArray());
             $qrCodeRaw = $qrService->generateQrCode($qrText, 120);
             $foodDrinksQRCode = $qrCodeRaw ? 'data:image/png;base64,' . $qrCodeRaw : null;
         }
