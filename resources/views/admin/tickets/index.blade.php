@@ -167,6 +167,10 @@
                                             <a href="{{ route('tickets.show', $ticket->id) }}" class="btn btn-light btn-sm" title="Xem chi tiết">
                                                 <iconify-icon icon="solar:eye-broken" class="align-middle fs-18"></iconify-icon>
                                             </a>
+                                            <!-- Print Ticket Button -->
+                                            <a href="{{ route('admin.tickets.print', $ticket->ticket_code) }}" class="btn btn-success btn-sm" title="In vé" target="_blank">
+                                                <iconify-icon icon="solar:printer-minimalistic-broken" class="align-middle fs-18"></iconify-icon>
+                                            </a>
                                             <!-- Edit Button -->
                                             {{-- <a href="{{ route('tickets.edit', $ticket->id) }}" class="btn btn-soft-primary btn-sm" title="Sửa">
                                                 <iconify-icon icon="solar:pen-2-broken" class="align-middle fs-18"></iconify-icon>

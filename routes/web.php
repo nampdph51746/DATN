@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\MovieController;
 use App\Http\Controllers\Admin\PointController;
 use App\Http\Controllers\Client\HomeController;
 use App\Http\Controllers\Client\SeatController;
+use App\Http\Controllers\TicketPrintController;
 use App\Http\Controllers\Admin\CinemaController;
 use App\Http\Controllers\Admin\TicketController;
 use App\Http\Controllers\Client\VnpayController;
@@ -86,9 +87,9 @@ Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.up
 Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
+
 Route::middleware(['auth', 'role:admin,staff'])->group(function () {
-
-
+  
 
     Route::prefix('admin')->name('admin.')->group(function () {
     // Seat routes from HEAD
@@ -276,6 +277,12 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
         Route::post('/scan', [QrCodeController::class, 'scanQr'])->name('qr.scan');
         Route::post('/check-status', [QrCodeController::class, 'checkTicketStatus'])->name('qr.check');
     });
+    // Route in vé riêng theo ticket_code
+    Route::get('/tickets/{ticket_code}/print', [TicketPrintController::class, 'printTicket'])->name('tickets.print');
+    // Route in chung đồ ăn, đồ uống theo booking_code
+    Route::get('/bookings/{booking_code}/print-items', [TicketPrintController::class, 'printBookingItems'])->name('bookings.printItems');
+
+
 
     // Trang quét QR code cho nhân viên
     Route::get('/qr-scanner', function () {
@@ -286,18 +293,5 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
 });
 
 });
-
-// Test route for barcode
-// Route::get('/test-barcode-api', function () {
-//     $barcodeService = new \App\Services\BarcodeService();
-//     $barcode = $barcodeService->generateBarcode('BK1754063915');
-    
-//     return response()->json([
-//         'barcode' => $barcode,
-//         'booking_code' => 'BK1754063915'
-//     ]);
-// });
-
-
 
 require __DIR__.'/auth.php';

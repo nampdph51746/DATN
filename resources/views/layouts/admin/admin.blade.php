@@ -739,6 +739,9 @@
                 </a>
                 <div class="collapse" id="sidebarBookings" data-bs-parent="#navbar-nav">
                     <ul class="nav sub-navbar-nav">
+                         <li class="sub-nav-item">
+                            <a class="sub-nav-link" href="{{ route('admin.bookings.index') }}">Danh sách đơn đặt vé</a>
+                        </li>
                         <li class="sub-nav-item">
                             <a class="sub-nav-link" href="{{ route('tickets.index') }}">Danh sách vé</a>
                         </li>
