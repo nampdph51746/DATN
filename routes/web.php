@@ -237,7 +237,9 @@ Route::get('admin/bookingShow/{id}', [BookingController::class, 'show'])->name('
 Route::get('admin/bookings/{booking}/edit-status', [BookingController::class, 'editStatus'])->name('admin.bookings.editStatus');
 Route::put('admin/bookings/{booking}/update-status', [BookingController::class, 'updateStatus'])->name('admin.bookings.updateStatus');
 // Route in vé PDF cho booking
-Route::get('admin/bookings/{id}/print', [BookingController::class, 'print'])->name('admin.bookings.print');
+    // Route::get('/tickets/{ticket_code}/print', [TicketPrintController::class, 'printTicket'])->name('tickets.print');
+
+Route::get('admin/bookings/{booking_code}/print', [BookingController::class, 'print'])->name('admin.bookings.print');
 
 
 

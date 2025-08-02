@@ -143,7 +143,7 @@
                                                             <iconify-icon icon="solar:eye-broken"
                                                                 class="align-middle fs-18"></iconify-icon>
                                                         </a>
-                                                        <a href="{{ route('admin.bookings.print', $booking->id) }}" target="_blank"
+                                                        <a href="{{ route('admin.bookings.print', $booking->booking_code) }}" target="_blank"
                                                             class="btn btn-primary btn-sm">
                                                             <iconify-icon icon="solar:printer-minimalistic-broken"
                                                                 class="align-middle fs-18"></iconify-icon> In vé

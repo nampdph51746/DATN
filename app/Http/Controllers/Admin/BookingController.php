@@ -129,7 +129,7 @@ class BookingController extends Controller
 
         return redirect()->route('admin.bookings.index')->with('success', 'Cập nhật trạng thái thành công.');
     }
-    public function print($id)
+    public function print($booking_code)
     {
         $booking = Booking::with([
             'tickets.showtime.movie',
@@ -137,7 +137,7 @@ class BookingController extends Controller
             'tickets.seat',
             'bookingItems.productVariant.product',
             'user',
-        ])->findOrFail($id);
+        ])->where('booking_code', $booking_code)->firstOrFail();
 
         $tickets = $booking->tickets;
         $foodDrinks = $booking->bookingItems;
@@ -167,6 +167,6 @@ class BookingController extends Controller
             'foodDrinksQRCode' => $foodDrinksQRCode,
         ]);
 
-        return $pdf->stream('ve-dat-'. $booking->booking_code .'.pdf');
+        return $pdf->download('ve-dat-'. $booking->booking_code .'.pdf');
     }
 }
