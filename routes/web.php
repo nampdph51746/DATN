@@ -269,6 +269,20 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::resource('combos', ComboController::class)->names('combos');
     Route::post('/admin/combos/check-duplicate', [App\Http\Controllers\Admin\ComboController::class, 'checkDuplicate'])->name('admin.combos.checkDuplicate');
     Route::get('products/{id}/variants', [AdminProductController::class, 'getVariants'])->name('products.variants');
+
+    // QR code scanning routes (chỉ staff và admin)
+Route::middleware(['auth', 'role:admin,staff'])->group(function () {
+    Route::prefix('api/qr')->group(function () {
+        Route::post('/scan', [QrCodeController::class, 'scanQr'])->name('qr.scan');
+        Route::post('/check-status', [QrCodeController::class, 'checkTicketStatus'])->name('qr.check');
+    });
+
+    // Trang quét QR code cho nhân viên
+    Route::get('/qr-scanner', function () {
+        return view('admin.Qrcode-scanner'); // Nếu bạn đổi tên view thành qr-scanner thì sửa lại ở đây
+    })->name('qr.scanner');
+});
+
 });
 
 });
@@ -284,15 +298,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
 //     ]);
 // });
 
-// QR code scanning routes
-Route::prefix('api/qr')->group(function () {
-    Route::post('/scan', [QrCodeController::class, 'scanQr'])->name('qr.scan');
-    Route::post('/check-status', [QrCodeController::class, 'checkTicketStatus'])->name('qr.check');
-});
 
-// Trang quét QR code cho nhân viên
-Route::get('/qr-scanner', function () {
-    return view('Qrcode-scanner'); // Nếu bạn đổi tên view thành qr-scanner thì sửa lại ở đây
-})->name('qr.scanner');
 
 require __DIR__.'/auth.php';
