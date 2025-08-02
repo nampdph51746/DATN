@@ -92,7 +92,7 @@ class TicketScanService
                     'used_at' => now(),
                     'scanned_by' => Auth::user()->id ?? null // Nếu có hệ thống auth cho nhân viên
                 ]);
-                
+
                 // Reload ticket với relationships để hiển thị trong response
                 $ticket->load('seat');
                 $updatedTickets[] = $ticket;
@@ -103,19 +103,18 @@ class TicketScanService
             return [
                 'success' => true,
                 'message' => 'Quét vé thành công! Đã cập nhật ' . count($updatedTickets) . ' vé.',
-                 'booking' => [
-        'booking_code' => $booking->booking_code,
-        'customer_name' => $booking->customer_name ?? ($booking->user->name ?? 'N/A'),
-        'customer_phone' => $booking->customer_phone ?? ($booking->user->phone_number ?? 'N/A'),
-        'total_amount' => $booking->total_amount ?? 0,
-        // thêm các trường khác nếu cần
-    ],
+                'booking' => [
+                    'booking_code' => $booking->booking_code,
+                    'customer_name' => $booking->customer_name ?? ($booking->user->name ?? 'N/A'),
+                    'customer_phone' => $booking->customer_phone ?? ($booking->user->phone_number ?? 'N/A'),
+                    'total_amount' => $booking->total_amount ?? 0,
+                    // thêm các trường khác nếu cần
+                ],
                 'updated_tickets' => $updatedTickets
             ];
-
         } catch (\Exception $e) {
             DB::rollback();
-            
+
             return [
                 'success' => false,
                 'message' => 'Có lỗi xảy ra khi quét vé: ' . $e->getMessage()
@@ -143,7 +142,7 @@ class TicketScanService
             // Lấy thông tin vé
             $tickets = $booking->tickets;
 
-            $ticketInfo = $tickets->map(function($ticket) {
+            $ticketInfo = $tickets->map(function ($ticket) {
                 return [
                     'id' => $ticket->id,
                     'seat_name' => $ticket->seat ? ($ticket->seat->row_char . $ticket->seat->seat_number) : 'N/A',
@@ -174,8 +173,7 @@ class TicketScanService
                     'tickets' => $ticketInfo
                 ]
             ];
-
-        } catch (\Exception $e) {            
+        } catch (\Exception $e) {
             return [
                 'success' => false,
                 'message' => 'Có lỗi xảy ra khi lấy thông tin vé'
