@@ -178,45 +178,54 @@
             <div class="ticket-info">
                 <h3 class="mb-3 text-primary">📋 Thông tin đặt vé</h3>
                 
+
+                @php
+                use App\Services\QrcodeService;
+                @endphp
                 @foreach($booking->tickets as $ticket)
-                <div class="ticket-card">
+                <div class="ticket-card" style="position:relative;">
                     <h4 class="mb-3 text-dark">{{ $ticket->showtime->movie->name }}</h4>
-                    
                     <div class="info-row">
                         <span class="label">📅 Ngày chiếu:</span>
                         <span class="value">{{ $ticket->showtime->start_time->format('d/m/Y') }}</span>
                     </div>
-                    
                     <div class="info-row">
                         <span class="label">⏰ Giờ chiếu:</span>
                         <span class="value">{{ $ticket->showtime->start_time->format('H:i') }} - {{ $ticket->showtime->end_time->format('H:i') }}</span>
                     </div>
-                    
                     <div class="info-row">
                         <span class="label">🏢 Rạp:</span>
                         <span class="value">{{ $ticket->showtime->room->cinema->name }}</span>
                     </div>
-                    
                     <div class="info-row">
                         <span class="label">🪑 Phòng:</span>
                         <span class="value">{{ $ticket->showtime->room->name }}</span>
                     </div>
-                    
                     <div class="info-row">
                         <span class="label">💺 Ghế:</span>
                         <span class="value">{{ $ticket->seat->row_char }}{{ $ticket->seat->seat_number }}</span>
                     </div>
-                    
                     <div class="info-row">
                         <span class="label">💰 Giá vé:</span>
                         <span class="value">{{ number_format($ticket->price_at_purchase, 0, ',', '.') }} VNĐ</span>
+                    </div>
+                    <div style="position:absolute; bottom:12px; right:12px; text-align:right;">
+                        @php
+                            $qrText = 'TICKET|' . $ticket->id . '|' . $ticket->seat_id . '|' . $ticket->ticket_code;
+                            $qrBase64 = (new QrcodeService())->generateQrCode($qrText);
+                        @endphp
+                        @if($qrBase64)
+                        <img src="data:image/png;base64,{{ $qrBase64 }}" alt="QR Vé" style="width:80px; height:80px; border:1px solid #e2e8f0; border-radius:6px; background:#fff;">
+                        <div style="font-size:10px; color:#888;">Vé #{{ $ticket->id }}</div>
+                        @endif
                     </div>
                 </div>
                 @endforeach
 
                 <!-- Thông tin combo (nếu có) -->
+
                 @if($booking->bookingItems->count() > 0)
-                <div class="mt-4">
+                <div class="mt-4" style="position:relative;">
                     <h4 class="text-primary mb-3">🍿 Combo đã chọn:</h4>
                     @foreach($booking->bookingItems as $item)
                     <div class="info-row">
@@ -224,6 +233,16 @@
                         <span class="value">{{ number_format($item->price_at_purchase * $item->quantity, 0, ',', '.') }} VNĐ</span>
                     </div>
                     @endforeach
+                    <div style="position:absolute; bottom:12px; right:12px; text-align:right;">
+                        @php
+                            $foodText = 'FOOD|' . $booking->id . '|' . json_encode($booking->bookingItems->toArray());
+                            $foodQrBase64 = (new QrcodeService())->generateQrCode($foodText);
+                        @endphp
+                        @if($foodQrBase64)
+                        <img src="data:image/png;base64,{{ $foodQrBase64 }}" alt="QR Combo" style="width:80px; height:80px; border:1px solid #e2e8f0; border-radius:6px; background:#fff;">
+                        <div style="font-size:10px; color:#888;">Combo</div>
+                        @endif
+                    </div>
                 </div>
                 @endif
 
