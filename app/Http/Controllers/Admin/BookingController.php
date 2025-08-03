@@ -98,15 +98,9 @@ class BookingController extends Controller
                         'created_at' => now(),
                     ]);
 
-                    // Sau khi cộng điểm, kiểm tra nâng hạng user
-                    $user->updateRankByTotalSpent();
-
                 } catch (\Exception $e) {
                     return redirect()->route('admin.bookings.index')->with('error', 'Lỗi khi cộng điểm thưởng: ' . $e->getMessage());
                 }
-            } else {
-                // Nếu không cộng điểm (đơn giá nhỏ), vẫn kiểm tra nâng hạng
-                $user->updateRankByTotalSpent();
             }
         }
 
