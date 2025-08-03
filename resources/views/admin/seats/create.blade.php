@@ -31,7 +31,18 @@
                     <h4 class="card-title">Thông tin ghế</h4>
                 </div>
                 <div class="card-body">
-                   
+                    @if (session('error'))
+                        <div class="alert alert-danger">{{ session('error') }}</div>
+                    @endif
+                    @if ($errors->any())
+                        <div class="alert alert-danger">
+                            <ul>
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
                     <form id="seatForm" action="{{ route('admin.seats.store') }}" method="POST">
                         @csrf
                         <input type="hidden" name="room_id" value="{{ $room->id }}">

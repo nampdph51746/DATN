@@ -32,7 +32,7 @@ class CinemaController extends Controller
 {
     $cinema = Cinema::withTrashed()
         ->with(['city' => function ($query) {
-            $query->withTrashed(); 
+            $query->withTrashed(); // Load cả thành phố đã bị xóa mềm
         }])
         ->findOrFail($id);
 
@@ -88,17 +88,15 @@ class CinemaController extends Controller
         return redirect()->route('admin.cinemas.index')->with('success', 'Đã thêm rạp chiếu phim mới thành công.');
     }
 
-    public function edit($id)
+    public function edit(Cinema $cinema)
     {
         $cities = City::orderBy('created_at', 'asc')->get()->reverse();
-        $cinema = Cinema::withTrashed()->findOrFail($id);
         return view('admin.cinemas.edit', compact('cinema', 'cities'));
     }
 
     // Cập nhật rạp
-    public function update(Request $request, $id)
+    public function update(Request $request, Cinema $cinema)
     {
-        $cinema = Cinema::withTrashed()->findOrFail($id);
         $validated = $request->validate([
             'name'          => 'required|string|max:255',
             'address'       => 'required|string',

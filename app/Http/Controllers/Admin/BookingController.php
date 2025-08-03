@@ -72,36 +72,43 @@ class BookingController extends Controller
         $booking->status = BookingStatus::from($request->status); 
         $booking->save();
 
-        if ($oldStatus === BookingStatus::Pending->value && $booking->status->value === BookingStatus::Confirmed->value) {
+        // Kiểm tra nâng hạng cho mọi trường hợp booking được confirmed
+        if ($booking->status->value === BookingStatus::Confirmed->value) {
             $user = $booking->user;
             if (!$user) {
                 return redirect()->route('admin.bookings.index')->with('error', 'Không tìm thấy người dùng.');
             }
 
-            $pointsToAdd = max(1, floor($booking->final_amount / 10000));
+            // Chỉ cộng điểm khi chuyển từ Pending → Confirmed
+            if ($oldStatus === BookingStatus::Pending->value) {
+                $pointsToAdd = max(1, floor($booking->final_amount / 10000));
 
-            if ($pointsToAdd > 0 && !PointHistory::where('booking_id', $booking->id)->exists()) {
-                try {
-                    $point = Point::firstOrCreate(
-                        ['user_id' => $user->id],
-                        ['points_expiry_date' => now()->addYear(), 'created_at' => now(), 'updated_at' => now()]
-                    );
-                    $point->total_points = ($point->total_points ?? 0) + $pointsToAdd;
-                    $point->save();
+                if ($pointsToAdd > 0 && !PointHistory::where('booking_id', $booking->id)->exists()) {
+                    try {
+                        $point = Point::firstOrCreate(
+                            ['user_id' => $user->id],
+                            ['points_expiry_date' => now()->addYear(), 'created_at' => now(), 'updated_at' => now()]
+                        );
+                        $point->total_points = ($point->total_points ?? 0) + $pointsToAdd;
+                        $point->save();
 
-                    PointHistory::create([
-                        'user_id' => $user->id,
-                        'booking_id' => $booking->id,
-                        'points_change' => $pointsToAdd,
-                        'reason_type' => 'earned',
-                        'description' => 'Cộng điểm cho đơn hàng #' . $booking->id,
-                        'created_at' => now(),
-                    ]);
+                        PointHistory::create([
+                            'user_id' => $user->id,
+                            'booking_id' => $booking->id,
+                            'points_change' => $pointsToAdd,
+                            'reason_type' => 'earned',
+                            'description' => 'Cộng điểm cho đơn hàng #' . $booking->id,
+                            'created_at' => now(),
+                        ]);
 
-                } catch (\Exception $e) {
-                    return redirect()->route('admin.bookings.index')->with('error', 'Lỗi khi cộng điểm thưởng: ' . $e->getMessage());
+                    } catch (\Exception $e) {
+                        return redirect()->route('admin.bookings.index')->with('error', 'Lỗi khi cộng điểm thưởng: ' . $e->getMessage());
+                    }
                 }
             }
+
+            // Luôn kiểm tra nâng hạng khi booking được confirmed (bất kể trạng thái cũ)
+            $user->updateRankByTotalSpent();
         }
 
         return redirect()->route('admin.bookings.index')->with('success', 'Cập nhật trạng thái thành công.');

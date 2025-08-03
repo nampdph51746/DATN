@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Spatie\Permission\Traits\HasRoles;
-<<<<<<< HEAD
 use Illuminate\Support\Facades\Log;
 
 
@@ -43,12 +42,6 @@ class User extends Authenticatable
             Log::info("User {$this->id} - Save result: " . ($result ? 'success' : 'fail') . ", Updated rank: {$this->customer_rank_id}");
         }
     }
-=======
-
-class User extends Authenticatable
-{
-    use HasFactory,HasRoles;
->>>>>>> Giang
 
     protected $fillable = [
         'name',

@@ -122,7 +122,12 @@ class SeatController extends Controller
     public function showSeatMap($showtimeId)
     {
         Log::info('Starting showSeatMap for showtime ID: ' . $showtimeId);
-        $showtime = Showtime::with('room.seats.seatType')->findOrFail($showtimeId);
+        $showtime = Showtime::with([
+            'room.seats.seatType',
+            'room.seats.showtimeSeatStates' => function ($q) use ($showtimeId) {
+                $q->where('showtime_id', $showtimeId);
+            }
+        ])->findOrFail($showtimeId);
         Log::info('Room for showtime ID ' . $showtimeId . ': ' . $showtime->room->name);
 
         $room = $showtime->room;
@@ -137,12 +142,28 @@ class SeatController extends Controller
         $seats = $room->seats->map(function ($seat) use ($bookedSeats, $showtime) {
             $label = $seat->row_char . '-' . str_pad($seat->seat_number, 2, '0', STR_PAD_LEFT);
             $price = $seat->seatType->price_modifier ?? $showtime->base_price; // Sử dụng price_modifier, fallback về base_price
+            
+            // Kiểm tra trạng thái từ showtimes_seat_states, fallback về seats.status
+            $seatState = $seat->showtimeSeatStates->first();
+            $status = 'available';
+            
+            if (in_array($seat->id, $bookedSeats)) {
+                $status = 'reserved';
+            } elseif ($seatState && $seatState->status === SeatStatus::Maintenance) {
+                $status = 'maintenance';
+            } elseif ($seatState && $seatState->status === SeatStatus::Booked) {
+                $status = 'reserved';
+            } elseif ($seat->status === SeatStatus::Maintenance) {
+                // Fallback: nếu không có seatState nhưng ghế gốc là maintenance
+                $status = 'maintenance';
+            }
+            
             $seatInfo = [
                 'seat_id'     => $seat->id,
                 'label'       => $label,
                 'row_char'    => $seat->row_char,
                 'seat_number' => $seat->seat_number,
-                'status'      => in_array($seat->id, $bookedSeats) ? 'reserved' : 'available',
+                'status'      => $status,
                 'seat_type'   => $seat->seatType->name,
                 'color_code'  => $seat->seatType->color_code,
                 'price'       => $price,
@@ -202,7 +223,17 @@ class SeatController extends Controller
             Log::info('Session ID for reserving seats: ' . $sessionId);
 
             foreach ($seatIds as $id) {
+                $seat = Seat::find($id);
                 $seatState = $states->firstWhere('seat_id', $id);
+                
+                // Kiểm tra ghế maintenance
+                if (($seat && $seat->status === SeatStatus::Maintenance) || ($seatState && $seatState->status === SeatStatus::Maintenance)) {
+                    Log::warning("Seat ID $id is under maintenance");
+                    return response()->json([
+                        'error' => "Ghế {$seat->row_char}{$seat->seat_number} đang bảo trì"
+                    ], 400);
+                }
+                
                 // Nếu đã reserved thì bỏ qua, không giữ nữa
                 if ($seatState && $seatState->status === SeatStatus::Reserved) {
                     if ($seatState->locked_by !== $sessionId) {
@@ -300,7 +331,12 @@ class SeatController extends Controller
                     }
                 } elseif ($seatState->status === SeatStatus::Booked) {
                     $status = 'reserved';
+                } elseif ($seatState->status === SeatStatus::Maintenance) {
+                    $status = 'maintenance';
                 }
+            } elseif ($seat->status === SeatStatus::Maintenance) {
+                // Fallback: nếu không có seatState nhưng ghế gốc là maintenance
+                $status = 'maintenance';
             }
 
             return [

@@ -141,9 +141,14 @@
                                 aria-expanded="false">
                                 <iconify-icon icon="solar:bell-bing-bold-duotone"
                                     class="fs-24 align-middle"></iconify-icon>
+                                @php
+                                    $unreadCount = \App\Models\Notification::where('user_id', Auth::id())->where('is_read', 0)->count();
+                                @endphp
                                 <span
-                                    class="position-absolute topbar-badge fs-10 translate-middle badge bg-danger rounded-pill">1<span
-                                        class="visually-hidden">unread messages</span></span>
+                                    class="position-absolute topbar-badge fs-10 translate-middle badge bg-danger rounded-pill">
+                                    {{ $unreadCount }}
+                                    <span class="visually-hidden">unread messages</span>
+                                </span>
                             </button>
                             <div class="dropdown-menu py-0 dropdown-lg dropdown-menu-end"
                                 aria-labelledby="page-header-notifications-dropdown">
@@ -160,9 +165,34 @@
                                     </div>
                                 </div>
                                 <div data-simplebar style="max-height: 280px;">
-
+                                    @php
+                                        $notifications = \App\Models\Notification::where('user_id', Auth::id())
+                                            ->orderBy('created_at', 'desc')
+                                            ->limit(10)
+                                            ->get();
+                                    @endphp
+                                    @forelse($notifications as $notification)
+                                        <div class="dropdown-item border-bottom py-2 notification-item {{ $notification->is_read ? 'opacity-50' : '' }}" data-id="{{ $notification->id }}" style="cursor:pointer;">
+                                            <div class="d-flex align-items-center">
+                                                <div class="flex-shrink-0 me-2">
+                                                    <iconify-icon icon="solar:bell-bing-bold-duotone" class="fs-20 text-primary"></iconify-icon>
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <div class="fw-semibold">{{ $notification->title }}</div>
+                                                    <div class="small text-muted">{{ $notification->message }}</div>
+                                                    <div class="small text-muted">{{ $notification->created_at->diffForHumans() }}
+                                                        @if($notification->is_read && $notification->read_at)
+                                                            <span class="badge bg-secondary ms-2">Đã đọc: {{ $notification->read_at->format('H:i d/m/Y') }}</span>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @empty
+                                        <div class="text-center py-3 text-muted">Không có thông báo nào.</div>
+                                    @endforelse
                                     <div class="text-center py-3">
-                                        <a href="javascript:void(0);" class="btn btn-primary btn-sm">View All
+                                        <a href="" class="btn btn-primary btn-sm">View All
                                             Notification
                                             <i class="bx bx-right-arrow-alt ms-1"></i></a>
                                     </div>
@@ -552,11 +582,32 @@
             </button>
 
             <div class="scrollbar" data-simplebar>
+
                 <ul class="navbar-nav" id="navbar-nav">
                     <li class="menu-title">Quản lý chung</li>
 
+                    <!-- Menu Điểm -->
                     <li class="nav-item">
-                        <a class="nav-link" href="">
+                        <a class="nav-link menu-arrow" href="#sidebarPoints" role="button" aria-expanded="false" aria-controls="sidebarPoints">
+                            <span class="nav-icon">
+                                <iconify-icon icon="solar:star-bold-duotone"></iconify-icon>
+                            </span>
+                            <span class="nav-text">Quản lý điểm</span>
+                        </a>
+                        <div class="collapse" id="sidebarPoints" data-bs-parent="#navbar-nav">
+                            <ul class="nav sub-navbar-nav">
+                                <li class="sub-nav-item">
+                                    <a class="sub-nav-link" href="{{ route('admin.points.index') }}">Danh sách điểm</a>
+                                </li>
+                                <li class="sub-nav-item">
+                                    <a class="sub-nav-link" href="{{ route('admin.point_history.index') }}">Lịch sử điểm</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('admin.dashboard') }}">
                             <span class="nav-icon">
                                 <iconify-icon icon="solar:chart-square-bold-duotone"></iconify-icon>
                             </span>
@@ -956,6 +1007,7 @@
 
     </div>
     <!-- END Wrapper -->
+
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         @if (session('success'))
@@ -977,8 +1029,74 @@
                 showConfirmButton: false
             });
         @endif
+
+        // Đánh dấu thông báo đã đọc
+        document.querySelectorAll('.notification-item').forEach(function(item) {
+            item.addEventListener('click', function() {
+                var id = this.getAttribute('data-id');
+                var self = this;
+                if (!self.classList.contains('opacity-50')) {
+                    fetch('/admin/notifications/' + id + '/read', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({})
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            self.classList.add('opacity-50');
+                            // Hiện thời gian đọc
+                            var badge = self.querySelector('.badge.bg-secondary');
+                            if (!badge) {
+                                var timeDiv = self.querySelector('.small.text-muted');
+                                if (timeDiv) {
+                                    timeDiv.innerHTML += ' <span class="badge bg-secondary ms-2">Đã đọc: ' + data.read_at + '</span>';
+                                }
+                            }
+                        }
+                    });
+                }
+            });
+        });
+        // Đánh dấu thông báo đã đọc
+        document.querySelectorAll('.notification-item').forEach(function(item) {
+            item.addEventListener('click', function() {
+                var id = this.getAttribute('data-id');
+                var self = this;
+                if (!self.classList.contains('opacity-50')) {
+                    // Làm mờ ngay khi click
+                    self.classList.add('opacity-50');
+                    fetch('/admin/notifications/' + id + '/read', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({})
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Hiện thời gian đọc
+                            var badge = self.querySelector('.badge.bg-secondary');
+                            if (!badge) {
+                                var timeDiv = self.querySelector('.small.text-muted');
+                                if (timeDiv) {
+                                    timeDiv.innerHTML += ' <span class="badge bg-secondary ms-2">Đã đọc: ' + data.read_at + '</span>';
+                                }
+                            }
+                        }
+                    });
+                }
+            });
+        });
     });
-</script>
+    </script>
 
     <!-- SweetAlert2 hiển thị thông báo flash -->
     <script>

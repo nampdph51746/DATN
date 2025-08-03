@@ -128,6 +128,28 @@
                                     @enderror
                                 </div>
                             </div>
+                            <div class="col-lg-6">
+                                <div class="mb-3">
+                                    <label for="promotion-usage-limit" class="form-label">Giới hạn sử dụng mỗi người dùng</label>
+                                    <input type="number" id="promotion-usage-limit" name="usage_limit_per_user" class="form-control" value="{{ old('usage_limit_per_user', $promotion->usage_limit_per_user) }}">
+                                    @error('usage_limit_per_user')
+                                        <span class="text-danger fs-13">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-lg-6">
+                                <div class="mb-3">
+                                    <label for="promotion-applies-to" class="form-label">Áp dụng cho</label>
+                                    <select class="form-control" id="promotion-applies-to" name="applies_to">
+                                        <option value="">Chọn đối tượng áp dụng</option>
+                                        <option value="movies" {{ old('applies_to', $promotion->applies_to) == 'movies' ? 'selected' : '' }}>Movies</option>
+                                        <option value="tickets" {{ old('applies_to', $promotion->applies_to) == 'tickets' ? 'selected' : '' }}>Tickets</option>
+                                    </select>
+                                    @error('applies_to')
+                                        <span class="text-danger fs-13">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
                             <div class="col-lg-12">
                                 <div class="mb-0">
                                     <label for="promotion-description" class="form-label">Mô tả</label>

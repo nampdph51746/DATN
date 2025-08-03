@@ -22,11 +22,6 @@ class Kernel extends ConsoleKernel
         $schedule->job(new \App\Jobs\UpdateShowtimeStatusJob)
                  ->everyTwoMinutes()
                  ->withoutOverlapping();
-
-        // Dispatch job tự động xác nhận vé sau 10 phút
-        $schedule->job(new \App\Jobs\AutoConfirmPendingBookings)
-                 ->everyMinute()
-                 ->withoutOverlapping();
     }
 
     /**

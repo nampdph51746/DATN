@@ -1,70 +1,51 @@
-@extends('layouts.client.client')
-@section('title', 'Đặt lại mật khẩu | CineVN')
+<div style="max-width: 400px; margin: 40px auto; background: #fff; border-radius: 12px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); padding: 32px;">
+    <h2 style="text-align:center; font-weight:700; color:#2d3748; margin-bottom:24px;">Đặt lại mật khẩu</h2>
+    <form method="POST" action="{{ route('password.reset.submit') }}">
+        @csrf
+        @method('PUT')
 
-@section('content')
-    <div class="d-flex flex-column h-100 p-3">
-        <div class="d-flex flex-column flex-grow-1">
-            <div class="row h-100">
-                <div class="col-xxl-7">
-                    <div class="row justify-content-center h-100">
-                        <div class="col-lg-6 py-lg-5">
-                            <div class="d-flex flex-column h-100 justify-content-center">
-                                <div class="auth-logo mb-4">
-                                    <a href="{{ url('/') }}" class="logo-dark">
-                                        <img src="{{ asset('assets/images/logo-dark.png') }}" height="24" alt="logo dark">
-                                    </a>
-                                    <a href="{{ url('/') }}" class="logo-light">
-                                        <img src="{{ asset('assets/images/logo-light.png') }}" height="24" alt="logo light">
-                                    </a>
-                                </div>
+        <input type="hidden" name="token" value="{{ request()->route('token') }}">
 
-                                <h2 class="fw-bold fs-24">Đặt Lại Mật Khẩu</h2>
-                                <p class="text-muted mt-1 mb-4">Nhập mật khẩu mới cho tài khoản của bạn.</p>
-
-                                <form method="POST" action="{{ route('password.update') }}">
-                                    @csrf
-                                    <input type="hidden" name="token" value="{{ $request->route('token') }}">
-
-                                    <div class="mb-3">
-                                        <label for="email" class="form-label">Email</label>
-                                        <input type="email" name="email" id="email" class="form-control" placeholder="Nhập địa chỉ email" value="{{ old('email', $request->email) }}" required autofocus>
-                                        @error('email')
-                                            <span class="text-danger">{{ $message }}</span>
-                                        @enderror
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label for="password" class="form-label">Mật khẩu mới</label>
-                                        <input type="password" name="password" id="password" class="form-control" placeholder="Nhập mật khẩu mới" required>
-                                        @error('password')
-                                            <span class="text-danger">{{ $message }}</span>
-                                        @enderror
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label for="password_confirmation" class="form-label">Xác nhận mật khẩu</label>
-                                        <input type="password" name="password_confirmation" id="password_confirmation" class="form-control" placeholder="Nhập lại mật khẩu" required>
-                                    </div>
-
-                                    <div class="mb-1 text-center d-grid">
-                                        <button class="btn btn-soft-primary" type="submit">Đặt Lại Mật Khẩu</button>
-                                    </div>
-                                </form>
-
-                                <p class="mt-4 text-center">
-                                    <a href="{{ route('login') }}" class="text-dark fw-bold">Quay lại Đăng Nhập</a>
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-xxl-5 d-none d-xxl-flex">
-                    <div class="card h-100 mb-0 overflow-hidden">
-                        <img src="{{ asset('assets/images/small/img-11.jpg') }}" alt="" class="w-100 h-100">
-                    </div>
-                </div>
-            </div>
+        <div style="margin-bottom:18px;">
+            <label for="email" style="display:block; font-weight:500; color:#4a5568; margin-bottom:6px;">Email</label>
+            <input
+                type="email"
+                id="email"
+                name="email"
+                value="{{ old('email', request()->email) }}"
+                required
+                readonly
+                style="width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:6px; background:#f1f5f9; color:#64748b; font-size:1rem; cursor:not-allowed;"
+            >
         </div>
-    </div>
-@endsection
+
+        <div style="margin-bottom:18px;">
+            <label for="password" style="display:block; font-weight:500; color:#4a5568; margin-bottom:6px;">Mật khẩu mới</label>
+            <input
+                type="password"
+                id="password"
+                name="password"
+                placeholder="Nhập mật khẩu mới"
+                required
+                style="width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:6px; background:#f8fafc; font-size:1rem;"
+            >
+        </div>
+
+        <div style="margin-bottom:24px;">
+            <label for="password_confirmation" style="display:block; font-weight:500; color:#4a5568; margin-bottom:6px;">Xác nhận mật khẩu</label>
+            <input
+                type="password"
+                id="password_confirmation"
+                name="password_confirmation"
+                placeholder="Nhập lại mật khẩu"
+                required
+                style="width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:6px; background:#f8fafc; font-size:1rem;"
+            >
+        </div>
+
+        <button type="submit"
+            style="width:100%; background:#000000; color:#fff; font-weight:600; padding:12px 0; border:none; border-radius:6px; font-size:1.1rem; transition:background 0.2s;">
+            Đặt lại mật khẩu
+        </button>
+    </form>
+</div>
