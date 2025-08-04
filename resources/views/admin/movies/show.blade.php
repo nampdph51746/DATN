@@ -118,12 +118,12 @@
                             </p>
                         </div>
                         <div class="col-lg-6">
-                            <p class="mb-0 fw-medium text-dark fs-16">Thời gian tạo: <span class="text-muted">{{ $movie->created_at->tz('Asia/Ho_Chi_Minh')->format('d/m/Y H:i') }}</span></p>
+                            <p class="mb-0 fw-medium text-dark fs-16">Thời gian tạo: <span class="text-muted">{{ $movie->created_at ? $movie->created_at->tz('Asia/Ho_Chi_Minh')->format('d/m/Y H:i') : 'N/A' }}</span></p>
                         </div>
                     </div>
                     <div class="row align-items-center g-2 mt-3">
                         <div class="col-lg-6">
-                            <p class="mb-0 fw-medium text-dark fs-16">Thời gian cập nhật: <span class="text-muted">{{ $movie->updated_at->tz('Asia/Ho_Chi_Minh')->format('d/m/Y H:i') }}</span></p>
+                            <p class="mb-0 fw-medium text-dark fs-16">Thời gian cập nhật: <span class="text-muted">{{ $movie->updated_at ? $movie->updated_at->tz('Asia/Ho_Chi_Minh')->format('d/m/Y H:i') : 'N/A' }}</span></p>
                         </div>
                     </div>
                     <h4 class="text-dark fw-medium mt-4">Mô tả:</h4>
@@ -170,25 +170,132 @@
                     </div>
 
                     <!-- Form tạo suất chiếu tự động -->
-                    <form action="{{ route('admin.showtimes.storeAuto') }}" method="POST" class="d-flex align-items-center gap-2 mb-3" id="createShowtimeForm">
-                        @csrf
-                        <input type="hidden" name="movie_id" value="{{ $movie->id }}">
-                        <select name="room_ids[]" class="form-control form-control-sm" multiple required id="roomSelect">
-                            <option value="" disabled>Chọn phòng</option>
-                            @foreach ($rooms as $room)
-                                <option value="{{ $room->id }}">{{ $room->name }}</option>
-                            @endforeach
-                        </select>
-                        @error('room_ids')
-                            <span class="text-danger">{{ $message }}</span>
-                        @enderror
-                        <input type="date" name="date" class="form-control form-control-sm w-auto" value="{{ now()->format('Y-m-d') }}" min="{{ now()->format('Y-m-d') }}" required>
-                        @error('date')
-                            <span class="text-danger">{{ $message }}</span>
-                        @enderror
-                        <button type="button" class="btn btn-primary btn-sm d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#confirmShowtimeModal">
-                            <i class="bx bx-plus fs-18"></i> Tạo suất chiếu
-                        </button>
+                    <form action="{{ route('admin.showtimes.storeAuto') }}" method="POST" class="p-3 rounded shadow-sm bg-white mb-3" id="createShowtimeForm" style="border: 1px solid #e3e6ea;">
+                        <div class="row g-3 align-items-end">
+                            @csrf
+                            <input type="hidden" name="movie_id" value="{{ $movie->id }}">
+                            <div class="col-md-5">
+                                <label for="roomSelect" class="form-label fw-medium text-dark mb-1"><i class="bx bx-movie fs-18 me-1"></i> Phòng chiếu</label>
+                                <select name="room_ids[]" class="form-control form-control-sm rounded-2" multiple required id="roomSelect">
+                                    <option value="" disabled selected hidden>Chọn phòng chiếu...</option>
+                                    @foreach ($rooms as $room)
+                                        <option value="{{ $room->id }}">&#127910; {{ $room->name }}</option>
+                                    @endforeach
+                                </select>
+<style>
+/* Select2 custom cho dropdown phòng chiếu */
+.select2-container--default .select2-selection--multiple {
+    min-height: 44px;
+    border: 1.5px solid #b6c2d1;
+    border-radius: 0.5rem;
+    background: #f8fafc;
+    box-shadow: none;
+    padding: 6px 10px;
+    font-size: 1rem;
+    transition: border-color .2s, box-shadow .2s;
+}
+.select2-container--default .select2-selection--multiple:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 2px #0d6efd33;
+}
+.select2-container--default .select2-selection--multiple .select2-selection__choice {
+    background-color: #eaf4ff;
+    color: #0d6efd;
+    border: 1px solid #b6c2d1;
+    border-radius: 0.35rem;
+    padding: 2px 10px 2px 8px;
+    margin: 2px 3px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+    color: #dc3545;
+    font-weight: bold;
+    margin-right: 4px;
+    cursor: pointer;
+    font-size: 1.1em;
+}
+.select2-container--default .select2-selection--multiple .select2-selection__rendered {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.select2-container--default .select2-results__option {
+    padding: 10px 20px;
+    font-size: 1.08rem;
+    border-radius: 0.35rem;
+    transition: background .15s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.select2-container--default .select2-results__option--highlighted {
+    background: #eaf4ff;
+    color: #0d6efd;
+}
+.select2-container--default .select2-results__option[aria-selected=true] {
+    background: #0d6efd;
+    color: #fff;
+}
+.form-label[for="roomSelect"] {
+    color: #0d6efd;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    font-size: 1.08rem;
+    margin-bottom: 6px;
+}
+#roomSelect {
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    font-size: 1rem;
+}
+/* Dropdown phòng chiếu đẹp hơn */
+#roomSelect {
+    background: #f8fafc;
+    border: 1.5px solid #b6c2d1;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    min-height: 38px;
+    transition: border-color .2s, box-shadow .2s;
+}
+#roomSelect:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 2px #0d6efd33;
+}
+#roomSelect option {
+    padding: 8px 16px;
+    font-size: 1.08rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.form-label[for="roomSelect"] {
+    color: #0d6efd;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+</style>
+                                @error('room_ids')
+                                    <span class="text-danger small">{{ $message }}</span>
+                                @enderror
+                            </div>
+                            <div class="col-md-4">
+                                <label for="date" class="form-label fw-medium text-dark mb-1"><i class="bx bx-calendar fs-18 me-1"></i> Ngày chiếu</label>
+                                <input type="date" name="date" id="date" class="form-control form-control-sm rounded-2" value="{{ now()->format('Y-m-d') }}" min="{{ now()->format('Y-m-d') }}" required>
+                                @error('date')
+                                    <span class="text-danger small">{{ $message }}</span>
+                                @enderror
+                            </div>
+                            <div class="col-md-3 d-flex align-items-end">
+                                <button type="button" class="btn btn-primary btn-sm w-100 d-flex align-items-center justify-content-center gap-2 rounded-2 shadow-sm" data-bs-toggle="modal" data-bs-target="#confirmShowtimeModal" style="transition: box-shadow .2s;">
+                                    <i class="bx bx-plus fs-18"></i> <span class="fw-medium">Tạo suất chiếu</span>
+                                </button>
+                            </div>
+                        </div>
                     </form>
 
                     <!-- Modal xác nhận tạo suất chiếu -->
@@ -250,7 +357,7 @@
                                                 {{ ucfirst($statusValue) }}
                                             </span>
                                         </td>
-                                        <td>{{ $showtime->created_at->tz('Asia/Ho_Chi_Minh')->format('d/m/Y H:i') }}</td>
+                                        <td>{{ $showtime->created_at ? $showtime->created_at->tz('Asia/Ho_Chi_Minh')->format('d/m/Y H:i') : 'N/A' }}</td>
                                         <td>
                                             <a href="{{ route('admin.showtimes.edit', $showtime->id) }}" class="btn btn-sm btn-outline-primary">
                                                 <i class="bx bx-edit fs-16"></i>
@@ -322,13 +429,21 @@
 </style>
 
 <script>
-// Khởi tạo Select2 cho select phòng
+// Khởi tạo Select2 cho select phòng với icon và style đẹp hơn
 $('#roomSelect').select2({
     placeholder: "Chọn phòng (gõ để tìm)",
     closeOnSelect: false,
     allowClear: true,
     theme: 'bootstrap4',
     width: 'resolve',
+    templateResult: function(data) {
+        if (!data.id) return data.text;
+        return $('<span><i class="bx bx-movie me-2 text-primary"></i>' + data.text + '</span>');
+    },
+    templateSelection: function(data) {
+        if (!data.id) return data.text;
+        return $('<span><i class="bx bx-check me-1 text-success"></i>' + data.text + '</span>');
+    }
 });
 
 // Hàm tính toán các khung giờ suất chiếu dự kiến

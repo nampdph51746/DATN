@@ -22,6 +22,7 @@ use App\Models\ShowtimeSeatState;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
+use App\Events\BookingConfirmed;
 
 class VnpayController extends Controller
 {
@@ -220,27 +221,31 @@ class VnpayController extends Controller
                     Log::warning("Points not added. Points: {$pointsToAdd}, Existing history: " . (PointHistory::where('booking_id', $booking->id)->exists() ? 'Yes' : 'No'));
                 }
 
-                // 4. Tạo bản ghi trong bảng showtimes
-                $movie = Movie::where('name', $bookingData['movie_title'])->firstOrFail();
-                $room = Room::where('name', $bookingData['room_name'])->firstOrFail();
-                $startTime = $bookingData['showtime'] ? \Carbon\Carbon::parse($bookingData['showtime']) : now();
-                $endTime = $startTime->copy()->addMinutes(90);
-
-                $showtime = Showtime::create([
-                    'movie_id' => $movie->id,
-                    'room_id' => $room->id,
-                    'start_time' => $startTime,
-                    'end_time' => $endTime,
-                    'base_price' => $bookingData['base_price'] ?? 100000,
-                    'status' => 'scheduled',
-                ]);
-
-                // 5. Tạo bản ghi trong bảng tickets và cập nhật showtime_seat_states
+                // 4. Lấy showtime từ ghế đã đặt và tạo tickets
                 $selectedSeatInfos = session('selected_seats_info', []);
 
                 // Log selected_seats_info để debug
                 Log::info('Selected seats info:', $selectedSeatInfos);
+                
+                if (empty($selectedSeatInfos)) {
+                    throw new \Exception('Không tìm thấy thông tin ghế đã chọn.');
+                }
 
+                // Lấy showtime_id từ showtime_seat_states của ghế đầu tiên
+                $firstSeatId = $selectedSeatInfos[0]['seat_id'];
+                $seatState = ShowtimeSeatState::where('seat_id', $firstSeatId)
+                    ->where('status', SeatStatus::Reserved)
+                    ->orderBy('created_at', 'desc')
+                    ->first();
+                    
+                if (!$seatState) {
+                    throw new \Exception('Không tìm thấy trạng thái ghế đã đặt.');
+                }
+                
+                $showtime = Showtime::findOrFail($seatState->showtime_id);
+                Log::info('Using existing showtime ID: ' . $showtime->id);
+
+                // 5. Tạo bản ghi trong bảng tickets và cập nhật showtime_seat_states
                 foreach ($selectedSeatInfos as $seatInfo) {
                     $seat = Seat::where('id', $seatInfo['seat_id'])->first();
 
@@ -300,6 +305,10 @@ class VnpayController extends Controller
                 }
 
                 DB::commit();
+                
+                // Fire event để gửi email xác nhận booking
+                event(new BookingConfirmed($booking));
+                
                 session()->forget(['booking_preview', 'selected_seats_info']);
 
                 return redirect()->route('client.success')->with('success', 'Thanh toán thành công!');

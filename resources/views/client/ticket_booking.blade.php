@@ -3,6 +3,7 @@
             window.userRankDiscountPercentage = {{ (float) $userRank->discount_percentage }};
         </script>
     @endif
+    
     <style>
         .seat-selection-wrapper {
             padding: 20px;
@@ -934,7 +935,6 @@
                                 <li id="step2" class="not_active">Seat Selection</li>
                                 <li id="step3" class="not_active">Snack Selection</li>
                                 <li id="step4" class="not_active">Payment</li>
-                                <li id="step5" class="not_active">E-Ticket</li>
                             </ul>
                             <br>
                             <fieldset>
@@ -1100,7 +1100,7 @@
                                 <div class="flex justify-between mt-4 px-4">
                                     <input type="button" name="previous-step" id="back-btn"
                                         class="previous-step custom-btn bg-gray-600 hover:bg-gray-700" value="Back" />
-                                    <input type="button" name="next-step" id="proceed-snack-btn"
+                                    <input type="button" name="next-step" id="proceed-payment-btn"
                                         class="next-step custom-btn bg-[#e5006e] hover:bg-[#c4005c]"
                                         value="Proceed to Payment" />
                                 </div>
@@ -1407,9 +1407,9 @@
                                 <div class="flex justify-between mt-4 px-4">
                                     <input type="button" name="previous-step" id="back-btn"
                                         class="previous-step custom-btn bg-gray-600 hover:bg-gray-700" value="Back" />
-                                    <input type="button" name="next-step" id="proceed-payment-btn"
+                                    <!-- <input type="button" name="next-step" id="proceed-payment-btn"
                                         class="next-step custom-btn bg-[#e5006e] hover:bg-[#c4005c]"
-                                        value="Proceed to Payment" />
+                                        value="Proceed to Payment" /> -->
                                 </div>
                             </fieldset>
                             <!-- Bước 5: E-Ticket -->
@@ -1542,6 +1542,50 @@
         let selectedSnacks = [];
         let countdownInterval = null;
         let countdownEndTime = null;
+
+        // Nhận timer từ iframe seat_selection
+        window.receiveTimer = function(data) {
+            if (data && data.endTime) {
+                countdownEndTime = data.endTime;
+                if (countdownInterval) clearInterval(countdownInterval);
+                startCountdownFromEndTime(countdownEndTime);
+            }
+        };
+
+        function startCountdownFromEndTime(endTime) {
+            function updateTimerDisplay() {
+                const now = new Date().getTime();
+                let distance = endTime - now;
+                if (distance <= 0) {
+                    clearInterval(countdownInterval);
+                    countdownInterval = null;
+                    ['hours-snack', 'minutes-snack', 'seconds-snack', 'hours-payment', 'minutes-payment', 'seconds-payment']
+                    .forEach(id => {
+                        const element = document.getElementById(id);
+                        if (element) element.textContent = "00";
+                    });
+                    countdownEndTime = null;
+                    return;
+                }
+                const hours = Math.floor(distance / (1000 * 60 * 60));
+                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                ['hours-snack', 'hours-payment'].forEach(id => {
+                    const element = document.getElementById(id);
+                    if (element) element.textContent = String(hours).padStart(2, '0');
+                });
+                ['minutes-snack', 'minutes-payment'].forEach(id => {
+                    const element = document.getElementById(id);
+                    if (element) element.textContent = String(minutes).padStart(2, '0');
+                });
+                ['seconds-snack', 'seconds-payment'].forEach(id => {
+                    const element = document.getElementById(id);
+                    if (element) element.textContent = String(seconds).padStart(2, '0');
+                });
+            }
+            updateTimerDisplay();
+            countdownInterval = setInterval(updateTimerDisplay, 1000);
+        }
         let prevId = "1";
 
         console.log('Variables initialized:', {
@@ -1646,6 +1690,11 @@
                 selectedSeats,
                 cinemaName
             });
+            // Chỉ enable nút Proceed to Snacks khi đã chọn ghế
+            const proceedSnackBtn = document.getElementById('proceed-snack-btn');
+            if (proceedSnackBtn) {
+                proceedSnackBtn.disabled = !(selectedSeats.length > 0);
+            }
             updateOrderSummary();
         };
 
@@ -1701,11 +1750,14 @@
                     if (!seenTimes.has(key)) {
                         seenTimes.add(key);
                         const btn = document.createElement('button');
+                        
+                        // CSS class đơn giản
                         btn.className = 'screen-time';
-                        btn.textContent = time.time;
+                        btn.textContent = `${time.time} - ${time.end_time}`;
                         btn.onclick = function() {
-                            timeFunction(time.id, time.time, time.base_price);
+                            timeFunction(time.id, `${time.time} - ${time.end_time}`, time.base_price);
                         };
+                        
                         timeDiv.appendChild(btn);
                     }
                 });
@@ -1722,9 +1774,14 @@
             ticketPrice = basePrice;
             selectedSeats = [];
             document.getElementById("screen-next-btn").disabled = false;
+            // Disable nút Proceed to Snacks khi chưa chọn ghế
+            const proceedSnackBtn = document.getElementById('proceed-snack-btn');
+            if (proceedSnackBtn) {
+                proceedSnackBtn.disabled = true;
+            }
             updateOrderSummary();
-
-            startCountdown(600);
+            // Không khởi tạo timer mặc định nữa, sẽ nhận từ iframe seat_selection
+            // startCountdown(600);
 
             const iframe = document.getElementById('seat-map-iframe');
             const placeholder = document.getElementById('seat-map-placeholder');

@@ -12,6 +12,7 @@
     <meta name="author" content="Techzaa" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 
+
     <!-- App favicon -->
     <link rel="shortcut icon" href="{{ asset('assets/images/favicon.ico') }}">
 
@@ -25,21 +26,74 @@
     <link href="{{ asset('assets/css/app.min.css') }}" rel="stylesheet" type="text/css" />
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <!-- Theme Config js (Require in all Page) -->
     <script src="{{ asset('assets/js/config.js') }}"></script>
 
 
-
     <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
 </head>
 
 <style>
-    /* Thêm lớp tùy chỉnh để đảm bảo main-nav có thể cuộn và không bị giới hạn chiều cao */
-    .main-nav-scrollable {
-        overflow-y: auto !important;
-        max-height: none !important;
+    /* Animation cho dropdown menu sidebar */
+    .collapse {
+        transition: all 0.35s ease-in-out;
+        overflow: hidden;
+        max-height: 0;
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    /* Animation cho menu arrow (mũi tên xoay) */
+    .nav-link.menu-arrow {
+        position: relative;
+    }
+
+    .nav-link.menu-arrow[aria-expanded="true"]::after {
+        transform: translateY(-50%) rotate(180deg);
+    }
+
+    /* Smooth transition cho sub-menu items */
+    .sub-navbar-nav {
+        transition: all 0.35s ease-in-out;
+    }
+
+    .sub-navbar-nav .sub-nav-item {
+        opacity: 0;
+        transform: translateX(-15px);
+        transition: all 0.25s ease-in-out;
+    }
+
+    .collapse.show .sub-navbar-nav .sub-nav-item {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    .collapse.show .sub-navbar-nav .sub-nav-item:nth-child(1) {
+        transition-delay: 0.1s;
+    }
+
+    .collapse.show .sub-navbar-nav .sub-nav-item:nth-child(2) {
+        transition-delay: 0.15s;
+    }
+
+    .collapse.show .sub-navbar-nav .sub-nav-item:nth-child(3) {
+        transition-delay: 0.2s;
+    }
+
+    .collapse.show .sub-navbar-nav .sub-nav-item:nth-child(4) {
+        transition-delay: 0.25s;
+    }
+
+    /* Hover effect cho menu items */
+    .sub-nav-link:hover {
+        background-color: rgba(var(--bs-primary-rgb), 0.1);
+        padding-left: 20px;
+        transition: all 0.25s ease;
     }
 </style>
 
@@ -47,7 +101,6 @@
 
     <!-- START Wrapper -->
     <div class="wrapper">
-
         <!-- ========== Topbar Start ========== -->
         <header class="topbar">
             <div class="container-fluid">
@@ -70,7 +123,6 @@
                             </h4>
                         </div>
                     </div>
-
                     <div class="d-flex align-items-center gap-1">
 
                         <!-- Theme Color (Light/Dark) -->
@@ -87,9 +139,14 @@
                                 aria-expanded="false">
                                 <iconify-icon icon="solar:bell-bing-bold-duotone"
                                     class="fs-24 align-middle"></iconify-icon>
+                                @php
+                                    $unreadCount = \App\Models\Notification::where('user_id', Auth::id())->where('is_read', 0)->count();
+                                @endphp
                                 <span
-                                    class="position-absolute topbar-badge fs-10 translate-middle badge bg-danger rounded-pill">3<span
-                                        class="visually-hidden">unread messages</span></span>
+                                    class="position-absolute topbar-badge fs-10 translate-middle badge bg-danger rounded-pill">
+                                    {{ $unreadCount }}
+                                    <span class="visually-hidden">unread messages</span>
+                                </span>
                             </button>
                             <div class="dropdown-menu py-0 dropdown-lg dropdown-menu-end"
                                 aria-labelledby="page-header-notifications-dropdown">
@@ -106,170 +163,115 @@
                                     </div>
                                 </div>
                                 <div data-simplebar style="max-height: 280px;">
-                                    <!-- Item -->
-                                    <a href="javascript:void(0);" class="dropdown-item py-3 border-bottom text-wrap">
-                                        <div class="d-flex">
-                                            <div class="flex-shrink-0">
-                                                <img src="{{ asset('assets/images/users/avatar-1.jpg') }}"
-                                                    class="img-fluid me-2 avatar-sm rounded-circle" alt="avatar-1" />
-                                            </div>
-                                            <div class="flex-grow-1">
-                                                <p class="mb-0"><span class="fw-medium">Josephine Thompson
-                                                    </span>commented on admin panel <span>" Wow 😍! this admin looks
-                                                        good and awesome design"</span></p>
-                                            </div>
-                                        </div>
-                                    </a>
-                                    <!-- Item -->
-                                    <a href="javascript:void(0);" class="dropdown-item py-3 border-bottom">
-                                        <div class="d-flex">
-                                            <div class="flex-shrink-0">
-                                                <div class="avatar-sm me-2">
-                                                    <span
-                                                        class="avatar-title bg-soft-info text-info fs-20 rounded-circle">
-                                                        D
-                                                    </span>
+                                    @php
+                                        $notifications = \App\Models\Notification::where('user_id', Auth::id())
+                                            ->orderBy('created_at', 'desc')
+                                            ->limit(10)
+                                            ->get();
+                                    @endphp
+                                    @forelse($notifications as $notification)
+                                        <div class="dropdown-item border-bottom py-2 notification-item {{ $notification->is_read ? 'opacity-50' : '' }}" data-id="{{ $notification->id }}" style="cursor:pointer;">
+                                            <div class="d-flex align-items-center">
+                                                <div class="flex-shrink-0 me-2">
+                                                    <iconify-icon icon="solar:bell-bing-bold-duotone" class="fs-20 text-primary"></iconify-icon>
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <div class="fw-semibold">{{ $notification->title }}</div>
+                                                    <div class="small text-muted">{{ $notification->message }}</div>
+                                                    <div class="small text-muted">{{ $notification->created_at->diffForHumans() }}
+                                                        @if($notification->is_read && $notification->read_at)
+                                                            <span class="badge bg-secondary ms-2">Đã đọc: {{ $notification->read_at->format('H:i d/m/Y') }}</span>
+                                                        @endif
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <div class="flex-grow-1">
-                                                <p class="mb-0 fw-semibold">Donoghue Susan</p>
-                                                <p class="mb-0 text-wrap">
-                                                    Hi, How are you? What about our next meeting
-                                                </p>
-                                            </div>
                                         </div>
-                                    </a>
-                                    <!-- Item -->
-                                    <a href="javascript:void(0);" class="dropdown-item py-3 border-bottom">
-                                        <div class="d-flex">
-                                            <div class="flex-shrink-0">
-                                                <img src="assets/images/users/avatar-3.jpg"
-                                                    class="img-fluid me-2 avatar-sm rounded-circle" alt="avatar-3" />
-                                            </div>
-                                            <div class="flex-grow-1">
-                                                <p class="mb-0 fw-semibold">Jacob Gines</p>
-                                                <p class="mb-0 text-wrap">Answered to your comment on the cash flow
-                                                    forecast's graph 🔔.</p>
-                                            </div>
-                                        </div>
-                                    </a>
-                                    <!-- Item -->
-                                    <a href="javascript:void(0);" class="dropdown-item py-3 border-bottom">
-                                        <div class="d-flex">
-                                            <div class="flex-shrink-0">
-                                                <div class="avatar-sm me-2">
-                                                    <span
-                                                        class="avatar-title bg-soft-warning text-warning fs-20 rounded-circle">
-                                                        <iconify-icon
-                                                            icon="iconamoon:comment-dots-duotone"></iconify-icon>
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            <div class="flex-grow-1">
-                                                <p class="mb-0 fw-semibold text-wrap">You have received <b>20</b> new
-                                                    messages in the
-                                                    conversation</p>
-                                            </div>
-                                        </div>
-                                    </a>
-                                    <!-- Item -->
-                                    <a href="javascript:void(0);" class="dropdown-item py-3 border-bottom">
-                                        <div class="d-flex">
-                                            <div class="flex-shrink-0">
-                                                <img src="{{ asset('assets/images/users/avatar-5.jpg') }}"
-                                                    class="img-fluid me-2 avatar-sm rounded-circle" alt="avatar-5" />
-                                            </div>
-                                            <div class="flex-grow-1">
-                                                <p class="mb-0 fw-semibold">Shawn Bunch</p>
-                                                <p class="mb-0 text-wrap">
-                                                    Commented on Admin
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </a>
-                                </div>
-                                <div class="text-center py-3">
-                                    <a href="javascript:void(0);" class="btn btn-primary btn-sm">View All Notification
-                                        <i class="bx bx-right-arrow-alt ms-1"></i></a>
+                                    @empty
+                                        <div class="text-center py-3 text-muted">Không có thông báo nào.</div>
+                                    @endforelse
+                                    <div class="text-center py-3">
+                                        <a href="" class="btn btn-primary btn-sm">View All
+                                            Notification
+                                            <i class="bx bx-right-arrow-alt ms-1"></i></a>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <!-- Theme Setting -->
-                        <div class="topbar-item d-none d-md-flex">
-                            <button type="button" class="topbar-button" id="theme-settings-btn"
-                                data-bs-toggle="offcanvas" data-bs-target="#theme-settings-offcanvas"
-                                aria-controls="theme-settings-offcanvas">
-                                <iconify-icon icon="solar:settings-bold-duotone"
-                                    class="fs-24 align-middle"></iconify-icon>
-                            </button>
-                        </div>
+                            <!-- Theme Setting -->
+                            <div class="topbar-item d-none d-md-flex">
+                                <button type="button" class="topbar-button" id="theme-settings-btn"
+                                    data-bs-toggle="offcanvas" data-bs-target="#theme-settings-offcanvas"
+                                    aria-controls="theme-settings-offcanvas">
+                                    <iconify-icon icon="solar:settings-bold-duotone"
+                                        class="fs-24 align-middle"></iconify-icon>
+                                </button>
+                            </div>
 
-                        <!-- Activity -->
-                        <div class="topbar-item d-none d-md-flex">
-                            <button type="button" class="topbar-button" id="theme-settings-btn"
-                                data-bs-toggle="offcanvas" data-bs-target="#theme-activity-offcanvas"
-                                aria-controls="theme-settings-offcanvas">
-                                <iconify-icon icon="solar:clock-circle-bold-duotone"
-                                    class="fs-24 align-middle"></iconify-icon>
-                            </button>
-                        </div>
+                            <!-- Activity -->
+                            <div class="topbar-item d-none d-md-flex">
+                                <button type="button" class="topbar-button" id="theme-settings-btn"
+                                    data-bs-toggle="offcanvas" data-bs-target="#theme-activity-offcanvas"
+                                    aria-controls="theme-settings-offcanvas">
+                                    <iconify-icon icon="solar:clock-circle-bold-duotone"
+                                        class="fs-24 align-middle"></iconify-icon>
+                                </button>
+                            </div>
 
-                        <!-- User -->
-                        <div class="dropdown topbar-item">
-                            <a type="button" class="topbar-button" id="page-header-user-dropdown"
-                                data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <span class="d-flex align-items-center">
-                                    <iconify-icon icon="mdi:account-circle" width="24" height="24"
-                                        class="me-2"></iconify-icon>
-                                </span>
-                            </a>
-                            <div class="dropdown-menu dropdown-menu-end">
-                                <!-- item-->
-                                <h6 class="dropdown-header">Welcome,
-                                    @auth
-                                        {{ Auth::user()->name }}
-                                    @endauth!
-                                </h6>
-                                <a class="dropdown-item" href="{{ route('profile.edit') }}">
-                                    <i class="bx bx-user-circle text-muted fs-18 align-middle me-1"></i><span
-                                        class="align-middle">Profile</span>
+                            <!-- User -->
+                            <div class="dropdown topbar-item">
+                                <a type="button" class="topbar-button" id="page-header-user-dropdown"
+                                    data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    <span class="d-flex align-items-center">
+                                        <iconify-icon icon="mdi:account-circle" width="24" height="24"
+                                            class="me-2"></iconify-icon>
+                                    </span>
                                 </a>
-                                <a class="dropdown-item" href="apps-chat.html">
-                                    <i class="bx bx-message-dots text-muted fs-18 align-middle me-1"></i><span
-                                        class="align-middle">Messages</span>
-                                </a>
+                                <div class="dropdown-menu dropdown-menu-end">
+                                    <!-- item-->
+                                    <h6 class="dropdown-header">Welcome,
+                                        @auth
+                                            {{ Auth::user()->name }}
+                                        @endauth!
+                                    </h6>
+                                    <a class="dropdown-item" href="{{ route('profile.edit') }}">
+                                        <i class="bx bx-user-circle text-muted fs-18 align-middle me-1"></i><span
+                                            class="align-middle">Profile</span>
+                                    </a>
+                                    <a class="dropdown-item" href="apps-chat.html">
+                                        <i class="bx bx-message-dots text-muted fs-18 align-middle me-1"></i><span
+                                            class="align-middle">Messages</span>
+                                    </a>
 
-                                <a class="dropdown-item" href="pages-pricing.html">
-                                    <i class="bx bx-wallet text-muted fs-18 align-middle me-1"></i><span
-                                        class="align-middle">Pricing</span>
-                                </a>
-                                <a class="dropdown-item" href="pages-faqs.html">
-                                    <i class="bx bx-help-circle text-muted fs-18 align-middle me-1"></i><span
-                                        class="align-middle">Help</span>
-                                </a>
-                                <a class="dropdown-item" href="auth-lock-screen.html">
-                                    <i class="bx bx-lock text-muted fs-18 align-middle me-1"></i><span
-                                        class="align-middle">Lock screen</span>
-                                </a>
+                                    <a class="dropdown-item" href="pages-pricing.html">
+                                        <i class="bx bx-wallet text-muted fs-18 align-middle me-1"></i><span
+                                            class="align-middle">Pricing</span>
+                                    </a>
+                                    <a class="dropdown-item" href="pages-faqs.html">
+                                        <i class="bx bx-help-circle text-muted fs-18 align-middle me-1"></i><span
+                                            class="align-middle">Help</span>
+                                    </a>
+                                    <a class="dropdown-item" href="auth-lock-screen.html">
+                                        <i class="bx bx-lock text-muted fs-18 align-middle me-1"></i><span
+                                            class="align-middle">Lock screen</span>
+                                    </a>
 
-                                <div class="dropdown-divider my-1"></div>
+                                    <div class="dropdown-divider my-1"></div>
 
-                                <a class="dropdown-item text-danger" href="#"
-                                    onclick="event.preventDefault(); if(confirm('Bạn có chắc muốn đăng xuất không?')) document.getElementById('logout-form').submit();">
-                                    <i class="bx bx-log-out fs-18 align-middle me-1"></i>
-                                    <span class="align-middle">Logout</span>
-                                </a>
-                                <form id="logout-form" action="{{ route('logout') }}" method="POST"
-                                    style="display: none;">
-                                    @csrf
-                                </form>
+                                    <a class="dropdown-item text-danger" href="#"
+                                        onclick="event.preventDefault(); if(confirm('Bạn có chắc muốn đăng xuất không?')) document.getElementById('logout-form').submit();">
+                                        <i class="bx bx-log-out fs-18 align-middle me-1"></i>
+                                        <span class="align-middle">Logout</span>
+                                    </a>
+                                    <form id="logout-form" action="{{ route('logout') }}" method="POST"
+                                        style="display: none;">
+                                        @csrf
+                                    </form>
 
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
         </header>
 
         <!-- Activity Timeline -->
@@ -570,7 +572,6 @@
                     <img src="{{ asset('assets/images/logo-light.png') }}" class="logo-lg" alt="logo sáng">
                 </a>
             </div>
-
             <!-- Menu Toggle Button -->
             <button type="button" class="button-sm-hover" aria-label="Hiển thị toàn bộ Sidebar">
                 <iconify-icon icon="solar:double-alt-arrow-right-bold-duotone"
@@ -578,8 +579,29 @@
             </button>
 
             <div class="scrollbar" data-simplebar>
+
                 <ul class="navbar-nav" id="navbar-nav">
                     <li class="menu-title">Quản lý chung</li>
+
+                    <!-- Menu Điểm -->
+                    <li class="nav-item">
+                        <a class="nav-link menu-arrow" href="#sidebarPoints" role="button" aria-expanded="false" aria-controls="sidebarPoints">
+                            <span class="nav-icon">
+                                <iconify-icon icon="solar:star-bold-duotone"></iconify-icon>
+                            </span>
+                            <span class="nav-text">Quản lý điểm</span>
+                        </a>
+                        <div class="collapse" id="sidebarPoints" data-bs-parent="#navbar-nav">
+                            <ul class="nav sub-navbar-nav">
+                                <li class="sub-nav-item">
+                                    <a class="sub-nav-link" href="{{ route('admin.points.index') }}">Danh sách điểm</a>
+                                </li>
+                                <li class="sub-nav-item">
+                                    <a class="sub-nav-link" href="{{ route('admin.point_history.index') }}">Lịch sử điểm</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
 
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('admin.dashboard') }}">
@@ -590,16 +612,16 @@
                         </a>
                     </li>
 
-
+                    <!-- Menu Phim -->
                     <li class="nav-item">
-                        <a class="nav-link menu-arrow" href="#sidebarMovies" data-bs-toggle="collapse"
-                            role="button" aria-expanded="false" aria-controls="sidebarMovies">
+                        <a class="nav-link menu-arrow" href="#sidebarMovies" role="button" aria-expanded="false"
+                            aria-controls="sidebarMovies">
                             <span class="nav-icon">
                                 <iconify-icon icon="solar:clapperboard-bold-duotone"></iconify-icon>
                             </span>
                             <span class="nav-text">Phim</span>
                         </a>
-                        <div class="collapse" id="sidebarMovies">
+                        <div class="collapse" id="sidebarMovies" data-bs-parent="#navbar-nav">
                             <ul class="nav sub-navbar-nav">
                                 <li class="sub-nav-item">
                                     <a class="sub-nav-link" href="{{ route('admin.movies.index') }}">Danh sách</a>
@@ -611,15 +633,16 @@
                         </div>
                     </li>
 
+                    <!-- Menu Thể loại phim -->
                     <li class="nav-item">
-                        <a class="nav-link menu-arrow" href="#sidebarGenres" data-bs-toggle="collapse"
-                            role="button" aria-expanded="false" aria-controls="sidebarGenres">
+                        <a class="nav-link menu-arrow" href="#sidebarGenres" role="button" aria-expanded="false"
+                            aria-controls="sidebarGenres">
                             <span class="nav-icon">
                                 <iconify-icon icon="solar:tag-bold-duotone"></iconify-icon>
                             </span>
                             <span class="nav-text">Thể loại phim</span>
                         </a>
-                        <div class="collapse" id="sidebarGenres">
+                        <div class="collapse" id="sidebarGenres" data-bs-parent="#navbar-nav">
                             <ul class="nav sub-navbar-nav">
                                 <li class="sub-nav-item">
                                     <a class="sub-nav-link" href="{{ route('admin.genres.index') }}">Danh sách</a>
@@ -631,15 +654,16 @@
                         </div>
                     </li>
 
+                    <!-- Menu Độ tuổi -->
                     <li class="nav-item">
-                        <a class="nav-link menu-arrow" href="#sidebarAgeLimits" data-bs-toggle="collapse"
-                            role="button" aria-expanded="false" aria-controls="sidebarAgeLimits">
+                        <a class="nav-link menu-arrow" href="#sidebarAgeLimits" role="button" aria-expanded="false"
+                            aria-controls="sidebarAgeLimits">
                             <span class="nav-icon">
                                 <iconify-icon icon="solar:shield-user-bold-duotone"></iconify-icon>
                             </span>
                             <span class="nav-text">Độ tuổi</span>
                         </a>
-                        <div class="collapse" id="sidebarAgeLimits">
+                        <div class="collapse" id="sidebarAgeLimits" data-bs-parent="#navbar-nav">
                             <ul class="nav sub-navbar-nav">
                                 <li class="sub-nav-item">
                                     <a class="sub-nav-link" href="{{ route('admin.age_limits.index') }}">Danh
@@ -653,15 +677,16 @@
                         </div>
                     </li>
 
+                    <!-- Menu Quốc gia -->
                     <li class="nav-item">
-                        <a class="nav-link menu-arrow" href="#sidebarCountries" data-bs-toggle="collapse"
-                            role="button" aria-expanded="false" aria-controls="sidebarCountries">
+                        <a class="nav-link menu-arrow" href="#sidebarCountries" role="button" aria-expanded="false"
+                            aria-controls="sidebarCountries">
                             <span class="nav-icon">
                                 <iconify-icon icon="solar:flag-bold-duotone"></iconify-icon>
                             </span>
                             <span class="nav-text">Quốc gia</span>
                         </a>
-                        <div class="collapse" id="sidebarCountries">
+                        <div class="collapse" id="sidebarCountries" data-bs-parent="#navbar-nav">
                             <ul class="nav sub-navbar-nav">
                                 <li class="sub-nav-item">
                                     <a class="sub-nav-link" href="{{ route('admin.countries.index') }}">Danh sách</a>
@@ -673,15 +698,16 @@
                         </div>
                     </li>
 
+                    <!-- Menu Thành phố -->
                     <li class="nav-item">
-                        <a class="nav-link menu-arrow" href="#sidebarCities" data-bs-toggle="collapse"
-                            role="button" aria-expanded="false" aria-controls="sidebarCities">
+                        <a class="nav-link menu-arrow" href="#sidebarCities" role="button" aria-expanded="false"
+                            aria-controls="sidebarCities">
                             <span class="nav-icon">
                                 <iconify-icon icon="solar:city-bold-duotone"></iconify-icon>
                             </span>
                             <span class="nav-text">Thành phố</span>
                         </a>
-                        <div class="collapse" id="sidebarCities">
+                        <div class="collapse" id="sidebarCities" data-bs-parent="#navbar-nav">
                             <ul class="nav sub-navbar-nav">
                                 <li class="sub-nav-item">
                                     <a class="sub-nav-link" href="{{ route('admin.cities.index') }}">Danh sách</a>
@@ -693,15 +719,16 @@
                         </div>
                     </li>
 
+                    <!-- Menu Rạp chiếu -->
                     <li class="nav-item">
-                        <a class="nav-link menu-arrow" href="#sidebarCinemas" data-bs-toggle="collapse"
-                            role="button" aria-expanded="false" aria-controls="sidebarCinemas">
+                        <a class="nav-link menu-arrow" href="#sidebarCinemas" role="button" aria-expanded="false"
+                            aria-controls="sidebarCinemas">
                             <span class="nav-icon">
                                 <iconify-icon icon="solar:buildings-2-bold-duotone"></iconify-icon>
                             </span>
                             <span class="nav-text">Rạp chiếu</span>
                         </a>
-                        <div class="collapse" id="sidebarCinemas">
+                        <div class="collapse" id="sidebarCinemas" data-bs-parent="#navbar-nav">
                             <ul class="nav sub-navbar-nav">
                                 <li class="sub-nav-item">
                                     <a class="sub-nav-link" href="{{ route('admin.cinemas.index') }}">Danh sách</a>
@@ -713,15 +740,16 @@
                         </div>
                     </li>
 
+                    <!-- Menu Phòng chiếu -->
                     <li class="nav-item">
-                        <a class="nav-link menu-arrow" href="#sidebarRooms" data-bs-toggle="collapse" role="button"
-                            aria-expanded="false" aria-controls="sidebarRooms">
+                        <a class="nav-link menu-arrow" href="#sidebarRooms" role="button" aria-expanded="false"
+                            aria-controls="sidebarRooms">
                             <span class="nav-icon">
                                 <iconify-icon icon="solar:projector-bold-duotone"></iconify-icon>
                             </span>
                             <span class="nav-text">Phòng chiếu</span>
                         </a>
-                        <div class="collapse" id="sidebarRooms">
+                        <div class="collapse" id="sidebarRooms" data-bs-parent="#navbar-nav">
                             <ul class="nav sub-navbar-nav">
                                 <li class="sub-nav-item">
                                     <a class="sub-nav-link" href="{{ route('admin.rooms.index') }}">Danh sách</a>
@@ -733,15 +761,16 @@
                         </div>
                     </li>
 
+                    <!-- Menu Đặt vé -->
                     <li class="nav-item">
-                        <a class="nav-link menu-arrow" href="#sidebarBookings" data-bs-toggle="collapse"
-                            role="button" aria-expanded="false" aria-controls="sidebarBookings">
+                        <a class="nav-link menu-arrow" href="#sidebarBookings" role="button" aria-expanded="false"
+                            aria-controls="sidebarBookings">
                             <span class="nav-icon">
                                 <iconify-icon icon="solar:ticket-bold-duotone"></iconify-icon>
                             </span>
                             <span class="nav-text">Đặt vé</span>
                         </a>
-                        <div class="collapse" id="sidebarBookings">
+                        <div class="collapse" id="sidebarBookings" data-bs-parent="#navbar-nav">
                             <ul class="nav sub-navbar-nav">
                                 <li class="sub-nav-item">
                                     <a class="sub-nav-link" href="{{ route('admin.bookings.index') }}">Danh sách</a>
@@ -750,39 +779,35 @@
                         </div>
                     </li>
 
+                    <!-- Menu Thanh toán -->
                     <li class="nav-item">
-                        <a class="nav-link menu-arrow" href="#sidebarPayments" data-bs-toggle="collapse"
-                            role="button" aria-expanded="false" aria-controls="sidebarPayments">
+                        <a class="nav-link menu-arrow" href="#sidebarPayments" role="button" aria-expanded="false"
+                            aria-controls="sidebarPayments">
                             <span class="nav-icon">
                                 <iconify-icon icon="solar:card-bold-duotone"></iconify-icon>
                             </span>
                             <span class="nav-text">Thanh toán</span>
                         </a>
-                        <div class="collapse" id="sidebarPayments">
+                        <div class="collapse" id="sidebarPayments" data-bs-parent="#navbar-nav">
                             <ul class="nav sub-navbar-nav">
                                 <li class="sub-nav-item">
                                     <a class="sub-nav-link" href="{{ route('admin.payments.index') }}">Danh sách</a>
                                 </li>
-                                <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="{{ route('admin.payments.show', 1) }}">Chi tiết</a>
-                                </li>
-                                <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="{{ route('admin.payments.editStatus', 1) }}">Cập
-                                        nhật trạng thái</a>
-                                </li>
+
                             </ul>
                         </div>
                     </li>
 
+                    <!-- Menu Loại ghế -->
                     <li class="nav-item">
-                        <a class="nav-link menu-arrow" href="#sidebarSeatTypes" data-bs-toggle="collapse"
-                            role="button" aria-expanded="false" aria-controls="sidebarSeatTypes">
+                        <a class="nav-link menu-arrow" href="#sidebarSeatTypes" role="button" aria-expanded="false"
+                            aria-controls="sidebarSeatTypes">
                             <span class="nav-icon">
                                 <iconify-icon icon="solar:sofa-2-bold-duotone"></iconify-icon>
                             </span>
                             <span class="nav-text">Loại ghế</span>
                         </a>
-                        <div class="collapse" id="sidebarSeatTypes">
+                        <div class="collapse" id="sidebarSeatTypes" data-bs-parent="#navbar-nav">
                             <ul class="nav sub-navbar-nav">
                                 <li class="sub-nav-item">
                                     <a class="sub-nav-link" href="{{ route('seat-type.index') }}">Danh sách</a>
@@ -795,116 +820,14 @@
                     </li>
 
                     <li class="nav-item">
-                        <a class="nav-link menu-arrow" href="#sidebarSeats" data-bs-toggle="collapse" role="button"
-                            aria-expanded="false" aria-controls="sidebarSeats">
-                            <span class="nav-icon">
-                                <iconify-icon icon="solar:armchair-bold-duotone"></iconify-icon>
-                            </span>
-                            <span class="nav-text">Ghế</span>
-                        </a>
-                        <div class="collapse" id="sidebarSeats">
-                            <ul class="nav sub-navbar-nav">
-                                <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="{{ route('admin.seats.index') }}">Danh sách</a>
-                                </li>
-                            </ul>
-                        </div>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link menu-arrow" href="#sidebarTickets" data-bs-toggle="collapse"
-                            role="button" aria-expanded="false" aria-controls="sidebarTickets">
-                            <span class="nav-icon">
-                                <iconify-icon icon="solar:ticket-sale-bold-duotone"></iconify-icon>
-                            </span>
-                            <span class="nav-text">Vé</span>
-                        </a>
-                        <div class="collapse" id="sidebarTickets">
-                            <ul class="nav sub-navbar-nav">
-                                <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="{{ route('tickets.index') }}">Danh sách</a>
-                                </li>
-                            </ul>
-                        </div>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link" href="">
-                            <span class="nav-icon">
-                                <iconify-icon icon="solar:settings-bold-duotone"></iconify-icon>
-                            </span>
-                            <span class="nav-text">Cài đặt</span>
-                        </a>
-                    </li>
-
-                    <li class="menu-title mt-3">Quản lý người dùng</li>
-
-                    <li class="nav-item">
-                        <a class="nav-link" href="">
-                            <span class="nav-icon">
-                                <iconify-icon icon="solar:user-bold-duotone"></iconify-icon>
-                            </span>
-                            <span class="nav-text">Hồ sơ</span>
-                        </a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link menu-arrow" href="#sidebarRoles" data-bs-toggle="collapse" role="button"
-                            aria-expanded="false" aria-controls="sidebarRoles">
-                            <span class="nav-icon">
-                                <iconify-icon icon="solar:user-check-bold-duotone"></iconify-icon>
-                            </span>
-                            <span class="nav-text">Vai trò</span>
-                        </a>
-                        <div class="collapse" id="sidebarRoles">
-                            <ul class="nav sub-navbar-nav">
-                                <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="">Danh sách</a>
-                                </li>
-                                <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="">Thêm mới</a>
-                                </li>
-                            </ul>
-                        </div>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link" href="">
-                            <span class="nav-icon">
-                                <iconify-icon icon="solar:key-bold-duotone"></iconify-icon>
-                            </span>
-                            <span class="nav-text">Quyền hạn</span>
-                        </a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link menu-arrow" href="#sidebarCustomers" data-bs-toggle="collapse"
-                            role="button" aria-expanded="false" aria-controls="sidebarCustomers">
-                            <span class="nav-icon">
-                                <iconify-icon icon="solar:users-group-rounded-bold-duotone"></iconify-icon>
-                            </span>
-                            <span class="nav-text">Khách hàng</span>
-                        </a>
-                        <div class="collapse" id="sidebarCustomers">
-                            <ul class="nav sub-navbar-nav">
-                                <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="">Danh sách</a>
-                                </li>
-                            </ul>
-                        </div>
-                    </li>
-
-                    <li class="menu-title mt-3">Khác</li>
-
-                    <li class="nav-item">
-                        <a class="nav-link menu-arrow" href="#sidebarPromotions" data-bs-toggle="collapse"
-                            role="button" aria-expanded="false" aria-controls="sidebarPromotions">
+                        <a class="nav-link menu-arrow" href="#sidebarPromotions" role="button"
+                            aria-expanded="false" aria-controls="sidebarPromotions">
                             <span class="nav-icon">
                                 <iconify-icon icon="solar:sale-bold-duotone"></iconify-icon>
                             </span>
                             <span class="nav-text">Khuyến mãi</span>
                         </a>
-                        <div class="collapse" id="sidebarPromotions">
+                        <div class="collapse" id="sidebarPromotions" data-bs-parent="#navbar-nav">
                             <ul class="nav sub-navbar-nav">
                                 <li class="sub-nav-item">
                                     <a class="sub-nav-link" href="{{ route('promotions.index') }}">Danh sách</a>
@@ -916,137 +839,148 @@
                         </div>
                     </li>
 
+                    <!-- Menu Ghế -->
                     <li class="nav-item">
-                        <a class="nav-link" href="">
+                        <a class="nav-link menu-arrow" href="#sidebarSeats" role="button" aria-expanded="false"
+                            aria-controls="sidebarSeats">
                             <span class="nav-icon">
-                                <iconify-icon icon="solar:star-bold-duotone"></iconify-icon>
+                                <iconify-icon icon="solar:armchair-bold-duotone"></iconify-icon>
                             </span>
-                            <span class="nav-text">Đánh giá</span>
+                            <span class="nav-text">Ghế</span>
                         </a>
-                    </li>
-
-                    <li class="menu-title mt-3">Ứng dụng khác</li>
-
-                    <li class="nav-item">
-                        <a class="nav-link" href="">
-                            <span class="nav-icon">
-                                <iconify-icon icon="solar:chat-round-bold-duotone"></iconify-icon>
-                            </span>
-                            <span class="nav-text">Trò chuyện</span>
-                        </a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link" href="">
-                            <span class="nav-icon">
-                                <iconify-icon icon="solar:mailbox-bold-duotone"></iconify-icon>
-                            </span>
-                            <span class="nav-text">Email</span>
-                        </a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link" href="">
-                            <span class="nav-icon">
-                                <iconify-icon icon="solar:calendar-bold-duotone"></iconify-icon>
-                            </span>
-                            <span class="nav-text">Lịch</span>
-                        </a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link" href="">
-                            <span class="nav-icon">
-                                <iconify-icon icon="solar:checklist-bold-duotone"></iconify-icon>
-                            </span>
-                            <span class="nav-text">Việc cần làm</span>
-                        </a>
-                    </li>
-
-                    <li class="menu-title mt-3">Hỗ trợ</li>
-
-                    <li class="nav-item">
-                        <a class="nav-link" href="">
-                            <span class="nav-icon">
-                                <iconify-icon icon="solar:help-bold-duotone"></iconify-icon>
-                            </span>
-                            <span class="nav-text">Trung tâm hỗ trợ</span>
-                        </a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link" href="">
-                            <span class="nav-icon">
-                                <iconify-icon icon="solar:question-circle-bold-duotone"></iconify-icon>
-                            </span>
-                            <span class="nav-text">Câu hỏi thường gặp</span>
-                        </a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link" href="">
-                            <span class="nav-icon">
-                                <iconify-icon icon="solar:document-text-bold-duotone"></iconify-icon>
-                            </span>
-                            <span class="nav-text">Chính sách bảo mật</span>
-                        </a>
-                    </li>
-
-                    <li class="menu-title mt-3">Tùy chỉnh</li>
-
-                    <li class="nav-item">
-                        <a class="nav-link menu-arrow" href="#sidebarPages" data-bs-toggle="collapse" role="button"
-                            aria-expanded="false" aria-controls="sidebarPages">
-                            <span class="nav-icon">
-                                <iconify-icon icon="solar:files-bold-duotone"></iconify-icon>
-                            </span>
-                            <span class="nav-text">Trang</span>
-                        </a>
-                        <div class="collapse" id="sidebarPages">
+                        <div class="collapse" id="sidebarSeats" data-bs-parent="#navbar-nav">
                             <ul class="nav sub-navbar-nav">
                                 <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="">Chào mừng</a>
-                                </li>
-                                <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="">Sắp ra mắt</a>
-                                </li>
-                                <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="">Dòng thời gian</a>
-                                </li>
-                                <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="">Bảng giá</a>
-                                </li>
-                                <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="">Bảo trì</a>
-                                </li>
-                                <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="">Lỗi 404</a>
+                                    <a class="sub-nav-link" href="{{ route('admin.seats.index') }}">Danh sách</a>
                                 </li>
                             </ul>
                         </div>
                     </li>
 
+                    <!-- Menu Vé -->
                     <li class="nav-item">
-                        <a class="nav-link menu-arrow" href="#sidebarAuthentication" data-bs-toggle="collapse"
-                            role="button" aria-expanded="false" aria-controls="sidebarAuthentication">
+                        <a class="nav-link menu-arrow" href="#sidebarTickets" role="button" aria-expanded="false"
+                            aria-controls="sidebarTickets">
                             <span class="nav-icon">
-                                <iconify-icon icon="solar:lock-keyhole-bold-duotone"></iconify-icon>
+                                <iconify-icon icon="solar:ticket-sale-bold-duotone"></iconify-icon>
                             </span>
-                            <span class="nav-text">Xác thực</span>
+                            <span class="nav-text">Vé</span>
                         </a>
-                        <div class="collapse" id="sidebarAuthentication">
+                        <div class="collapse" id="sidebarTickets" data-bs-parent="#navbar-nav">
                             <ul class="nav sub-navbar-nav">
                                 <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="">Đăng nhập</a>
+                                    <a class="sub-nav-link" href="{{ route('tickets.index') }}">Danh sách</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+
+                    <li class="menu-title mt-3">Quản lý người dùng</li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('users.index') }}">
+                            <span class="nav-icon">
+                                <iconify-icon icon="solar:user-bold-duotone"></iconify-icon>
+                            </span>
+                            <span class="nav-text">Hồ sơ</span>
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('roles.index') }}">
+                            <span class="nav-icon">
+                                <iconify-icon icon="solar:key-bold-duotone"></iconify-icon>
+                            </span>
+                            <span class="nav-text">Quyền hạn</span>
+                        </a>
+                    </li>
+
+                    <li class="menu-title mt-3">Quản lý Sản phẩm</li>
+
+
+                    {{-- Menu Danh mục sản phẩm --}}
+                    <li class="nav-item">
+                        <a class="nav-link menu-arrow" href="#sidebarProductCategories" role="button"
+                            aria-expanded="false" aria-controls="sidebarProductCategories">
+                            <span class="nav-icon">
+                                <iconify-icon icon="solar:category-bold-duotone"></iconify-icon>
+                            </span>
+                            <span class="nav-text">Danh mục sản phẩm</span>
+                        </a>
+                        <div class="collapse" id="sidebarProductCategories" data-bs-parent="#navbar-nav">
+                            <ul class="nav sub-navbar-nav">
+                                <li class="sub-nav-item">
+                                    <a class="sub-nav-link" href="{{ route('admin.product-categories.index') }}">Danh
+                                        sách</a>
                                 </li>
                                 <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="">Đăng ký</a>
+                                    <a class="sub-nav-link"
+                                        href="{{ route('admin.product-categories.create') }}">Thêm mới</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+
+                    {{-- Menu Sản phẩm --}}
+                    <li class="nav-item">
+                        <a class="nav-link menu-arrow" href="#sidebarProducts" role="button" aria-expanded="false"
+                            aria-controls="sidebarProducts">
+                            <span class="nav-icon">
+                                <iconify-icon icon="solar:box-bold-duotone"></iconify-icon>
+                            </span>
+                            <span class="nav-text">Sản phẩm</span>
+                        </a>
+                        <div class="collapse" id="sidebarProducts" data-bs-parent="#navbar-nav">
+                            <ul class="nav sub-navbar-nav">
+                                <li class="sub-nav-item">
+                                    <a class="sub-nav-link" href="{{ route('admin.products.index') }}">Danh sách</a>
                                 </li>
                                 <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="">Đặt lại mật khẩu</a>
+                                    <a class="sub-nav-link" href="{{ route('admin.products.create') }}">Thêm mới</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+
+                    {{-- Menu Sản phẩm biến thể --}}
+                    <li class="nav-item">
+                        <a class="nav-link menu-arrow" href="#sidebarProductVariants" role="button"
+                            aria-expanded="false" aria-controls="sidebarProductVariants">
+                            <span class="nav-icon">
+                                <iconify-icon icon="solar:layers-bold-duotone"></iconify-icon>
+                            </span>
+                            <span class="nav-text">Sản phẩm biến thể</span>
+                        </a>
+                        <div class="collapse" id="sidebarProductVariants" data-bs-parent="#navbar-nav">
+                            <ul class="nav sub-navbar-nav">
+                                <li class="sub-nav-item">
+                                    <a class="sub-nav-link" href="{{ route('admin.product-variants.index') }}">Danh
+                                        sách</a>
                                 </li>
                                 <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="">Khóa màn hình</a>
+                                    <a class="sub-nav-link" href="{{ route('admin.product-variants.create') }}">Thêm
+                                        mới</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+
+                    {{-- Menu Combo --}}
+                    <li class="nav-item">
+                        <a class="nav-link menu-arrow" href="#sidebarCombos" role="button" aria-expanded="false"
+                            aria-controls="sidebarCombos">
+                            <span class="nav-icon">
+                                <iconify-icon icon="solar:gift-bold-duotone"></iconify-icon>
+                            </span>
+                            <span class="nav-text">Combo</span>
+                        </a>
+                        <div class="collapse" id="sidebarCombos" data-bs-parent="#navbar-nav">
+                            <ul class="nav sub-navbar-nav">
+                                <li class="sub-nav-item">
+                                    <a class="sub-nav-link" href="{{ route('admin.combos.index') }}">Danh sách</a>
+                                </li>
+                                <li class="sub-nav-item">
+                                    <a class="sub-nav-link" href="{{ route('admin.combos.create') }}">Thêm mới</a>
                                 </li>
                             </ul>
                         </div>
@@ -1071,6 +1005,188 @@
     </div>
     <!-- END Wrapper -->
 
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        @if (session('success'))
+            Swal.fire({
+                icon: 'success',
+                title: 'Thành công',
+                text: '{{ session('success') }}',
+                timer: 2500,
+                showConfirmButton: false
+            });
+        @endif
+
+        @if (session('error'))
+            Swal.fire({
+                icon: 'error',
+                title: 'Lỗi',
+                text: '{{ session('error') }}',
+                timer: 2500,
+                showConfirmButton: false
+            });
+        @endif
+
+        // Đánh dấu thông báo đã đọc
+        document.querySelectorAll('.notification-item').forEach(function(item) {
+            item.addEventListener('click', function() {
+                var id = this.getAttribute('data-id');
+                var self = this;
+                if (!self.classList.contains('opacity-50')) {
+                    fetch('/admin/notifications/' + id + '/read', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({})
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            self.classList.add('opacity-50');
+                            // Hiện thời gian đọc
+                            var badge = self.querySelector('.badge.bg-secondary');
+                            if (!badge) {
+                                var timeDiv = self.querySelector('.small.text-muted');
+                                if (timeDiv) {
+                                    timeDiv.innerHTML += ' <span class="badge bg-secondary ms-2">Đã đọc: ' + data.read_at + '</span>';
+                                }
+                            }
+                        }
+                    });
+                }
+            });
+        });
+        // Đánh dấu thông báo đã đọc
+        document.querySelectorAll('.notification-item').forEach(function(item) {
+            item.addEventListener('click', function() {
+                var id = this.getAttribute('data-id');
+                var self = this;
+                if (!self.classList.contains('opacity-50')) {
+                    // Làm mờ ngay khi click
+                    self.classList.add('opacity-50');
+                    fetch('/admin/notifications/' + id + '/read', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({})
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Hiện thời gian đọc
+                            var badge = self.querySelector('.badge.bg-secondary');
+                            if (!badge) {
+                                var timeDiv = self.querySelector('.small.text-muted');
+                                if (timeDiv) {
+                                    timeDiv.innerHTML += ' <span class="badge bg-secondary ms-2">Đã đọc: ' + data.read_at + '</span>';
+                                }
+                            }
+                        }
+                    });
+                }
+            });
+        });
+    });
+    </script>
+
+    <!-- SweetAlert2 hiển thị thông báo flash -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const menuLinks = document.querySelectorAll('.nav-link.menu-arrow');
+
+            menuLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+
+                    const targetSelector = this.getAttribute('href');
+                    const targetCollapse = document.querySelector(targetSelector);
+
+                    if (targetCollapse) {
+                        const isCurrentlyOpen = targetCollapse.classList.contains('show');
+
+                        // Đóng tất cả các menu khác với animation
+                        const allCollapses = document.querySelectorAll('.collapse.show');
+                        allCollapses.forEach(collapse => {
+                            if (collapse !== targetCollapse) {
+                                // Animation đóng menu
+                                collapse.style.maxHeight = collapse.scrollHeight + 'px';
+                                collapse.offsetHeight; // Force reflow
+                                collapse.style.maxHeight = '0px';
+                                collapse.style.opacity = '0';
+                                collapse.style.transform = 'translateY(-10px)';
+
+                                setTimeout(() => {
+                                    collapse.classList.remove('show');
+                                }, 350);
+
+                                const correspondingLink = document.querySelector(
+                                    `[href="#${collapse.id}"]`);
+                                if (correspondingLink) {
+                                    correspondingLink.setAttribute('aria-expanded',
+                                        'false');
+                                }
+                            }
+                        });
+
+                        // Toggle menu hiện tại với animation
+                        if (isCurrentlyOpen) {
+                            // Đóng menu với animation
+                            targetCollapse.style.maxHeight = targetCollapse.scrollHeight + 'px';
+                            targetCollapse.offsetHeight; // Force reflow
+                            targetCollapse.style.maxHeight = '0px';
+                            targetCollapse.style.opacity = '0';
+                            targetCollapse.style.transform = 'translateY(-10px)';
+
+                            setTimeout(() => {
+                                targetCollapse.classList.remove('show');
+                            }, 350);
+
+                            this.setAttribute('aria-expanded', 'false');
+                        } else {
+                            // Mở menu với animation
+                            targetCollapse.classList.add('show');
+                            targetCollapse.style.maxHeight = '0px';
+                            targetCollapse.style.opacity = '0';
+                            targetCollapse.style.transform = 'translateY(-10px)';
+
+                            // Trigger animation
+                            setTimeout(() => {
+                                targetCollapse.style.maxHeight = targetCollapse
+                                    .scrollHeight + 'px';
+                                targetCollapse.style.opacity = '1';
+                                targetCollapse.style.transform = 'translateY(0)';
+                            }, 10);
+
+                            // Reset max-height sau khi animation hoàn thành
+                            setTimeout(() => {
+                                if (targetCollapse.classList.contains('show')) {
+                                    targetCollapse.style.maxHeight = 'none';
+                                }
+                            }, 350);
+
+                            this.setAttribute('aria-expanded', 'true');
+                        }
+                    }
+                });
+            });
+
+            // Reset animation styles khi trang load
+            document.querySelectorAll('.collapse').forEach(collapse => {
+                if (!collapse.classList.contains('show')) {
+                    collapse.style.maxHeight = '0px';
+                    collapse.style.opacity = '0';
+                    collapse.style.transform = 'translateY(-10px)';
+                }
+            });
+        });
+    </script>
+
     <!-- Vendor Javascript (Require in all Page) -->
     <script src="assets/js/vendor.js"></script>
 
@@ -1086,6 +1202,8 @@
     <script src="assets/js/pages/dashboard.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     @stack('scripts')
+
+
 </body>
 <!-- Mirrored from techzaa.in/larkon/admin/index.html by HTTrack Website Copier/3.x [XR&CO'2014], Thu, 29 May 2025 02:26:35 GMT -->
 

@@ -9,9 +9,11 @@ use App\Enums\SeatStatus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+
 use App\Models\RoomSeatConfiguration;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Maatwebsite\Excel\Facades\Excel;
 
 class AdminSeatController extends Controller
 {
@@ -23,6 +25,7 @@ class AdminSeatController extends Controller
         $this->middleware('can:edit role')->only(['edit', 'update']);
         $this->middleware('can:delete role')->only('destroy');
     }
+
     public function index(Request $request)
     {
         $query = $request->input('query');
@@ -45,23 +48,27 @@ class AdminSeatController extends Controller
 
     public function create(Room $room)
     {
-        $seatTypes = SeatType::all();
-        $seatPercentages = config('seat_types.percentages');
+        $roomSeatValidation = new \App\Services\RoomSeatValidationService();
+        $layoutOptimizer = new \App\Services\SeatLayoutOptimizer();
         
-        // Lấy tỷ lệ tùy chỉnh từ room_seat_configurations
+        $allowedSeatTypes = $room->allowedSeatTypes();
+        $recommendedConfig = $roomSeatValidation->getRecommendedSeatConfiguration($room);
+
+        // Get optimized layout suggestions
+        $layoutSuggestions = $layoutOptimizer->getLayoutSuggestions($room);
+
         $roomSeatConfigs = RoomSeatConfiguration::where('room_id', $room->id)
             ->with('seatType')
             ->get()
             ->pluck('percentage', 'seat_type_id')
             ->toArray();
 
-        // Nếu chưa có cấu hình tùy chỉnh, sử dụng tỷ lệ mặc định
+        $seatPercentages = [];
         if ($roomSeatConfigs) {
             $seatPercentages = $roomSeatConfigs;
         } else {
-            $seatPercentages = [];
-            foreach ($seatTypes as $seatType) {
-                $seatPercentages[$seatType->id] = config('seat_types.percentages')[$seatType->name] ?? 0;
+            foreach ($recommendedConfig as $seatTypeId => $config) {
+                $seatPercentages[$seatTypeId] = $config['suggested_percentage'];
             }
         }
 
@@ -70,188 +77,60 @@ class AdminSeatController extends Controller
         $maxSeatsPerRow = 50;
         $rows = range('A', chr(64 + $maxRows));
 
-        return view('admin.seats.create', compact('room', 'seatTypes', 'seatPercentages', 'seats', 'maxRows', 'maxSeatsPerRow', 'rows'));
+        return view('admin.seats.create', compact(
+            'room', 
+            'allowedSeatTypes', 
+            'recommendedConfig',
+            'seatPercentages', 
+            'seats', 
+            'maxRows', 
+            'maxSeatsPerRow', 
+            'rows',
+            'layoutSuggestions'
+        ));
     }
 
-    public function store(Request $request)
+    public function store(\App\Http\Requests\CreateSeatsRequest $request)
     {
-        Log::info('Request data: ', $request->all());
+        \Log::info('---[START STORE SEAT]---');
+        \Log::info('Request data: ', $request->all());
 
-        $rules = [
-            'room_id' => 'required|exists:rooms,id',
-            'seat_type_id' => 'required|exists:seat_types,id',
-            'min_seats_per_row' => 'required|integer|min:1|max:50',
-            'seat_type_percentages' => 'required|array',
-            'seat_type_percentages.*' => 'required|numeric|min:0|max:100',
-        ];
-
-        $validator = Validator::make($request->all(), $rules, [
-            'room_id.required' => 'Phòng chiếu là bắt buộc.',
-            'room_id.exists' => 'Phòng chiếu không tồn tại.',
-            'seat_type_id.required' => 'Loại ghế là bắt buộc.',
-            'seat_type_id.exists' => 'Loại ghế không tồn tại.',
-            'min_seats_per_row.required' => 'Số ghế tối thiểu mỗi hàng là bắt buộc.',
-            'min_seats_per_row.integer' => 'Số ghế tối thiểu mỗi hàng phải là số nguyên.',
-            'min_seats_per_row.min' => 'Số ghế tối thiểu mỗi hàng phải lớn hơn hoặc bằng 1.',
-            'min_seats_per_row.max' => 'Số ghế tối thiểu mỗi hàng không được vượt quá 50.',
-            'seat_type_percentages.required' => 'Tỷ lệ loại ghế là bắt buộc.',
-            'seat_type_percentages.*.required' => 'Tỷ lệ mỗi loại ghế không được để trống.',
-            'seat_type_percentages.*.numeric' => 'Tỷ lệ phải là số.',
-            'seat_type_percentages.*.min' => 'Tỷ lệ phải lớn hơn hoặc bằng 0.',
-            'seat_type_percentages.*.max' => 'Tỷ lệ phải nhỏ hơn hoặc bằng 100.',
-        ]);
-
-        if ($validator->fails()) {
-            Log::error('Validation failed: ', $validator->errors()->all());
-            return redirect()->back()->withErrors($validator)->withInput();
-        }
-
-        $room = Room::findOrFail($request->room_id);
-        if ($room->status !== 'active') {
-            $validator->errors()->add('room_id', 'Phòng chiếu không ở trạng thái hoạt động.');
-            return redirect()->back()->withErrors($validator)->withInput();
-        }
-
-        $existingSeatsCount = Seat::where('room_id', $request->room_id)->count();
-        if ($existingSeatsCount >= $room->capacity) {
-            $validator->errors()->add('room_id', 'Phòng đã đầy ghế.');
-            return redirect()->back()->withErrors($validator)->withInput();
-        }
-
-        // Kiểm tra tổng tỷ lệ phần trăm
-        $totalPercentage = array_sum($request->seat_type_percentages);
-        if (abs($totalPercentage - 100) > 0.01) {
-            $validator->errors()->add('seat_type_percentages', 'Tổng tỷ lệ loại ghế phải bằng 100%.');
-            return redirect()->back()->withErrors($validator)->withInput();
-        }
-
-        // Lưu tỷ lệ tùy chỉnh
-        DB::beginTransaction();
         try {
-            RoomSeatConfiguration::where('room_id', $request->room_id)->delete();
-            foreach ($request->seat_type_percentages as $seatTypeId => $percentage) {
-                if ($percentage > 0) {
-                    RoomSeatConfiguration::create([
-                        'room_id' => $request->room_id,
-                        'seat_type_id' => $seatTypeId,
-                        'percentage' => $percentage,
-                    ]);
-                }
+            $roomSeatValidation = new \App\Services\RoomSeatValidationService();
+            $seatManagementService = new \App\Services\SeatManagementService($roomSeatValidation);
+            
+            $room = Room::findOrFail($request->room_id);
+            
+            // Validate room status
+            if ($room->status !== 'active') {
+                return redirect()->back()
+                    ->withErrors(['room_id' => 'Phòng chiếu không ở trạng thái hoạt động.'])
+                    ->withInput();
+
             }
 
-            // Tính số ghế cần thêm cho mỗi loại
-            $seatTypes = SeatType::all()->keyBy('id');
-            $requiredSeats = [];
-            $totalSeats = $room->capacity;
-            foreach ($request->seat_type_percentages as $seatTypeId => $percentage) {
-                $requiredSeats[$seatTypeId] = (int) round(($percentage / 100) * $totalSeats);
+            // Create seats using the management service
+            $ignoreConstraints = $request->boolean('ignore_constraints', false);
+            $result = $seatManagementService->createSeatsForRoom($request->validated(), $ignoreConstraints);
+            
+            if (!$result['success']) {
+                return redirect()->back()
+                    ->withErrors($result['errors'])
+                    ->withInput();
             }
 
-            // Đếm số ghế hiện có của mỗi loại
-            $existingSeatsByType = Seat::where('room_id', $request->room_id)
-                ->select('seat_type_id', DB::raw('count(*) as count'))
-                ->groupBy('seat_type_id')
-                ->pluck('count', 'seat_type_id')
-                ->toArray();
-
-            // Tính số ghế còn lại cần thêm cho loại ghế được chọn
-            $currentTypeSeats = $existingSeatsByType[$request->seat_type_id] ?? 0;
-            $requiredTypeSeats = $requiredSeats[$request->seat_type_id] ?? 0;
-            $remainingCapacity = $room->capacity - $existingSeatsCount;
-            $totalSeatsToAdd = min($requiredTypeSeats - $currentTypeSeats, $remainingCapacity);
-
-            // Định nghĩa maxRows và maxSeatsPerRow
-            $maxRows = 26;
-            $maxSeatsPerRow = 50;
-
-            // Tự động tính số ghế mỗi hàng dựa trên min_seats_per_row
-            $minSeatsPerRow = $request->min_seats_per_row;
-            $optimalSeatsPerRow = $minSeatsPerRow;
-            for ($i = $minSeatsPerRow; $i <= $maxSeatsPerRow; $i++) {
-                if ($totalSeatsToAdd % $i === 0 && $totalSeatsToAdd / $i <= $maxRows) {
-                    $optimalSeatsPerRow = $i;
-                    break;
-                }
-            }
-            $rows = ceil($totalSeatsToAdd / $optimalSeatsPerRow);
-
-            // Kiểm tra số ghế thực tế sẽ được thêm
-            $totalSeatsProposed = $rows * $optimalSeatsPerRow;
-            if ($totalSeatsProposed > $totalSeatsToAdd) {
-                $excessSeats = $totalSeatsProposed - $totalSeatsToAdd;
-                $validator->errors()->add('min_seats_per_row', 'Số ghế tối thiểu mỗi hàng dẫn đến ' . $excessSeats . ' ghế dư. Vui lòng chọn giá trị khác để khớp với ' . $totalSeatsToAdd . ' ghế cần thêm.');
-                return redirect()->back()->withErrors($validator)->withInput();
-            }
-
-            if ($rows * $optimalSeatsPerRow > $remainingCapacity) {
-                $validator->errors()->add('min_seats_per_row', 'Số ghế muốn thêm vượt quá sức chứa còn lại (' . $remainingCapacity . ' ghế).');
-                return redirect()->back()->withErrors($validator)->withInput();
-            }
-
-            // Kiểm tra ghế trùng lặp
-            $existingSeats = Seat::where('room_id', $request->room_id)
-                ->get()
-                ->groupBy('row_char')
-                ->map->pluck('seat_number')
-                ->toArray();
-
-            // Tạo ghế mới
-            $createdSeats = 0;
-            $maxRowChar = Seat::where('room_id', $request->room_id)->max('row_char');
-            $startRowIndex = $maxRowChar ? ord(strtoupper($maxRowChar)) - 64 : 0;
-
-            for ($i = 0; $i < $rows; $i++) {
-                $rowChar = chr(65 + $startRowIndex + $i);
-                if (strlen($rowChar) > 5) {
-                    throw new \Exception('Số hàng vượt quá giới hạn ký tự cho phép.');
-                }
-                for ($j = 1; $j <= $optimalSeatsPerRow; $j++) {
-                    $seatNumber = str_pad($j, 2, '0', STR_PAD_LEFT);
-                    if (isset($existingSeats[$rowChar]) && in_array($seatNumber, $existingSeats[$rowChar])) {
-                        Log::warning("Seat $rowChar$seatNumber already exists, skipping.");
-                        continue;
-                    }
-                    Seat::create([
-                        'room_id' => $request->room_id,
-                        'seat_type_id' => $request->seat_type_id,
-                        'row_char' => $rowChar,
-                        'seat_number' => $seatNumber,
-                        'status' => SeatStatus::Available->value ?? 'available',
-                    ]);
-                    Log::info("Created seat: $rowChar$seatNumber");
-                    $createdSeats++;
-                    if ($existingSeatsCount + $createdSeats > $room->capacity) {
-                        throw new \Exception('Số ghế vượt quá sức chứa của phòng (' . $room->capacity . ' ghế).');
-                    }
-                }
-            }
-
-            // Xác định loại ghế tiếp theo
-            $seatTypesOrder = config('seat_types.order');
-            $currentTypeSeats += $createdSeats;
-            $remainingTypeSeats = $requiredTypeSeats - $currentTypeSeats;
-            $nextSeatTypeId = null;
-            if ($remainingTypeSeats <= 0) {
-                $nextTypeIndex = array_search($seatTypes[$request->seat_type_id]->name, $seatTypesOrder) + 1;
-                if ($nextTypeIndex < count($seatTypesOrder)) {
-                    $nextSeatType = SeatType::where('name', $seatTypesOrder[$nextTypeIndex])->first();
-                    if ($nextSeatType) {
-                        $nextSeatTypeId = $nextSeatType->id;
-                    }
-                }
-            } else {
-                $nextSeatTypeId = $request->seat_type_id;
-            }
-
-            DB::commit();
-            return redirect()->route('admin.rooms.show', $request->room_id)
-                ->with('success', "$createdSeats ghế loại '{$seatTypes[$request->seat_type_id]->name}' đã được thêm thành công!")
-                ->with('next_seat_type_id', $nextSeatTypeId);
-
+            \Log::info('Seats created successfully', $result['data']);
+            
+            return redirect()
+                ->route('admin.rooms.show', $room->id)
+                ->with('success', 'Tạo ghế thành công! ' . $result['message']);
+                
         } catch (\Exception $e) {
-            Log::error('Exception during seat creation: ' . $e->getMessage() . ' | Trace: ' . $e->getTraceAsString());
-            DB::rollBack();
-            return redirect()->back()->with('error', 'Lỗi khi thêm ghế: ' . $e->getMessage())->withInput();
+            \Log::error('Error creating seats: ' . $e->getMessage());
+            return redirect()->back()
+                ->withErrors(['error' => 'Có lỗi xảy ra khi tạo ghế: ' . $e->getMessage()])
+                ->withInput();
+
         }
     }
 
@@ -266,80 +145,319 @@ class AdminSeatController extends Controller
 
     public function update(Request $request, $id)
     {
-        $seat = Seat::findOrFail($id);
+        $seat = Seat::with('seatType')->findOrFail($id);
 
         $request->validate([
-            'seat_type_id' => 'required|exists:seat_types,id',
-            'status' => 'required|in:available,reserved,booked',
+            'status' => 'required|in:' . implode(',', array_column(SeatStatus::cases(), 'value')),
         ]);
 
-        $seat->update([
-            'seat_type_id' => $request->seat_type_id,
-            'status' => $request->status,
-        ]);
-
-        // Lấy room_id từ session và redirect về trang chi tiết phòng cụ thể
-        $roomId = session('return_room_id');
-        return redirect()->route('admin.rooms.show', ['room' => $roomId])->with('success', 'Ghế đã được cập nhật thành công!');
-    }
-
-    public function show($id)
-    {
-        $seat = Seat::with('room', 'seatType')->findOrFail($id);
-        return view('admin.seats.show', compact('seat'));
-    }
-
-    public function editBulk(Request $request)
-    {
-        $seatIds = $request->input('seat_ids', []);
+        \Log::info('Updating seat ' . $id . ' with status: ' . $request->input('status'));
         
-        if (empty($seatIds)) {
-            return redirect()->route('admin.seats.index')->with('error', 'Vui lòng chọn ít nhất một ghế để chỉnh sửa.');
-        }
+        try {
+            DB::beginTransaction();
 
-        $seats = Seat::with('room', 'seatType')->whereIn('id', $seatIds)->get();
-        $seatTypes = SeatType::all();
+            // Cập nhật ghế chính
+            $seat->update([
+                'status' => $request->input('status'),
+            ]);
 
-        return view('admin.seats.edit-bulk', compact('seats', 'seatTypes'));
-    }
-
-    public function updateBulk(Request $request)
-    {
-        // Validate dữ liệu
-        $request->validate([
-            'seat_ids' => 'required|array',
-            'seat_ids.*' => 'required|integer|exists:seats,id',
-            'seat_type_id' => 'nullable|integer|exists:seat_types,id',
-            'status' => 'nullable|string|in:available,booked,sold,broken',
-        ]);
-
-        // Lấy seat_ids từ request
-        $seatIds = $request->input('seat_ids', []);
-        $seatTypeId = $request->input('seat_type_id');
-        $status = $request->input('status');
-
-        // Kiểm tra nếu không có ghế nào được chọn
-        if (empty($seatIds)) {
-            return redirect()->route('admin.seats.index')->with('error', 'Không có ghế nào được chọn để cập nhật.');
-        }
-
-        // Cập nhật hàng loạt ghế trong transaction
-        DB::transaction(function () use ($seatIds, $seatTypeId, $status) {
-            foreach ($seatIds as $seatId) {
-                $seat = Seat::find($seatId);
-                if ($seat) {
-                    // Chỉ cập nhật nếu có giá trị mới
-                    if ($seatTypeId) {
-                        $seat->seat_type_id = $seatTypeId;
-                    }
-                    if ($status) {
-                        $seat->status = $status; // Nếu Seat model sử dụng enum, giá trị này sẽ tự động cast
-                    }
-                    $seat->save();
+            // Nếu là ghế đôi, cập nhât ghế partner
+            if ($seat->seatType && $this->isCoupleSeaType($seat->seatType->name)) {
+                $couplePartner = $this->findCouplePartner($seat);
+                
+                if ($couplePartner) {
+                    $couplePartner->update([
+                        'status' => $request->input('status'),
+                    ]);
+                    
+                    \Log::info('Also updated couple partner seat ' . $couplePartner->id . ' with same status');
                 }
             }
-        });
 
-        return redirect()->route('admin.seats.index')->with('success', 'Cập nhật hàng loạt ghế thành công!');
+            DB::commit();
+
+            $roomId = session('return_room_id', $seat->room_id);
+            session()->forget('return_room_id');
+            
+            $message = $seat->seatType && $this->isCoupleSeaType($seat->seatType->name) 
+                ? 'Cập nhật ghế đôi thành công!'
+                : 'Cập nhật ghế thành công!';
+
+            return redirect()->route('admin.rooms.show', ['room' => $roomId])->with('success', $message);
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Error updating seat: ' . $e->getMessage());
+            
+            return redirect()->back()
+                ->withErrors(['error' => 'Có lỗi xảy ra khi cập nhật ghế: ' . $e->getMessage()]);
+        }
+    }
+
+    public function destroy($id)
+    {
+        $seat = Seat::findOrFail($id);
+        $roomId = $seat->room_id;
+        $seat->delete();
+
+        return redirect()->route('admin.rooms.show', ['room' => $roomId])->with('success', 'Xóa ghế thành công!');
+    }
+
+    public function bulkDestroy(Request $request, Room $room)
+    {
+        $request->validate([
+            'seat_ids' => 'required|array',
+            'seat_ids.*' => 'exists:seats,id',
+        ]);
+
+        try {
+            DB::beginTransaction();
+            
+            $deletedCount = Seat::whereIn('id', $request->seat_ids)
+                ->where('room_id', $room->id)
+                ->delete();
+            
+            DB::commit();
+            
+            return redirect()
+                ->route('admin.rooms.show', $room->id)
+                ->with('success', "Đã xóa thành công {$deletedCount} ghế!");
+                
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()
+                ->withErrors(['error' => 'Có lỗi xảy ra khi xóa ghế: ' . $e->getMessage()]);
+        }
+    }
+    
+    /**
+     * Hiển thị form chỉnh sửa hàng loạt ghế
+     */
+    public function editBulk(Request $request)
+    {
+        $request->validate([
+            'seat_ids' => 'required|array',
+            'seat_ids.*' => 'exists:seats,id',
+        ]);
+
+        // Lấy danh sách ghế đã chọn
+        $selectedSeats = Seat::with(['seatType', 'room'])
+            ->whereIn('id', $request->seat_ids)
+            ->get();
+
+        if ($selectedSeats->isEmpty()) {
+            return redirect()->back()
+                ->withErrors(['error' => 'Không tìm thấy ghế nào để chỉnh sửa.']);
+        }
+
+        // Thêm ghế đôi tự động nếu cần
+        $finalSeats = $this->addCoupleSeatsIfNeeded($selectedSeats);
+        
+        $room = $selectedSeats->first()->room;
+        $seatStatuses = SeatStatus::cases();
+
+        return view('admin.seats.edit-bulk', compact('finalSeats', 'room', 'seatStatuses'));
+    }
+
+    /**
+     * Cập nhật hàng loạt ghế
+     */
+    public function updateBulk(Request $request)
+    {
+        $request->validate([
+            'seat_ids' => 'required|array',
+            'seat_ids.*' => 'exists:seats,id',
+            'status' => 'required|string|in:' . implode(',', array_column(SeatStatus::cases(), 'value')),
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $selectedSeats = Seat::with('seatType')
+                ->whereIn('id', $request->seat_ids)
+                ->get();
+
+            // Thêm ghế đôi tự động nếu cần
+            $finalSeats = $this->addCoupleSeatsIfNeeded($selectedSeats);
+            $finalSeatIds = $finalSeats->pluck('id')->toArray();
+
+            $updateData = [
+                'status' => $request->status,
+            ];
+
+            $updatedCount = Seat::whereIn('id', $finalSeatIds)->update($updateData);
+
+            DB::commit();
+
+            $roomId = $selectedSeats->first()->room_id;
+            $coupleMessage = count($finalSeatIds) > count($request->seat_ids) 
+                ? " (bao gồm cả ghế đôi liên quan)" 
+                : "";
+
+            return redirect()
+                ->route('admin.rooms.show', $roomId)
+                ->with('success', "Đã cập nhật thành công {$updatedCount} ghế{$coupleMessage}!");
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()
+                ->withErrors(['error' => 'Có lỗi xảy ra khi cập nhật ghế: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Thêm ghế đôi tự động nếu cần thiết
+     */
+    private function addCoupleSeatsIfNeeded($selectedSeats)
+    {
+        $finalSeats = collect($selectedSeats);
+        $addedSeatIds = [];
+
+        foreach ($selectedSeats as $seat) {
+            // Kiểm tra xem có phải là ghế đôi không
+            if ($seat->seatType && $this->isCoupleSeaType($seat->seatType->name)) {
+                $couplePartner = $this->findCouplePartner($seat);
+                
+                if ($couplePartner && !$finalSeats->contains('id', $couplePartner->id) && !in_array($couplePartner->id, $addedSeatIds)) {
+                    $finalSeats->push($couplePartner);
+                    $addedSeatIds[] = $couplePartner->id;
+                }
+            }
+        }
+
+        return $finalSeats;
+    }
+
+    /**
+     * Tìm ghế đôi liên quan
+     */
+    private function findCouplePartner(Seat $seat)
+    {
+        $rowChar = $seat->row_char;
+        $seatNumber = $seat->seat_number;
+        $roomId = $seat->room_id;
+
+        // Logic ghế đôi: A1-A2, A3-A4, B1-B2, etc.
+        if ($seatNumber % 2 === 1) {
+            // Ghế lẻ, tìm ghế chẵn kế tiếp
+            $partnerSeatNumber = $seatNumber + 1;
+        } else {
+            // Ghế chẵn, tìm ghế lẻ trước đó
+            $partnerSeatNumber = $seatNumber - 1;
+        }
+
+        return Seat::where('room_id', $roomId)
+            ->where('row_char', $rowChar)
+            ->where('seat_number', $partnerSeatNumber)
+            ->first();
+    }
+
+    /**
+     * Kiểm tra xem loại ghế có phải là ghế đôi không
+     */
+    private function isCoupleSeaType(string $seatTypeName): bool
+    {
+        $typeName = strtolower($seatTypeName);
+        return str_contains($typeName, 'couple') || 
+               str_contains($typeName, 'sweetbox') || 
+               str_contains($typeName, 'bed') ||
+               str_contains($typeName, 'sofa');
+    }
+
+    /**
+     * Import seats from CSV file
+     */
+    public function importExcel(Request $request)
+    {
+        \Log::info('---[IMPORT SEAT CSV START]---');
+        $request->validate([
+            'excel_file' => 'required|file|mimes:csv,txt',
+        ]);
+        if (!$request->hasFile('excel_file')) {
+            \Log::error('No file uploaded!');
+            return back()->withErrors(['error' => 'Không nhận được file upload!']);
+        }
+        $file = $request->file('excel_file');
+        \Log::info('File info', ['original_name' => $file->getClientOriginalName(), 'mime' => $file->getMimeType()]);
+        $path = $file->getRealPath();
+        \Log::info('CSV file path: ' . $path);
+        
+        try {
+            // Read CSV file manually
+            $rows = [];
+            if (($handle = fopen($path, "r")) !== FALSE) {
+                while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
+                    $rows[] = $data;
+                }
+                fclose($handle);
+            }
+            \Log::info('CSV rows loaded', ['rows_count' => count($rows)]);
+        } catch (\Throwable $e) {
+            \Log::error('Error reading CSV: ' . $e->getMessage());
+            return back()->withErrors(['error' => 'Không đọc được file CSV: ' . $e->getMessage()]);
+        }
+
+        $errors = [];
+        $imported = 0;
+
+        foreach ($rows as $index => $row) {
+            if ($index === 0) {
+                \Log::info('Header row: ', $row);
+                continue; // Bỏ qua header
+            }
+
+            // Get room_id from request
+            $roomId = $request->input('room_id');
+            
+            // Find seat type by name
+            $seatTypeName = $row[2] ?? null;
+            $seatType = \App\Models\SeatType::where('name', $seatTypeName)->first();
+            
+            $data = [
+                'room_id' => $roomId,
+                'row_char' => $row[0] ?? null,
+                'seat_number' => str_pad($row[1] ?? null, 2, '0', STR_PAD_LEFT),
+                'seat_type_id' => $seatType ? $seatType->id : null,
+                'status' => $row[3] ?? 'available',
+            ];
+            \Log::info('Processing row', ['index' => $index, 'data' => $data, 'seat_type_name' => $seatTypeName]);
+
+            $validator = \Validator::make($data, [
+                'room_id' => 'required|exists:rooms,id',
+                'row_char' => 'required|string|max:2',
+                'seat_number' => 'required|string|max:3',
+                'seat_type_id' => 'required|exists:seat_types,id',
+                'status' => 'required|in:available,unavailable,maintenance',
+            ]);
+
+            if ($validator->fails()) {
+                $errorMsg = "Dòng " . ($index + 1) . ": " . implode(', ', $validator->errors()->all());
+                $errors[] = $errorMsg;
+                \Log::warning('Validation failed', ['index' => $index, 'errors' => $validator->errors()->all()]);
+                continue;
+            }
+
+            $seat = \App\Models\Seat::updateOrCreate(
+                [
+                    'room_id' => $data['room_id'],
+                    'row_char' => $data['row_char'],
+                    'seat_number' => $data['seat_number'],
+                ],
+                [
+                    'seat_type_id' => $data['seat_type_id'],
+                    'status' => $data['status'],
+                ]
+            );
+            $imported++;
+            \Log::info('Seat imported/updated', ['seat_id' => $seat->id]);
+        }
+
+        \Log::info('---[IMPORT SEAT EXCEL END]---', ['imported' => $imported, 'errors' => $errors]);
+
+        if ($errors) {
+            return back()->withErrors($errors);
+        }
+
+        return back()->with('success', "Đã import thành công {$imported} ghế!");
     }
 }

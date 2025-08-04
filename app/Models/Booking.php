@@ -12,6 +12,7 @@ class Booking extends Model
     protected $fillable = [
         'user_id', 'booking_code', 'total_amount_before_discount', 'discount_amount',
         'final_amount', 'promotion_id', 'payment_method_id', 'status', 'notes',
+        'customer_name', 'customer_phone', 'customer_email'
     ];
 
     protected $casts = [
@@ -20,6 +21,14 @@ class Booking extends Model
         'final_amount' => 'decimal:2',
         'status' => \App\Enums\BookingStatus::class,
     ];
+
+    /**
+     * Get total amount attribute
+     */
+    public function getTotalAmountAttribute()
+    {
+        return $this->final_amount;
+    }
 
     public function user()
     {
@@ -59,5 +68,21 @@ class Booking extends Model
     public function pointHistory()
     {
         return $this->hasMany(PointHistory::class);
+    }
+
+    /**
+     * Get showtime through tickets
+     * Lấy showtime từ vé đầu tiên (vì tất cả vé trong 1 booking thuộc cùng 1 showtime)
+     */
+    public function showtime()
+    {
+        return $this->hasOneThrough(
+            Showtime::class,
+            Ticket::class,
+            'booking_id', // Foreign key on tickets table
+            'id', // Foreign key on showtimes table  
+            'id', // Local key on bookings table
+            'showtime_id' // Local key on tickets table
+        );
     }
 }

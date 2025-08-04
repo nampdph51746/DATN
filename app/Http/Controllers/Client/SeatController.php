@@ -17,6 +17,32 @@ use App\Http\Controllers\Controller;
 
 class SeatController extends Controller
 {
+    // API bỏ giữ ghế khi người dùng thoát hoặc reload trang
+    public function releaseSeat(Request $request, $showtimeId)
+    {
+        $request->validate([
+            'seat_ids' => 'required|array',
+            'seat_ids.*' => 'exists:seats,id',
+        ]);
+
+        try {
+            $seatIds = $request->input('seat_ids');
+            foreach ($seatIds as $id) {
+                $seatState = ShowtimeSeatState::where('showtime_id', $showtimeId)
+                    ->where('seat_id', $id)
+                    ->first();
+                if ($seatState && $seatState->status === SeatStatus::Reserved) {
+                    $seatState->status = SeatStatus::Available;
+                    $seatState->locked_until = null;
+                    $seatState->locked_by = null;
+                    $seatState->save();
+                }
+            }
+            return response()->json(['message' => 'Ghế đã được bỏ giữ']);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Lỗi khi bỏ giữ ghế.'], 500);
+        }
+    }
     public function getSeatsForShowtime($showtimeId)
     {
         \Log::info('Starting getSeatsForShowtime for showtime ID: ' . $showtimeId);
@@ -98,9 +124,14 @@ class SeatController extends Controller
 
     public function showSeatMap($showtimeId)
     {
-        \Log::info('Starting showSeatMap for showtime ID: ' . $showtimeId);
-        $showtime = Showtime::with('room.seats.seatType')->findOrFail($showtimeId);
-        \Log::info('Room for showtime ID ' . $showtimeId . ': ' . $showtime->room->name);
+        Log::info('Starting showSeatMap for showtime ID: ' . $showtimeId);
+        $showtime = Showtime::with([
+            'room.seats.seatType',
+            'room.seats.showtimeSeatStates' => function ($q) use ($showtimeId) {
+                $q->where('showtime_id', $showtimeId);
+            }
+        ])->findOrFail($showtimeId);
+        Log::info('Room for showtime ID ' . $showtimeId . ': ' . $showtime->room->name);
 
         $room = $showtime->room;
 
@@ -114,12 +145,28 @@ class SeatController extends Controller
         $seats = $room->seats->map(function ($seat) use ($bookedSeats, $showtime) {
             $label = $seat->row_char . '-' . str_pad($seat->seat_number, 2, '0', STR_PAD_LEFT);
             $price = $seat->seatType->price_modifier ?? $showtime->base_price; // Sử dụng price_modifier, fallback về base_price
+            
+            // Kiểm tra trạng thái từ showtimes_seat_states, fallback về seats.status
+            $seatState = $seat->showtimeSeatStates->first();
+            $status = 'available';
+            
+            if (in_array($seat->id, $bookedSeats)) {
+                $status = 'reserved';
+            } elseif ($seatState && $seatState->status === SeatStatus::Maintenance) {
+                $status = 'maintenance';
+            } elseif ($seatState && $seatState->status === SeatStatus::Booked) {
+                $status = 'reserved';
+            } elseif ($seat->status === SeatStatus::Maintenance) {
+                // Fallback: nếu không có seatState nhưng ghế gốc là maintenance
+                $status = 'maintenance';
+            }
+            
             $seatInfo = [
                 'seat_id'     => $seat->id,
                 'label'       => $label,
                 'row_char'    => $seat->row_char,
                 'seat_number' => $seat->seat_number,
-                'status'      => in_array($seat->id, $bookedSeats) ? 'reserved' : 'available',
+                'status'      => $status,
                 'seat_type'   => $seat->seatType->name,
                 'color_code'  => $seat->seatType->color_code,
                 'price'       => $price,
@@ -170,8 +217,9 @@ class SeatController extends Controller
         ]);
 
         try {
-            $seatIds = $request->seat_ids;
-            \Log::info('Seat IDs to reserve: ' . json_encode($seatIds));
+
+            $seatIds = $request->input('seat_ids');
+            Log::info('Seat IDs to reserve: ' . json_encode($seatIds));
 
             $states = ShowtimeSeatState::where('showtime_id', $showtimeId)
                 ->whereIn('seat_id', $seatIds)
@@ -183,56 +231,67 @@ class SeatController extends Controller
             \Log::info('Session ID for reserving seats: ' . $sessionId);
 
             foreach ($seatIds as $id) {
-                $isEven = (int)$id % 2 === 0;
-                \Log::info("Processing seat ID: $id, is even: " . ($isEven ? 'true' : 'false'));
-
+                $seat = Seat::find($id);
                 $seatState = $states->firstWhere('seat_id', $id);
-                if ($seatState) {
-                    \Log::info("Existing state for seat ID $id: " . json_encode([
-                        'status' => $seatState->status,
-                        'locked_by' => $seatState->locked_by,
-                        'locked_until' => $seatState->locked_until,
-                    ]));
-                    if ($seatState->status === \App\Enums\SeatStatus::Reserved) {
-                        if ($seatState->locked_by !== $sessionId && Carbon::now()->lt($seatState->locked_until)) {
-                            \Log::warning("Seat ID $id is locked by another session until " . $seatState->locked_until);
-                            return response()->json([
-                                'error' => "Ghế {$seatState->seat->row_char}{$seatState->seat->seat_number} không khả dụng"
-                            ], 400);
-                        } elseif (Carbon::now()->gte($seatState->locked_until)) {
-                            \Log::info("Seat ID $id lock expired, resetting state");
-                            $seatState->update([
-                                'status' => \App\Enums\SeatStatus::Available,
-                                'locked_by' => null,
-                                'locked_until' => null,
-                            ]);
-                        }
+                
+                // Kiểm tra ghế maintenance
+                if (($seat && $seat->status === SeatStatus::Maintenance) || ($seatState && $seatState->status === SeatStatus::Maintenance)) {
+                    Log::warning("Seat ID $id is under maintenance");
+                    return response()->json([
+                        'error' => "Ghế {$seat->row_char}{$seat->seat_number} đang bảo trì"
+                    ], 400);
+                }
+                
+                // Nếu đã reserved thì bỏ qua, không giữ nữa
+                if ($seatState && $seatState->status === SeatStatus::Reserved) {
+                    if ($seatState->locked_by !== $sessionId) {
+                        Log::warning("Seat ID $id is locked by another session");
+                        return response()->json([
+                            'error' => "Ghế {$seatState->seat->row_char}{$seatState->seat->seat_number} không khả dụng"
+                        ], 400);
                     }
                 }
 
-                $lockedUntil = now()->addMinutes(10);
+                // Không giữ ghế 10 phút nữa, chỉ giữ khi đang ở trang
                 $seatState = ShowtimeSeatState::updateOrCreate(
                     ['showtime_id' => $showtimeId, 'seat_id' => $id],
                     [
-                        'status'        => \App\Enums\SeatStatus::Reserved,
-                        'locked_until'  => $lockedUntil,
-                        'booking_id'    => null,
-                        'locked_by'     => $sessionId,
+                        'status' => SeatStatus::Reserved,
+                        'locked_until' => null,
+                        'booking_id' => null,
+                        'locked_by' => $sessionId,
                     ]
                 );
 
-                \Log::info("Seat ID $id reserved for showtime ID: $showtimeId, locked until: " . $lockedUntil->toDateTimeString() . ", locked by: $sessionId");
-
-                // Gửi sự kiện Pusher
-                \Log::info("Triggering SeatStatusUpdated event for showtime ID: $showtimeId, seat ID: $id, status: Reserved, locked by: $sessionId, is even: " . ($isEven ? 'true' : 'false'));
-                event(new SeatStatusUpdated($showtimeId, $id, \App\Enums\SeatStatus::Reserved, $lockedUntil, $sessionId));
+                Log::info("Seat ID $id reserved for showtime ID: $showtimeId");
+                event(new SeatStatusUpdated($showtimeId, $id, SeatStatus::Reserved, null, $sessionId));
             }
 
-            \Log::info('Seats reserved successfully for showtime ID: ' . $showtimeId);
-            return response()->json(['message' => 'Đã khóa ghế tạm thời']);
+            $selectedSeatInfos = ShowtimeSeatState::with(['seat.seatType'])
+                ->where('showtime_id', $showtimeId)
+                ->whereIn('seat_id', $seatIds)
+                ->get()
+                ->map(function ($state) use ($showtimeId) {
+                    $showtime = Showtime::find($showtimeId);
+                    $ticketPrice = $showtime->base_price * ($state->seat->seatType->price_modifier ?? 1.0);
+                    return [
+                        'seat_id' => $state->seat_id,
+                        'row_char' => $state->seat->row_char,
+                        'seat_number' => $state->seat->seat_number,
+                        'seat_type' => $state->seat->seatType->name ?? 'Regular',
+                        'price_modifier' => $state->seat->seatType->price_modifier ?? 1.0,
+                        'color_code' => $state->seat->seatType->color_code ?? '#28a745',
+                        'price' => $ticketPrice,
+                    ];
+                })->toArray();
+            Log::info('Selected seats info saved to session: ' . json_encode($selectedSeatInfos));
+            session(['selected_seats_info' => $selectedSeatInfos]);
+
+            Log::info('Seats reserved successfully for showtime ID: ' . $showtimeId);
+            return response()->json(['message' => 'Đã giữ ghế tạm thời']);
         } catch (\Exception $e) {
-            \Log::error('Error in reserveSeat for showtime ID: ' . $showtimeId . ': ' . $e->getMessage());
-            return response()->json(['error' => 'Lỗi khi khóa ghế. Vui lòng thử lại.'], 500);
+            Log::error('Error in reserveSeat for showtime ID: ' . $showtimeId . ': ' . $e->getMessage());
+            return response()->json(['error' => 'Lỗi khi giữ ghế. Vui lòng thử lại.'], 500);
         }
     }
 
@@ -281,7 +340,12 @@ class SeatController extends Controller
                     }
                 } elseif ($seatState->status === SeatStatus::Booked) {
                     $status = 'reserved';
+                } elseif ($seatState->status === SeatStatus::Maintenance) {
+                    $status = 'maintenance';
                 }
+            } elseif ($seat->status === SeatStatus::Maintenance) {
+                // Fallback: nếu không có seatState nhưng ghế gốc là maintenance
+                $status = 'maintenance';
             }
 
             return [

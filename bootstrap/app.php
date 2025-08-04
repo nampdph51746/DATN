@@ -21,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             // 'admin.staff' => \App\Http\Middleware\EnsureUserIsAdminOrStaff::class,
             'role' => RoleMiddleware::class,
+            'update.showtime.status' => \App\Http\Middleware\UpdateShowtimeStatus::class,
         ]);
 
         

@@ -19,19 +19,19 @@
                                 </span>
                             </div>
                         </form>
-                        <a href="{{ route('admin.rooms.create') }}" class="btn btn-sm btn-primary">
-                            Thêm Phòng Chiếu
-                        </a>
+                        @can('create room')
+                            <a href="{{ route('admin.rooms.create') }}" class="btn btn-sm btn-primary">
+                                Thêm Phòng Chiếu
+                            </a>
+                        @endcan
 
                         {{-- Bộ lọc loại phòng --}}
-                        <form method="GET" action="{{ route('admin.rooms.index') }}"
-                            class="d-flex align-items-center ms-2">
+                        <form method="GET" action="{{ route('admin.rooms.index') }}" class="d-flex align-items-center ms-2">
                             <select name="room_type_id" class="form-select form-select-sm me-2"
                                 onchange="this.form.submit()">
                                 <option value="">-- Tất cả loại phòng --</option>
                                 @foreach ($roomTypes as $type)
-                                    <option value="{{ $type->id }}"
-                                        {{ request('room_type_id') == $type->id ? 'selected' : '' }}>
+                                    <option value="{{ $type->id }}" {{ request('room_type_id') == $type->id ? 'selected' : '' }}>
                                         {{ $type->name }}
                                     </option>
                                 @endforeach
@@ -65,8 +65,7 @@
                                                 <div class="form-check">
                                                     <input type="checkbox" class="form-check-input"
                                                         id="customCheck{{ $room->id }}">
-                                                    <label class="form-check-label"
-                                                        for="customCheck{{ $room->id }}"></label>
+                                                    <label class="form-check-label" for="customCheck{{ $room->id }}"></label>
                                                 </div>
                                             </td>
                                             <td>
@@ -91,10 +90,12 @@
                                                     <a href="{{ route('admin.rooms.show', $room->id) }}"
                                                         class="btn btn-light btn-sm"><iconify-icon icon="solar:eye-broken"
                                                             class="align-middle fs-18"></iconify-icon></a>
-                                                    <a href="{{ route('admin.rooms.edit', $room->id) }}"
+                                                    @can('edit room')
+                                                        <a href="{{ route('admin.rooms.edit', $room->id) }}"
                                                         class="btn btn-soft-primary btn-sm"><iconify-icon
                                                             icon="solar:pen-2-broken"
                                                             class="align-middle fs-18"></iconify-icon></a>
+                                                    @endcan
                                                 </div>
                                             </td>
                                         </tr>
