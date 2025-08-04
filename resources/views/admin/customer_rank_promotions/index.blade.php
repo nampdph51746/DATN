@@ -12,7 +12,9 @@
                             <input type="text" name="search" placeholder="Tìm kiếm ID hạng hoặc ID KM" value="{{ request('search') }}" class="form-control form-control-sm" style="width: 200px;">
                             <button type="submit" class="btn btn-sm btn-primary">Tìm</button>
                         </form>
-                        <a href="{{ route('customer_rank_promotions.create') }}" class="btn btn-sm btn-primary">Thêm mới</a>
+                        @can('create customer rank promotion')
+                            <a href="{{ route('customer_rank_promotions.create') }}" class="btn btn-sm btn-primary">Thêm mới</a>
+                        @endcan
                         <div class="dropdown">
                             <a href="#" class="dropdown-toggle btn btn-sm btn-outline-light" data-bs-toggle="dropdown" aria-expanded="false">
                                 Lọc
@@ -71,16 +73,20 @@
                                             <a href="{{ route('customer_rank_promotions.show', [$item->customer_rank_id, $item->promotion_id]) }}" class="btn btn-light btn-sm">
                                                 <iconify-icon icon="solar:eye-broken" class="align-middle fs-18"></iconify-icon>
                                             </a>
-                                            <a href="{{ route('customer_rank_promotions.edit', [$item->customer_rank_id, $item->promotion_id]) }}" class="btn btn-soft-primary btn-sm">
+                                            @can('can edit customer rank promotion')
+                                                 <a href="{{ route('customer_rank_promotions.edit', [$item->customer_rank_id, $item->promotion_id]) }}" class="btn btn-soft-primary btn-sm">
                                                 <iconify-icon icon="solar:pen-2-broken" class="align-middle fs-18"></iconify-icon>
-                                            </a>
-                                            <form action="{{ route('customer_rank_promotions.destroy', [$item->customer_rank_id, $item->promotion_id]) }}" method="POST" style="display:inline;">
+                                                </a>
+                                            @endcan
+                                            @can('delete customer rank promotion')
+                                                <form action="{{ route('customer_rank_promotions.destroy', [$item->customer_rank_id, $item->promotion_id]) }}" method="POST" style="display:inline;">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="btn btn-soft-danger btn-sm" onclick="return confirm('Xóa vĩnh viễn?')">
                                                     <iconify-icon icon="solar:trash-bin-minimalistic-2-broken" class="align-middle fs-18"></iconify-icon>
                                                 </button>
                                             </form>
+                                            @endcan
                                         </div>
                                     </td>
                                 </tr>

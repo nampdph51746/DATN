@@ -9,97 +9,81 @@
 
     <div class="row">
         <div class="col-xl-12">
-            <div class="card">
-                <div class="card-header d-flex flex-wrap align-items-center gap-2">
-                    <h4 class="card-title flex-grow-1 mb-0">Danh sách giới hạn độ tuổi</h4>
-                    <form id="delete-selected-age-limit-form" action="{{ route('admin.age_limits.bulkDelete') }}" method="POST" style="display: none;">
+            <div class="card mt-3">
+                <div class="card-header d-flex justify-content-between align-items-center gap-2">
+                    <h4 class="card-title flex-grow-1">Danh sách giới hạn độ tuổi</h4>
+
+                   @can('delete age limit')
+                        <form id="delete-selected-age-limit-form" method="POST" action="{{ route('admin.age_limits.bulkDelete') }}">
                         @csrf
-                        @method('DELETE')
                         <input type="hidden" name="ids" id="selected-age-limit-ids">
-                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Bạn có chắc muốn xóa các giới hạn đã chọn?')">
+                        <button type="submit" class="btn btn-danger btn-sm">
+                            <iconify-icon icon="solar:trash-bin-trash-bold-duotone" class="me-1"></iconify-icon>
                             Xóa đã chọn
                         </button>
                     </form>
-                    <form class="d-flex align-items-center gap-2 ms-2" method="GET" action="{{ route('admin.age_limits.index') }}" style="min-width:320px;">
-                        <div class="position-relative flex-grow-1">
-                            <input type="search" name="query" class="form-control form-control-sm ps-5 pe-3 rounded-2"
-                                placeholder="Tìm kiếm tên giới hạn..." autocomplete="off" value="{{ request('query') }}">
-                            <iconify-icon icon="solar:magnifer-linear"
-                                class="position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"
-                                style="font-size: 16px;"></iconify-icon>
-                        </div>
-                        <button type="submit" class="btn btn-sm btn-outline-primary">
-                            <i class="bi bi-search"></i>
-                        </button>
-                    </form>
-                    <div class="d-flex gap-2 flex-wrap">
+                   @endcan
+
+                    @can('create age limit')
                         <a href="{{ route('admin.age_limits.create') }}" class="btn btn-sm btn-primary">
-                            <i class="bi bi-plus-circle"></i> Thêm mới
+                        Thêm mới
                         </a>
-                    </div>
+                    @endcan
                 </div>
-                <div>
-                    <div class="table-responsive">
-                        <table class="table align-middle mb-0 table-hover table-centered">
-                            <thead class="bg-light-subtle">
+
+                <div class="table-responsive">
+                    <table class="table align-middle table-hover mb-0">
+                        <thead class="bg-light-subtle">
+                            <tr>
+                                <th style="width: 20px;">
+                                    <div class="form-check ms-1">
+                                        <input type="checkbox" class="form-check-input" id="checkAllAgeLimits">
+                                    </div>
+                                </th>
+                                <th>Tên</th>
+                                <th>Mô tả</th>
+                                <th>Độ tuổi tối thiểu</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($ageLimits as $ageLimit)
                                 <tr>
-                                    <th style="width: 20px;">
+                                    <td>
                                         <div class="form-check ms-1">
-                                            <input type="checkbox" class="form-check-input" id="checkAllAgeLimits">
+                                            <input type="checkbox" class="form-check-input age-limit-checkbox" value="{{ $ageLimit->id }}" id="ageLimitCheck{{ $ageLimit->id }}">
                                         </div>
-                                    </th>
-                                    <th>Tên giới hạn</th>
-                                    <th>Mô tả</th>
-                                    <th>Độ tuổi tối thiểu</th>
-                                    <th>Thời gian tạo</th>
-                                    <th>Thời gian cập nhật</th>
-                                    <th class="text-center" style="width: 120px;">Hành động</th>
+                                    </td>
+                                    <td>{{ $ageLimit->name }}</td>
+                                    <td>{{ $ageLimit->description }}</td>
+                                    <td>{{ $ageLimit->min_age }}</td>
+                                    <td>
+                                        <div class="d-flex gap-2">
+                                            <a href="{{ route('admin.age_limits.edit', $ageLimit->id) }}" class="btn btn-sm btn-soft-primary">
+                                                <iconify-icon icon="solar:pen-2-broken" class="align-middle fs-18"></iconify-icon>
+                                            </a>
+                                            @can('delete age limit')
+                                            <form action="{{ route('admin.age_limits.destroy', $ageLimit->id) }}" method="POST" onsubmit="return confirm('Bạn có chắc muốn xóa?')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-sm btn-light">
+                                                    <iconify-icon icon="solar:trash-bin-trash-broken" class="align-middle fs-18"></iconify-icon>
+                                                </button>
+                                            </form>
+                                            @endcan
+                                        </div>
+                                    </td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($ageLimits as $ageLimit)
-                                    <tr>
-                                        <td>
-                                            <div class="form-check ms-1">
-                                                <input type="checkbox" class="form-check-input age-limit-checkbox" value="{{ $ageLimit->id }}" id="ageLimitCheck{{ $ageLimit->id }}">
-                                            </div>
-                                        </td>
-                                        <td class="fw-semibold">{{ $ageLimit->name }}</td>
-                                        <td>{{ $ageLimit->description }}</td>
-                                        <td>
-                                            {{ $ageLimit->min_age !== null ? $ageLimit->min_age : 'Không giới hạn' }}
-                                        </td>
-                                        <td>
-                                            {{ $ageLimit->created_at ? $ageLimit->created_at->format('d/m/Y H:i') : '' }}
-                                        </td>
-                                        <td>
-                                            {{ $ageLimit->updated_at ? $ageLimit->updated_at->format('d/m/Y H:i') : '' }}
-                                        </td>
-                                        <td class="text-center">
-                                            <div class="d-flex gap-2 justify-content-center">
-                                                <a href="{{ route('admin.age_limits.edit', $ageLimit->id) }}" class="btn btn-soft-primary btn-sm" title="Sửa">
-                                                    <i class="bi bi-pencil"></i>
-                                                </a>
-                                                <form action="{{ route('admin.age_limits.destroy', $ageLimit->id) }}" method="POST" style="display:inline;">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn btn-soft-danger btn-sm"
-                                                        onclick="return confirm('Bạn có chắc muốn xóa?')">
-                                                        <i class="bi bi-trash"></i>
-                                                    </button>
-                                                </form>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="7" class="text-center text-muted">Chưa có dữ liệu.</td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted">Chưa có dữ liệu.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
                 </div>
+
+                @if($ageLimits->hasPages())
                 <div class="card-footer border-top">
                     <div class="d-flex justify-content-end">
                         {{ $ageLimits->appends(request()->query())->links('pagination::bootstrap-5') }}
@@ -138,14 +122,21 @@ document.addEventListener('DOMContentLoaded', function () {
         cb.addEventListener('change', updateDeleteAgeLimitButton);
     });
 
-    // Khi submit form xóa, lấy id các age limit đã chọn
-    document.getElementById('delete-selected-age-limit-form').addEventListener('submit', function(e) {
+    document.getElementById('delete-selected-age-limit-form').addEventListener('submit', function (e) {
+        e.preventDefault(); // Ngăn submit ngay lập tức
+
         const checked = Array.from(document.querySelectorAll('.age-limit-checkbox:checked')).map(cb => cb.value);
+        console.log('IDs được chọn:', checked);
+
         if (checked.length === 0) {
-            e.preventDefault();
-            return false;
+            alert('Bạn chưa chọn mục nào!');
+            return;
         }
-        document.getElementById('selected-age-limit-ids').value = checked.join(',');
+
+        if (confirm('Bạn có chắc muốn xóa các giới hạn đã chọn?')) {
+            document.getElementById('selected-age-limit-ids').value = checked.join(',');
+            this.submit(); // Submit sau khi đã gán
+        }
     });
 });
 </script>

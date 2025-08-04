@@ -30,4 +30,18 @@ class Room extends Model
     {
         return $this->hasMany(Showtime::class);
     }
+
+    // Lấy các loại ghế được phép cho phòng này dựa trên constraint
+    public function allowedSeatTypes()
+    {
+        // Trả về collection các model SeatType được phép cho phòng này, chỉ lấy những cái hợp lệ
+        $constraints = \App\Models\RoomSeatTypeConstraint::where('room_type_id', $this->room_type_id)
+            ->with('seatType')
+            ->get();
+        return $constraints->map(function($constraint) {
+            return $constraint->seatType instanceof \App\Models\SeatType ? $constraint->seatType : null;
+        })->filter(function($seatType) {
+            return $seatType !== null;
+        })->values();
+    }
 }

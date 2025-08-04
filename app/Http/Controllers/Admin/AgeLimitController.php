@@ -8,7 +8,15 @@ use App\Models\AgeLimit;
 
 class AgeLimitController extends Controller
 {
-    public function index(Request $request)
+    public function __construct()
+    {
+        $this->middleware(['auth', 'role:admin,staff']);
+        $this->middleware('can:view age limit')->only('index');
+        $this->middleware('can:create age limit')->only(['create', 'store']);
+        $this->middleware('can:edit age limit')->only(['edit', 'update']);
+        $this->middleware('can:delete age limit')->only('destroy');
+    }
+    public function index()
     {
         $query = AgeLimit::query();
 
@@ -42,7 +50,7 @@ class AgeLimitController extends Controller
     public function edit($id)
     {
         $ageLimit = AgeLimit::findOrFail($id);
-        return view('admin.ageLimit.edit', compact('ageLimit'));
+        return view('admin.movies.ageLimit.edit', compact('ageLimit'));
     }
 
     public function update(Request $request, $id)

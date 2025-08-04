@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Models\Role;
 use App\Models\User;
 use App\Models\Product;
 use App\Enums\UserStatus;
@@ -13,6 +12,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Requests\Admin\User\StoreUserRequest;
 use App\Http\Requests\Admin\User\UpdateUserRequest;
+use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
 use Symfony\Component\Mailer\Test\Constraint\EmailCount;
 
 class UserController extends Controller
@@ -22,9 +23,8 @@ class UserController extends Controller
      */
     public function index(Request $request)
     {
-        $query = User::with('role', 'customerRank')->orderBy('id', 'desc');
+        $query = User::with('roles', 'customerRank')->orderBy('id', 'desc');
 
-        // 🔍 Search by name or email
         if ($request->filled('search')) {
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
@@ -33,26 +33,32 @@ class UserController extends Controller
             });
         }
 
+        
         if ($request->filled('role')) {
-            $query->where('role_id', $request->input('role'));
+            $query->whereHas('roles', function ($q) use ($request) {
+                $q->where('id', $request->input('role'));
+            });
         }
 
+        // Filter by Rank
         if ($request->filled('rank')) {
             $query->where('customer_rank_id', $request->input('rank'));
         }
 
+        // Filter by Status
         if ($request->filled('status')) {
-        $query->where('status', $request->input('status'));
+            $query->where('status', $request->input('status'));
         }
 
-        $users = $query->paginate(10)->withQueryString(); // Keep filters on pagination links
+        $users = $query->paginate(10)->withQueryString();
 
-        // For dropdowns
+        // For dropdown filters
         $roles = Role::all();
         $ranks = CustomerRank::all();
 
         return view('admin.users.list', compact('users', 'roles', 'ranks'));
     }
+
 
     /**
      * Show the form for creating a new resource.
@@ -79,8 +85,18 @@ class UserController extends Controller
             $data['avatar_url'] = $request->file('avatar_url')->store('avatars', 'public');
         }
 
-        User::create($data);
+        $data['password'] = Hash::make($data['password']);
 
+        $user = User::create($data);
+
+        if ($request->filled('role')) {
+            // Đảm bảo chỉ gán role hợp lệ
+            $role = Role::where('name', $request->input('role'))->first();
+
+            if ($role) {
+                $user->assignRole($role);
+            }
+        }
 
         return redirect()->route('users.index')->with('success', 'User created successfully.');
     }
@@ -97,28 +113,40 @@ class UserController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
+    public function edit($id)
     {
-        $users = User::with('role', 'customerRank')->findOrFail($id);
+        $user = User::findOrFail($id); // dùng đúng tên biến
 
         $roles = Role::all();
-
         $customerRanks = CustomerRank::all();
-
         $statuses = UserStatus::cases();
-        return view('admin.users.edit', compact('roles', 'customerRanks', 'statuses', 'users'));
+
+        $selectedRole = $user->roles->pluck('name')->first();
+
+        return view('admin.users.edit', [
+            'user' => $user,
+            'roles' => $roles,
+            'customerRanks' => $customerRanks,
+            'statuses' => $statuses,
+            'selectedRole' => $selectedRole,
+        ]);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateUserRequest  $request, string $id)
+    public function update(UpdateUserRequest $request, $id)
     {
-        $user = User::findOrFail($id);
+        $user = User::findOrFail($id); // tự lấy model
 
-        $data = $request->validated();
+        $user->update([
+            'customer_rank_id' => $request->customer_rank_id,
+            'status' => $request->status,
+        ]);
 
-        $user->update($data);
-        return redirect()->route('users.index')->with('success', 'User updated successfully.');
+        $user->syncRoles($request->role);
+
+        return redirect()->route('users.index')->with('success', 'Cập nhật người dùng thành công.');
     }
+
 }

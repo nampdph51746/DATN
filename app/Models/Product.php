@@ -9,7 +9,17 @@ class Product extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['category_id', 'name', 'description', 'image_url', 'product_type', 'is_active'];
+    protected $fillable = [
+        'category_id',
+        'name',
+        'sku', 
+        'description',
+        'image_url',
+        'product_type',
+        'is_active',
+        'created_at',
+        'updated_at'
+    ];
 
     protected $casts = [
         'product_type' => \App\Enums\ProductType::class,

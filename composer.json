@@ -7,21 +7,19 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
+        "laravel-lang/lang": "^15.22",
         "laravel/framework": "^12.0",
-<<<<<<< Updated upstream
-        "laravel/tinker": "^2.10.1"
-=======
         "laravel/socialite": "^5.23",
         "laravel/tinker": "^2.10.1",
         "maatwebsite/excel": "^1.1",
         "phpoffice/phpspreadsheet": "^4.4",
         "picqer/php-barcode-generator": "^3.2",
         "pusher/pusher-php-server": "^7.2",
-        "spatie/laravel-permission": "^6.21"
->>>>>>> Stashed changes
+        "spatie/laravel-permission": "^6.20"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
+        "laravel/breeze": "^2.3",
         "laravel/pail": "^1.2.2",
         "laravel/pint": "^1.13",
         "laravel/sail": "^1.41",

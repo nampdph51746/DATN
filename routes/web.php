@@ -2,15 +2,18 @@
 
 use App\Http\Controllers\Admin\AdminMovieController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Customer;
-use App\Http\Controllers\Admin\AgeLimitController;
-use App\Http\Controllers\Admin\CustomerController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\CityController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\ComboController;
 use App\Http\Controllers\Admin\MovieController;
+use App\Http\Controllers\Admin\PointController;
+use App\Http\Controllers\Client\HomeController;
+use App\Http\Controllers\Client\SeatController;
 use App\Http\Controllers\Admin\CinemaController;
 use App\Http\Controllers\Admin\TicketController;
+use App\Http\Controllers\Client\VnpayController;
 use App\Http\Controllers\Admin\BookingController;
 use App\Http\Controllers\Admin\CountryController;
 use App\Http\Controllers\Admin\PaymentController;
@@ -18,32 +21,115 @@ use App\Http\Controllers\Admin\RoomTypeController;
 use App\Http\Controllers\Admin\ShowtimeController;
 use App\Http\Controllers\Admin\AdminRoomController;
 use App\Http\Controllers\Admin\AdminSeatController;
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\PromotionController;
+use App\Http\Controllers\Client\CheckoutController;
+use App\Http\Controllers\Admin\AdminProductController;
 use App\Http\Controllers\Admin\CustomerRankController;
+use App\Http\Controllers\Admin\PointHistoryController;
 use App\Http\Controllers\Admin\AdminSeatTypeController;
 use App\Http\Controllers\Admin\PaymentMethodController;
+use App\Http\Controllers\Admin\AdminAttributeController;
+use App\Http\Controllers\Client\ClientPaymentController;
+use App\Http\Controllers\Client\PaymentSuccessController;
+use App\Http\Controllers\Admin\AdminAttributeValueController;
+use App\Http\Controllers\Admin\AdminProductVariantController;
 use App\Http\Controllers\Admin\CustomerRankPromotionController;
+use App\Http\Controllers\Admin\AdminProductCategoriesController;
 
-// Route::get('/', function () {
-//     return view('welcome');
+
+Route::get('/', [HomeController::class, 'index'])->name('client.home');
+Route::get('/movies', [HomeController::class, 'movies'])->name('client.movies');
+Route::get('/movies/{id}', [HomeController::class, 'show'])->name('movies.show');
+Route::get('/movies/{id}/ticket-booking', [HomeController::class, 'ticketBooking'])->name('client.movies.ticketBooking');
+Route::get('/showtimes/{showtimeId}/seat-map', [SeatController::class, 'showSeatMap'])->name('client.seats.map');
+Route::post('/showtimes/{showtimeId}/reserve', [SeatController::class, 'reserveSeat'])->name('client.seats.reserve');
+Route::get('/api/seats/status/{showtimeId}', [SeatController::class, 'getSeatStatus']);
+Route::post('/apply-promotion-auto', [App\Http\Controllers\Client\HomeController::class, 'applyDiscountCodeAutomatically'])->name('client.applyPromotionAuto');
+
+Route::post('/checkout/vnpay', [VnpayController::class, 'redirectToVnpay'])->name('checkout.vnpay');
+Route::get('/checkout/confirmation', [CheckoutController::class, 'showConfirmation'])->name('checkout.confirmation');
+
+
+Route::get('/checkout/vnpay_return', [VnpayController::class, 'vnpayReturn'])->name('vnpay.return');
+
+Route::post('/checkout/preview', [CheckoutController::class, 'previewBooking'])->name('checkout.preview');
+
+
+Route::get('/payment-success', [PaymentSuccessController::class, 'show'])->name('client.success');
+
+Route::get('/payment-failed', function () {
+    return 'Thanh toán thất bại!';
+})->name('client.failed');
+
+// Route::middleware('guest')->group(function () {
+//     Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])
+//         ->name('password.request');
+
+//     Route::post('forgot-password', [PasswordResetLinkController::class, 'store'])
+//         ->name('password.email');
+
+//     Route::get('reset-password/{token}', [NewPasswordController::class, 'create'])
+//         ->name('password.reset');
+
+//     Route::put('reset-password', [NewPasswordController::class, 'store'])
+//         ->name('password.reset.submit');
 // });
-Route::get('/', [App\Http\Controllers\Admin\AdminMovieController::class, 'index']);
-Route::delete('admin/movies/bulk-delete', [AdminMovieController::class, 'bulkDelete'])->name('admin.movies.bulkDelete');
-Route::delete('admin/genres/bulk-delete', [\App\Http\Controllers\Admin\GenreController::class, 'bulkDelete'])->name('admin.genres.bulkDelete');
 
-Route::prefix('admin')->name('admin.')->group(function () {
-   Route::resource('movies', App\Http\Controllers\Admin\AdminMovieController::class);
-   Route::resource('genres', App\Http\Controllers\Admin\GenreController::class);
+Route::post('/apply-promotion', [App\Http\Controllers\Client\HomeController::class, 'applyDiscountCode'])->name('client.applyPromotion');
+
+
+Route::post('/apply-points', [App\Http\Controllers\Client\HomeController::class, 'applyPoints'])->name('client.applyPoints');
+Route::get('/available-promotions', [App\Http\Controllers\Client\HomeController::class, 'getAvailablePromotions'])->name('client.getAvailablePromotions');
+Route::get('/user-rank', [App\Http\Controllers\Client\HomeController::class, 'getUserRank'])->name('client.getUserRank');
+Route::get('/user-points', [App\Http\Controllers\Client\HomeController::class, 'getUserPoints'])->name('client.getUserPoints');
+Route::get('/user-point-history', [App\Http\Controllers\Client\HomeController::class, 'getUserPointHistory'])->name('client.getUserPointHistory');
+
+
+// Route::get('/dashboard', function () {
+//     return view('dashboard');
+// })->middleware(['auth', 'verified'])->name('dashboard');
+
+
+
+Route::middleware(['auth'])->group(function (){
+Route::get('/profile', [App\Http\Controllers\Auth\AuthenticatedSessionController::class, 'profile'])->name('profile.edit');
+Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-Route::get('test-customer', [CustomerController::class, 'index'])->name('customer.index'); 
-Route::get('test-customer-detail/{id}', [CustomerController::class, 'show'])->name('customer.show');
-Route::prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'role:admin,staff'])->group(function () {
+
+
+
+    Route::prefix('admin')->name('admin.')->group(function () {
     // Seat routes from HEAD
-    Route::get('seats/edit-bulk', [AdminSeatController::class, 'editBulk'])->name('seats.editBulk');
-    Route::put('seats/update-bulk', [AdminSeatController::class, 'updateBulk'])->name('seats.bulkUpdate');
+    Route::post('seats/edit-bulk', [AdminSeatController::class, 'editBulk'])->name('seats.edit-bulk');
+    Route::post('seats/update-bulk', [AdminSeatController::class, 'updateBulk'])->name('seats.update-bulk');
+
+    // Dashboard
+    Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    Route::get('product-categories/trash', [AdminProductCategoriesController::class, 'trash'])->name('product-categories.trash');
+    Route::post('product-categories/{id}/restore', [AdminProductCategoriesController::class, 'restore'])->name('product-categories.restore');
+    Route::delete('product-categories/{id}/force-delete', [AdminProductCategoriesController::class, 'forceDelete'])->name('product-categories.forceDelete');
+    Route::resource('product-categories', AdminProductCategoriesController::class);
 
     Route::resource('seats', AdminSeatController::class);
+    Route::resource('attributes', AdminAttributeController::class);
+    Route::resource('attribute-values', AdminAttributeValueController::class);
+    Route::resource('product-variants', AdminProductVariantController::class);
+    Route::resource('products', AdminProductController::class);
+
+    Route::get('product-categories/trash', [AdminProductCategoriesController::class, 'trash'])->name('product-categories.trash');
+    Route::post('product-categories/{id}/restore', [AdminProductCategoriesController::class, 'restore'])->name('product-categories.restore');
+    Route::delete('product-categories/{id}/force-delete', [AdminProductCategoriesController::class, 'forceDelete'])->name('product-categories.forceDelete');
+    Route::resource('product-categories', AdminProductCategoriesController::class);
+
+    Route::resource('attributes', AdminAttributeController::class);
+    Route::resource('attribute-values', AdminAttributeValueController::class);
+    Route::resource('product-variants', AdminProductVariantController::class);
+    Route::resource('products', AdminProductController::class);
 
     // Room-types routes from HEAD
     Route::delete('room-types/{id}/deactivate', [RoomTypeController::class, 'deactivate'])->name('room-types.deactivate');
@@ -64,9 +150,15 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
     // Tạo suất chiếu tự động (HEAD)
     Route::post('/showtimes', [ShowtimeController::class, 'storeAuto'])->name('showtimes.storeAuto');
+    
+    // Cập nhật trạng thái suất chiếu
+    Route::post('/showtimes/update-statuses', [ShowtimeController::class, 'updateStatuses'])->name('showtimes.updateStatuses');
+    Route::post('/showtimes/{id}/update-status', [ShowtimeController::class, 'updateSingleStatus'])->name('showtimes.updateSingleStatus');
 
     //Room
     Route::resource('rooms', AdminRoomController::class);
+    Route::patch('rooms/{id}/update-percentages', [AdminRoomController::class, 'updateSeatPercentages'])->name('rooms.updatePercentages');
+    Route::post('rooms/{room}/update-seat-percentages', [AdminRoomController::class, 'updateSeatPercentages'])->name('rooms.update-seat-percentages');
 
     //Son
     Route::get('countries', [CountryController::class, 'index'])->name('countries.index');
@@ -80,7 +172,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('cities-add', [CityController::class, 'create'])->name('create');
     Route::get('cities-edit', [CityController::class, 'edit'])->name('edit');
     Route::get('cities/trash', [CityController::class, 'trash'])->name('cities.trash');
-    Route::PATCH('cities/{id}/restore', [CityController::class, 'restore'])->name('cities.restore');
+    Route::patch('cities/{id}/restore', [CityController::class, 'restore'])->name('cities.restore');
     Route::delete('cities/{id}/force-delete', [CityController::class, 'forceDelete'])->name('cities.forceDelete');
     Route::resource('cities', CityController::class);
     Route::get('cinemas', [CinemaController::class, 'index'])->name('index');
@@ -94,7 +186,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 });
 
 // Routes quản lý seat-type từ origin/Giang
-Route::prefix('Admin/seat-type')->name('seat-type.')->group(function () {
+Route::prefix('admin/seat-type')->name('seat-type.')->group(function () {
     Route::get('/', [AdminSeatTypeController::class, 'index'])->name('index'); // Danh sách loại ghế
     Route::get('create', [AdminSeatTypeController::class, 'create'])->name('create'); // Form tạo loại ghế
     Route::post('store', [AdminSeatTypeController::class, 'store'])->name('store'); // Lưu loại ghế mới
@@ -107,6 +199,8 @@ Route::prefix('Admin/seat-type')->name('seat-type.')->group(function () {
 });
 
 // Route::delete('admin/movies/bulk-delete', [AdminMovieController::class, 'bulkDelete'])->name('admin.movies.bulkDelete');
+// Route import ghế từ Excel
+Route::post('admin/seats/import', [App\Http\Controllers\Admin\AdminSeatController::class, 'importExcel'])->name('admin.seats.import');
 Route::delete('admin/genres/bulk-delete', [\App\Http\Controllers\Admin\GenreController::class, 'bulkDelete'])->name('admin.genres.bulkDelete');
 
 Route::prefix('admin')->name('admin.')->group(function () {
@@ -125,11 +219,11 @@ Route::get('admin/age-limits', [\App\Http\Controllers\Admin\AgeLimitController::
 Route::delete('admin/age-limits/bulk-delete', [\App\Http\Controllers\Admin\AgeLimitController::class, 'bulkDelete'])->name('admin.age_limits.bulkDelete');
 Route::get('admin/movies/{movie}', [AdminMovieController::class, 'show'])->name('admin.movies.show');
 Route::get('admin/age-limits', [AgeLimitController::class, 'index'])->name('admin.age_limits.index');
-Route::delete('admin/age-limits/bulk-delete', [AgeLimitController::class, 'bulkDelete'])->name('admin.age_limits.bulkDelete');
+Route::post('admin/age-limits/bulk-delete', [AgeLimitController::class, 'bulkDelete'])->name('admin.age_limits.bulkDelete');
 
 Route::resource('admin/users', UserController::class);
 
-Route::prefix('customers-rank')->name('customers-rank.')->group(function () {
+Route::prefix('admin/customers-rank')->name('customers-rank.')->group(function () {
     Route::get('deleted', [CustomerRankController::class, 'deleted'])->name('deleted');
     Route::get('deleted/{id}', [CustomerRankController::class, 'deletedShow'])->name('deleted.show');
     Route::delete('{customerRank}/soft-delete', [CustomerRankController::class, 'softDelete'])->name('softDelete');
@@ -139,7 +233,7 @@ Route::prefix('customers-rank')->name('customers-rank.')->group(function () {
 });
 Route::resource('admin/customers-rank', CustomerRankController::class);
 
-Route::prefix('roles')->name('roles.')->group(function () {
+Route::prefix('admin/roles')->name('roles.')->group(function () {
     Route::get('deleted', [RoleController::class, 'deleted'])->name('deleted');
     Route::get('deleted/{id}', [RoleController::class, 'deletedShow'])->name('deleted.show');
     Route::get('deleted/detail/{id}', [RoleController::class, 'deletedShow'])->name('deleted-detail');
@@ -150,8 +244,8 @@ Route::prefix('roles')->name('roles.')->group(function () {
 Route::resource('admin/roles', RoleController::class);
 
 Route::prefix('admin/payment_methods')->group(function () {
-    Route::get('/', [PaymentMethodController::class, 'index'])->name('payment_methods.index');    // danh sách + tìm kiếm lọc
-    Route::get('/{id}', [PaymentMethodController::class, 'show'])->name('payment_methods.show');   // xem chi tiết
+    Route::get('/', [PaymentMethodController::class, 'index'])->name('payment_methods.index');    
+    Route::get('/{id}', [PaymentMethodController::class, 'show'])->name('payment_methods.show');   
     Route::get('/{paymentMethod}/edit-status', [PaymentMethodController::class, 'editStatus'])->name('payment_methods.editStatus');
     Route::put('/{paymentMethod}/update-status', [PaymentMethodController::class, 'updateStatus'])->name('payment_methods.updateStatus');
 });
@@ -184,3 +278,41 @@ Route::get('admin/customer_rank_promotions/{customer_rank_id}/{promotion_id}/edi
 Route::put('admin/customer_rank_promotions/{customer_rank_id}/{promotion_id}', [CustomerRankPromotionController::class, 'update'])->name('customer_rank_promotions.update');
 Route::delete('admin/customer_rank_promotions/{customer_rank_id}/{promotion_id}', [CustomerRankPromotionController::class, 'destroy'])->name('customer_rank_promotions.destroy');
 
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::resource('points', PointController::class)->only(['index', 'show']);
+    Route::resource('point_history', PointHistoryController::class)->only(['index', 'show']);
+    Route::patch('point_history/toggle/{id}', [PointHistoryController::class, 'toggle'])->name('point_history.toggle');
+});
+
+
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::resource('combos', ComboController::class)->names('combos');
+    Route::post('/admin/combos/check-duplicate', [App\Http\Controllers\Admin\ComboController::class, 'checkDuplicate'])->name('admin.combos.checkDuplicate');
+    Route::get('products/{id}/variants', [AdminProductController::class, 'getVariants'])->name('products.variants');
+});
+
+});
+
+// Test route for barcode
+Route::get('/test-barcode-api', function () {
+    $barcodeService = new \App\Services\BarcodeService();
+    $barcode = $barcodeService->generateBarcode('BK1754063915');
+    
+    return response()->json([
+        'barcode' => $barcode,
+        'booking_code' => 'BK1754063915'
+    ]);
+});
+
+// Barcode scanning routes
+Route::prefix('api/barcode')->group(function () {
+    Route::post('/scan', [App\Http\Controllers\BarcodeController::class, 'scanBarcode'])->name('barcode.scan');
+    Route::post('/check-status', [App\Http\Controllers\BarcodeController::class, 'checkTicketStatus'])->name('barcode.check');
+});
+
+// Trang quét barcode cho nhân viên
+Route::get('/barcode-scanner', function () {
+    return view('barcode-scanner');
+})->name('barcode.scanner');
+
+require __DIR__.'/auth.php';
