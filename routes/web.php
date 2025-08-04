@@ -79,7 +79,10 @@ Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-
+Route::middleware('auth')->group(function () {
+    Route::get('my-bookings', [BookingController::class, 'myBookings'])->name('client.bookings.index');
+    Route::get('my-bookings/show/{id}', [BookingController::class, 'myBookingsShow'])->name('client.bookings.show');
+});
 
 Route::middleware(['auth'])->group(function (){
 Route::get('/profile', [App\Http\Controllers\Auth\AuthenticatedSessionController::class, 'profile'])->name('profile.edit');
