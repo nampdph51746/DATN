@@ -18,17 +18,6 @@ class TicketPrintController extends Controller
             ->where('ticket_code', $ticket_code)
             ->firstOrFail();
 
-        // Kiểm tra thời gian chiếu
-        if ($ticket->showtime && $ticket->showtime->start_time) {
-            $showtimeStart = $ticket->showtime->start_time;
-            $now = now();
-            
-            // Nếu thời gian hiện tại đã vượt qua thời gian bắt đầu chiếu
-            if ($now->greaterThanOrEqualTo($showtimeStart)) {
-                return redirect()->back()->with('error', 'Không thể in vé sau khi suất chiếu đã bắt đầu. Suất chiếu: ' . $showtimeStart->format('d/m/Y H:i'));
-            }
-        }
-
         // Sinh QR code base64
         $qrCodeBase64 = null;
         if ($ticket) {

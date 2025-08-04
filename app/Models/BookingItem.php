@@ -11,9 +11,9 @@ class BookingItem extends Model
     use HasFactory;
 
     protected $fillable = [
-        'booking_id',
-        'product_variant_id',
-        'quantity',
+        'booking_id', 
+        'product_variant_id', 
+        'quantity', 
         'price_at_purchase',
         'ticket_status',
         'used_at',
@@ -39,10 +39,5 @@ class BookingItem extends Model
     public function scannedBy()
     {
         return $this->belongsTo(User::class, 'scanned_by');
-    }
-
-    public function product()
-    {
-        return $this->belongsTo(Product::class);
     }
 }

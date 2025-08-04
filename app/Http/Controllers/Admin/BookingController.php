@@ -17,41 +17,6 @@ use Illuminate\Support\Facades\Auth;
 
 class BookingController extends Controller
 {
-       public function myBookings()
-    {
-        $user = Auth::user();
-
-        $bookings = Booking::with([
-            'tickets.showtime.movie',
-            'tickets.showtime.room',
-            'tickets.seat.seatType',
-            'bookingItems.product'
-        ])
-        ->where('user_id', Auth::id())
-        ->latest()
-        ->paginate(10);
-
-        
-
-        return view('client.bookings.index', compact('bookings'));
-    }
-
-    public function myBookingsShow($id)
-    {
-        $user = Auth::user();
-
-        $booking = Booking::with([
-            'tickets.showtime.movie',
-            'tickets.showtime.room',
-            'tickets.seat.seatType',
-            'bookingItems.productVariant.product'
-        ])
-        ->where('user_id', $user->id)
-        ->findOrFail($id);
-        
-        return view('client.bookings.show', compact('booking'));
-    }
-
     public function index(Request $request)
     {
         $query = Booking::query();
@@ -111,9 +76,6 @@ class BookingController extends Controller
         $oldStatus = $booking->status->value;
         $oldData = $booking->getOriginal();
         $booking->status = BookingStatus::from($request->status);
-        $oldStatus = $booking->status->value;
-        $oldData = $booking->getOriginal();
-        $booking->status = BookingStatus::from($request->status);
         $booking->save();
 
         // Tạo thông báo khi cập nhật trạng thái booking
@@ -132,24 +94,7 @@ class BookingController extends Controller
                 'new' => $booking->getAttributes(),
             ]),
         ]);
-        // Tạo thông báo khi cập nhật trạng thái booking
-        Notification::create([
-            'user_id' => Auth::id(),
-            'entity_type' => Booking::class,
-            'entity_id' => $booking->id,
-            'title' => 'Cập nhật trạng thái đơn đặt vé',
-            'message' => 'Đơn đặt vé #' . $booking->id . ' đã được cập nhật trạng thái từ "' . $oldStatus . '" sang "' . $booking->status->value . '".',
-            'type' => NotificationType::Booking,
-            'priority' => 'high',
-            'old_status' => $oldStatus,
-            'new_status' => $booking->status->value,
-            'event_details' => json_encode([
-                'old' => $oldData,
-                'new' => $booking->getAttributes(),
-            ]),
-        ]);
 
-        if ($oldStatus === BookingStatus::Pending->value && $booking->status->value === BookingStatus::Confirmed->value) {
         if ($oldStatus === BookingStatus::Pending->value && $booking->status->value === BookingStatus::Confirmed->value) {
             $user = $booking->user;
             if (!$user) {
@@ -184,7 +129,6 @@ class BookingController extends Controller
 
         return redirect()->route('admin.bookings.index')->with('success', 'Cập nhật trạng thái thành công.');
     }
-    }
     public function print($booking_code)
     {
         $booking = Booking::with([
@@ -195,21 +139,7 @@ class BookingController extends Controller
             'user',
         ])->where('booking_code', $booking_code)->firstOrFail();
 
-        // Kiểm tra thời gian chiếu
         $tickets = $booking->tickets;
-        if ($tickets->isNotEmpty()) {
-            $firstTicket = $tickets->first();
-            if ($firstTicket->showtime && $firstTicket->showtime->start_time) {
-                $showtimeStart = $firstTicket->showtime->start_time;
-                $now = now();
-                
-                // Nếu thời gian hiện tại đã vượt qua thời gian bắt đầu chiếu
-                if ($now->greaterThanOrEqualTo($showtimeStart)) {
-                    return redirect()->back()->with('error', 'Không thể in vé sau khi suất chiếu đã bắt đầu. Suất chiếu: ' . $showtimeStart->format('d/m/Y H:i'));
-                }
-            }
-        }
-
         $foodDrinks = $booking->bookingItems;
 
         // Sinh QR code cho từng vé

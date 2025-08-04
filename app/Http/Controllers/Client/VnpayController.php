@@ -192,10 +192,12 @@ class VnpayController extends Controller
                 // 3. Cộng điểm thưởng cho người dùng
                 $user = $booking->user;
                 if (!$user) {
+                    \Log::error("User not found for booking ID: {$booking->id}, User ID: {$booking->user_id}");
                     throw new \Exception('Không tìm thấy người dùng.');
                 }
 
                 $pointsToAdd = max(1, floor($booking->final_amount / 10000));
+                \Log::info("Points to add: {$pointsToAdd}, Booking ID: {$booking->id}, User ID: {$user->id}");
 
                 if ($pointsToAdd > 0 && !PointHistory::where('booking_id', $booking->id)->exists()) {
                     $point = Point::firstOrCreate(
@@ -214,7 +216,11 @@ class VnpayController extends Controller
                         'created_at' => now(),
                     ]);
 
+                    \Log::info("Points added for user ID: {$user->id}, Booking ID: {$booking->id}, Points: {$pointsToAdd}");
+                } else {
+                    \Log::warning("Points not added. Points: {$pointsToAdd}, Existing history: " . (PointHistory::where('booking_id', $booking->id)->exists() ? 'Yes' : 'No'));
                 }
+
                 // 4. Lấy showtime từ ghế đã đặt và tạo tickets
                 $selectedSeatInfos = session('selected_seats_info', []);
 

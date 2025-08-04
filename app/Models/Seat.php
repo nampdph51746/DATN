@@ -34,9 +34,4 @@ class Seat extends Model
     {
         return $this->hasMany(Ticket::class);
     }
-
-    public function getNameAttribute()
-    {
-        return $this->row_char . $this->seat_number;
-    }
 }

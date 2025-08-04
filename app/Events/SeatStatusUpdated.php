@@ -29,10 +29,19 @@ class SeatStatusUpdated implements ShouldBroadcast
         $this->lockedUntil = $lockedUntil;
         $this->lockedBy = $lockedBy;
 
+        \Log::info('SeatStatusUpdated event constructed', [
+            'showtime_id' => $showtimeId,
+            'seat_id' => $seatId,
+            'is_even' => (int)$seatId % 2 === 0 ? 'true' : 'false',
+            'status' => $status,
+            'locked_until' => $lockedUntil ? $lockedUntil->toDateTimeString() : null,
+            'locked_by' => $lockedBy,
+        ]);
     }
 
     public function broadcastOn()
     {
+        \Log::info('Broadcasting SeatStatusUpdated on channel: showtime.' . $this->showtimeId);
         return new Channel('showtime.' . $this->showtimeId);
     }
 
@@ -44,6 +53,7 @@ class SeatStatusUpdated implements ShouldBroadcast
             'locked_until' => $this->lockedUntil ? $this->lockedUntil->toDateTimeString() : null,
             'locked_by' => $this->lockedBy,
         ];
+        \Log::info('SeatStatusUpdated broadcast data', $data);
         return $data;
     }
 
