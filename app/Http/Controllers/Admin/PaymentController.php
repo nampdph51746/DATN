@@ -30,6 +30,7 @@ class PaymentController extends Controller
 
         $payments = $query->latest()->paginate(10);
 
+
         // Đếm số lượng giao dịch theo trạng thái
         $countCompleted = Payment::where('status', 'completed')->count();
         $countPending = Payment::where('status', 'pending')->count();

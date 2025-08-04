@@ -1,6 +1,10 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+
+// =======================
+// Import Controllers
+// =======================
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\CityController;
 use App\Http\Controllers\Admin\RoleController;
@@ -36,30 +40,40 @@ use App\Http\Controllers\Admin\AdminAttributeValueController;
 use App\Http\Controllers\Admin\AdminProductVariantController;
 use App\Http\Controllers\Admin\CustomerRankPromotionController;
 use App\Http\Controllers\Admin\AdminProductCategoriesController;
+use App\Http\Controllers\Admin\DashboardController;
 
+// =======================
+// CLIENT ROUTES
+// =======================
 
+// Trang chủ, phim, đặt vé
 Route::get('/', [HomeController::class, 'index'])->name('client.home');
 Route::get('/movies', [HomeController::class, 'movies'])->name('client.movies');
 Route::get('/movies/{id}', [HomeController::class, 'show'])->name('movies.show');
 Route::get('/movies/{id}/ticket-booking', [HomeController::class, 'ticketBooking'])->name('client.movies.ticketBooking');
+
+// Sơ đồ ghế, đặt ghế
 Route::get('/showtimes/{showtimeId}/seat-map', [SeatController::class, 'showSeatMap'])->name('client.seats.map');
 Route::post('/showtimes/{showtimeId}/reserve', [SeatController::class, 'reserveSeat'])->name('client.seats.reserve');
 Route::get('/api/seats/status/{showtimeId}', [SeatController::class, 'getSeatStatus']);
-Route::post('/apply-promotion-auto', [App\Http\Controllers\Client\HomeController::class, 'applyDiscountCodeAutomatically'])->name('client.applyPromotionAuto');
 
+// Khuyến mãi, điểm, các API phụ
+Route::post('/apply-promotion-auto', [App\Http\Controllers\Client\HomeController::class, 'applyDiscountCodeAutomatically'])->name('client.applyPromotionAuto');
+Route::post('/apply-promotion', [App\Http\Controllers\Client\HomeController::class, 'applyDiscountCode'])->name('client.applyPromotion');
+Route::post('/apply-points', [App\Http\Controllers\Client\HomeController::class, 'applyPoints'])->name('client.applyPoints');
+Route::get('/available-promotions', [App\Http\Controllers\Client\HomeController::class, 'getAvailablePromotions'])->name('client.getAvailablePromotions');
+Route::get('/user-rank', [App\Http\Controllers\Client\HomeController::class, 'getUserRank'])->name('client.getUserRank');
+Route::get('/user-points', [App\Http\Controllers\Client\HomeController::class, 'getUserPoints'])->name('client.getUserPoints');
+Route::get('/user-point-history', [App\Http\Controllers\Client\HomeController::class, 'getUserPointHistory'])->name('client.getUserPointHistory');
+
+// Thanh toán, xác nhận, kết quả
 Route::post('/checkout/vnpay', [VnpayController::class, 'redirectToVnpay'])->name('checkout.vnpay');
 Route::get('/checkout/confirmation', [CheckoutController::class, 'showConfirmation'])->name('checkout.confirmation');
-
-
 Route::get('/checkout/vnpay_return', [VnpayController::class, 'vnpayReturn'])->name('vnpay.return');
-
 Route::post('/checkout/preview', [CheckoutController::class, 'previewBooking'])->name('checkout.preview');
-
-
 Route::get('/payment-success', [PaymentSuccessController::class, 'show'])->name('client.success');
-
 Route::get('/payment-failed', function () {
-    return 'Thanh toán thất bại!';
+    return view('client.failed');
 })->name('client.failed');
 
 // Route::middleware('guest')->group(function () {
@@ -96,12 +110,17 @@ Route::middleware(['auth'])->group(function (){
 Route::get('/profile', [App\Http\Controllers\Auth\AuthenticatedSessionController::class, 'profile'])->name('profile.edit');
 Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
 Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
 });
 
+// =======================
+// ADMIN ROUTES
+// =======================
 Route::middleware(['auth', 'role:admin,staff'])->group(function () {
 
-
-
+    // =======================
+    // Quản lý sản phẩm, ghế, thuộc tính, biến thể
+    // =======================
     Route::prefix('admin')->name('admin.')->group(function () {
     // Seat routes from HEAD
     Route::post('seats/edit-bulk', [AdminSeatController::class, 'editBulk'])->name('seats.edit-bulk');
@@ -288,6 +307,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('products/{id}/variants', [AdminProductController::class, 'getVariants'])->name('products.variants');
 });
 
+    Route::prefix('admin')->name('admin.')->group(function () {
+        Route::resource('combos', ComboController::class)->names('combos');
+        Route::get('products/{id}/variants', [AdminProductController::class, 'getVariants'])->name('products.variants');
+    });
 });
 
 // Test route for barcode

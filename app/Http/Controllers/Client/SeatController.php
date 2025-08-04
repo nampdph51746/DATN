@@ -45,7 +45,8 @@ class SeatController extends Controller
     }
     public function getSeatsForShowtime($showtimeId)
     {
-        Log::info('Starting getSeatsForShowtime for showtime ID: ' . $showtimeId);
+        \Log::info('Starting getSeatsForShowtime for showtime ID: ' . $showtimeId);
+
 
         $showtime = Showtime::with([
             'room.seats.seatType',
@@ -54,7 +55,8 @@ class SeatController extends Controller
             }
         ])->findOrFail($showtimeId);
 
-        Log::info('Showtime loaded: ' . json_encode([
+        \Log::info('Showtime loaded: ' . json_encode([
+
             'id' => $showtime->id,
             'room_id' => $showtime->room_id,
             'base_price' => $showtime->base_price,
@@ -63,11 +65,11 @@ class SeatController extends Controller
         $room = $showtime->room;
 
         if (!$room || $room->seats->isEmpty()) {
-            Log::warning("Room or seats not found for showtime ID: $showtimeId");
+            \Log::warning("Room or seats not found for showtime ID: $showtimeId");
             return response()->json(['error' => 'Phòng chiếu không có ghế.'], 404);
         }
 
-        Log::info('Room loaded: ' . json_encode([
+        \Log::info('Room loaded: ' . json_encode([
             'id' => $room->id,
             'name' => $room->name,
             'seat_count' => $room->seats->count(),
@@ -76,7 +78,8 @@ class SeatController extends Controller
         $rows = $room->seats->pluck('row_char')->unique()->count();
         $cols = $room->seats->pluck('seat_number')->max();
 
-        Log::info('Room dimensions: ' . json_encode([
+        \Log::info('Room dimensions: ' . json_encode([
+
             'rows' => $rows,
             'cols' => $cols,
         ]));
@@ -97,7 +100,7 @@ class SeatController extends Controller
                     : null,
                 'locked_by'     => $seatState ? $seatState->locked_by : null,
             ];
-            Log::info('Seat data processed: ' . json_encode($seatInfo));
+            \Log::info('Seat data processed: ' . json_encode($seatInfo));
             return $seatInfo;
         });
 
@@ -115,7 +118,7 @@ class SeatController extends Controller
             ],
         ];
 
-        Log::info('Returning seat data for showtime ID: ' . $showtimeId);
+        \Log::info('Returning seat data for showtime ID: ' . $showtimeId);
         return response()->json($response);
     }
 
@@ -137,7 +140,7 @@ class SeatController extends Controller
             ->pluck('seat_id')
             ->toArray();
 
-        Log::info('Booked seats for showtime ID ' . $showtimeId . ': ' . json_encode($bookedSeats));
+        \Log::info('Booked seats for showtime ID ' . $showtimeId . ': ' . json_encode($bookedSeats));
 
         $seats = $room->seats->map(function ($seat) use ($bookedSeats, $showtime) {
             $label = $seat->row_char . '-' . str_pad($seat->seat_number, 2, '0', STR_PAD_LEFT);
@@ -168,7 +171,8 @@ class SeatController extends Controller
                 'color_code'  => $seat->seatType->color_code,
                 'price'       => $price,
             ];
-            Log::info('Seat processed for showSeatMap: ' . json_encode($seatInfo));
+            \Log::info('Seat processed for showSeatMap: ' . json_encode($seatInfo));
+
             return $seatInfo;
         });
 
@@ -180,17 +184,18 @@ class SeatController extends Controller
             'row_chars' => $room->seats->pluck('row_char')->unique()->values()->toArray(),
         ];
 
-        Log::info('Room meta for showtime ID ' . $showtimeId . ': ' . json_encode($roomMeta));
+        \Log::info('Room meta for showtime ID ' . $showtimeId . ': ' . json_encode($roomMeta));
 
         $seatTypes = $room->seats->pluck('seatType')->unique('id');
-        Log::info('Seat types loaded: ' . json_encode($seatTypes->map(function ($type) {
+        \Log::info('Seat types loaded: ' . json_encode($seatTypes->map(function ($type) {
+
             return [
                 'name' => $type->name,
                 'price_modifier' => $type->price_modifier,
             ];
         })->toArray()));
 
-        Log::info('Rendering seat_selection view for showtime ID: ' . $showtimeId);
+        \Log::info('Rendering seat_selection view for showtime ID: ' . $showtimeId);
         return view('client.seat_selection', [
             'showtime'       => $showtime,
             'room'           => $roomMeta,
@@ -204,23 +209,26 @@ class SeatController extends Controller
 
     public function reserveSeat(Request $request, $showtimeId)
     {
-        Log::info('Starting reserveSeat for showtime ID: ' . $showtimeId . ', request data: ' . json_encode($request->all()));
+        \Log::info('Starting reserveSeat for showtime ID: ' . $showtimeId . ', request data: ' . json_encode($request->all()));
+
         $request->validate([
-            'seat_ids' => 'required|array',
+            'seat_ids'   => 'required|array',
             'seat_ids.*' => 'exists:seats,id',
         ]);
 
         try {
+
             $seatIds = $request->input('seat_ids');
             Log::info('Seat IDs to reserve: ' . json_encode($seatIds));
 
             $states = ShowtimeSeatState::where('showtime_id', $showtimeId)
                 ->whereIn('seat_id', $seatIds)
                 ->get();
-            Log::info('Current seat states: ' . json_encode($states->toArray()));
+
+            \Log::info('Current seat states: ' . json_encode($states->toArray()));
 
             $sessionId = $request->session()->getId();
-            Log::info('Session ID for reserving seats: ' . $sessionId);
+            \Log::info('Session ID for reserving seats: ' . $sessionId);
 
             foreach ($seatIds as $id) {
                 $seat = Seat::find($id);
@@ -286,10 +294,10 @@ class SeatController extends Controller
             return response()->json(['error' => 'Lỗi khi giữ ghế. Vui lòng thử lại.'], 500);
         }
     }
-    
+
     public function getSeatStatus($showtimeId)
     {
-        Log::info('Starting getSeatStatus for showtime ID: ' . $showtimeId);
+        \Log::info('Starting getSeatStatus for showtime ID: ' . $showtimeId);
 
         $showtime = Showtime::with([
             'room.seats.seatType',
@@ -301,7 +309,8 @@ class SeatController extends Controller
         $room = $showtime->room;
 
         if (!$room || $room->seats->isEmpty()) {
-            Log::warning("Room or seats not found for showtime ID: $showtimeId");
+
+            \Log::warning("Room or seats not found for showtime ID: $showtimeId");
             return response()->json(['error' => 'Phòng chiếu không có ghế.'], 404);
         }
 

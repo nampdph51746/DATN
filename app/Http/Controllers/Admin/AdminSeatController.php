@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 
 use App\Models\RoomSeatConfiguration;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -105,6 +106,7 @@ class AdminSeatController extends Controller
                 return redirect()->back()
                     ->withErrors(['room_id' => 'Phòng chiếu không ở trạng thái hoạt động.'])
                     ->withInput();
+
             }
 
             // Create seats using the management service
@@ -128,6 +130,7 @@ class AdminSeatController extends Controller
             return redirect()->back()
                 ->withErrors(['error' => 'Có lỗi xảy ra khi tạo ghế: ' . $e->getMessage()])
                 ->withInput();
+
         }
     }
 

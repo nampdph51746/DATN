@@ -12,6 +12,7 @@
     <meta name="author" content="Techzaa" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 
+
     <!-- App favicon -->
     <link rel="shortcut icon" href="{{ asset('assets/images/favicon.ico') }}">
 
@@ -32,10 +33,8 @@
     <script src="{{ asset('assets/js/config.js') }}"></script>
 
 
-
     <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
 
 </head>
 
@@ -124,7 +123,6 @@
                             </h4>
                         </div>
                     </div>
-
                     <div class="d-flex align-items-center gap-1">
 
                         <!-- Theme Color (Light/Dark) -->
@@ -574,7 +572,6 @@
                     <img src="{{ asset('assets/images/logo-light.png') }}" class="logo-lg" alt="logo sáng">
                 </a>
             </div>
-
             <!-- Menu Toggle Button -->
             <button type="button" class="button-sm-hover" aria-label="Hiển thị toàn bộ Sidebar">
                 <iconify-icon icon="solar:double-alt-arrow-right-bold-duotone"

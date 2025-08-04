@@ -16,67 +16,33 @@ use Illuminate\View\View;
 
 class RegisteredUserController extends Controller
 {
-    /**
-     * Display the registration view.
-     */
-    public function create(): View
+    public function create()
     {
         return view('auth.register');
     }
 
-    /**
-     * Handle an incoming registration request.
-     *
-     * @throws \Illuminate\Validation\ValidationException
-     */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request)
     {
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
-            'phone_number' => ['required', 'numeric', 'unique:' . User::class],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'phone_number' => ['nullable', 'string', 'max:20'],
+            'date_of_birth' => ['nullable', 'date'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'date_of_birth' => ['required', 'date', 'before:today'],
-        ], [
-            'required' => ':attribute là bắt buộc.',
-            'email' => ':attribute phải là email hợp lệ.',
-            'unique' => ':attribute đã tồn tại.',
-            'numeric' => ':attribute phải là số.',
-            'confirmed' => ':attribute không khớp.',
-            'before' => ':attribute phải trước hôm nay.',
-        ], [
-            'name' => 'Họ và tên',
-            'email' => 'Email',
-            'phone_number' => 'Số điện thoại',
-            'password' => 'Mật khẩu',
-            'date_of_birth' => 'Ngày sinh',
         ]);
-
-
-        $userRank = CustomerRank::firstOrCreate(['name' => 'Đồng']);
-
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
-            'password' => Hash::make($request->password),
             'phone_number' => $request->phone_number,
             'date_of_birth' => $request->date_of_birth,
-            'status' => \App\Enums\UserStatus::Active,
-            'customer_rank_id' => $userRank->id,
+            'password' => Hash::make($request->password),
+            'role' => 'user',
         ]);
-
-        if (!Role::where('name', 'user')->exists()) {
-            Role::create(['name' => 'user']);
-        }
-
-        $user->assignRole('user');
-
-
         event(new Registered($user));
 
         Auth::login($user);
-
-        return redirect(route('client.home', absolute: false));
+        return redirect()->route('client.home');
     }
 }
+

@@ -61,9 +61,11 @@
         margin-bottom: 8px;
         font-weight: 500;
         display: block;
+
     }
 
-    [data-theme="dark"] .form-label {
+    .dark .form-label {
+
         color: #d1d5db;
     }
 
@@ -77,7 +79,6 @@
         margin-bottom: 12px;
         transition: border-color 0.3s ease, box-shadow 0.3s ease;
     }
-
     [data-theme="dark"] .form-control {
         background: #374151;
         color: #f3f4f6;
@@ -99,6 +100,7 @@
         border: none;
         transition: transform 0.2s ease, background 0.3s ease;
         width: 100%;
+
     }
 
     .btn-primary:hover {
