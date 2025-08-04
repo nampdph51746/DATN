@@ -139,7 +139,21 @@ class BookingController extends Controller
             'user',
         ])->where('booking_code', $booking_code)->firstOrFail();
 
+        // Kiểm tra thời gian chiếu
         $tickets = $booking->tickets;
+        if ($tickets->isNotEmpty()) {
+            $firstTicket = $tickets->first();
+            if ($firstTicket->showtime && $firstTicket->showtime->start_time) {
+                $showtimeStart = $firstTicket->showtime->start_time;
+                $now = now();
+                
+                // Nếu thời gian hiện tại đã vượt qua thời gian bắt đầu chiếu
+                if ($now->greaterThanOrEqualTo($showtimeStart)) {
+                    return redirect()->back()->with('error', 'Không thể in vé sau khi suất chiếu đã bắt đầu. Suất chiếu: ' . $showtimeStart->format('d/m/Y H:i'));
+                }
+            }
+        }
+
         $foodDrinks = $booking->bookingItems;
 
         // Sinh QR code cho từng vé
