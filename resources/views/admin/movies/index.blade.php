@@ -74,6 +74,7 @@
                         <table class="table align-middle mb-0 table-hover table-centered">
                             <thead class="bg-light-subtle">
                                 <tr>
+<<<<<<< Updated upstream
                                     <th style="width: 20px;">
                                         <div class="form-check ms-1">
                                             <input type="checkbox" class="form-check-input" id="checkAllMovies">
@@ -88,6 +89,22 @@
                                     <th>Độ tuổi</th>
                                     <th>Trạng Thái</th>
                                     <th class="text-center" style="width: 120px;">Hành Động</th>
+=======
+                                    <th>ID</th>
+                                    <th>Hình ảnh</th>
+                                    <th>Tên phim</th>
+                                    <th>Đạo diễn</th>
+                                    <th>Thể loại</th>
+                                    <th>Thời lượng (phút)</th>
+                                    <th>Ngày phát hành</th>
+                                    <th>Ngày kết thúc</th>
+                                    <th>Ngôn ngữ</th>
+                                    <th>Quốc gia</th>
+                                    <th>Giới hạn tuổi</th>
+                                    <th>Trạng thái</th>
+                                    <th>Thời gian tạo</th>
+                                    <th>Hành động</th>
+>>>>>>> Stashed changes
                                 </tr>
                             </thead>
                             <tbody>
