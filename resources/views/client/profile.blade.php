@@ -12,12 +12,14 @@
         transition: background-color 0.3s;
     }
 
-    [data-theme="dark"] .profile-container {
+    .dark .profile-container {
+
         background-color: #111827;
     }
 
     .profile-box {
-        max-width: 720px;
+        max-width: 520px;
+
         margin: auto;
         background-color: #ffffff;
         border-radius: 12px;
@@ -26,319 +28,133 @@
         transition: background-color 0.3s, color 0.3s;
     }
 
-    [data-theme="dark"] .profile-box {
+
+    .dark .profile-box {
+
         background-color: #1f2937;
         color: #f9fafb;
-    }
-
-    .profile-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1.5rem;
     }
 
     .profile-box h2 {
         font-size: 24px;
         font-weight: bold;
         color: #1f2937;
-        margin: 0;
     }
 
-    [data-theme="dark"] .profile-box h2 {
+    .dark .profile-box h2 {
         color: #f9fafb;
     }
 
-    .profile-subtitle {
-        font-size: 14px;
-        color: #6b7280;
-        margin-bottom: 2rem;
-    }
+    .profile-box .form-label {
 
-    [data-theme="dark"] .profile-subtitle {
-        color: #9ca3af;
-    }
-
-    .profile-content {
-        display: flex;
-        gap: 40px;
-    }
-
-    .profile-info {
-        flex: 1;
-    }
-
-    .profile-actions {
-        width: 280px;
-        display: flex;
-        flex-direction: column;
-    }
-
-    .info-item {
-        margin-bottom: 1.5rem;
-    }
-
-    .info-label {
-        font-size: 14px;
         font-weight: 600;
         color: #374151;
         margin-bottom: 4px;
     }
 
-    [data-theme="dark"] .info-label {
+    .dark .form-label {
         color: #d1d5db;
     }
 
-    .info-value {
+    .profile-box p {
+        margin-bottom: 1rem;
         font-size: 15px;
         color: #4b5563;
-        padding: 0.5rem 0;
     }
 
-    [data-theme="dark"] .info-value {
+    .dark .profile-box p {
         color: #e5e7eb;
-    }
-
-    .btn {
-        display: block;
-        width: 100%;
-        font-weight: 600;
-        padding: 0.75rem;
-        border-radius: 8px;
-        border: none;
-        text-align: center;
-        transition: all 0.3s;
-        margin-bottom: 1rem;
-        cursor: pointer;
     }
 
     .btn-primary {
         background-color: #3b82f6;
         color: #fff;
+        font-weight: 600;
+        padding: 0.75rem;
+        border-radius: 8px;
+        border: none;
+        transition: background-color 0.3s;
     }
 
     .btn-primary:hover {
         background-color: #2563eb;
     }
 
-    .btn-outline {
-        background-color: transparent;
-        color: #3b82f6;
-        border: 1px solid #3b82f6;
+    .btn-soft-primary {
+        background-color: #e0e7ff;
+        color: #1d4ed8;
+        font-weight: 600;
+        padding: 0.75rem;
+        border-radius: 8px;
+        border: none;
+        transition: background-color 0.3s;
     }
 
-    .btn-outline:hover {
-        background-color: rgba(59, 130, 246, 0.1);
-    }
-
-    [data-theme="dark"] .btn-outline {
-        color: #93c5fd;
-        border-color: #93c5fd;
-    }
-
-    [data-theme="dark"] .btn-outline:hover {
-        background-color: rgba(147, 197, 253, 0.1);
+    .btn-soft-primary:hover {
+        background-color: #c7d2fe;
     }
 
     .btn-danger {
         background-color: #ef4444;
         color: #fff;
+        font-weight: 600;
+        padding: 0.75rem;
+        border-radius: 8px;
+        border: none;
+        transition: background-color 0.3s;
     }
 
     .btn-danger:hover {
         background-color: #dc2626;
     }
-
-    .avatar-container {
-        display: flex;
-        align-items: center;
-        margin-bottom: 2rem;
-        gap: 1rem;
-    }
-
-    .avatar {
-        width: 80px;
-        height: 80px;
-        border-radius: 50%;
-        background-color: #e5e7eb;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        overflow: hidden;
-        font-size: 32px;
-        color: #6b7280;
-    }
-
-    [data-theme="dark"] .avatar {
-        background-color: #4b5563;
-        color: #d1d5db;
-    }
-
-    .avatar img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-
-    .avatar-text {
-        font-weight: 600;
-        font-size: 18px;
-    }
-
-    .edit-link {
-        font-size: 14px;
-        color: #3b82f6;
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-    }
-
-    .edit-link:hover {
-        text-decoration: underline;
-    }
-
-    [data-theme="dark"] .edit-link {
-        color: #93c5fd;
-    }
-
-    .form-control {
-        width: 100%;
-        padding: 0.75rem;
-        border-radius: 8px;
-        border: 1px solid #d1d5db;
-        background-color: #fff;
-        color: #111827;
-        font-size: 15px;
-    }
-
-    [data-theme="dark"] .form-control {
-        background-color: #374151;
-        color: #f9fafb;
-        border-color: #4b5563;
-    }
-
-    .form-control:focus {
-        border-color: #3b82f6;
-        outline: none;
-        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
-    }
-
-    .alert {
-    padding: 0.75rem 1rem;
-    border-radius: 8px;
-    margin-bottom: 1rem;
-    font-size: 14px;
-}
-
-.alert-success {
-    background-color: #d1fae5;
-    color: #065f46;
-}
-
-[data-theme="dark"] .alert-success {
-    background-color: #064e3b;
-    color: #6ee7b7;
-}
-
-.alert-danger {
-    background-color: #fee2e2;
-    color: #991b1b;
-}
-
-[data-theme="dark"] .alert-danger {
-    background-color: #7f1d1d;
-    color: #fca5a5;
-}
-
 </style>
 
 <div class="profile-container">
     <div class="profile-box">
-        <div class="profile-header">
-            <h2>Thông tin tài khoản</h2>
-        </div>
-        <p class="profile-subtitle">Thông tin cá nhân của bạn được hiển thị bên dưới</p>
+        <h2 class="mb-3">Thông tin tài khoản</h2>
+        <p class="text-sm text-muted dark:text-gray-400 mb-4">Thông tin cá nhân của bạn được hiển thị bên dưới.</p>
 
-                @if(session('success'))
-            <div class="alert alert-success">
-                {{ session('success') }}
+        <div class="mb-3">
+            <label class="form-label">Họ và tên</label>
+            <p>{{ Auth::user()->name }}</p>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Email</label>
+            <p>{{ Auth::user()->email }}</p>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Số điện thoại</label>
+            <p>{{ Auth::user()->phone_number ?? 'Chưa cập nhật' }}</p>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Ngày sinh</label>
+            <p>{{ Auth::user()->date_of_birth ? Auth::user()->date_of_birth->format('d/m/Y') : 'Chưa cập nhật' }}</p>
+        </div>
+
+        <div class="mb-4">
+            <label class="form-label">Vai trò</label>
+            <p>{{ Auth::user()->role }}</p>
+        </div>
+
+        @if (Auth::check() && in_array(Auth::user()->role, ['admin', 'staff']))
+            <div class="mb-3 d-grid">
+                <a href="{{ route('admin.dashboard') }}" class="btn btn-primary">Đi đến Trang Admin</a>
             </div>
         @endif
 
-        @if($errors->any())
-            <div class="alert alert-danger">
-                <ul class="list-disc list-inside text-sm">
-                    @foreach($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
-
-
-        <div class="profile-content">
-            <form method="POST" action="{{ route('profile.update') }}" class="profile-info" id="profile-form">
-                @csrf
-                @method('PATCH')
-
-                <div class="avatar-container">
-                    <div class="avatar">
-                        @if(Auth::user()->avatar)
-                            <img src="{{ Auth::user()->avatar }}" alt="Avatar">
-                        @else
-                            {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
-                        @endif
-                        
-                    </div>
-                    
-                    <div class="avatar-text">
-                        {{ Auth::user()->name }}
-                        <div class="info-value">
-                        {{ Auth::user()->getRoleNames()->first() }}
-                        </div>
-                    </div>
-                    
-                </div>
-
-                <div class="info-item">
-                    <label class="info-label" for="name">Họ và tên</label>
-                    <input type="text" class="form-control" name="name" id="name"
-                        value="{{ old('name', Auth::user()->name) }}" required>
-                </div>
-
-                <div class="info-item">
-                    <label class="info-label" for="phone_number">Số điện thoại</label>
-                    <input type="text" class="form-control" name="phone_number" id="phone_number"
-                        value="{{ old('phone_number', Auth::user()->phone_number) }}">
-                </div>
-
-                <div class="info-item">
-                    <label class="info-label" for="date_of_birth">Ngày sinh</label>
-                    <input type="date" class="form-control" name="date_of_birth" id="date_of_birth"
-                        value="{{ old('date_of_birth', Auth::user()->date_of_birth ? Auth::user()->date_of_birth->format('Y-m-d') : '') }}">
-                </div>
-
-                <div class="info-item">
-
-                     <label class="info-label" for="email">Email</label>
-                    <input type="email" class="form-control" name="email" id="email"
-                        value="{{ old('email', Auth::user()->email) }}" readonly>
-                </div>
-
-
-            </form>
-
-            <div class="profile-actions">
-                <a href="{{ route('client.home') }}" class="btn btn-outline">Quay lại Trang Chủ</a>
-                <button type="submit" form="profile-form" class="btn btn-primary">Cập nhật thông tin</button>
-
-                <form method="POST" action="{{ route('logout') }}" class="w-full">
-                    @csrf
-                    <button class="btn btn-danger w-full" type="submit" onclick="return confirm('Bạn có muốn đăng xuất không?')">Đăng xuất</button>
-                </form>
-            </div>
+        <div class="mb-3 d-grid">
+            <a href="{{ route('client.home') }}" class="btn btn-soft-primary">Quay lại Trang Chủ</a>
         </div>
+
+        <form method="POST" action="{{ route('logout') }}">
+            @csrf
+            <div class="d-grid">
+                <button class="btn btn-danger" type="submit">Đăng xuất</button>
+            </div>
+        </form>
     </div>
 </div>
 @endsection

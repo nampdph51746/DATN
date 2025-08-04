@@ -22,7 +22,7 @@
                                             data-seat-id="{{ $seat['seat_id'] }}"
                                             data-label="{{ $seat['label'] }}"
                                             data-type="{{ $seat['seat_type'] }}"
-                                            data-price="{{ $showtime->base_price * ($seat['price'] ?? 1) }}"
+                                            data-price="{{ $seat['price'] }}"
                                             data-original-color="{{ $seat['color_code'] }}"
                                             style="background-color: {{ $seat['color_code'] }};"
                                             onclick="selectSeat(this)">
@@ -41,7 +41,7 @@
                     @foreach ($seatTypes as $type)
                         <div class="legend-item text-gray-light">
                             <span class="legend-color" style="background-color: {{ $type->color_code }};"></span>
-                            {{ $type->name }} ({{ number_format($showtime->base_price * ($type->price_modifier ?? 1), 0, ',', '.') }} ₫)
+                            {{ $type->name }} ({{ number_format($type->price_modifier ?? $showtime->base_price, 0, ',', '.') }} ₫)
                         </div>
                     @endforeach
                     <div class="legend-item text-gray-light">
@@ -70,40 +70,15 @@
                 <div class="info-line text-gray-light"><strong>Tiền vé:</strong> <span id="total-ticket-price-summary">0 ₫</span></div>
 
                 <!-- Timer Section -->
-<div class="timer-section" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #333333;" id="timer-section">
-    <div style="text-align: center;">
-        <h2 style="color: #ffffff; font-size: 1.4em; margin-bottom: 16px; font-weight: bold;">Time Remaining</h2>
-
-        <div style="display: flex; justify-content: center; gap: 16px; margin-bottom: 10px;" id="timer-display">
-            <!-- Giờ -->
-            <div style="display: flex; flex-direction: column; align-items: center;">
-                <span id="hours-seat"
-                    style="background: #e5006e; color: #fff; padding: 10px 10px; border-radius: 6px; font-size: 1.6em; font-weight: bold; min-width: 45px; text-align: center;">
-                    00
-                </span>
-                <span style="margin-top: 6px; font-size: 0.95em; color: #ffffff;">Giờ</span>
-            </div>
-
-            <!-- Phút -->
-            <div style="display: flex; flex-direction: column; align-items: center;">
-                <span id="minutes-seat"
-                    style="background: #e5006e; color: #fff; padding: 10px 10px; border-radius: 6px; font-size: 1.6em; font-weight: bold; min-width: 45px; text-align: center;">
-                    09
-                </span>
-                <span style="margin-top: 6px; font-size: 0.95em; color: #ffffff;">Phút</span>
-            </div>
-
-            <!-- Giây -->
-            <div style="display: flex; flex-direction: column; align-items: center;">
-                <span id="seconds-seat"
-                    style="background: #e5006e; color: #fff; padding: 10px 10px; border-radius: 6px; font-size: 1.6em; font-weight: bold; min-width: 45px; text-align: center;">
-                    19
-                </span>
-                <span style="margin-top: 6px; font-size: 0.95em; color: #ffffff;">Giây</span>
-            </div>
-        </div>
-    </div>
-</div>
+                <div class="timer-section" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #333333;" id="timer-section" style="display: none;">
+                    <h2 style="color: #ffffff; font-size: 1.2em; margin-bottom: 10px;">Time Remaining</h2>
+                    <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 10px;" id="timer-display">
+                        <span style="background: #e5006e; color: #fff; padding: 8px 12px; border-radius: 4px; font-size: 1.2em; font-weight: 600;" id="hours">0</span>
+                        <span style="background: #e5006e; color: #fff; padding: 8px 12px; border-radius: 4px; font-size: 1.2em; font-weight: 600;" id="minutes">0</span>
+                        <span style="background: #e5006e; color: #fff; padding: 8px 12px; border-radius: 4px; font-size: 1.2em; font-weight: 600;" id="seconds">0</span>
+                    </div>
+                    <p style="color: #d3d3d3; font-size: 0.9em;">Hours Minutes Seconds</p>
+                </div>
 
             </div>
         </div>
@@ -114,7 +89,6 @@
         let selectedSeats = [];
         let timerStarted = false;
         let timerInterval;
-        let countdownEndTime = null;
 
         const sessionId = '{{ session()->getId() }}';
         const showtimeId = '{{ $showtime->id }}';
@@ -170,21 +144,16 @@
                         }
                     });
 
+                    // Cập nhật lại tổng kết nếu có ghế locked bởi chính tab này
                     updateSummary();
-                    sendSeatsToParent();
+
                 }
             } catch (error) {
                 console.error('Error fetching initial seat status:', error);
             }
         }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            fetchInitialSeatStatus();
-            startTimer(); // Start timer immediately when page loads
-            timerStarted = true;
-            document.getElementById('timer-section').style.display = 'block';
-            sendTimerToParent();
-        });
+        // Call fetch on page load
+        document.addEventListener('DOMContentLoaded', fetchInitialSeatStatus);
 
         console.log('Pusher Config:', {
             key: '{{ $pusher_key }}',
@@ -218,6 +187,8 @@
         channel.bind('seat-status-updated', function(data) {
             console.log('Received seat-status-updated event:', data);
             console.log('Comparing locked_by:', data.locked_by, 'with sessionId:', sessionId);
+            console.log('Seat ID:', data.seat_id, 'Is even:', parseInt(data.seat_id) % 2 === 0);
+
 
             const seatElement = document.querySelector(`.seat[data-seat-id="${data.seat_id}"]`);
             if (seatElement) {
@@ -230,7 +201,6 @@
                         seatElement.style.opacity = '0.6';
                         selectedSeats = selectedSeats.filter(seat => seat.id !== data.seat_id.toString());
                         updateSummary();
-                        sendSeatsToParent();
                     } else if (data.status === 'available') {
                         const originalColor = seatElement.getAttribute('data-original-color');
                         seatElement.style.backgroundColor = originalColor || '#28a745';
@@ -244,7 +214,7 @@
             }
         });
 
-        async function selectSeat(element) {
+        function selectSeat(element) {
             const seatId = element.getAttribute('data-seat-id');
             const label = element.getAttribute('data-label');
             const type = element.getAttribute('data-type');
@@ -268,51 +238,47 @@
                 element.style.backgroundColor = '#e5006e';
                 element.style.opacity = '1';
                 selectedSeats.push({ id: seatId, label: label, type: type, price: price });
-            }
 
-            // Gửi tất cả seat_ids được chọn
-            const seatIds = selectedSeats.map(seat => seat.id);
-            console.log('Sending reserve request for seats:', seatIds);
-            try {
-                const response = await fetch('{{ route('client.seats.reserve', ['showtimeId' => $showtime->id]) }}', {
+                console.log('Sending reserve request for seat:', seatId);
+                fetch('{{ route('client.seats.reserve', ['showtimeId' => $showtime->id]) }}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': '{{ csrf_token() }}'
                     },
-                    body: JSON.stringify({ seat_ids: seatIds })
-                });
-                const data = await response.json();
-                console.log('Reserve seat response:', data);
-                if (data.error) {
-                    console.warn('Reserve seat failed:', data.error);
-                    // Revert UI và selectedSeats nếu có lỗi
-                    selectedSeats = selectedSeats.filter(seat => !seatIds.includes(seat.id));
-                    document.querySelectorAll('.seat.selected').forEach(seatEl => {
-                        const id = seatEl.getAttribute('data-seat-id');
-                        if (!selectedSeats.some(seat => seat.id === id)) {
-                            seatEl.classList.remove('selected');
-                            seatEl.style.backgroundColor = seatEl.getAttribute('data-original-color') || '#28a745';
-                            seatEl.style.opacity = '1';
-                        }
-                    });
-                }
-            } catch (error) {
-                console.error('Error reserving seats:', error);
-                // Revert UI và selectedSeats nếu có lỗi
-                selectedSeats = selectedSeats.filter(seat => !seatIds.includes(seat.id));
-                document.querySelectorAll('.seat.selected').forEach(seatEl => {
-                    const id = seatEl.getAttribute('data-seat-id');
-                    if (!selectedSeats.some(seat => seat.id === id)) {
-                        seatEl.classList.remove('selected');
-                        seatEl.style.backgroundColor = seatEl.getAttribute('data-original-color') || '#28a745';
-                        seatEl.style.opacity = '1';
+                    body: JSON.stringify({ seat_ids: [seatId] })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Reserve seat response:', data);
+                    if (data.error) {
+                        console.warn('Reserve seat failed:', data.error);
+                        element.classList.remove('selected');
+                        element.style.backgroundColor = originalColor || '#28a745';
+                        element.style.opacity = '1';
+                        selectedSeats = selectedSeats.filter(seat => seat.id !== seatId);
                     }
+                    updateSummary();
+                })
+                .catch(error => {
+                    console.error('Error reserving seat:', error);
+                    element.classList.remove('selected');
+                    element.style.backgroundColor = originalColor || '#28a745';
+                    element.style.opacity = '1';
+                    selectedSeats = selectedSeats.filter(seat => seat.id !== seatId);
+                    updateSummary();
                 });
             }
 
+            // Start timer on first seat selection
+            if (!timerStarted) {
+                console.log('Starting timer...');
+                startTimer();
+                document.getElementById('timer-section').style.display = 'block';
+                timerStarted = true;
+            }
+
             updateSummary();
-            sendSeatsToParent();
         }
 
         function updateSummary() {
@@ -334,68 +300,46 @@
                 ticketPrice: ticketPriceSummary.textContent
             });
         }
-
-        function sendSeatsToParent() {
-            console.log('Sending seats to parent:', selectedSeats);
-            const cinemaName = document.getElementById('cinema-name')?.textContent || 'Chưa xác định';
-            if (window.parent && window.parent.receiveSeats) {
-                try {
-                    window.parent.receiveSeats({
-                        seats: selectedSeats,
-                        cinemaName: cinemaName
-                    });
-                    console.log('Seats and cinemaName sent to parent successfully:', { seats: selectedSeats, cinemaName });
-                } catch (error) {
-                    console.error('Error sending seats and cinemaName to parent:', error);
-                }
-            } else {
-                console.warn('Parent window or receiveSeats function not available');
-            }
-        }
-
-        function sendTimerToParent() {
-            if (window.parent && window.parent.receiveTimer) {
-                try {
-                    window.parent.receiveTimer({
-                        endTime: countdownEndTime ? countdownEndTime.getTime() : null
-                    });
-                    console.log('Timer endTime sent to parent:', countdownEndTime);
-                } catch (error) {
-                    console.error('Error sending timer to parent:', error);
-                }
-            } else {
-                console.warn('Parent window or receiveTimer function not available');
-            }
-        }
-
+        // Timer Logic
         function startTimer() {
-            const timerDuration = 600000; // 600 seconds (10 minutes)
-            const now = new Date();
-            const endTime = new Date(now.getTime() + timerDuration);
-            countdownEndTime = endTime;
+            const now = new Date(); // Use current time dynamically
+            const showtime = new Date('{{ $showtime->start_time->toIso8601String() }}');
+            const diffMs = showtime - now;
+            let timerDuration;
 
+            console.log('Current time:', now);
+            console.log('Showtime:', showtime);
+            console.log('Difference in ms:', diffMs);
+
+            if (diffMs > 3600000) { // > 1 hour (3600000 ms)
+                timerDuration = 60000; // 1 minute for testing (5 minutes = 300000 ms)
+            } else if (diffMs < 1800000) { // < 30 minutes (1800000 ms)
+                timerDuration = 30000; // 30 seconds for testing (3 minutes = 180000 ms)
+            } else {
+                timerDuration = 60000; // Default 1 minute for testing
+            }
+
+            console.log('Timer duration set to:', timerDuration, 'ms');
+
+            const endTime = new Date(now.getTime() + timerDuration);
             const timerDisplay = document.getElementById('timer-display');
-            const hoursElem = document.getElementById('hours-seat');
-            const minutesElem = document.getElementById('minutes-seat');
-            const secondsElem = document.getElementById('seconds-seat');
+            const hoursElem = document.getElementById('hours');
+            const minutesElem = document.getElementById('minutes');
+            const secondsElem = document.getElementById('seconds');
 
             function updateTimer() {
                 const now = new Date();
-                const diff = countdownEndTime - now;
+                const diff = endTime - now;
                 if (diff <= 0) {
                     clearInterval(timerInterval);
-                    timerStarted = false;
-                    countdownEndTime = null;
                     timerDisplay.innerHTML = `
                         <span style="background: #dc3545; color: #fff; padding: 10px 15px; border-radius: 4px; font-size: 1.2em; font-weight: 600;">Đơn hàng đã quá hạn</span>
                     `;
-                    selectedSeats = [];
-                    updateSummary();
-                    sendSeatsToParent();
-                    sendTimerToParent();
                     setTimeout(() => {
                         window.top.location.href = '{{ route('movies.show', ['id' => $showtime->movie_id ?? $movie->id]) }}';
-                    }, 2000);
+                    }, 2000); // Redirect to movie detail page after 2 seconds
+                    selectedSeats = []; // Reset selected seats
+                    updateSummary(); // Update summary to reflect reset
                     return;
                 }
 
@@ -407,28 +351,10 @@
                 minutesElem.textContent = String(minutes).padStart(2, '0');
                 secondsElem.textContent = String(seconds).padStart(2, '0');
             }
-
-            updateTimer();
-            timerInterval = setInterval(updateTimer, 1000);
+            updateTimer(); // Run immediately
+            timerInterval = setInterval(updateTimer, 1000); // Start interval
             console.log('Timer started with interval:', timerInterval);
         }
-
-        // Handle reset seats message from parent
-        window.addEventListener('message', function(event) {
-            if (event.data.resetSeats) {
-                selectedSeats.forEach(seat => {
-                    const seatElement = document.querySelector(`.seat[data-seat-id="${seat.id}"]`);
-                    if (seatElement) {
-                        seatElement.classList.remove('selected');
-                        seatElement.style.backgroundColor = seatElement.getAttribute('data-original-color') || '#28a745';
-                        seatElement.style.opacity = '1';
-                    }
-                });
-                selectedSeats = [];
-                updateSummary();
-                sendSeatsToParent();
-            }
-        });
     </script>
 @else
     <div class="alert alert-danger bg-danger text-white">
