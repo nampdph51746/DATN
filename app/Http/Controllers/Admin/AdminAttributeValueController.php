@@ -9,6 +9,14 @@ use App\Http\Controllers\Controller;
 
 class AdminAttributeValueController extends Controller
 {
+            public function __construct()
+    {
+        $this->middleware(['auth', 'role:admin,staff']);
+        $this->middleware('can:view attribute value')->only('index');
+        $this->middleware('can:create attribute value')->only(['create', 'store']);
+        $this->middleware('can:edit attribute value')->only(['edit', 'update']);
+        $this->middleware('can:delete attribute value')->only('destroy');
+    }
     public function index(Request $request)
     {
         $query = AttributeValue::with('attribute');

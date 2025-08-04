@@ -13,11 +13,13 @@
     }
 
     .dark .profile-container {
+
         background-color: #111827;
     }
 
     .profile-box {
         max-width: 520px;
+
         margin: auto;
         background-color: #ffffff;
         border-radius: 12px;
@@ -26,7 +28,9 @@
         transition: background-color 0.3s, color 0.3s;
     }
 
+
     .dark .profile-box {
+
         background-color: #1f2937;
         color: #f9fafb;
     }
@@ -42,6 +46,7 @@
     }
 
     .profile-box .form-label {
+
         font-weight: 600;
         color: #374151;
         margin-bottom: 4px;

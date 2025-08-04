@@ -335,11 +335,13 @@
 					</div>
 
 					{{-- Nút đặt vé --}}
+
 					<a href="{{ route('client.movies.ticketBooking', ['id' => $movie->id]) }}"
 					class="btn btn-primary px-4 py-2 mt-4"
 					style="font-size: 16px; font-weight: 500;">
 						🎟️ Đặt vé ngay
 					</a>
+
 				</div>
 			</div>
 

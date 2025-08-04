@@ -12,12 +12,15 @@
         transition: background-color 0.3s;
     }
 
+
     .dark .register-container {
+
         background-color: #111827;
     }
 
     .register-box {
         max-width: 520px;
+
         margin: auto;
         background-color: #ffffff;
         border-radius: 12px;
@@ -27,6 +30,7 @@
     }
 
     .dark .register-box {
+
         background-color: #1f2937;
         color: #f9fafb;
     }
@@ -38,6 +42,7 @@
     }
 
     .dark .register-box h2 {
+
         color: #f9fafb;
     }
 
@@ -45,9 +50,11 @@
         font-size: 14px;
         color: #374151;
         margin-bottom: 6px;
+
     }
 
     .dark .form-label {
+
         color: #d1d5db;
     }
 
@@ -62,6 +69,7 @@
     }
 
     .dark .form-control {
+
         background-color: #374151;
         color: #f9fafb;
         border-color: #4b5563;
@@ -97,6 +105,7 @@
         font-size: 15px;
         gap: 8px;
         transition: background-color 0.3s;
+
     }
 
     .google-btn {
@@ -120,6 +129,7 @@
 
     .text-danger {
         font-size: 13px;
+
     }
 </style>
 

@@ -41,11 +41,9 @@ class PaymentController extends Controller
 }
 
     // Xem chi tiết 1 payment
-public function show(Payment $payment)
+public function show($id)
 {
-    // Nạp sẵn các quan hệ để tránh lỗi null
-    $payment->load(['booking.user', 'paymentMethod']);
-
+    $payment = Payment::with(['booking.user', 'paymentMethod'])->findOrFail($id);
     return view('admin.payments.show', compact('payment'));
 }
 

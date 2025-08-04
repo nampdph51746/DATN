@@ -9,6 +9,14 @@ use App\Http\Controllers\Controller;
 
 class AdminSeatTypeController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(['auth', 'role:admin,staff']);
+        $this->middleware('can:view seat type')->only('index');
+        $this->middleware('can:create seat type')->only(['create', 'store']);
+        $this->middleware('can:edit seat type')->only(['edit', 'update']);
+        $this->middleware('can:delete seat type')->only('destroy');
+    }
     public function index()
     {
         $seatTypes = SeatType::paginate(10);

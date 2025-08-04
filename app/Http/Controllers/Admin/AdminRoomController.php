@@ -9,6 +9,7 @@ use App\Models\RoomType;
 use App\Models\SeatType;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Models\RoomSeatConfiguration;
 use App\Http\Requests\StoreRoomRequest;
 use App\Http\Requests\UpdateRoomRequest;
 
@@ -49,30 +50,64 @@ class AdminRoomController extends Controller
     }
 
     // Xem chi tiết phòng chiếu
-    public function show(Room $room)
+    public function show($id)
     {
-        // Lấy danh sách loại ghế
+        // Load room với relationships
+        $room = Room::with(['cinema', 'roomType'])->findOrFail($id);
+        
+        // Debug để kiểm tra
+        \Log::info('Room data:', [
+            'room_id' => $room->id,
+            'cinema_id' => $room->cinema_id,
+            'room_type_id' => $room->room_type_id,
+            'cinema' => $room->cinema,
+            'roomType' => $room->roomType
+        ]);
+        
         $seatTypes = SeatType::all();
-
-        // Lấy danh sách ghế của phòng
         $seats = Seat::with('seatType')
             ->where('room_id', $room->id)
             ->orderBy('row_char')
             ->orderBy('seat_number')
             ->get();
 
-        // Tính danh sách hàng
+        // Lấy danh sách các hàng ghế (row_char) duy nhất
         $rows = $seats->pluck('row_char')->unique()->sort()->values();
-
+        
         // Tính số ghế tối đa mỗi hàng
-        $maxSeatsPerRow = 0;
-        if (!$seats->isEmpty()) {
-            $maxSeatsPerRow = $seats->groupBy('row_char')->map(function ($group) {
-                return $group->count();
-            })->values()->max() ?: 0;
+        $maxSeatsPerRow = $seats->isEmpty() ? 50 : $seats->groupBy('row_char')->map(function($group) { return $group->count(); })->max();
+        
+        // Số hàng tối đa
+        $maxRows = 26;
+
+        // Lấy tỷ lệ tùy chỉnh từ room_seat_configurations
+        $seatPercentages = RoomSeatConfiguration::where('room_id', $room->id)
+            ->with('seatType')
+            ->get()
+            ->pluck('percentage', 'seat_type_id')
+            ->toArray();
+        
+        // Nếu chưa có cấu hình tùy chỉnh, sử dụng tỷ lệ mặc định
+        if (empty($seatPercentages)) {
+            $seatPercentages = [];
+            foreach ($seatTypes as $seatType) {
+                $seatPercentages[$seatType->id] = config('seat_types.percentages')[$seatType->name] ?? 0;
+            }
         }
 
-        return view('admin.rooms.show', compact('room', 'seatTypes', 'seats', 'rows', 'maxSeatsPerRow'));
+        // Tính số ghế yêu cầu và ghế hiện có cho mỗi loại
+        $requiredSeats = [];
+        foreach ($seatPercentages as $seatTypeId => $percentage) {
+            $requiredSeats[$seatTypeId] = (int) round(($percentage / 100) * $room->capacity);
+        }
+        $existingSeatsByType = $seats->groupBy('seat_type_id')->map(function($group) { return $group->count(); })->toArray();
+
+        // Ghi log dữ liệu
+        \Log::info('Seat Percentages: ', $seatPercentages);
+        \Log::info('Existing Seats by Type: ', $existingSeatsByType);
+        \Log::info('Required Seats: ', $requiredSeats);
+
+        return view('admin.rooms.show', compact('room', 'seatTypes', 'seats', 'rows', 'maxSeatsPerRow', 'maxRows', 'seatPercentages', 'existingSeatsByType', 'requiredSeats'));
     }
 
     // Hiển thị form chỉnh sửa

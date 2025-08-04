@@ -4,6 +4,7 @@ namespace App\Http\Requests\Admin\Roles;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Spatie\Permission\Models\Role;
 
 class UpdateRoleRequest extends FormRequest
 {
@@ -23,7 +24,7 @@ class UpdateRoleRequest extends FormRequest
     public function rules(): array
     {
         $role = $this->route('role');
-        $roleId = $role ? $role->id : null;
+        $roleId = is_object($role) ? $role->id : Role::find($role)?->id;
 
         return [
             'name' => [
@@ -32,7 +33,8 @@ class UpdateRoleRequest extends FormRequest
                 'max:255',
                 Rule::unique('roles', 'name')->ignore($roleId),
             ],
-            'description' => ['nullable', 'string', 'max:500'],
+            'permissions' => 'array',
+            'permissions.*' => 'exists:permissions,name',
         ];
     }
 
@@ -43,9 +45,6 @@ class UpdateRoleRequest extends FormRequest
             'name.string' => 'Tên vai trò phải là chuỗi ký tự.',
             'name.max' => 'Tên vai trò không được vượt quá 255 ký tự.',
             'name.unique' => 'Tên vai trò này đã tồn tại.',
-
-            'description.string' => 'Mô tả phải là chuỗi ký tự.',
-            'description.max' => 'Mô tả không được vượt quá 500 ký tự.',
         ];
     }
 }

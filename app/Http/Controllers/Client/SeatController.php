@@ -21,6 +21,7 @@ class SeatController extends Controller
     {
         \Log::info('Starting getSeatsForShowtime for showtime ID: ' . $showtimeId);
 
+
         $showtime = Showtime::with([
             'room.seats.seatType',
             'room.seats.showtimeSeatStates' => function ($q) use ($showtimeId) {
@@ -29,6 +30,7 @@ class SeatController extends Controller
         ])->findOrFail($showtimeId);
 
         \Log::info('Showtime loaded: ' . json_encode([
+
             'id' => $showtime->id,
             'room_id' => $showtime->room_id,
             'base_price' => $showtime->base_price,
@@ -51,6 +53,7 @@ class SeatController extends Controller
         $cols = $room->seats->pluck('seat_number')->max();
 
         \Log::info('Room dimensions: ' . json_encode([
+
             'rows' => $rows,
             'cols' => $cols,
         ]));
@@ -122,6 +125,7 @@ class SeatController extends Controller
                 'price'       => $price,
             ];
             \Log::info('Seat processed for showSeatMap: ' . json_encode($seatInfo));
+
             return $seatInfo;
         });
 
@@ -137,6 +141,7 @@ class SeatController extends Controller
 
         $seatTypes = $room->seats->pluck('seatType')->unique('id');
         \Log::info('Seat types loaded: ' . json_encode($seatTypes->map(function ($type) {
+
             return [
                 'name' => $type->name,
                 'price_modifier' => $type->price_modifier,
@@ -245,6 +250,7 @@ class SeatController extends Controller
         $room = $showtime->room;
 
         if (!$room || $room->seats->isEmpty()) {
+
             \Log::warning("Room or seats not found for showtime ID: $showtimeId");
             return response()->json(['error' => 'Phòng chiếu không có ghế.'], 404);
         }

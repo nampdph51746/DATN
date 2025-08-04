@@ -79,6 +79,7 @@
                     </div>
                     <p style="color: #d3d3d3; font-size: 0.9em;">Hours Minutes Seconds</p>
                 </div>
+
             </div>
         </div>
     </div>
@@ -123,7 +124,6 @@
                                 seatElement.style.opacity = '0.6';
                                 seatElement.style.pointerEvents = 'none';
                             } else {
-                                // Nếu ghế do phiên hiện tại giữ thì đánh dấu là selected
                                 seatElement.classList.add('selected');
                                 seatElement.style.backgroundColor = '#e5006e';
                                 seatElement.style.opacity = '1';
@@ -146,12 +146,12 @@
 
                     // Cập nhật lại tổng kết nếu có ghế locked bởi chính tab này
                     updateSummary();
+
                 }
             } catch (error) {
                 console.error('Error fetching initial seat status:', error);
             }
         }
-
         // Call fetch on page load
         document.addEventListener('DOMContentLoaded', fetchInitialSeatStatus);
 
@@ -188,6 +188,7 @@
             console.log('Received seat-status-updated event:', data);
             console.log('Comparing locked_by:', data.locked_by, 'with sessionId:', sessionId);
             console.log('Seat ID:', data.seat_id, 'Is even:', parseInt(data.seat_id) % 2 === 0);
+
 
             const seatElement = document.querySelector(`.seat[data-seat-id="${data.seat_id}"]`);
             if (seatElement) {
@@ -299,7 +300,6 @@
                 ticketPrice: ticketPriceSummary.textContent
             });
         }
-
         // Timer Logic
         function startTimer() {
             const now = new Date(); // Use current time dynamically
@@ -351,7 +351,6 @@
                 minutesElem.textContent = String(minutes).padStart(2, '0');
                 secondsElem.textContent = String(seconds).padStart(2, '0');
             }
-
             updateTimer(); // Run immediately
             timerInterval = setInterval(updateTimer, 1000); // Start interval
             console.log('Timer started with interval:', timerInterval);

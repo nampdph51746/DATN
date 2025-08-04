@@ -10,6 +10,14 @@ use App\Models\Product;
 
 class AdminProductCategoriesController extends Controller
 {
+        public function __construct()
+    {
+        $this->middleware(['auth', 'role:admin,staff']);
+        $this->middleware('can:view product category')->only('index');
+        $this->middleware('can:create product category')->only(['create', 'store']);
+        $this->middleware('can:edit product category')->only(['edit', 'update']);
+        $this->middleware('can:delete product category')->only('destroy');
+    }
     public function index()
     {
         $categories = ProductCategory::paginate(10);

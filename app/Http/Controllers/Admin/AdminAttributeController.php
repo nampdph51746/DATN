@@ -9,6 +9,14 @@ use Illuminate\Support\Facades\Validator;
 
 class AdminAttributeController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(['auth', 'role:admin,staff']);
+        $this->middleware('can:view attributes')->only('index');
+        $this->middleware('can:create attributes')->only(['create', 'store']);
+        $this->middleware('can:edit attributes')->only(['edit', 'update']);
+        $this->middleware('can:delete attributes')->only('destroy');
+    }
    public function index(Request $request)
 {
     $query = Attribute::query();

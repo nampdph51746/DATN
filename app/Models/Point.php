@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\PointHistory;
+use App\Models\User;
 
 class Point extends Model
 {
@@ -23,6 +25,6 @@ class Point extends Model
 
     public function histories()
     {
-        return $this->hasMany(PointHistory::class, 'user_id', 'user_id');
+        return $this->hasMany(PointHistory::class);
     }
 }

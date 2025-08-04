@@ -9,7 +9,14 @@ class ShowtimeSeatState extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['showtime_id', 'seat_id', 'status', 'locked_until', 'booking_id'];
+    protected $fillable = [
+        'showtime_id',
+        'seat_id',
+        'status',
+        'locked_until',
+        'booking_id',
+        'locked_by',
+    ];
 
     protected $casts = [
         'status' => \App\Enums\SeatStatus::class,

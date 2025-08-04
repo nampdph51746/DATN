@@ -36,21 +36,15 @@
                                 </div>
 
                                 <!-- Role -->
-                                <div class="col-lg-6 mb-3">
-                                    <label for="role_id" class="form-label">Role</label>
-                                    <select name="role_id" id="role_id"
-                                        class="form-control @error('role_id') is-invalid @enderror">
-                                        <option value="">Select role</option>
-                                        @foreach ($roles as $role)
-                                            <option value="{{ $role->id }}" {{ old('role_id', $users->role_id) == $role->id ? 'selected' : '' }}>
-                                                {{ $role->name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    @error('role_id')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
+                                <select name="role_id" id="role_id"
+                                    class="form-control @error('role_id') is-invalid @enderror">
+                                    <option value="">Select role</option>
+                                    @foreach ($roles as $role)
+                                        <option value="{{ $role->name }}" {{ old('role_id', $selectedRole) == $role->name ? 'selected' : '' }}>
+                                            {{ $role->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
 
                                 <!-- Status -->
                                 <div class="col-lg-6 mb-3">
@@ -83,8 +77,6 @@
                                     </div>
                                 </div>
                 </form>
-
-
             </div>
         </div>
     </div>

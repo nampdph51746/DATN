@@ -12,11 +12,14 @@
         transition: background-color 0.3s;
     }
 
+
     .dark .login-container {
+
         background-color: #111827;
     }
 
     .login-box {
+
         max-width: 480px;
         margin: auto;
         background-color: #fff;
@@ -29,12 +32,14 @@
     .dark .login-box {
         background-color: #1f2937;
         color: #f3f4f6;
+
     }
 
     .login-box h2 {
         font-size: 24px;
         font-weight: bold;
         color: #1f2937;
+
     }
 
     .dark .login-box h2 {
@@ -47,6 +52,7 @@
     }
 
     .dark .login-box label {
+
         color: #d1d5db;
     }
 
@@ -57,9 +63,11 @@
         border: 1px solid #d1d5db;
         background-color: #fff;
         color: #111827;
+
     }
 
     .dark .form-control {
+
         background-color: #374151;
         color: #f9fafb;
         border-color: #4b5563;
@@ -68,7 +76,9 @@
     .form-control:focus {
         border-color: #3b82f6;
         outline: none;
+
         box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+
     }
 
     .btn-primary {
@@ -77,8 +87,10 @@
         font-weight: 600;
         padding: 0.75rem;
         border-radius: 8px;
+
         transition: background-color 0.3s;
         border: none;
+
     }
 
     .btn-primary:hover {
@@ -89,10 +101,12 @@
         display: flex;
         align-items: center;
         justify-content: center;
+
         padding: 0.75rem;
         border-radius: 8px;
         font-weight: 500;
         transition: background-color 0.3s;
+
     }
 
     .google-btn {
@@ -104,32 +118,40 @@
         background-color: #e5e7eb;
     }
 
+
     .dark .google-btn {
+
         background-color: #4b5563;
         color: #fff;
     }
 
     .facebook-btn {
+
         background-color: #1877f2;
+
         color: #fff;
     }
 
     .facebook-btn:hover {
+
         background-color: #145fbe;
     }
 
     .text-sm {
         font-size: 14px;
+
     }
 
     .text-link {
         color: #3b82f6;
         font-weight: 500;
+
     }
 
     .text-link:hover {
         text-decoration: underline;
     }
+
 </style>
 
 <div class="login-container">
@@ -141,6 +163,7 @@
         <!-- Thông báo trạng thái -->
         @if (session('status'))
             <div class="alert alert-success bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 p-3 rounded mb-3 text-sm">
+
                 {{ session('status') }}
             </div>
         @endif
