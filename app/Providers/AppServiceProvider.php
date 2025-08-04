@@ -8,7 +8,11 @@ use App\Observers\ShowtimeObserver;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\ServiceProvider;
 use Spatie\Permission\PermissionRegistrar;
+use Illuminate\Support\Facades\Event;
+use App\Events\BookingConfirmed;
+use App\Listeners\SendBookingConfirmationEmail;
 use Illuminate\Database\Eloquent\Relations\Relation;
+
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -30,8 +34,11 @@ class AppServiceProvider extends ServiceProvider
         
         // Đăng ký Observer cho Showtime
         Showtime::observe(ShowtimeObserver::class);
+        
+        // Đăng ký Event và Listener
+        Event::listen(BookingConfirmed::class, SendBookingConfirmationEmail::class);
 
-        // Morph map cho tất cả các model
+         // Morph map cho tất cả các model
         Relation::morphMap([
             'age_limit' => \App\Models\AgeLimit::class,
             'attribute' => \App\Models\Attribute::class,

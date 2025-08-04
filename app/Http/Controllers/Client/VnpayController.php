@@ -15,17 +15,14 @@ use App\Enums\SeatStatus;
 use App\Enums\TicketStatus;
 use App\Models\BookingItem;
 use App\Enums\BookingStatus;
-use App\Models\Notification;
 use App\Models\PointHistory;
 use Illuminate\Http\Request;
 use App\Models\ProductVariant;
-use App\Enums\NotificationType;
 use App\Models\ShowtimeSeatState;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
-use App\Mail\TicketPurchasedMail;
-use Illuminate\Support\Facades\Mail;
+use App\Events\BookingConfirmed;
 
 class VnpayController extends Controller
 {
@@ -195,10 +192,12 @@ class VnpayController extends Controller
                 // 3. Cộng điểm thưởng cho người dùng
                 $user = $booking->user;
                 if (!$user) {
+                    \Log::error("User not found for booking ID: {$booking->id}, User ID: {$booking->user_id}");
                     throw new \Exception('Không tìm thấy người dùng.');
                 }
 
                 $pointsToAdd = max(1, floor($booking->final_amount / 10000));
+                \Log::info("Points to add: {$pointsToAdd}, Booking ID: {$booking->id}, User ID: {$user->id}");
 
                 if ($pointsToAdd > 0 && !PointHistory::where('booking_id', $booking->id)->exists()) {
                     $point = Point::firstOrCreate(
@@ -217,11 +216,16 @@ class VnpayController extends Controller
                         'created_at' => now(),
                     ]);
 
+                    \Log::info("Points added for user ID: {$user->id}, Booking ID: {$booking->id}, Points: {$pointsToAdd}");
+                } else {
+                    \Log::warning("Points not added. Points: {$pointsToAdd}, Existing history: " . (PointHistory::where('booking_id', $booking->id)->exists() ? 'Yes' : 'No'));
                 }
+
                 // 4. Lấy showtime từ ghế đã đặt và tạo tickets
                 $selectedSeatInfos = session('selected_seats_info', []);
 
                 // Log selected_seats_info để debug
+                Log::info('Selected seats info:', $selectedSeatInfos);
                 
                 if (empty($selectedSeatInfos)) {
                     throw new \Exception('Không tìm thấy thông tin ghế đã chọn.');
@@ -279,13 +283,6 @@ class VnpayController extends Controller
                         ]);
                 }
 
-                // Gửi email xác nhận mua vé cho user
-               $user = $booking->user;
-                $tickets = Ticket::where('booking_id', $booking->id)->get();
-                if ($user && $tickets->count()) {
-                    Mail::to($user->email)->send(new TicketPurchasedMail($tickets,$booking));
-                }
-
                 // 6. Tạo bản ghi trong bảng booking_items
                 $items = is_string($bookingData['items'])
                     ? json_decode($bookingData['items'], true)
@@ -308,32 +305,11 @@ class VnpayController extends Controller
                 }
 
                 DB::commit();
+                
+                // Fire event để gửi email xác nhận booking
+                event(new BookingConfirmed($booking));
+                
                 session()->forget(['booking_preview', 'selected_seats_info']);
-
-                // Tạo thông báo cho user khi đặt vé thành công
-                Notification::create([
-                    'user_id' => $booking->user_id,
-                    'entity_type' => Booking::class,
-                    'entity_id' => $booking->id,
-                    'title' => 'Đặt vé thành công',
-                    'message' => (
-                        ($booking->user && $booking->user->name)
-                        ? ($booking->user->name . ' đã đặt vé thành công cho đơn hàng #' . $booking->id . '.')
-                        : ('User ID #' . $booking->user_id . ' đã đặt vé thành công cho đơn hàng #' . $booking->id . '.')
-                    ),
-                    'type' => NotificationType::Booking,
-                    'priority' => 'high',
-                    'old_status' => null,
-                    'new_status' => $booking->status,
-                    'event_details' => json_encode([
-                        'booking_id' => $booking->id,
-                        'user_id' => $booking->user_id,
-                        'final_amount' => $booking->final_amount,
-                    ]),
-                ]);
-
-
-                //Gửi email cho user khi thanh toán thành công
 
                 return redirect()->route('client.success')->with('success', 'Thanh toán thành công!');
             } catch (\Exception $e) {

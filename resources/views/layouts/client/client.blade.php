@@ -133,7 +133,6 @@
 				</div>
 				<!-- toggle switch for light and dark theme -->
 				<div class="mobile-position">
-					
 					<nav class="navigation" style="display: flex; align-items: center; justify-content: flex-end; gap: 30px;">
 						<div class="user-navigation" style="position: relative;">
 							<button onclick="toggleUserDropdown()" class="user-container" style="background: none; border: none; cursor: pointer;">
@@ -147,6 +146,7 @@
 
 								@auth
 								<li><a href="/profile" style="display: block; padding: 10px; text-decoration: none;">Tài khoản</a></li>
+								<li><a href="/my-bookings" style="display: block; padding: 10px; text-decoration: none;">Lịch sử đơn hàng</a></li>
 								@hasanyrole(['admin', 'staff'])
 								<li><a href="{{ route('admin.movies.index') }}" style="display: block; padding: 10px; text-decoration: none;">Quản lý</a></li>
 								@endhasanyrole

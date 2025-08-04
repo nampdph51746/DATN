@@ -5,17 +5,54 @@ namespace App\Http\Controllers\Admin;
 use App\Models\Point;
 use App\Models\Booking;
 use App\Enums\BookingStatus;
+use App\Models\Notification;
 use App\Models\PointHistory;
 use Illuminate\Http\Request;
+use App\Enums\NotificationType;
+use App\Services\QrcodeService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Validation\Rule;
 use App\Http\Controllers\Controller;
-
-use App\Models\Notification;
-use App\Enums\NotificationType;
+use BaconQrCode\Encoder\QrCode;
 use Illuminate\Support\Facades\Auth;
 
 class BookingController extends Controller
 {
+
+    public function myBookings()
+    {
+        $user = Auth::user();
+
+        $bookings = Booking::with([
+            'tickets.showtime.movie',
+            'tickets.showtime.room',
+            'tickets.seat.seatType',
+            'bookingItems.product'
+        ])
+        ->where('user_id', auth()->id())
+        ->latest()
+        ->paginate(10);
+
+        
+
+        return view('client.bookings.index', compact('bookings'));
+    }
+
+    public function myBookingsShow($id)
+    {
+        $user = Auth::user();
+
+        $booking = Booking::with([
+            'tickets.showtime.movie',
+            'tickets.showtime.room',
+            'tickets.seat.seatType',
+            'bookingItems.productVariant.product'
+        ])
+        ->where('user_id', $user->id)
+        ->findOrFail($id);
+        
+        return view('client.bookings.show', compact('booking'));
+    }
     public function index(Request $request)
     {
         $query = Booking::query();
@@ -127,5 +164,45 @@ class BookingController extends Controller
         }
 
         return redirect()->route('admin.bookings.index')->with('success', 'Cập nhật trạng thái thành công.');
+    }
+    public function print($booking_code)
+    {
+        $booking = Booking::with([
+            'tickets.showtime.movie',
+            'tickets.showtime.room',
+            'tickets.seat',
+            'bookingItems.productVariant.product',
+            'user',
+        ])->where('booking_code', $booking_code)->firstOrFail();
+
+        $tickets = $booking->tickets;
+        $foodDrinks = $booking->bookingItems;
+
+        // Sinh QR code cho từng vé
+        $qrService = app(QrcodeService::class);
+        $ticketQRCodes = [];
+        foreach ($tickets as $ticket) {
+            $qrText = $ticket->ticket_code;
+            $qrCodeRaw = $qrService->generateQrCode($qrText, 120);
+            $ticketQRCodes[$ticket->id] = $qrCodeRaw ? 'data:image/png;base64,' . $qrCodeRaw : null;
+        }
+
+        // QR code cho food/drink chung
+        $foodDrinksQRCode = null;
+        if ($foodDrinks && $foodDrinks->count() > 0) {
+            $qrText =  json_encode($foodDrinks->toArray());
+            $qrCodeRaw = $qrService->generateQrCode($qrText, 120);
+            $foodDrinksQRCode = $qrCodeRaw ? 'data:image/png;base64,' . $qrCodeRaw : null;
+        }
+
+        $pdf = PDF::loadView('admin.bookings.print', [
+            'booking' => $booking,
+            'tickets' => $tickets,
+            'foodDrinks' => $foodDrinks,
+            'ticketQRCodes' => $ticketQRCodes,
+            'foodDrinksQRCode' => $foodDrinksQRCode,
+        ]);
+
+        return $pdf->download('ve-dat-'. $booking->booking_code .'.pdf');
     }
 }
