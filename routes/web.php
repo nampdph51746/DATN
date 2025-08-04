@@ -39,6 +39,12 @@ use App\Http\Controllers\Admin\AdminProductVariantController;
 use App\Http\Controllers\Admin\CustomerRankPromotionController;
 use App\Http\Controllers\Admin\AdminProductCategoriesController;
 
+use App\Mail\TestMail;
+use App\Mail\TicketPurchasedMail;
+use App\Models\Ticket;
+use Illuminate\Support\Facades\Mail;
+
+
 Route::get('/', [HomeController::class, 'index'])->name('client.home');
 Route::get('/movies', [HomeController::class, 'movies'])->name('client.movies');
 Route::get('/movies/{id}', [HomeController::class, 'show'])->name('movies.show');
