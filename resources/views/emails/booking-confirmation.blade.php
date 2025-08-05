@@ -133,6 +133,12 @@
         .footer strong {
             color: #2d3748;
         }
+        .btn-outline-primary:hover {
+            background: #5a67d8 !important;
+            color: white !important;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(90, 103, 216, 0.3);
+        }
         @media (max-width: 576px) {
             .container {
                 margin: 10px;
@@ -179,61 +185,40 @@
                 <h3 class="mb-3 text-primary">📋 Thông tin đặt vé</h3>
                 
 
-                @foreach($booking->tickets as $ticket)
-                <div class="ticket-card" style="position:relative;">
-                    <h4 class="mb-3 text-dark">{{ $ticket->showtime->movie->name }}</h4>
+                <!-- Thông tin tóm tắt -->
+                <div class="ticket-card">
+                    <h4 class="mb-3 text-dark">📋 Thông tin đơn hàng</h4>
+                    <div class="info-row">
+                        <span class="label">🎬 Phim:</span>
+                        <span class="value">{{ $booking->tickets->first()->showtime->movie->name }}</span>
+                    </div>
                     <div class="info-row">
                         <span class="label">📅 Ngày chiếu:</span>
-                        <span class="value">{{ $ticket->showtime->start_time->format('d/m/Y') }}</span>
+                        <span class="value">{{ $booking->tickets->first()->showtime->start_time->format('d/m/Y') }}</span>
                     </div>
                     <div class="info-row">
                         <span class="label">⏰ Giờ chiếu:</span>
-                        <span class="value">{{ $ticket->showtime->start_time->format('H:i') }} - {{ $ticket->showtime->end_time->format('H:i') }}</span>
+                        <span class="value">{{ $booking->tickets->first()->showtime->start_time->format('H:i') }} - {{ $booking->tickets->first()->showtime->end_time->format('H:i') }}</span>
                     </div>
                     <div class="info-row">
                         <span class="label">🏢 Rạp:</span>
-                        <span class="value">{{ $ticket->showtime->room->cinema->name }}</span>
+                        <span class="value">{{ $booking->tickets->first()->showtime->room->cinema->name }}</span>
                     </div>
                     <div class="info-row">
                         <span class="label">🪑 Phòng:</span>
-                        <span class="value">{{ $ticket->showtime->room->name }}</span>
+                        <span class="value">{{ $booking->tickets->first()->showtime->room->name }}</span>
                     </div>
                     <div class="info-row">
-                        <span class="label">💺 Ghế:</span>
-                        <span class="value">{{ $ticket->seat->row_char }}{{ $ticket->seat->seat_number }}</span>
+                        <span class="label">� Số ghế:</span>
+                        <span class="value">{{ $booking->tickets->count() }} ghế</span>
                     </div>
+                    @if($booking->bookingItems->count() > 0)
                     <div class="info-row">
-                        <span class="label">💰 Giá vé:</span>
-                        <span class="value">{{ number_format($ticket->price_at_purchase, 0, ',', '.') }} VNĐ</span>
+                        <span class="label">🍿 Combo:</span>
+                        <span class="value">{{ $booking->bookingItems->count() }} món</span>
                     </div>
-                    <div style="position:absolute; bottom:12px; right:12px; text-align:right;">
-                        @if(!empty($ticketQrs[$ticket->id]))
-                        <img src="data:image/png;base64,{{ $ticketQrs[$ticket->id] }}" alt="QR Vé" style="width:80px; height:80px; border:1px solid #e2e8f0; border-radius:6px; background:#fff;">
-                        <div style="font-size:10px; color:#888;">Vé #{{ $ticket->id }}</div>
-                        @endif
-                    </div>
+                    @endif
                 </div>
-                @endforeach
-
-                <!-- Thông tin combo (nếu có) -->
-
-                @if($booking->bookingItems->count() > 0)
-                <div class="mt-4" style="position:relative;">
-                    <h4 class="text-primary mb-3">🍿 Combo đã chọn:</h4>
-                    @foreach($booking->bookingItems as $item)
-                    <div class="info-row">
-                        <span class="label">{{ $item->productVariant->product->name ?? 'Sản phẩm' }} (x{{ $item->quantity }})</span>
-                        <span class="value">{{ number_format($item->price_at_purchase * $item->quantity, 0, ',', '.') }} VNĐ</span>
-                    </div>
-                    @endforeach
-                    <div style="position:absolute; bottom:12px; right:12px; text-align:right;">
-                        @if(!empty($foodQr))
-                        <img src="data:image/png;base64,{{ $foodQr }}" alt="QR Combo" style="width:80px; height:80px; border:1px solid #e2e8f0; border-radius:6px; background:#fff;">
-                        <div style="font-size:10px; color:#888;">Combo</div>
-                        @endif
-                    </div>
-                </div>
-                @endif
 
                 <!-- Tổng tiền -->
                 <div class="info-row mt-4 pt-3 border-top border-primary">
@@ -253,6 +238,19 @@
                 <div class="mt-2 font-monospace text-secondary">{{ $booking->booking_code }}</div>
             </div>
             @endif
+
+            <!-- Nút xem chi tiết -->
+            <div class="text-center mb-4">
+                {{-- <a href="{{ url('/booking/detail/' . $booking->booking_code) }}" --}}
+                <a href="#" 
+                   class="btn btn-outline-primary btn-lg"
+                   style="padding: 12px 30px; font-weight: 600; text-decoration: none; border-radius: 8px; border: 2px solid #5a67d8; color: #5a67d8; background: white; transition: all 0.3s ease;">
+                    📄 Xem chi tiết đơn hàng
+                </a>
+                <div class="mt-2 text-muted small">
+                    Nhấn để xem thông tin chi tiết về vé và combo
+                </div>
+            </div>
 
             <!-- Hướng dẫn -->
             <div class="instructions">

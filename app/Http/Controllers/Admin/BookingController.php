@@ -19,7 +19,7 @@ class BookingController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Booking::query();
+        $query = Booking::with(['tickets.showtime']);
 
         // Tìm kiếm theo ID, mã booking, hoặc user_id
         if ($request->has('search')) {
@@ -139,6 +139,9 @@ class BookingController extends Controller
             'user',
         ])->where('booking_code', $booking_code)->firstOrFail();
 
+        // Validate thời gian in vé cho tất cả các vé trong booking
+        $this->validatePrintTimeForBooking($booking);
+
         $tickets = $booking->tickets;
         $foodDrinks = $booking->bookingItems;
 
@@ -168,5 +171,30 @@ class BookingController extends Controller
         ]);
 
         return $pdf->download('ve-dat-'. $booking->booking_code .'.pdf');
+    }
+
+    /**
+     * Validate thời gian in vé cho booking
+     * Vé chỉ được in trước suất chiếu 1 tiếng và không được in sau khi suất chiếu đã bắt đầu
+     */
+    private function validatePrintTimeForBooking($booking)
+    {
+        $currentTime = now();
+        
+        foreach ($booking->tickets as $ticket) {
+            $showtime = $ticket->showtime;
+            $showtimeStart = $showtime->start_time;
+            
+            // Kiểm tra nếu suất chiếu đã bắt đầu
+            if ($currentTime >= $showtimeStart) {
+                abort(403, 'Không thể in vé sau khi suất chiếu đã bắt đầu. Suất chiếu: ' . $showtimeStart->format('d/m/Y H:i'));
+            }
+            
+            // Kiểm tra nếu còn ít hơn 1 tiếng trước suất chiếu
+            $oneHourBeforeShowtime = $showtimeStart->copy()->subHour();
+            if ($currentTime > $oneHourBeforeShowtime) {
+                abort(403, 'Vé chỉ có thể in trước suất chiếu ít nhất 1 tiếng. Suất chiếu: ' . $showtimeStart->format('d/m/Y H:i'));
+            }
+        }
     }
 }

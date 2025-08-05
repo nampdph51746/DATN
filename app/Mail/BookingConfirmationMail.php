@@ -34,14 +34,14 @@ class BookingConfirmationMail extends Mailable
         // QR cho từng vé (ghế)
         if (method_exists($booking, 'tickets')) {
             foreach ($booking->tickets as $ticket) {
-                $qrText = 'TICKET|' . $ticket->id . '|' . $ticket->seat_id . '|' . $ticket->ticket_code;
+                $qrText = $ticket->ticket_code;
                 $this->ticketQrs[$ticket->id] = $qrcodeService->generateQrCode($qrText);
             }
         }
 
         // QR cho combo đồ ăn/uống
         if (method_exists($booking, 'bookingItems') && $booking->bookingItems->count() > 0) {
-            $foodText = 'FOOD|' . $booking->id . '|' . json_encode($booking->bookingItems->toArray());
+            $foodText =  json_encode($booking->bookingItems->toArray());
             $this->foodQr = $qrcodeService->generateQrCode($foodText);
         }
     }
@@ -81,6 +81,16 @@ class BookingConfirmationMail extends Mailable
     {
         $attachments = [];
         $qrcodeService = new QrcodeService();
+
+        // Đính kèm QR code cho booking code
+        $bookingQrFileName = 'booking_' . $this->booking->id . '_qrcode.png';
+        $bookingQrFilePath = storage_path('app/temp/' . $bookingQrFileName);
+        $bookingQrPath = $qrcodeService->generateQrCodeFile($this->booking->booking_code, $bookingQrFilePath);
+        if ($bookingQrPath && file_exists($bookingQrPath)) {
+            $attachments[] = \Illuminate\Mail\Mailables\Attachment::fromPath($bookingQrPath)
+                ->as($bookingQrFileName)
+                ->withMime('image/png');
+        }
 
         // Đính kèm QR code cho từng vé (ghế)
         if (method_exists($this->booking, 'tickets')) {

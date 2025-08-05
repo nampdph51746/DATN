@@ -18,6 +18,9 @@ class TicketPrintController extends Controller
             ->where('ticket_code', $ticket_code)
             ->firstOrFail();
 
+        // Validate thời gian in vé
+        $this->validatePrintTime($ticket);
+
         // Sinh QR code base64
         $qrCodeBase64 = null;
         if ($ticket) {
@@ -65,6 +68,28 @@ class TicketPrintController extends Controller
         ]);
 
         return $pdf->download('do-an-do-uong-' . $booking_code . '.pdf');
+    }
+
+    /**
+     * Validate thời gian in vé
+     * Vé chỉ được in trước suất chiếu 1 tiếng và không được in sau khi suất chiếu đã bắt đầu
+     */
+    private function validatePrintTime($ticket)
+    {
+        $showtime = $ticket->showtime;
+        $currentTime = now();
+        $showtimeStart = $showtime->start_time;
+        
+        // Kiểm tra nếu suất chiếu đã bắt đầu
+        if ($currentTime >= $showtimeStart) {
+            abort(403, 'Không thể in vé sau khi suất chiếu đã bắt đầu. Suất chiếu: ' . $showtimeStart->format('d/m/Y H:i'));
+        }
+        
+        // Kiểm tra nếu còn ít hơn 1 tiếng trước suất chiếu
+        $oneHourBeforeShowtime = $showtimeStart->copy()->subHour();
+        if ($currentTime > $oneHourBeforeShowtime) {
+            abort(403, 'Vé chỉ có thể in trước suất chiếu ít nhất 1 tiếng. Suất chiếu: ' . $showtimeStart->format('d/m/Y H:i'));
+        }
     }
 }
 ?>
