@@ -36,6 +36,7 @@ use App\Http\Controllers\Admin\AdminAttributeValueController;
 use App\Http\Controllers\Admin\AdminProductVariantController;
 use App\Http\Controllers\Admin\CustomerRankPromotionController;
 use App\Http\Controllers\Admin\AdminProductCategoriesController;
+use App\Http\Controllers\Admin\AgeLimitController;
 
 
 Route::get('/', [HomeController::class, 'index'])->name('client.home');
@@ -140,13 +141,12 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
     Route::resource('showtimes', ShowtimeController::class)->except(['destroy']);
 
     // Movies routes from HEAD
-    Route::get('/movies', [MovieController::class, 'index'])->name('movies.index');
-    Route::get('/movies/create', [MovieController::class, 'create'])->name('movies.create');
-    Route::post('/movies', [MovieController::class, 'store'])->name('movies.store');
-    Route::get('/movies/{id}', [MovieController::class, 'show'])->name('movies.show');
-    Route::get('/movies/{id}/edit', [MovieController::class, 'edit'])->name('movies.edit');
-    Route::put('/movies/{id}', [MovieController::class, 'update'])->name('movies.update');
-    Route::delete('/movies/{id}', [MovieController::class, 'destroy'])->name('movies.destroy');
+    Route::get('/movies', [AdminMovieController::class, 'index'])->name('movies.index');
+    Route::get('/movies/create', [AdminMovieController::class, 'create'])->name('movies.create');
+    Route::post('/movies', [AdminMovieController::class, 'store'])->name('movies.store');
+    Route::get('/movies/{id}/edit', [AdminMovieController::class, 'edit'])->name('movies.edit');
+    Route::put('/movies/{id}', [AdminMovieController::class, 'update'])->name('movies.update');
+    Route::delete('/movies/{id}', [AdminMovieController::class, 'destroy'])->name('movies.destroy');
 
     // Tạo suất chiếu tự động (HEAD)
     Route::post('/showtimes', [ShowtimeController::class, 'storeAuto'])->name('showtimes.storeAuto');
@@ -198,10 +198,16 @@ Route::prefix('admin/seat-type')->name('seat-type.')->group(function () {
     Route::delete('{id}/force-delete', [AdminSeatTypeController::class, 'forceDelete'])->name('force-delete'); // Xóa vĩnh viễn loại ghế
 });
 
-// Route::delete('admin/movies/bulk-delete', [AdminMovieController::class, 'bulkDelete'])->name('admin.movies.bulkDelete');
+Route::delete('admin/movies/bulk-delete', [AdminMovieController::class, 'bulkDelete'])->name('admin.movies.bulkDelete');
 // Route import ghế từ Excel
 Route::post('admin/seats/import', [App\Http\Controllers\Admin\AdminSeatController::class, 'importExcel'])->name('admin.seats.import');
 Route::delete('admin/genres/bulk-delete', [\App\Http\Controllers\Admin\GenreController::class, 'bulkDelete'])->name('admin.genres.bulkDelete');
+
+// Directors and Actors routes
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::resource('directors', \App\Http\Controllers\Admin\AdminDirectorController::class);
+    Route::resource('actors', \App\Http\Controllers\Admin\AdminActorController::class);
+});
 
 Route::prefix('admin')->name('admin.')->group(function () {
    Route::resource('genres', App\Http\Controllers\Admin\GenreController::class);
@@ -217,7 +223,7 @@ Route::prefix('admin/age-limits')->name('admin.age_limits.')->group(function () 
 });
 Route::get('admin/age-limits', [\App\Http\Controllers\Admin\AgeLimitController::class, 'index'])->name('admin.age_limits.index');
 Route::delete('admin/age-limits/bulk-delete', [\App\Http\Controllers\Admin\AgeLimitController::class, 'bulkDelete'])->name('admin.age_limits.bulkDelete');
-Route::get('admin/movies/{movie}', [AdminMovieController::class, 'show'])->name('admin.movies.show');
+Route::get('admin/movies/{id}', [AdminMovieController::class, 'show'])->name('admin.movies.show');
 Route::get('admin/age-limits', [AgeLimitController::class, 'index'])->name('admin.age_limits.index');
 Route::post('admin/age-limits/bulk-delete', [AgeLimitController::class, 'bulkDelete'])->name('admin.age_limits.bulkDelete');
 

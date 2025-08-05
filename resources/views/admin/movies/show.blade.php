@@ -41,8 +41,18 @@
                         <!-- Cột trái -->
                         <div class="col-md-6 border-end">
                             <ul class="list-unstyled mb-0">
-                                <li class="mb-3"><span class="fw-semibold text-dark">Đạo diễn:</span> {{ $movie->director ?? 'N/A' }}</li>
-                                <li class="mb-3"><span class="fw-semibold text-dark">Diễn viên:</span> {{ $movie->actors ?? 'N/A' }}</li>
+                                <li class="mb-3"><span class="fw-semibold text-dark">Đạo diễn:</span> {{ $movie->director->name ?? 'N/A' }}</li>
+                                <li class="mb-3"><span class="fw-semibold text-dark">Diễn viên:</span> 
+                                    @if($movie->actors->isNotEmpty())
+                                        <div class="d-flex flex-wrap gap-1 mt-1">
+                                            @foreach($movie->actors as $actor)
+                                                <span class="badge bg-primary-subtle text-primary">{{ $actor->name }}</span>
+                                            @endforeach
+                                        </div>
+                                    @else
+                                        N/A
+                                    @endif
+                                </li>
                                 <li class="mb-3"><span class="fw-semibold text-dark">Thời lượng:</span> {{ $movie->duration_minutes ?? 'N/A' }} phút</li>
                                 <li class="mb-3"><span class="fw-semibold text-dark">Ngày phát hành:</span>
                                     {{ $movie->release_date ? \Carbon\Carbon::parse($movie->release_date)->format('d/m/Y') : 'N/A' }}
@@ -55,7 +65,15 @@
                             </ul>
                         </div>
                         <div class="col-lg-6">
-                            <p class="mb-0 fw-medium text-dark fs-16">Diễn viên: <span class="text-muted">{{ $movie->actors ?? 'N/A' }}</span></p>
+                            <p class="mb-0 fw-medium text-dark fs-16">Diễn viên: 
+                                <span class="text-muted">
+                                    @if($movie->actors->isNotEmpty())
+                                        {{ $movie->actors->pluck('name')->join(', ') }}
+                                    @else
+                                        N/A
+                                    @endif
+                                </span>
+                            </p>
                         </div>
                     </div>
                     <div class="row align-items-center g-2 mt-3">

@@ -27,16 +27,239 @@
 </head>
 
 <style>
-		.search-hny {
-			font-size: 14px; /* Giảm kích thước chữ */
-			padding: 8px 16px; /* Giảm padding để nút nhỏ hơn */
-			line-height: 1.5; /* Điều chỉnh chiều cao dòng */
+	.search-hny {
+		font-size: 14px; /* Giảm kích thước chữ */
+		padding: 8px 16px; /* Giảm padding để nút nhỏ hơn */
+		line-height: 1.5; /* Điều chỉnh chiều cao dòng */
+	}
+	.search-hny .fa-search {
+		font-size: 12px; /* Giảm kích thước biểu tượng tìm kiếm */
+		margin-left: 8px; /* Giảm khoảng cách bên trái */
+	}
+
+	/* Custom styles for search and filter section */
+	.search-filter-section {
+		background: rgba(255, 255, 255, 0.1);
+		border-radius: 25px;
+		padding: 8px 15px;
+		backdrop-filter: blur(10px);
+		border: 1px solid rgba(255, 255, 255, 0.2);
+		margin: 0 15px;
+		display: flex !important;
+		align-items: center;
+		flex: 1;
+		max-width: 500px;
+		min-width: 300px;
+	}
+
+	.search-filter-section form {
+		width: 100%;
+		display: flex;
+		align-items: center;
+		gap: 8px;
+	}
+
+	.search-input-wrapper {
+		flex: 1;
+		position: relative;
+	}
+
+	.search-input-wrapper input {
+		background: rgba(255, 255, 255, 0.95);
+		transition: all 0.3s ease;
+		border: 1px solid rgba(255, 255, 255, 0.5);
+		width: 100%;
+		padding: 8px 12px 8px 35px;
+		border-radius: 20px;
+		font-size: 14px;
+	}
+
+	.search-input-wrapper input:focus {
+		background: white;
+		box-shadow: 0 0 10px rgba(255, 107, 107, 0.3);
+		border-color: #ff6b6b;
+		outline: none;
+	}
+
+	.filter-dropdown select {
+		background: rgba(255, 255, 255, 0.95);
+		transition: all 0.3s ease;
+		border: 1px solid rgba(255, 255, 255, 0.5);
+		border-radius: 20px;
+		padding: 8px 12px;
+		font-size: 14px;
+		min-width: 120px;
+	}
+
+	.filter-dropdown select:focus {
+		background: white;
+		box-shadow: 0 0 10px rgba(255, 107, 107, 0.3);
+		border-color: #ff6b6b;
+		outline: none;
+	}
+
+	.search-btn {
+		background: linear-gradient(45deg, #ff6b6b, #ffa500);
+		color: white;
+		border: none;
+		border-radius: 20px;
+		padding: 8px 15px;
+		cursor: pointer;
+		transition: all 0.3s ease;
+	}
+
+	.search-btn:hover {
+		transform: translateY(-1px);
+		box-shadow: 0 4px 8px rgba(255, 107, 107, 0.3);
+	}
+
+	.clear-btn {
+		border: 1px solid #6c757d;
+		color: #6c757d;
+		background: rgba(255, 255, 255, 0.9);
+		border-radius: 20px;
+		padding: 8px 12px;
+		text-decoration: none;
+		transition: all 0.3s ease;
+	}
+
+	.clear-btn:hover {
+		background: #6c757d;
+		color: white;
+		text-decoration: none;
+	}
+
+	/* Compact search section styles - Beautiful Design */
+	.compact-search-section {
+		display: flex !important;
+		align-items: center !important;
+		visibility: visible !important;
+		opacity: 1 !important;
+		position: relative !important;
+		z-index: 999 !important;
+	}
+
+	.compact-search-section form {
+		position: relative;
+	}
+
+	.compact-search-section input {
+		transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+	}
+
+	.compact-search-section input:focus {
+		outline: none !important;
+	}
+
+	.compact-search-section input::placeholder {
+		color: #888;
+		font-style: italic;
+	}
+
+	/* Force show compact search on desktop */
+	@media (min-width: 992px) {
+		.compact-search-section {
+			display: flex !important;
+			visibility: visible !important;
 		}
-		.search-hny .fa-search {
-			font-size: 12px; /* Giảm kích thước biểu tượng tìm kiếm */
-			margin-left: 8px; /* Giảm khoảng cách bên trái */
+		
+		.navbar-collapse {
+			display: flex !important;
 		}
-	</style>
+		
+		.navbar-collapse.collapse {
+			display: flex !important;
+		}
+		
+		.navbar-collapse.collapse:not(.show) {
+			display: flex !important;
+		}
+	}
+
+	/* Responsive styles */
+	@media (max-width: 991px) {
+		.search-filter-section {
+			margin: 10px 0;
+			min-width: 100%;
+			max-width: 100%;
+		}
+		
+		.search-filter-section form {
+			flex-wrap: wrap;
+			gap: 10px;
+		}
+		
+		.search-input-wrapper {
+			flex: 1 1 100%;
+			margin-bottom: 10px;
+		}
+		
+		.filter-dropdown {
+			flex: 1 1 auto;
+		}
+		
+		.filter-dropdown select {
+			min-width: 150px;
+		}
+
+		.navbar-nav {
+			margin-bottom: 15px;
+		}
+
+		/* Hide compact search on mobile, show only main search */
+		.compact-search-section {
+			display: none !important;
+		}
+	}
+
+	@media (max-width: 768px) {
+		.search-filter-section {
+			padding: 10px;
+			border-radius: 15px;
+		}
+		
+		.search-filter-section form {
+			flex-direction: column;
+			align-items: stretch;
+			gap: 15px;
+		}
+		
+		.search-input-wrapper,
+		.filter-dropdown {
+			width: 100%;
+		}
+		
+		.filter-dropdown select {
+			min-width: 100%;
+		}
+
+		.search-btn,
+		.clear-btn {
+			width: 100%;
+			padding: 10px;
+			justify-content: center;
+		}
+
+		.navbar-toggler {
+			margin-left: auto;
+		}
+
+		.compact-search-section {
+			display: none !important;
+		}
+	}
+
+	/* Desktop specific styles for compact search */
+	@media (min-width: 992px) {
+		.compact-search-section input {
+			width: 180px;
+		}
+		
+		.compact-search-section select {
+			min-width: 120px;
+		}
+	}
+</style>
 
 	 <!-- JavaScript cho kiểm tra đăng nhập và hiển thị popup -->
     <script>
@@ -60,6 +283,7 @@
     </script>
 <body>
 	<!-- header -->
+	@if(!request()->routeIs(['login', 'register', 'password.request', 'password.reset', 'password.confirm', 'verification.notice']))
 	<header id="site-header" class="w3l-header fixed-top">
 		<!--/nav-->
 		<nav class="navbar navbar-expand-lg navbar-light fill px-lg-0 py-0 px-3">
@@ -76,12 +300,12 @@
 				</button>
 
 				<div class="collapse navbar-collapse" id="navbarSupportedContent">
-					<ul class="navbar-nav ml-auto">
+					<ul class="navbar-nav mr-auto">
 						<li class="nav-item active">
-							<a class="nav-link" href="index.html">Home</a>
+							<a class="nav-link" href="{{ route('client.home') }}">Home</a>
 						</li>
 						<li class="nav-item">
-							<a class="nav-link" href="movies.html">Movies</a>
+							<a class="nav-link" href="{{ route('client.movies') }}">Movies</a>
 						</li>
 						<li class="nav-item">
 							<a class="nav-link" href="about.html">About</a>
@@ -91,8 +315,10 @@
 						</li>
 					</ul>
 
-					<!--/search-right-->
-					<div class="search-right">
+
+
+					<!--/search-right - Keep original search popup for backwards compatibility -->
+					<div class="search-right" style="display: none;">
 						<a href="#search" class="btn search-hny mr-lg-3 mt-lg-0 mt-4" title="search">Search <span class="fa fa-search ml-3" aria-hidden="true"></span></a>
 						<!-- search popup -->
 						<div id="search" class="pop-overlay">
@@ -112,14 +338,6 @@
 										<li><a href="movies.html">Romantic</a></li>
 										<li><a href="movies.html">Tv-Series</a></li>
 										<li><a href="movies.html">Horror</a></li>
-										<li><a href="movies.html">Action</a></li>
-										<li><a href="movies.html">Drama</a></li>
-										<li><a href="movies.html">Family</a></li>
-										<li><a href="movies.html">Thriller</a></li>
-										<li><a href="movies.html">Commedy</a></li>
-										<li><a href="movies.html">Romantic</a></li>
-										<li><a href="movies.html">Tv-Series</a></li>
-										<li><a href="movies.html">Horror</a></li>
 									</ul>
 								</div>
 							</div>
@@ -127,42 +345,104 @@
 						</div>
 						<!-- /search popup -->
 					</div>
-					<div class="Login_SignUp" id="login" style="font-size: 2rem ; display: inline-block; position: relative;">
-						<a class="nav-link" href="sign_in.html"><i class="fa fa-user-circle-o"></i></a>
-					</div>
 				</div>
-				<!-- toggle switch for light and dark theme -->
-				<div class="mobile-position">
-					<nav class="navigation" style="display: flex; align-items: center; justify-content: flex-end; gap: 30px;">
-						<div class="user-navigation" style="position: relative;">
-							<button onclick="toggleUserDropdown()" class="user-container" style="background: none; border: none; cursor: pointer;">
-								<i class="fa fa-user-circle-o" style="font-size: 30px;"></i>
-							</button>
 
-							<ul id="userDropdown" style=" display: none; position: absolute; right: 0; top: 120%; background-color: white; border: 1px solid #ccc; box-shadow: 0 2px 8px rgba(0,0,0,0.1); list-style: none; padding: 0;
-								margin: 0;
-								min-width: 150px;
-								z-index: 1000;">
+				<!-- Compact Search Section - Beautiful Search Box -->
+				<div class="compact-search-section d-none d-lg-flex" style="display: flex !important; align-items: center; margin-right: 20px; position: relative; z-index: 1000;">
+					<form action="{{ Request::url() }}" method="GET" style="position: relative;">
+						<!-- Preserve other query parameters -->
+						@foreach(request()->except(['search', 'page']) as $key => $value)
+							<input type="hidden" name="{{ $key }}" value="{{ $value }}">
+						@endforeach
+						
+						<!-- Beautiful Search Input -->
+						<div style="position: relative; display: flex; align-items: center;">
+							<input type="text" 
+								   name="search" 
+								   placeholder="Tìm kiếm phim..." 
+								   value="{{ request('search') }}"
+								   style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.85)); 
+								          border: 2px solid rgba(255, 255, 255, 0.3); 
+								          border-radius: 25px; 
+								          padding: 12px 50px 12px 20px; 
+								          font-size: 14px; 
+								          width: 300px; 
+								          height: 45px; 
+								          box-sizing: border-box;
+								          transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+								          backdrop-filter: blur(10px);
+								          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+								          color: #333;
+								          font-weight: 500;"
+								   onfocus="this.style.background='linear-gradient(135deg, #ffffff, #f8f9fa)'; 
+								           this.style.boxShadow='0 8px 25px rgba(255, 107, 107, 0.2), 0 0 0 3px rgba(255, 107, 107, 0.1)'; 
+								           this.style.borderColor='#ff6b6b'; 
+								           this.style.transform='translateY(-2px)';"
+								   onblur="this.style.background='linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.85))'; 
+								          this.style.boxShadow='0 4px 15px rgba(0, 0, 0, 0.1)'; 
+								          this.style.borderColor='rgba(255, 255, 255, 0.3)'; 
+								          this.style.transform='translateY(0)';">
+							
+							<!-- Search Icon with Animation -->
+							<!-- Clear Button (only show when there's search) -->
+							@if(request('search'))
+								<a href="{{ Request::url() }}" 
+								   style="position: absolute; 
+								          right: 50px; 
+								          top: 50%; 
+								          transform: translateY(-50%); 
+								          background: rgba(108, 117, 125, 0.2); 
+								          color: #6c757d; 
+								          border: none; 
+								          border-radius: 50%; 
+								          padding: 0; 
+								          width: 24px; 
+								          height: 24px; 
+								          display: flex; 
+								          align-items: center; 
+								          justify-content: center; 
+								          text-decoration: none; 
+								          transition: all 0.3s ease;"
+								   onmouseover="this.style.background='#6c757d'; this.style.color='white'; this.style.transform='translateY(-50%) scale(1.1)';"
+								   onmouseout="this.style.background='rgba(108, 117, 125, 0.2)'; this.style.color='#6c757d'; this.style.transform='translateY(-50%) scale(1)';">
+									<i class="fa fa-times" style="font-size: 12px;"></i>
+								</a>
+							@endif
+						</div>
+					</form>
+				</div>
 
-								@auth
-								<li><a href="/profile" style="display: block; padding: 10px; text-decoration: none;">Tài khoản</a></li>
+				<!-- User Account Section -->
+				<div class="Login_SignUp ml-3" id="login" style="font-size: 2rem; display: inline-block; position: relative;">
+					<button onclick="toggleUserDropdown()" class="user-container" style="background: none; border: none; cursor: pointer; color: inherit;">
+						<i class="fa fa-user-circle-o" style="font-size: 30px;"></i>
+					</button>
+					
+
+						<ul id="userDropdown" style="display: none; position: absolute; right: 0; top: 120%; background-color: white; border: 1px solid #ccc; box-shadow: 0 2px 8px rgba(0,0,0,0.1); list-style: none; padding: 0; margin: 0; min-width: 150px; z-index: 1000; border-radius: 8px;">
+							@auth
+								<li><a href="/profile" style="display: block; padding: 8px 12px; text-decoration: none; color: #333; font-size: 12px;">Tài khoản</a></li>
 								@hasanyrole(['admin', 'staff'])
-								<li><a href="{{ route('admin.dashboard') }}" style="display: block; padding: 10px; text-decoration: none;">Quản lý</a></li>
+									<li><a href="{{ route('admin.dashboard') }}" style="display: block; padding: 8px 12px; text-decoration: none; color: #333; font-size: 12px;">Quản lý</a></li>
 								@endhasanyrole
 								<li>
 									<form method="POST" action="{{ route('logout') }}" style="margin: 0;">
 										@csrf
-										<button type="submit" style="background: none; border: none; padding: 10px; text-align: left; width: 100%; cursor: pointer;">
+										<button type="submit" style="background: none; border: none; padding: 8px 12px; text-align: left; width: 100%; cursor: pointer; color: #333; font-size: 12px;">
 											Đăng xuất
 										</button>
 									</form>
 								</li>
 							@else
-								<li><a href="{{ route('login') }}" style="display: block; padding: 10px; text-decoration: none;">Đăng nhập</a></li>
-								<li><a href="{{ route('register') }}" style="display: block; padding: 10px; text-decoration: none;">Đăng ký</a></li>
+								<li><a href="{{ route('login') }}" style="display: block; padding: 8px 12px; text-decoration: none; color: #333; font-size: 12px;">Đăng nhập</a></li>
+								<li><a href="{{ route('register') }}" style="display: block; padding: 8px 12px; text-decoration: none; color: #333; font-size: 12px;">Đăng ký</a></li>
 							@endauth
-							</ul>
-						</div>
+						</ul>
+					</div>
+				</div>
+				<!-- toggle switch for light and dark theme -->
+				<div class="mobile-position">
+					<nav class="navigation" style="display: flex; align-items: center; justify-content: flex-end; gap: 30px;">
 						<div class="theme-switch-wrapper">
 							<label class="theme-switch" for="checkbox">
 								<input type="checkbox" id="checkbox">
@@ -177,6 +457,7 @@
 			</div>
 		</nav>
 	</header>
+	@endif
 	<!-- main-slider -->
 	@yield('content')
 </body>
@@ -195,6 +476,60 @@
 		const button = document.querySelector('.user-container');
 		if (!button.contains(e.target) && !dropdown.contains(e.target)) {
 			dropdown.style.display = 'none';
+		}
+	});
+
+	// Enhanced search functionality
+	document.addEventListener('DOMContentLoaded', function() {
+		// Force show navbar collapse and compact search on desktop
+		function ensureNavbarVisible() {
+			if (window.innerWidth >= 992) {
+				const navbarCollapse = document.getElementById('navbarSupportedContent');
+				const compactSearch = document.querySelector('.compact-search-section');
+				
+				if (navbarCollapse) {
+					navbarCollapse.classList.add('show');
+					navbarCollapse.style.display = 'flex';
+				}
+				
+				if (compactSearch) {
+					compactSearch.style.display = 'flex';
+					compactSearch.style.visibility = 'visible';
+					compactSearch.style.opacity = '1';
+				}
+			}
+		}
+		
+		// Run immediately and on resize
+		ensureNavbarVisible();
+		window.addEventListener('resize', ensureNavbarVisible);
+		
+		// Search functionality for compact search
+		const compactSearchForm = document.querySelector('.compact-search-section form');
+		const compactSearchInput = compactSearchForm ? compactSearchForm.querySelector('input[name="search"]') : null;
+		
+		if (compactSearchInput) {
+			// Submit on Enter key
+			compactSearchInput.addEventListener('keypress', function(e) {
+				if (e.key === 'Enter') {
+					e.preventDefault();
+					compactSearchForm.submit();
+				}
+			});
+			
+			// Add search suggestions (optional enhancement)
+			let searchTimeout;
+			compactSearchInput.addEventListener('input', function() {
+				clearTimeout(searchTimeout);
+				const query = this.value.trim();
+				
+				if (query.length >= 2) {
+					searchTimeout = setTimeout(() => {
+						// You can implement live search suggestions here
+						console.log('Searching for:', query);
+					}, 300);
+				}
+			});
 		}
 	});
 </script>
