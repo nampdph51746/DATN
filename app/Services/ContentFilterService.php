@@ -54,12 +54,12 @@ class ContentFilterService
             $shouldPending = true;
         }
 
-        // 4. Kiểm tra độ tin cậy người dùng
-        $userTrustIssue = $this->checkUserTrust($userId);
-        if ($userTrustIssue) {
-            $reasons[] = $userTrustIssue;
-            $shouldPending = true;
-        }
+        // 4. Bỏ kiểm tra độ tin cậy người dùng - chỉ focus vào nội dung
+        // $userTrustIssue = $this->checkUserTrust($userId);
+        // if ($userTrustIssue) {
+        //     $reasons[] = $userTrustIssue;
+        //     $shouldPending = true;
+        // }
 
         // 5. Kiểm tra spam (ký tự lặp lại)
         $spamCheck = $this->checkSpam($content);
@@ -157,13 +157,7 @@ class ContentFilterService
             return 'Không tìm thấy thông tin người dùng';
         }
 
-        // Kiểm tra người dùng mới
-        $newUserThreshold = $this->userTrustConfig['new_user_threshold'] ?? 7;
-        $daysSinceRegistration = $user->created_at->diffInDays(now());
-        
-        if ($daysSinceRegistration < $newUserThreshold) {
-            return "Tài khoản mới (< {$newUserThreshold} ngày)";
-        }
+        // Bỏ kiểm tra người dùng mới - cho phép tất cả user đăng ký mới
 
         // Kiểm tra số lượng review đã được duyệt
         $minApprovedReviews = $this->userTrustConfig['min_approved_reviews'] ?? 3;

@@ -166,6 +166,12 @@
                         </form>
                     @endif
 
+                    @if($review->status !== 'approved')
+                        <button type="button" class="btn btn-warning btn-block mb-2" onclick="showForceApproveModal()">
+                            <i class="fas fa-exclamation-triangle"></i> Ép duyệt (Force Approve)
+                        </button>
+                    @endif
+
                     <button type="button" class="btn btn-danger btn-block" onclick="deleteReview()">
                         <i class="fas fa-trash"></i> Xóa đánh giá
                     </button>
@@ -208,6 +214,45 @@
     @method('DELETE')
 </form>
 
+<!-- Force Approve Modal -->
+<div class="modal fade" id="forceApproveModal" tabindex="-1" role="dialog" aria-labelledby="forceApproveModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-white">
+                <h5 class="modal-title" id="forceApproveModalLabel">
+                    <i class="fas fa-exclamation-triangle"></i> Ép duyệt bình luận
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form method="POST" action="{{ route('admin.reviews.force-approve', $review->id) }}">
+                @csrf
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <strong>Cảnh báo:</strong> Bạn đang chuẩn bị ép duyệt một bình luận có thể chứa nội dung không phù hợp. 
+                        Vui lòng cung cấp lý do rõ ràng cho hành động này.
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="force_reason">Lý do ép duyệt <span class="text-danger">*</span></label>
+                        <textarea name="force_reason" id="force_reason" class="form-control" rows="4" 
+                                  placeholder="Ví dụ: Sau khi xem xét kỹ, nội dung này không vi phạm quy định nghiêm trọng..."
+                                  required></textarea>
+                        <small class="form-text text-muted">Tối thiểu 10 ký tự</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-check"></i> Xác nhận ép duyệt
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 @endsection
 
 @section('styles')
@@ -239,6 +284,10 @@ function deleteReview() {
     if (confirm('Bạn có chắc muốn xóa đánh giá này? Hành động này không thể hoàn tác!')) {
         $('#deleteForm').submit();
     }
+}
+
+function showForceApproveModal() {
+    $('#forceApproveModal').modal('show');
 }
 </script>
 @endsection

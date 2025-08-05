@@ -38,6 +38,18 @@ class AdminReviewController extends Controller
             $query->where('rating_star', $request->rating);
         }
 
+        // Lọc theo loại xử lý (tự động/thủ công)
+        if ($request->has('auto_type') && $request->auto_type !== '') {
+            if ($request->auto_type === 'auto') {
+                $query->where('admin_note', 'like', 'Tự động chờ duyệt%');
+            } elseif ($request->auto_type === 'manual') {
+                $query->where(function($q) {
+                    $q->whereNull('admin_note')
+                      ->orWhere('admin_note', 'not like', 'Tự động chờ duyệt%');
+                });
+            }
+        }
+
         // Tìm kiếm theo tên user hoặc comment
         if ($request->has('search') && $request->search !== '') {
             $search = $request->search;
@@ -54,13 +66,24 @@ class AdminReviewController extends Controller
         // Lấy danh sách phim để filter
         $movies = Movie::select('id', 'name')->orderBy('name')->get();
 
-        // Thống kê
+        // Thống kê (refresh mỗi lần load)
         $stats = [
             'total' => Review::count(),
             'approved' => Review::where('status', 'approved')->count(),
             'pending' => Review::where('status', 'pending')->count(),
             'rejected' => Review::where('status', 'rejected')->count(),
         ];
+
+        // Force refresh nếu có request refresh
+        if ($request->has('refresh')) {
+            // Clear any potential cache
+            if (function_exists('opcache_reset')) {
+                opcache_reset();
+            }
+            
+            // Recalculate all movie ratings
+            $this->recalculateAllRatingsInternal();
+        }
 
         return view('admin.reviews.index', compact('reviews', 'movies', 'stats'));
     }
@@ -81,6 +104,19 @@ class AdminReviewController extends Controller
 
         $review = Review::findOrFail($id);
         $oldStatus = $review->status;
+        
+        // Kiểm tra nội dung nhạy cảm khi admin muốn duyệt
+        if ($request->status === 'approved' && $review->comment) {
+            $contentCheck = $this->contentFilterService->checkContent($review->comment, $review->user_id);
+            
+            if ($contentCheck['auto_flagged']) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', 'Không thể duyệt bình luận này vì chứa nội dung không phù hợp: ' . 
+                           implode(', ', $contentCheck['reasons']) . 
+                           '. Vui lòng từ chối hoặc để ở trạng thái chờ duyệt.');
+            }
+        }
         
         $review->update([
             'status' => $request->status,
@@ -108,6 +144,36 @@ class AdminReviewController extends Controller
 
         $reviews = Review::whereIn('id', $request->review_ids)->get();
         $movieIds = $reviews->pluck('movie_id')->unique();
+        
+        // Kiểm tra nội dung nhạy cảm khi admin muốn duyệt hàng loạt
+        if ($request->status === 'approved') {
+            $flaggedReviews = [];
+            
+            foreach ($reviews as $review) {
+                if ($review->comment) {
+                    $contentCheck = $this->contentFilterService->checkContent($review->comment, $review->user_id);
+                    
+                    if ($contentCheck['auto_flagged']) {
+                        $flaggedReviews[] = [
+                            'id' => $review->id,
+                            'user' => $review->user->name,
+                            'reasons' => $contentCheck['reasons']
+                        ];
+                    }
+                }
+            }
+            
+            if (!empty($flaggedReviews)) {
+                $errorMessage = 'Không thể duyệt một số bình luận vì chứa nội dung không phù hợp:<br>';
+                foreach ($flaggedReviews as $flagged) {
+                    $errorMessage .= "- ID #{$flagged['id']} ({$flagged['user']}): " . implode(', ', $flagged['reasons']) . '<br>';
+                }
+                $errorMessage .= 'Vui lòng xem xét từng bình luận riêng lẻ.';
+                
+                return redirect()->back()
+                    ->with('error', $errorMessage);
+            }
+        }
 
         Review::whereIn('id', $request->review_ids)->update([
             'status' => $request->status,
@@ -193,6 +259,23 @@ class AdminReviewController extends Controller
             ->with('success', "Đã tính lại điểm trung bình cho {$updated} phim!");
     }
 
+    private function recalculateAllRatingsInternal()
+    {
+        $movies = Movie::whereHas('reviews')->get();
+        
+        foreach ($movies as $movie) {
+            $averageRating = Review::where('movie_id', $movie->id)
+                ->where('status', 'approved')
+                ->avg('rating_star');
+
+            $newRating = $averageRating ? round($averageRating, 1) : 0;
+            
+            if ($movie->average_rating != $newRating) {
+                $movie->update(['average_rating' => $newRating]);
+            }
+        }
+    }
+
     public function contentFilterSettings()
     {
         $sensitiveWords = $this->contentFilterService->getSensitiveWords();
@@ -239,6 +322,9 @@ class AdminReviewController extends Controller
 
         $contentCheck = $this->contentFilterService->checkContent($review->comment, $review->user_id);
         
+        // Đề xuất trạng thái mới dựa trên kết quả kiểm tra
+        $suggestedStatus = $contentCheck['auto_flagged'] ? 'pending' : 'approved';
+        
         $review->update([
             'admin_note' => $contentCheck['auto_flagged'] 
                 ? 'Kiểm tra lại: ' . implode(', ', $contentCheck['reasons'])
@@ -247,8 +333,67 @@ class AdminReviewController extends Controller
             'reviewed_at' => now()
         ]);
 
+        $statusText = $contentCheck['auto_flagged'] ? 'Chờ duyệt (có vấn đề)' : 'Có thể duyệt (sạch)';
+
         return redirect()->back()
-            ->with('success', 'Đã kiểm tra lại review. Trạng thái đề xuất: ' . 
-                   ($contentCheck['auto_flagged'] ? 'Pending' : 'Approved'));
+            ->with('success', 'Đã kiểm tra lại review. Kết quả: ' . $statusText . 
+                   ($contentCheck['auto_flagged'] ? '. Lý do: ' . implode(', ', $contentCheck['reasons']) : ''));
+    }
+
+    public function forceApprove(Request $request, $id)
+    {
+        $request->validate([
+            'force_reason' => 'required|string|min:10|max:500'
+        ], [
+            'force_reason.required' => 'Vui lòng nhập lý do ép duyệt.',
+            'force_reason.min' => 'Lý do phải có ít nhất 10 ký tự.',
+            'force_reason.max' => 'Lý do không được vượt quá 500 ký tự.'
+        ]);
+
+        $review = Review::findOrFail($id);
+        $oldStatus = $review->status;
+        
+        $review->update([
+            'status' => 'approved',
+            'admin_note' => 'ÉP DUYỆT - Lý do: ' . $request->force_reason,
+            'reviewed_by' => Auth::id(),
+            'reviewed_at' => now()
+        ]);
+
+        // Cập nhật lại average rating của phim nếu status thay đổi
+        if ($oldStatus !== 'approved') {
+            $this->updateMovieAverageRating($review->movie_id);
+        }
+
+        return redirect()->route('admin.reviews.show', $id)
+            ->with('warning', 'Đã ép duyệt bình luận. Lý do: ' . $request->force_reason);
+    }
+
+    public function resetAllStats()
+    {
+        try {
+            // Reset all movie ratings
+            $movies = Movie::all();
+            foreach ($movies as $movie) {
+                $averageRating = Review::where('movie_id', $movie->id)
+                    ->where('status', 'approved')
+                    ->avg('rating_star');
+
+                $movie->update([
+                    'average_rating' => $averageRating ? round($averageRating, 1) : 0
+                ]);
+            }
+
+            // Clear any potential cache
+            if (function_exists('opcache_reset')) {
+                opcache_reset();
+            }
+
+            return redirect()->route('admin.reviews.index')
+                ->with('success', 'Đã reset tất cả thống kê thành công!');
+        } catch (\Exception $e) {
+            return redirect()->route('admin.reviews.index')
+                ->with('error', 'Có lỗi xảy ra khi reset thống kê: ' . $e->getMessage());
+        }
     }
 }

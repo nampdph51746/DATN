@@ -316,12 +316,14 @@ Route::prefix('admin/reviews')->name('admin.reviews.')->group(function () {
     Route::post('/add-sensitive-word', [App\Http\Controllers\Admin\AdminReviewController::class, 'addSensitiveWord'])->name('add-sensitive-word');
     Route::delete('/remove-sensitive-word', [App\Http\Controllers\Admin\AdminReviewController::class, 'removeSensitiveWord'])->name('remove-sensitive-word');
     Route::post('/{review}/recheck', [App\Http\Controllers\Admin\AdminReviewController::class, 'recheckReview'])->name('recheck');
+    Route::post('/{review}/force-approve', [App\Http\Controllers\Admin\AdminReviewController::class, 'forceApprove'])->name('force-approve');
     Route::get('/{review}', [App\Http\Controllers\Admin\AdminReviewController::class, 'show'])->name('show');
     Route::patch('/{review}/status', [App\Http\Controllers\Admin\AdminReviewController::class, 'updateStatus'])->name('update-status');
     Route::post('/bulk-status', [App\Http\Controllers\Admin\AdminReviewController::class, 'bulkUpdateStatus'])->name('bulk-status');
     Route::delete('/{review}', [App\Http\Controllers\Admin\AdminReviewController::class, 'destroy'])->name('destroy');
     Route::delete('/bulk-delete', [App\Http\Controllers\Admin\AdminReviewController::class, 'bulkDelete'])->name('bulk-delete');
     Route::get('/recalculate-ratings/all', [App\Http\Controllers\Admin\AdminReviewController::class, 'recalculateAllRatings'])->name('recalculate-all');
+    Route::get('/reset-stats/all', [App\Http\Controllers\Admin\AdminReviewController::class, 'resetAllStats'])->name('reset-stats');
 });
 
 // Barcode scanning routes

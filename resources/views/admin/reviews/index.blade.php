@@ -6,7 +6,10 @@
 <div class="container-fluid">
     <!-- Page Heading -->
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Quản lý đánh giá</h1>
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">Quản lý đánh giá</h1>
+            <small class="text-muted">Cập nhật lần cuối: {{ now()->format('H:i:s d/m/Y') }}</small>
+        </div>
         <div class="btn-group" role="group">
             <a href="{{ route('admin.reviews.content-filter') }}" class="btn btn-secondary btn-sm">
                 <i class="fas fa-filter"></i> Lọc nội dung
@@ -17,6 +20,13 @@
             <a href="{{ route('admin.reviews.recalculate-all') }}" class="btn btn-warning btn-sm" 
                onclick="return confirm('Bạn có chắc muốn tính lại điểm trung bình cho tất cả phim?')">
                 <i class="fas fa-calculator"></i> Tính lại điểm TB
+            </a>
+            <a href="{{ route('admin.reviews.reset-stats') }}" class="btn btn-danger btn-sm" 
+               onclick="return confirm('Bạn có chắc muốn reset tất cả thống kê? Thao tác này sẽ cập nhật lại toàn bộ dữ liệu.')">
+                <i class="fas fa-sync-alt"></i> Reset Stats
+            </a>
+            <a href="{{ route('admin.reviews.index', ['refresh' => 1]) }}" class="btn btn-success btn-sm">
+                <i class="fas fa-refresh"></i> Làm mới
             </a>
         </div>
     </div>
@@ -127,7 +137,15 @@
                             @endfor
                         </select>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
+                        <label for="auto_type">Loại xử lý</label>
+                        <select name="auto_type" id="auto_type" class="form-control">
+                            <option value="">Tất cả</option>
+                            <option value="auto" {{ request('auto_type') == 'auto' ? 'selected' : '' }}>Tự động</option>
+                            <option value="manual" {{ request('auto_type') == 'manual' ? 'selected' : '' }}>Thủ công</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
                         <label for="search">Tìm kiếm</label>
                         <input type="text" name="search" id="search" class="form-control" 
                                placeholder="Tên người dùng hoặc bình luận..." value="{{ request('search') }}">
@@ -213,9 +231,17 @@
                                         @switch($review->status)
                                             @case('approved')
                                                 <span class="badge bg-success text-white">Đã duyệt</span>
+                                                @if($review->admin_note && str_contains($review->admin_note, 'ÉP DUYỆT'))
+                                                    <br><small class="badge bg-warning text-dark mt-1" 
+                                                              title="Admin đã ép duyệt bình luận này">ÉP DUYỆT</small>
+                                                @endif
                                                 @break
                                             @case('pending')
                                                 <span class="badge bg-warning text-dark">Chờ duyệt</span>
+                                                @if($review->admin_note && str_contains($review->admin_note, 'Tự động chờ duyệt'))
+                                                    <br><small class="badge bg-info text-white mt-1" 
+                                                              title="Hệ thống tự động đưa vào chờ duyệt vì: {{ strip_tags($review->admin_note) }}">TỰ ĐỘNG</small>
+                                                @endif
                                                 @break
                                             @case('rejected')
                                                 <span class="badge bg-danger text-white">Từ chối</span>
