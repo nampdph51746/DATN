@@ -7,6 +7,7 @@ use App\Models\Movie;
 use App\Models\Product;
 use App\Models\SeatType;
 use App\Models\Showtime;
+use App\Models\Review;
 use App\Enums\MovieStatus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -66,6 +67,45 @@ class HomeController extends Controller
         // Lấy thông tin phim (kèm quốc gia, giới hạn độ tuổi)
         $movie = Movie::with(['country', 'ageLimit', 'genres'])->findOrFail($id);
 
+        // Lấy reviews đã được duyệt
+        $reviews = Review::with('user')
+            ->where('movie_id', $id)
+            ->where('status', 'approved')
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get();
+
+        // Kiểm tra user hiện tại có thể review không
+        $canReview = false;
+        $reviewMessage = '';
+        
+        if (Auth::check()) {
+            $user = Auth::user();
+            
+            // Kiểm tra đã xem phim chưa
+            $hasWatchedMovie = Booking::where('user_id', $user->id)
+                ->whereHas('showtime', function ($query) use ($id) {
+                    $query->where('movie_id', $id);
+                })
+                ->where('status', 'confirmed')
+                ->exists();
+
+            // Kiểm tra đã đánh giá chưa
+            $hasReviewed = Review::where('user_id', $user->id)
+                ->where('movie_id', $id)
+                ->exists();
+
+            if (!$hasWatchedMovie) {
+                $reviewMessage = 'Bạn cần xem phim này trước khi có thể đánh giá.';
+            } elseif ($hasReviewed) {
+                $reviewMessage = 'Bạn đã đánh giá phim này rồi.';
+            } else {
+                $canReview = true;
+            }
+        } else {
+            $reviewMessage = 'Vui lòng đăng nhập để đánh giá.';
+        }
+
         // Lấy danh sách phòng
         $rooms = Room::all();
 
@@ -93,7 +133,10 @@ class HomeController extends Controller
             'showtimes',
             'rooms',
             'dates',
-            'selectedDate'
+            'selectedDate',
+            'reviews',
+            'canReview',
+            'reviewMessage'
         ));
     }
 

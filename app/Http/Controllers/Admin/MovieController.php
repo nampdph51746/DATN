@@ -237,7 +237,7 @@ class MovieController extends Controller
                 'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
                 'genre_ids' => 'required|array|min:1',
                 'genre_ids.*' => 'exists:genres,id',
-                'average_rating' => 'nullable|numeric|min:0|max:10',
+                'average_rating' => 'nullable|numeric|min:0|max:5',
                 'description' => 'nullable|string',
             ], [
                 // Thông báo lỗi giống bạn đã cung cấp

@@ -42,6 +42,14 @@ Route::get('/', [HomeController::class, 'index'])->name('client.home');
 Route::get('/movies', [HomeController::class, 'movies'])->name('client.movies');
 Route::get('/movies/{id}', [HomeController::class, 'show'])->name('movies.show');
 Route::get('/movies/{id}/ticket-booking', [HomeController::class, 'ticketBooking'])->name('client.movies.ticketBooking');
+
+// Review routes
+Route::middleware('auth')->group(function () {
+    Route::post('/movies/{movie}/reviews', [App\Http\Controllers\Client\ReviewController::class, 'store'])->name('reviews.store');
+    Route::get('/movies/{movie}/reviews/check', [App\Http\Controllers\Client\ReviewController::class, 'checkUserCanReview'])->name('reviews.check');
+});
+Route::get('/movies/{movie}/reviews', [App\Http\Controllers\Client\ReviewController::class, 'getReviews'])->name('reviews.get');
+
 Route::get('/showtimes/{showtimeId}/seat-map', [SeatController::class, 'showSeatMap'])->name('client.seats.map');
 Route::post('/showtimes/{showtimeId}/reserve', [SeatController::class, 'reserveSeat'])->name('client.seats.reserve');
 Route::get('/api/seats/status/{showtimeId}', [SeatController::class, 'getSeatStatus']);
@@ -299,6 +307,21 @@ Route::get('/test-barcode-api', function () {
         'barcode' => $barcode,
         'booking_code' => 'BK1754063915'
     ]);
+});
+
+// Admin Reviews Routes
+Route::prefix('admin/reviews')->name('admin.reviews.')->group(function () {
+    Route::get('/', [App\Http\Controllers\Admin\AdminReviewController::class, 'index'])->name('index');
+    Route::get('/content-filter', [App\Http\Controllers\Admin\AdminReviewController::class, 'contentFilterSettings'])->name('content-filter');
+    Route::post('/add-sensitive-word', [App\Http\Controllers\Admin\AdminReviewController::class, 'addSensitiveWord'])->name('add-sensitive-word');
+    Route::delete('/remove-sensitive-word', [App\Http\Controllers\Admin\AdminReviewController::class, 'removeSensitiveWord'])->name('remove-sensitive-word');
+    Route::post('/{review}/recheck', [App\Http\Controllers\Admin\AdminReviewController::class, 'recheckReview'])->name('recheck');
+    Route::get('/{review}', [App\Http\Controllers\Admin\AdminReviewController::class, 'show'])->name('show');
+    Route::patch('/{review}/status', [App\Http\Controllers\Admin\AdminReviewController::class, 'updateStatus'])->name('update-status');
+    Route::post('/bulk-status', [App\Http\Controllers\Admin\AdminReviewController::class, 'bulkUpdateStatus'])->name('bulk-status');
+    Route::delete('/{review}', [App\Http\Controllers\Admin\AdminReviewController::class, 'destroy'])->name('destroy');
+    Route::delete('/bulk-delete', [App\Http\Controllers\Admin\AdminReviewController::class, 'bulkDelete'])->name('bulk-delete');
+    Route::get('/recalculate-ratings/all', [App\Http\Controllers\Admin\AdminReviewController::class, 'recalculateAllRatings'])->name('recalculate-all');
 });
 
 // Barcode scanning routes

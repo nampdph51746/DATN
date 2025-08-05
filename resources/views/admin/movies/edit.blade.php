@@ -214,8 +214,8 @@
                         <div class="row">
                             <div class="col-lg-6">
                                 <div class="mb-3">
-                                    <label for="average_rating" class="form-label">Điểm đánh giá (0-10)</label>
-                                    <input type="number" name="average_rating" id="average_rating" class="form-control @error('average_rating') is-invalid @enderror" value="{{ old('average_rating', $movie->average_rating) }}" step="0.1" min="0" max="10">
+                                    <label for="average_rating" class="form-label">Điểm đánh giá (0-5)</label>
+                                    <input type="number" name="average_rating" id="average_rating" class="form-control @error('average_rating') is-invalid @enderror" value="{{ old('average_rating', $movie->average_rating) }}" step="0.1" min="0" max="5">
                                     @error('average_rating')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror

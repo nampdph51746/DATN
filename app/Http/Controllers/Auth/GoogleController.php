@@ -27,6 +27,9 @@ class GoogleController extends Controller
             $userRank = CustomerRank::firstOrCreate(['name' => 'Đồng']);
 
             // Tìm hoặc tạo người dùng trong cơ sở dữ liệu
+            if (empty($googleUser->email)) {
+                return redirect('/login')->with('error', 'Không lấy được email từ Google.');
+            }
             $user = User::updateOrCreate(
                 ['email' => $googleUser->email],
                 [
