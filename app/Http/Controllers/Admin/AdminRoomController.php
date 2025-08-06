@@ -213,10 +213,15 @@ class AdminRoomController extends Controller
             'allowed_seat_types_names' => $allowedSeatTypes->pluck('name')->toArray()
         ]);
 
+        // Kiểm tra xem phòng có suất chiếu đang hoạt động không
+        $hasActiveShowtimes = \App\Models\Showtime::where('room_id', $room->id)
+            ->whereIn('status', ['scheduled', 'ongoing'])
+            ->exists();
+
         return view('admin.rooms.show', compact(
             'room', 'allowedSeatTypes', 'seats', 'rows', 'maxSeatsPerRow', 'maxRows',
             'seatPercentages', 'existingSeatsByType', 'requiredSeats', 'next_seat_type_id',
-            'seatTypesOrder', 'showtimes', 'showtime_id', 'layoutSuggestions'
+            'seatTypesOrder', 'showtimes', 'showtime_id', 'layoutSuggestions', 'hasActiveShowtimes'
         ));
     }
 
@@ -428,5 +433,62 @@ class AdminRoomController extends Controller
                str_contains($typeName, 'sweetbox') || 
                str_contains($typeName, 'bed') ||
                str_contains($typeName, 'sofa');
+    }
+
+    /**
+     * Cập nhật sức chứa phòng
+     */
+    public function updateCapacity(Request $request, $room)
+    {
+        $room = Room::findOrFail($room);
+        
+        \Log::info('updateCapacity called', [
+            'room_id' => $room->id,
+            'request_data' => $request->all(),
+            'method' => $request->method()
+        ]);
+
+        $request->validate([
+            'capacity' => 'required|integer|min:1|max:1000'
+        ]);
+
+        $newCapacity = $request->capacity;
+        $currentSeats = $room->seats()->count();
+
+        \Log::info('Capacity update details', [
+            'room_id' => $room->id,
+            'current_capacity' => $room->capacity,
+            'new_capacity' => $newCapacity,
+            'current_seats' => $currentSeats
+        ]);
+
+        // Kiểm tra nếu sức chứa mới nhỏ hơn số ghế hiện tại
+        if ($newCapacity < $currentSeats) {
+            \Log::warning('Capacity update failed - too many seats', [
+                'new_capacity' => $newCapacity,
+                'current_seats' => $currentSeats
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => "Không thể giảm sức chứa xuống {$newCapacity} vì phòng hiện có {$currentSeats} ghế. Vui lòng xóa ghế trước."
+            ], 400);
+        }
+
+        $room->update(['capacity' => $newCapacity]);
+
+        \Log::info('Capacity updated successfully', [
+            'room_id' => $room->id,
+            'old_capacity' => $room->getOriginal('capacity'),
+            'new_capacity' => $room->capacity,
+            'room_fresh' => $room->fresh()->capacity
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => "Đã cập nhật sức chứa phòng thành {$newCapacity}",
+            'new_capacity' => $newCapacity,
+            'available_seats' => $newCapacity - $currentSeats
+        ]);
     }
 }

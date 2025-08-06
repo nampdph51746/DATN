@@ -34,7 +34,7 @@
         <div class="col-xl-9 col-lg-8">
             <div class="card">
                 <div class="card-header">
-                    <h4 class="card-title">Thông tin phim</h4>
+                    <h4 class="card-title">Chỉnh sửa phim: {{ $movie->name }}</h4>
                 </div>
                 <div class="card-body">
                     <form id="movieEditForm" action="{{ route('admin.movies.update', ['id' => $movie->id]) }}" method="POST" enctype="multipart/form-data">
@@ -52,9 +52,14 @@
                             </div>
                             <div class="col-lg-6">
                                 <div class="mb-3">
-                                    <label for="director" class="form-label">Đạo diễn</label>
-                                    <input type="text" name="director" id="director" class="form-control @error('director') is-invalid @enderror" value="{{ old('director', $movie->director) }}">
-                                    @error('director')
+                                    <label for="director_id" class="form-label">Đạo diễn <span class="text-danger">*</span></label>
+                                    <select name="director_id" id="director_id" class="form-control @error('director_id') is-invalid @enderror" required>
+                                        <option value="">Chọn đạo diễn</option>
+                                        @foreach ($directors as $director)
+                                            <option value="{{ $director->id }}" {{ old('director_id', $movie->director_id) == $director->id ? 'selected' : '' }}>{{ $director->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('director_id')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
@@ -63,9 +68,13 @@
                         <div class="row">
                             <div class="col-lg-6">
                                 <div class="mb-3">
-                                    <label for="actors" class="form-label">Diễn viên</label>
-                                    <input type="text" name="actors" id="actors" class="form-control @error('actors') is-invalid @enderror" value="{{ old('actors', $movie->actors) }}">
-                                    @error('actors')
+                                    <label for="actor_ids" class="form-label">Diễn viên <span class="text-danger">*</span></label>
+                                    <select name="actor_ids[]" id="actor_ids" class="form-control select2 @error('actor_ids') is-invalid @enderror" multiple required>
+                                        @foreach ($actors as $actor)
+                                            <option value="{{ $actor->id }}" {{ in_array($actor->id, old('actor_ids', $movie->actors->pluck('id')->toArray())) ? 'selected' : '' }}>{{ $actor->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('actor_ids')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
@@ -233,6 +242,10 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="d-flex justify-content-end gap-2">
+                            <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                            <a href="{{ route('admin.movies.index') }}" class="btn btn-outline-secondary">Hủy</a>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -251,46 +264,168 @@
 .select2-container--default .select2-selection--multiple {
     min-height: 38px;
     border: 1px solid #ced4da;
-    border-radius: 0.25rem;
+    border-radius: 0.375rem;
     padding: 4px 8px;
     background-color: #fff;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
+
+.select2-container--default .select2-selection--multiple:focus-within {
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.select2-container--default .select2-selection--single {
+    min-height: 38px;
+    border: 1px solid #ced4da;
+    border-radius: 0.375rem;
+    background-color: #fff;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    line-height: 36px;
+    padding-left: 12px;
+    color: #495057;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 36px;
+    right: 10px;
+}
+
 .select2-container--default .select2-selection--multiple .select2-selection__choice {
     background-color: #0d6efd;
     color: #fff;
     border: none;
-    border-radius: 0.2rem;
-    padding: 2px 6px;
+    border-radius: 0.25rem;
+    padding: 3px 8px;
     margin: 2px 3px;
-    font-size: 0.85rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
 }
+
 .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
     margin-right: 4px;
     color: #fff;
     font-weight: bold;
     cursor: pointer;
+    font-size: 1rem;
+    opacity: 0.8;
+    transition: opacity 0.2s ease;
 }
+
+.select2-container--default .select2-selection--multiple .select2-selection__choice__remove:hover {
+    opacity: 1;
+}
+
 .select2-container--default .select2-selection--multiple .select2-selection__rendered {
     display: flex;
     flex-wrap: wrap;
     gap: 4px;
+    padding: 2px;
 }
+
 .select2-container {
     width: 100% !important;
 }
+
+.select2-dropdown {
+    border: 1px solid #ced4da;
+    border-radius: 0.375rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.select2-container--default .select2-results__option {
+    padding: 8px 12px;
+    font-size: 0.875rem;
+    transition: background-color 0.15s ease;
+}
+
+.select2-container--default .select2-results__option--highlighted {
+    background-color: #0d6efd;
+    color: #fff;
+}
+
+.select2-container--default .select2-search--dropdown .select2-search__field {
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    padding: 6px 12px;
+    font-size: 0.875rem;
+}
+
 .img-thumbnail {
     max-width: 150px;
     margin-top: 10px;
+    border-radius: 0.375rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+/* Custom styles cho form labels */
+.form-label {
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.5rem;
+}
+
+.text-danger {
+    color: #dc3545 !important;
+}
+
+/* Responsive cho mobile */
+@media (max-width: 768px) {
+    .select2-container--default .select2-selection--multiple .select2-selection__choice {
+        font-size: 0.75rem;
+        padding: 2px 6px;
+    }
+    
+    .img-thumbnail {
+        max-width: 120px;
+    }
 }
 </style>
 
 <script>
 $(document).ready(function() {
+    // Khởi tạo Select2 cho thể loại
     $('#genre_ids').select2({
         placeholder: 'Chọn thể loại (gõ để tìm)',
         theme: 'bootstrap4',
         allowClear: true,
         width: 'resolve',
+    });
+
+    // Khởi tạo Select2 cho diễn viên
+    $('#actor_ids').select2({
+        placeholder: 'Chọn diễn viên (gõ để tìm)',
+        theme: 'bootstrap4',
+        allowClear: true,
+        width: 'resolve',
+        templateResult: function(data) {
+            if (data.loading) return data.text;
+            return $('<span><i class="bx bx-user me-2 text-primary"></i>' + data.text + '</span>');
+        },
+        templateSelection: function(data) {
+            return data.text;
+        }
+    });
+
+    // Khởi tạo Select2 cho đạo diễn
+    $('#director_id').select2({
+        placeholder: 'Chọn đạo diễn (gõ để tìm)', 
+        theme: 'bootstrap4',
+        allowClear: true,
+        width: 'resolve',
+        templateResult: function(data) {
+            if (data.loading) return data.text;
+            return $('<span><i class="bx bx-user-voice me-2 text-success"></i>' + data.text + '</span>');
+        },
+        templateSelection: function(data) {
+            return data.text;
+        }
     });
 });
 
@@ -320,3 +455,14 @@ document.getElementById('image').addEventListener('change', function(event) {
 });
 </script>
 @endsection
+
+@push('scripts')
+<script>
+function previewPoster(event) {
+    const [file] = event.target.files;
+    if (file) {
+        document.getElementById('poster-preview').src = URL.createObjectURL(file);
+    }
+}
+</script>
+@endpush

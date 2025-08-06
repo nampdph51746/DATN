@@ -55,6 +55,7 @@ class User extends Authenticatable
         'email_verified_at',
         'last_login_at',
         'customer_rank_id',
+        'google_id',
     ];
 
     protected $casts = [

@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\QrCodeController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\CityController;
 use App\Http\Controllers\Admin\RoleController;
@@ -10,6 +11,7 @@ use App\Http\Controllers\Admin\MovieController;
 use App\Http\Controllers\Admin\PointController;
 use App\Http\Controllers\Client\HomeController;
 use App\Http\Controllers\Client\SeatController;
+use App\Http\Controllers\TicketPrintController;
 use App\Http\Controllers\Admin\CinemaController;
 use App\Http\Controllers\Admin\TicketController;
 use App\Http\Controllers\Client\VnpayController;
@@ -24,6 +26,7 @@ use App\Http\Controllers\Admin\AdminSeatController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\PromotionController;
 use App\Http\Controllers\Client\CheckoutController;
+use App\Http\Controllers\Admin\AdminMovieController;
 use App\Http\Controllers\Admin\AdminProductController;
 use App\Http\Controllers\Admin\CustomerRankController;
 use App\Http\Controllers\Admin\PointHistoryController;
@@ -42,6 +45,14 @@ Route::get('/', [HomeController::class, 'index'])->name('client.home');
 Route::get('/movies', [HomeController::class, 'movies'])->name('client.movies');
 Route::get('/movies/{id}', [HomeController::class, 'show'])->name('movies.show');
 Route::get('/movies/{id}/ticket-booking', [HomeController::class, 'ticketBooking'])->name('client.movies.ticketBooking');
+
+// Review routes
+Route::middleware('auth')->group(function () {
+    Route::post('/movies/{movie}/reviews', [App\Http\Controllers\Client\ReviewController::class, 'store'])->name('reviews.store');
+    Route::get('/movies/{movie}/reviews/check', [App\Http\Controllers\Client\ReviewController::class, 'checkUserCanReview'])->name('reviews.check');
+});
+
+Route::get('/movies/{movie}/reviews', [App\Http\Controllers\Client\ReviewController::class, 'getReviews'])->name('reviews.get');
 Route::get('/showtimes/{showtimeId}/seat-map', [SeatController::class, 'showSeatMap'])->name('client.seats.map');
 Route::post('/showtimes/{showtimeId}/reserve', [SeatController::class, 'reserveSeat'])->name('client.seats.reserve');
 Route::get('/api/seats/status/{showtimeId}', [SeatController::class, 'getSeatStatus']);
@@ -89,8 +100,10 @@ Route::get('/user-point-history', [App\Http\Controllers\Client\HomeController::c
 // Route::get('/dashboard', function () {
 //     return view('dashboard');
 // })->middleware(['auth', 'verified'])->name('dashboard');
-
-
+Route::middleware('auth')->group(function () {
+    Route::get('my-bookings', [BookingController::class, 'myBookings'])->name('client.bookings.index');
+    Route::get('my-bookings/show/{id}', [BookingController::class, 'myBookingsShow'])->name('client.bookings.show');
+});
 
 Route::middleware(['auth'])->group(function (){
 Route::get('/profile', [App\Http\Controllers\Auth\AuthenticatedSessionController::class, 'profile'])->name('profile.edit');
@@ -106,7 +119,10 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
     // Seat routes from HEAD
     Route::post('seats/edit-bulk', [AdminSeatController::class, 'editBulk'])->name('seats.edit-bulk');
     Route::post('seats/update-bulk', [AdminSeatController::class, 'updateBulk'])->name('seats.update-bulk');
-
+    Route::delete('seats/bulk-delete', [AdminSeatController::class, 'deleteBulk'])->name('seats.deleteBulk');
+    Route::post('seats/store-new', [AdminSeatController::class, 'storeNew'])->name('seats.store-new');
+    Route::post('seats/add-single', [AdminSeatController::class, 'addSingleSeat'])->name('seats.add-single');
+    
     // Dashboard
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
@@ -154,11 +170,13 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
     // Cập nhật trạng thái suất chiếu
     Route::post('/showtimes/update-statuses', [ShowtimeController::class, 'updateStatuses'])->name('showtimes.updateStatuses');
     Route::post('/showtimes/{id}/update-status', [ShowtimeController::class, 'updateSingleStatus'])->name('showtimes.updateSingleStatus');
+    Route::post('/showtimes/{id}/update-status-manual', [ShowtimeController::class, 'updateStatus'])->name('showtimes.updateStatus');
 
     //Room
     Route::resource('rooms', AdminRoomController::class);
     Route::patch('rooms/{id}/update-percentages', [AdminRoomController::class, 'updateSeatPercentages'])->name('rooms.updatePercentages');
     Route::post('rooms/{room}/update-seat-percentages', [AdminRoomController::class, 'updateSeatPercentages'])->name('rooms.update-seat-percentages');
+    Route::post('rooms/{room}/update-capacity', [AdminRoomController::class, 'updateCapacity'])->name('rooms.update-capacity');
 
     //Son
     Route::get('countries', [CountryController::class, 'index'])->name('countries.index');
@@ -183,6 +201,25 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
     Route::patch('cinemas/{id}/restore', [CinemaController::class, 'restore'])->name('cinemas.restore');
     Route::delete('cinemas/{id}/force-delete', [CinemaController::class, 'forceDelete'])->name('cinemas.forceDelete');
     Route::resource('cinemas', CinemaController::class);
+
+    // QR code scanning routes (chỉ staff và admin)
+    Route::middleware(['auth', 'role:admin,staff'])->group(function () {
+        Route::prefix('api/qr')->group(function () {
+            Route::post('/scan', [QrCodeController::class, 'scanQr'])->name('qr.scan');
+            Route::post('/check-status', [QrCodeController::class, 'checkTicketStatus'])->name('qr.check');
+            Route::post('/scan-ticket', [QrCodeController::class, 'scanTicketByCode'])->name('qr.scanTicket');
+        });
+        // Route in vé riêng theo ticket_code
+        // Route::get('/tickets/{ticket_code}/print', [TicketPrintController::class, 'printTicket'])->name('tickets.print');
+        // Route in chung đồ ăn, đồ uống theo booking_code
+        Route::get('admin/bookings/{booking_code}/print', [BookingController::class, 'print'])->name('bookings.print');
+        // Trang quét QR code cho nhân viên
+        Route::get('/qr-scanner', function () {
+            return view('admin.Qrcode-scanner'); // Nếu bạn đổi tên view thành qr-scanner thì sửa lại ở đây
+        })->name('qr.scanner');
+    });
+
+
 });
 
 // Routes quản lý seat-type từ origin/Giang
@@ -198,10 +235,17 @@ Route::prefix('admin/seat-type')->name('seat-type.')->group(function () {
     Route::delete('{id}/force-delete', [AdminSeatTypeController::class, 'forceDelete'])->name('force-delete'); // Xóa vĩnh viễn loại ghế
 });
 
-// Route::delete('admin/movies/bulk-delete', [AdminMovieController::class, 'bulkDelete'])->name('admin.movies.bulkDelete');
+
+Route::delete('admin/movies/bulk-delete', [AdminMovieController::class, 'bulkDelete'])->name('admin.movies.bulkDelete');
 // Route import ghế từ Excel
 Route::post('admin/seats/import', [App\Http\Controllers\Admin\AdminSeatController::class, 'importExcel'])->name('admin.seats.import');
 Route::delete('admin/genres/bulk-delete', [\App\Http\Controllers\Admin\GenreController::class, 'bulkDelete'])->name('admin.genres.bulkDelete');
+
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::resource('movies', \App\Http\Controllers\Admin\AdminMovieController::class);
+    Route::resource('directors', \App\Http\Controllers\Admin\AdminDirectorController::class);
+    Route::resource('actors', \App\Http\Controllers\Admin\AdminActorController::class);
+});
 
 Route::prefix('admin')->name('admin.')->group(function () {
    Route::resource('genres', App\Http\Controllers\Admin\GenreController::class);
@@ -301,15 +345,21 @@ Route::get('/test-barcode-api', function () {
     ]);
 });
 
-// Barcode scanning routes
-Route::prefix('api/barcode')->group(function () {
-    Route::post('/scan', [App\Http\Controllers\BarcodeController::class, 'scanBarcode'])->name('barcode.scan');
-    Route::post('/check-status', [App\Http\Controllers\BarcodeController::class, 'checkTicketStatus'])->name('barcode.check');
+// Admin Reviews Routes
+Route::prefix('admin/reviews')->name('admin.reviews.')->group(function () {
+    Route::get('/', [App\Http\Controllers\Admin\AdminReviewController::class, 'index'])->name('index');
+    Route::get('/content-filter', [App\Http\Controllers\Admin\AdminReviewController::class, 'contentFilterSettings'])->name('content-filter');
+    Route::post('/add-sensitive-word', [App\Http\Controllers\Admin\AdminReviewController::class, 'addSensitiveWord'])->name('add-sensitive-word');
+    Route::delete('/remove-sensitive-word', [App\Http\Controllers\Admin\AdminReviewController::class, 'removeSensitiveWord'])->name('remove-sensitive-word');
+    Route::post('/{review}/recheck', [App\Http\Controllers\Admin\AdminReviewController::class, 'recheckReview'])->name('recheck');
+    Route::post('/{review}/force-approve', [App\Http\Controllers\Admin\AdminReviewController::class, 'forceApprove'])->name('force-approve');
+    Route::get('/{review}', [App\Http\Controllers\Admin\AdminReviewController::class, 'show'])->name('show');
+    Route::patch('/{review}/status', [App\Http\Controllers\Admin\AdminReviewController::class, 'updateStatus'])->name('update-status');
+    Route::post('/bulk-status', [App\Http\Controllers\Admin\AdminReviewController::class, 'bulkUpdateStatus'])->name('bulk-status');
+    Route::delete('/{review}', [App\Http\Controllers\Admin\AdminReviewController::class, 'destroy'])->name('destroy');
+    Route::delete('/bulk-delete', [App\Http\Controllers\Admin\AdminReviewController::class, 'bulkDelete'])->name('bulk-delete');
+    Route::get('/recalculate-ratings/all', [App\Http\Controllers\Admin\AdminReviewController::class, 'recalculateAllRatings'])->name('recalculate-all');
+    Route::get('/reset-stats/all', [App\Http\Controllers\Admin\AdminReviewController::class, 'resetAllStats'])->name('reset-stats');
 });
-
-// Trang quét barcode cho nhân viên
-Route::get('/barcode-scanner', function () {
-    return view('barcode-scanner');
-})->name('barcode.scanner');
 
 require __DIR__.'/auth.php';

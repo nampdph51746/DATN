@@ -40,4 +40,9 @@ class BookingItem extends Model
     {
         return $this->belongsTo(User::class, 'scanned_by');
     }
+
+    public function product()
+{
+    return $this->belongsTo(Product::class);
+}
 }
