@@ -10,10 +10,6 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
-use App\Models\Notification;
-use App\Enums\NotificationType;
-use Illuminate\Support\Facades\Auth;
-
 class AdminProductController extends Controller
 {
             public function __construct()
@@ -67,7 +63,7 @@ class AdminProductController extends Controller
             $imageUrl = $request->file('image')->store('products', 'public');
         }
 
-        $product = Product::create([
+        Product::create([
             'category_id' => $request->category_id,
             'name' => $request->name,
             'sku' => $request->sku,
@@ -77,22 +73,6 @@ class AdminProductController extends Controller
             'is_active' => $request->is_active ?? 1,
             'created_at' => now(),
             'updated_at' => now(),
-        ]);
-
-        // Tạo thông báo khi thêm mới sản phẩm
-        Notification::create([
-            'user_id' => Auth::id(),
-            'entity_type' => Product::class,
-            'entity_id' => $product->id,
-            'title' => 'Tạo mới sản phẩm',
-            'message' => 'Sản phẩm #' . $product->id . ' đã được tạo mới.',
-            'type' => NotificationType::System,
-            'priority' => 'low',
-            'old_status' => null,
-            'new_status' => $product->name,
-            'event_details' => json_encode([
-                'new' => $product->getAttributes(),
-            ]),
         ]);
 
         return redirect()->route('admin.products.index')->with('success', 'Sản phẩm đã được tạo thành công.');
@@ -141,7 +121,6 @@ class AdminProductController extends Controller
         ]);
 
         $product = Product::findOrFail($id);
-        $oldData = $product->getOriginal();
 
         // Xử lý ảnh
         $imageUrl = $product->image_url;
@@ -161,23 +140,6 @@ class AdminProductController extends Controller
             'product_type' => $request->product_type,
             'is_active' => $request->is_active,
             'updated_at' => now(),
-        ]);
-
-        // Tạo thông báo mức độ cao khi cập nhật sản phẩm
-        Notification::create([
-            'user_id' => Auth::id(),
-            'entity_type' => Product::class,
-            'entity_id' => $product->id,
-            'title' => 'Cập nhật sản phẩm',
-            'message' => 'Sản phẩm #' . $product->id . ' đã được cập nhật.',
-            'type' => NotificationType::System,
-            'priority' => 'low',
-            'old_status' => $oldData['name'] ?? null,
-            'new_status' => $product->name,
-            'event_details' => json_encode([
-                'old' => $oldData,
-                'new' => $product->getAttributes(),
-            ]),
         ]);
 
         return redirect()->route('admin.products.index')->with('success', 'Sản phẩm đã được cập nhật thành công.');

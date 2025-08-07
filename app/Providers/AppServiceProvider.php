@@ -38,6 +38,12 @@ class AppServiceProvider extends ServiceProvider
         // Đăng ký Event và Listener
         Event::listen(BookingConfirmed::class, SendBookingConfirmationEmail::class);
 
+        // Đăng ký View Composer cho client layout
+        view()->composer('layouts.client.client', function ($view) {
+            $genres = \App\Models\Genre::all();
+            $view->with('genres', $genres);
+        });
+
          // Morph map cho tất cả các model
         Relation::morphMap([
             'age_limit' => \App\Models\AgeLimit::class,

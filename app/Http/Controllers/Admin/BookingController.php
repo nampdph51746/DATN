@@ -17,6 +17,40 @@ use Illuminate\Support\Facades\Auth;
 
 class BookingController extends Controller
 {
+    public function myBookings()
+    {
+        $user = Auth::user();
+
+        $bookings = Booking::with([
+            'tickets.showtime.movie',
+            'tickets.showtime.room',
+            'tickets.seat.seatType',
+            'bookingItems.product'
+        ])
+        ->where('user_id', Auth::id())
+        ->latest()
+        ->paginate(10);
+
+        
+
+        return view('client.bookings.index', compact('bookings'));
+    }
+
+    public function myBookingsShow($id)
+    {
+        $user = Auth::user();
+
+        $booking = Booking::with([
+            'tickets.showtime.movie',
+            'tickets.showtime.room',
+            'tickets.seat.seatType',
+            'bookingItems.productVariant.product'
+        ])
+        ->where('user_id', $user->id)
+        ->findOrFail($id);
+        
+        return view('client.bookings.show', compact('booking'));
+    }
     public function index(Request $request)
     {
         $query = Booking::with(['tickets.showtime']);
@@ -186,15 +220,15 @@ class BookingController extends Controller
             $showtimeStart = $showtime->start_time;
             
             // Kiểm tra nếu suất chiếu đã bắt đầu
-            if ($currentTime >= $showtimeStart) {
-                abort(403, 'Không thể in vé sau khi suất chiếu đã bắt đầu. Suất chiếu: ' . $showtimeStart->format('d/m/Y H:i'));
-            }
+            // if ($currentTime >= $showtimeStart) {
+            //     abort(403, 'Không thể in vé sau khi suất chiếu đã bắt đầu. Suất chiếu: ' . $showtimeStart->format('d/m/Y H:i'));
+            // }
             
-            // Kiểm tra nếu còn ít hơn 1 tiếng trước suất chiếu
-            $oneHourBeforeShowtime = $showtimeStart->copy()->subHour();
-            if ($currentTime > $oneHourBeforeShowtime) {
-                abort(403, 'Vé chỉ có thể in trước suất chiếu ít nhất 1 tiếng. Suất chiếu: ' . $showtimeStart->format('d/m/Y H:i'));
-            }
+            // // Kiểm tra nếu còn ít hơn 1 tiếng trước suất chiếu
+            // $oneHourBeforeShowtime = $showtimeStart->copy()->subHour();
+            // if ($currentTime > $oneHourBeforeShowtime) {
+            //     abort(403, 'Vé chỉ có thể in trước suất chiếu ít nhất 1 tiếng. Suất chiếu: ' . $showtimeStart->format('d/m/Y H:i'));
+            // }
         }
     }
 }

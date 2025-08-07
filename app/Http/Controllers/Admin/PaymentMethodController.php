@@ -6,9 +6,6 @@ use App\Models\PaymentMethod;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
-use App\Models\Notification;
-use App\Enums\NotificationType;
-use Illuminate\Support\Facades\Auth;
 class PaymentMethodController extends Controller
 {
     // Danh sách tìm kiếm và lọc
@@ -52,26 +49,8 @@ class PaymentMethodController extends Controller
             'is_active' => 'required|boolean',
         ]);
 
-        $oldData = $paymentMethod->getOriginal();
         $paymentMethod->update([
             'is_active' => $request->is_active,
-        ]);
-
-        // Tạo thông báo mức độ thấp khi cập nhật trạng thái phương thức thanh toán
-        Notification::create([
-            'user_id' => Auth::id(),
-            'entity_type' => PaymentMethod::class,
-            'entity_id' => $paymentMethod->id,
-            'title' => 'Cập nhật trạng thái phương thức thanh toán',
-            'message' => 'Phương thức thanh toán #' . $paymentMethod->id . ' đã được cập nhật trạng thái.',
-            'type' => NotificationType::System,
-            'priority' => 'low',
-            'old_status' => $oldData['is_active'] ?? null,
-            'new_status' => $paymentMethod->is_active,
-            'event_details' => json_encode([
-                'old' => $oldData,
-                'new' => $paymentMethod->getAttributes(),
-            ]),
         ]);
 
         return redirect()->route('payment_methods.index')

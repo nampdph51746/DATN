@@ -6,10 +6,6 @@ use App\Models\Country;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
-use App\Models\Notification;
-use App\Enums\NotificationType;
-use Illuminate\Support\Facades\Auth;
-
 use function Laravel\Prompts\alert;
 
 class CountryController extends Controller
@@ -58,21 +54,7 @@ class CountryController extends Controller
             'code' => 'required|string|max:10|unique:countries,code',
         ]);
 
-        $country = Country::create($validated);
-
-        // Tạo thông báo khi thêm mới quốc gia
-        Notification::create([
-            'user_id' => Auth::id(),
-            'entity_type' => Country::class,
-            'entity_id' => $country->id,
-            'title' => 'Thêm mới quốc gia',
-            'message' => 'Quốc gia "' . $country->name . '" đã được thêm mới.',
-            'type' => NotificationType::System,
-            'priority' => 'low',
-            'old_status' => null,
-            'new_status' => json_encode($country->getAttributes()),
-            'event_details' => json_encode(['action' => 'create', 'country_id' => $country->id]),
-        ]);
+        Country::create($validated);
 
         return redirect()->route('admin.countries.index')->with('success', 'Đã thêm quốc gia mới.');
     }
@@ -94,22 +76,7 @@ class CountryController extends Controller
             'code' => 'required|string|max:10|unique:countries,code,' . $id,
         ]);
 
-        $oldData = $country->getOriginal();
         $country->update($validated);
-
-        // Tạo thông báo khi cập nhật quốc gia
-        Notification::create([
-            'user_id' => Auth::id(),
-            'entity_type' => Country::class,
-            'entity_id' => $country->id,
-            'title' => 'Cập nhật quốc gia',
-            'message' => 'Quốc gia "' . $country->name . '" đã được cập nhật.',
-            'type' => NotificationType::System,
-            'priority' => 'low',
-            'old_status' => json_encode($oldData),
-            'new_status' => json_encode($country->getAttributes()),
-            'event_details' => json_encode(['action' => 'update', 'country_id' => $country->id]),
-        ]);
 
         return redirect()->route('admin.countries.index')->with('success', 'Cập nhật thành công.');
     }
@@ -118,22 +85,7 @@ class CountryController extends Controller
     public function destroy($id)
     {
         $country = Country::findOrFail($id);
-        $oldData = $country->getOriginal();
         $country->delete();
-
-        // Tạo thông báo khi xóa mềm quốc gia
-        Notification::create([
-            'user_id' => Auth::id(),
-            'entity_type' => Country::class,
-            'entity_id' => $country->id,
-            'title' => 'Xóa quốc gia',
-            'message' => 'Quốc gia "' . $country->name . '" đã bị xóa (tạm thời).',
-            'type' => NotificationType::System,
-            'priority' => 'low',
-            'old_status' => json_encode($oldData),
-            'new_status' => null,
-            'event_details' => json_encode(['action' => 'delete', 'country_id' => $country->id]),
-        ]);
 
         alert('Quốc gia đã được xóa thành công.');
         return redirect()->route('admin.countries.index')->with('success', 'Đã xóa quốc gia.');
@@ -145,20 +97,6 @@ class CountryController extends Controller
         $country = Country::onlyTrashed()->findOrFail($id);
         $country->restore();
 
-        // Tạo thông báo khi khôi phục quốc gia
-        Notification::create([
-            'user_id' => Auth::id(),
-            'entity_type' => Country::class,
-            'entity_id' => $country->id,
-            'title' => 'Khôi phục quốc gia',
-            'message' => 'Quốc gia "' . $country->name . '" đã được khôi phục.',
-            'type' => NotificationType::System,
-            'priority' => 'low',
-            'old_status' => null,
-            'new_status' => json_encode($country->getAttributes()),
-            'event_details' => json_encode(['action' => 'restore', 'country_id' => $country->id]),
-        ]);
-
         alert('Quốc gia đã được khôi phục thành công.');
         return redirect()->route('admin.countries.trash')->with('success', 'Quốc gia đã được khôi phục.');
     }
@@ -167,22 +105,7 @@ class CountryController extends Controller
     public function forceDelete($id)
     {
         $country = Country::onlyTrashed()->findOrFail($id);
-        $oldData = $country->getOriginal();
         $country->forceDelete();
-
-        // Tạo thông báo khi xóa vĩnh viễn quốc gia
-        Notification::create([
-            'user_id' => Auth::id(),
-            'entity_type' => Country::class,
-            'entity_id' => $country->id,
-            'title' => 'Xóa vĩnh viễn quốc gia',
-            'message' => 'Quốc gia "' . $country->name . '" đã bị xóa vĩnh viễn.',
-            'type' => NotificationType::System,
-            'priority' => 'low',
-            'old_status' => json_encode($oldData),
-            'new_status' => null,
-            'event_details' => json_encode(['action' => 'force_delete', 'country_id' => $country->id]),
-        ]);
 
         alert('Quốc gia đã bị xóa vĩnh viễn.');
         return redirect()->route('admin.countries.trash')->with('success', 'Đã xóa quốc gia vĩnh viễn.');

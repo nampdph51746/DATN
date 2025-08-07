@@ -6,9 +6,6 @@ use App\Models\Seat;
 use App\Models\SeatType;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use App\Models\Notification;
-use App\Enums\NotificationType;
-use Illuminate\Support\Facades\Auth;
 
 class AdminSeatTypeController extends Controller
 {
@@ -49,25 +46,11 @@ class AdminSeatTypeController extends Controller
     'color_code.max' => 'Mã màu không được vượt quá 20 ký tự.'
 ]);
 
-        $seatType = SeatType::create([
+        SeatType::create([
             'name' => $request->name,
             'price_modifier' => $request->price_modifier,
             'color_code' => $request->color_code,
             'description' => $request->description,
-        ]);
-
-        // Tạo thông báo khi thêm mới loại ghế
-        Notification::create([
-            'user_id' => Auth::id(),
-            'entity_type' => SeatType::class,
-            'entity_id' => $seatType->id,
-            'title' => 'Thêm mới loại ghế',
-            'message' => 'Loại ghế "' . $seatType->name . '" đã được thêm mới.',
-            'type' => NotificationType::System,
-            'priority' => 'low',
-            'old_status' => null,
-            'new_status' => json_encode($seatType->getAttributes()),
-            'event_details' => json_encode(['action' => 'create', 'seat_type_id' => $seatType->id]),
         ]);
 
         return redirect()->route('seat-type.index')->with('success', 'Seat Type created successfully.');
@@ -99,26 +82,11 @@ class AdminSeatTypeController extends Controller
     ]);
 
         $seatType = SeatType::findOrFail($id);
-        $oldData = $seatType->getOriginal();
         $seatType->update([
             'name' => $request->name,
             'price_modifier' => $request->price_modifier,
             'color_code' => $request->color_code,
             'description' => $request->description,
-        ]);
-
-        // Tạo thông báo khi cập nhật loại ghế
-        Notification::create([
-            'user_id' => Auth::id(),
-            'entity_type' => SeatType::class,
-            'entity_id' => $seatType->id,
-            'title' => 'Cập nhật loại ghế',
-            'message' => 'Loại ghế "' . $seatType->name . '" đã được cập nhật.',
-            'type' => NotificationType::System,
-            'priority' => 'low',
-            'old_status' => json_encode($oldData),
-            'new_status' => json_encode($seatType->getAttributes()),
-            'event_details' => json_encode(['action' => 'update', 'seat_type_id' => $seatType->id]),
         ]);
 
         return redirect()->route('seat-type.index')->with('success', 'Seat Type updated successfully.');
@@ -135,22 +103,7 @@ class AdminSeatTypeController extends Controller
         }
 
         // Thực hiện xóa mềm
-        $oldData = $seatType->getOriginal();
         $seatType->delete();
-
-        // Tạo thông báo khi xóa mềm loại ghế
-        Notification::create([
-            'user_id' => Auth::id(),
-            'entity_type' => SeatType::class,
-            'entity_id' => $seatType->id,
-            'title' => 'Xóa loại ghế',
-            'message' => 'Loại ghế "' . $seatType->name . '" đã bị xóa.',
-            'type' => NotificationType::System,
-            'priority' => 'low',
-            'old_status' => json_encode($oldData),
-            'new_status' => null,
-            'event_details' => json_encode(['action' => 'delete', 'seat_type_id' => $seatType->id]),
-        ]);
 
         return redirect()->route('seat-type.index')->with('success', 'Loại ghế đã được xóa thành công.');
     }
@@ -159,20 +112,6 @@ class AdminSeatTypeController extends Controller
     {
         $seatType = SeatType::withTrashed()->findOrFail($id);
         $seatType->restore();
-
-        // Tạo thông báo khi khôi phục loại ghế
-        Notification::create([
-            'user_id' => Auth::id(),
-            'entity_type' => SeatType::class,
-            'entity_id' => $seatType->id,
-            'title' => 'Khôi phục loại ghế',
-            'message' => 'Loại ghế "' . $seatType->name . '" đã được khôi phục.',
-            'type' => NotificationType::System,
-            'priority' => 'low',
-            'old_status' => null,
-            'new_status' => json_encode($seatType->getAttributes()),
-            'event_details' => json_encode(['action' => 'restore', 'seat_type_id' => $seatType->id]),
-        ]);
 
         return redirect()->route('seat-type.index')->with('success', 'Seat Type restored successfully.');
     }
@@ -186,22 +125,7 @@ class AdminSeatTypeController extends Controller
     public function forceDelete($id)
     {
         $seatType = SeatType::onlyTrashed()->findOrFail($id);
-        $oldData = $seatType->getOriginal();
         $seatType->forceDelete();
-
-        // Tạo thông báo khi xóa vĩnh viễn loại ghế
-        Notification::create([
-            'user_id' => Auth::id(),
-            'entity_type' => SeatType::class,
-            'entity_id' => $seatType->id,
-            'title' => 'Xóa vĩnh viễn loại ghế',
-            'message' => 'Loại ghế "' . $seatType->name . '" đã bị xóa vĩnh viễn.',
-            'type' => NotificationType::System,
-            'priority' => 'low',
-            'old_status' => json_encode($oldData),
-            'new_status' => null,
-            'event_details' => json_encode(['action' => 'force_delete', 'seat_type_id' => $seatType->id]),
-        ]);
 
         return redirect()->route('seat-type.trash')->with('success', 'Loại ghế đã được xóa vĩnh viễn.');
     }  

@@ -11,10 +11,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use App\Services\ShowtimeStatusService;
+
 use App\Services\ShowtimePricingService;
-use \App\Models\Notification;
-use \App\Enums\NotificationType;
-use \Illuminate\Support\Facades\Auth;
 
 class ShowtimeController extends Controller
 {
@@ -100,15 +98,14 @@ class ShowtimeController extends Controller
     public function edit($id)
     {
         $showtime = Showtime::findOrFail($id);
-        $movies = Movie::all();
-        $rooms = Room::all();
+        $movies = \App\Models\Movie::all();
+        $rooms = \App\Models\Room::all();
         return view('admin.showtimes.edit', compact('showtime', 'movies', 'rooms'));
     }
 
     public function update(Request $request, $id)
     {
         $showtime = Showtime::findOrFail($id);
-        $oldData = $showtime->getOriginal();
 
         $request->validate([
             'movie_id' => 'required|exists:movies,id',
@@ -142,7 +139,7 @@ class ShowtimeController extends Controller
             'base_price' => 'required|numeric|min:0|max:99999.99',
             'status' => [
                 'required',
-                'in:scheduled,ongoing,completed,cancelled',
+                'in:scheduled,ongoing,completed,cancelled,postponed',
                 function ($attribute, $value, $fail) use ($request, $showtime) {
                     $start_time = \Carbon\Carbon::parse($request->start_time);
                     $end_time = \Carbon\Carbon::parse($request->end_time);
@@ -156,6 +153,9 @@ class ShowtimeController extends Controller
                     }
                     if ($value === 'completed' && !$end_time->isPast()) {
                         $fail('Trạng thái "completed" chỉ hợp lệ khi suất chiếu đã kết thúc.');
+                    }
+                    if ($value === 'postponed' && $start_time->isPast()) {
+                        $fail('Không thể hoãn suất chiếu đã bắt đầu.');
                     }
                 },
             ],
@@ -178,9 +178,12 @@ class ShowtimeController extends Controller
         ]);
 
         try {
+            \Log::info('Raw Start Time: ' . $request->start_time . ', Raw End Time: ' . $request->end_time);
 
             $start = \Carbon\Carbon::parse($request->start_time, 'Asia/Ho_Chi_Minh')->setSeconds(0);
             $end = \Carbon\Carbon::parse($request->end_time, 'Asia/Ho_Chi_Minh')->setSeconds(0);
+
+            \Log::info('Start Timezone: ' . $start->timezone->getName() . ', End Timezone: ' . $end->timezone->getName());
 
             $startDate = $start->toDateString();
             $endDate = $end->toDateString();
@@ -189,12 +192,13 @@ class ShowtimeController extends Controller
             }
 
             $duration = abs($end->diffInMinutes($start));
+            \Log::info('Start Time: ' . $start->toDateTimeString() . ', End Time: ' . $end->toDateTimeString() . ', Duration: ' . $duration . ' minutes');
 
             if ($end->lessThan($start)) {
                 return redirect()->back()->with('error', 'Thời gian kết thúc phải sau thời gian bắt đầu.');
             }
 
-            $movie = Movie::findOrFail($request->movie_id);
+            $movie = \App\Models\Movie::findOrFail($request->movie_id);
             $movieDuration = $movie->duration_minutes; // Đồng bộ với duration_minutes
             $minDuration = $movieDuration + 15; 
 
@@ -224,25 +228,9 @@ class ShowtimeController extends Controller
                 'status' => $request->status,
             ]);
 
-            // Thông báo khi cập nhật suất chiếu
-            Notification::create([
-                'user_id' => Auth::id(),
-                'entity_type' => Showtime::class,
-                'entity_id' => $showtime->id,
-                'title' => 'Cập nhật suất chiếu',
-                'message' => 'Suất chiếu #' . $showtime->id . ' đã được cập nhật.',
-                'type' => NotificationType::System,
-                'priority' => 'high',
-                'old_status' => json_encode($oldData),
-                'new_status' => json_encode($showtime->getAttributes()),
-                'event_details' => json_encode([
-                    'action' => 'update',
-                    'showtime_id' => $showtime->id,
-                ]),
-            ]);
-
             return redirect()->route('admin.showtimes.index')->with('success', 'Cập nhật suất chiếu thành công!');
         } catch (\Exception $e) {
+            \Log::error('Lỗi khi cập nhật suất chiếu: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Có lỗi xảy ra khi cập nhật suất chiếu. Vui lòng thử lại.');
         }
     }
@@ -259,13 +247,23 @@ class ShowtimeController extends Controller
                 function ($attribute, $value, $fail) {
                     $selectedDate = Carbon::parse($value)->setTimezone('Asia/Ho_Chi_Minh');
                     $now = Carbon::now('Asia/Ho_Chi_Minh');
-                    if ($selectedDate->isToday() && $now->hour >= 18) {
-                        $fail('Không thể tạo suất chiếu cho hôm nay sau 6 PM. Vui lòng chọn ngày khác.');
+                    
+                    // Nếu chọn ngày hiện tại, kiểm tra có đủ thời gian để tạo suất chiếu không
+                    if ($selectedDate->isSameDay($now)) {
+                        // Tính thời gian bắt đầu sớm nhất (hiện tại + 30 phút buffer)
+                        $earliestStart = $now->copy()->addMinutes(30);
+                        $endOfDay = $selectedDate->copy()->setTime(23, 0);
+                        
+                        // Kiểm tra xem còn đủ thời gian để tạo ít nhất 1 suất chiếu không
+                        if ($earliestStart->gte($endOfDay)) {
+                            $fail('Không thể tạo suất chiếu cho hôm nay vì không còn đủ thời gian (phải kết thúc trước 23:00).');
+                        }
                     }
                 },
             ],
             'room_ids' => 'required|array|min:1',
             'room_ids.*' => 'exists:rooms,id',
+            'max_showtimes' => 'nullable|in:auto,1,2,3,4,5',
         ], [
             'movie_id.required' => 'ID phim là bắt buộc.',
             'movie_id.exists' => 'Phim không tồn tại.',
@@ -275,6 +273,7 @@ class ShowtimeController extends Controller
             'room_ids.array' => 'Danh sách phòng chiếu không hợp lệ.',
             'room_ids.min' => 'Vui lòng chọn ít nhất một phòng chiếu.',
             'room_ids.*.exists' => 'Một hoặc nhiều phòng chiếu không tồn tại.',
+            'max_showtimes.in' => 'Số suất chiếu không hợp lệ.',
         ]);
 
         try {
@@ -285,6 +284,7 @@ class ShowtimeController extends Controller
                 $timezone = 'Asia/Ho_Chi_Minh';
                 $date = Carbon::parse($request->date, $timezone);
                 $roomIds = $request->room_ids;
+                $maxShowtimes = $request->max_showtimes ?? 'auto'; // Lấy giới hạn số suất
                 $totalShowtimesCreated = 0;
 
                 if (empty($movie->duration_minutes) || $movie->duration_minutes <= 0) {
@@ -298,77 +298,233 @@ class ShowtimeController extends Controller
                     }
 
                     $now = Carbon::now($timezone);
-                    $startOfDay = $date->copy()->setTime(8, 0);
-                    $endOfDay = $date->copy()->setTime(22, 0);
+                    $endOfDay = $date->copy()->setTime(23, 0);
 
+                    // Xác định thời gian bắt đầu tạo suất chiếu
                     if ($date->isSameDay($now)) {
-                        $startOfDay = $now->copy()->ceilMinute(5);
-                        if ($startOfDay->lt($date->copy()->setTime(8, 0))) {
-                            $startOfDay = $date->copy()->setTime(8, 0);
+                        // Nếu tạo cho ngày hiện tại, bắt đầu từ thời điểm hiện tại
+                        $earliestPossibleStart = $now->copy();
+                        
+                        // Làm tròn thời gian để hợp lý hơn (làm tròn lên 5 phút gần nhất)
+                        $minutes = $earliestPossibleStart->minute;
+                        $roundedMinutes = ceil($minutes / 5) * 5;
+                        
+                        if ($roundedMinutes >= 60) {
+                            $earliestPossibleStart->addHour()->setMinute(0)->setSecond(0);
+                        } else {
+                            $earliestPossibleStart->setMinute($roundedMinutes)->setSecond(0);
                         }
+                        
+                        // Thêm 30 phút buffer
+                        $earliestPossibleStart->addMinutes(30);
+                        
+                        $startOfDay = $earliestPossibleStart->copy();
+                        
+                        Log::info("Tạo suất chiếu cho ngày hôm nay. Bắt đầu từ {$startOfDay->format('H:i')} (thời gian hiện tại + 30 phút buffer).");
+                    } else {
+                        // Nếu tạo cho ngày khác, bắt đầu từ 8h sáng
+                        $startOfDay = $date->copy()->setTime(8, 0);
+                        
+                        Log::info("Tạo suất chiếu cho ngày {$date->format('d/m/Y')}. Bắt đầu từ 8:00 sáng.");
                     }
 
-                    $totalDuration = $movie->duration_minutes + 30;
-                    $currentTime = $startOfDay->copy();
                     $showtimesCreatedForRoom = 0;
 
-                    Log::info("Bắt đầu tạo suất chiếu: Phim ID: {$movie->id}, Ngày: {$date}, Thời lượng: {$movie->duration_minutes} phút, Phòng ID: {$room->id}, StartOfDay: {$startOfDay}, EndOfDay: {$endOfDay}");
+                    Log::info("Bắt đầu tạo suất chiếu: Phim ID: {$movie->id} ({$movie->title}), Ngày: {$date->format('d/m/Y')}, Thời lượng phim: {$movie->duration_minutes} phút, Phòng ID: {$room->id} ({$room->name}), Khung giờ: {$startOfDay->format('H:i')} - {$endOfDay->format('H:i')}, Giới hạn: " . ($maxShowtimes === 'auto' ? 'Tự động' : $maxShowtimes . ' suất'));
+
+                    // Lấy tất cả suất chiếu hiện có trong ngày cho phòng này
+                    $existingShowtimes = Showtime::where('room_id', $room->id)
+                        ->whereDate('start_time', $date->toDateString())
+                        ->orderBy('start_time')
+                        ->get();
+
+                    // Lấy base_price từ room type một lần
+                    $pricingService = new ShowtimePricingService();
+                    $basePriceFromRoomType = $pricingService->calculateBasePriceForRoom($room);
+
+                    // Tạo danh sách các khoảng thời gian bận
+                    $busyIntervals = [];
+                    foreach ($existingShowtimes as $existing) {
+                        $busyIntervals[] = [
+                            'start' => Carbon::parse($existing->start_time),
+                            'end' => Carbon::parse($existing->end_time)->addMinutes(30) // thêm 30 phút buffer
+                        ];
+                    }
+
+                    Log::info("Danh sách suất chiếu hiện có cho phòng {$room->name}:", [
+                        'count' => $existingShowtimes->count(),
+                        'showtimes' => $existingShowtimes->map(function($s) {
+                            return [
+                                'id' => $s->id,
+                                'movie' => $s->movie->title ?? 'Unknown',
+                                'start' => Carbon::parse($s->start_time)->format('H:i'),
+                                'end' => Carbon::parse($s->end_time)->format('H:i')
+                            ];
+                        })->toArray()
+                    ]);
+
+                    Log::info("Khoảng thời gian bận (có buffer 30 phút):", [
+                        'busy_intervals' => array_map(function($interval) {
+                            return [
+                                'start' => $interval['start']->format('H:i'),
+                                'end' => $interval['end']->format('H:i')
+                            ];
+                        }, $busyIntervals)
+                    ]);
+
+                    // Tìm slot trống từ startOfDay đến endOfDay
+                    $currentTime = $startOfDay->copy();
+                    $movieDurationWithBuffer = $movie->duration_minutes + 30; // thêm 30 phút buffer giữa các suất
+
+                    Log::info("Bắt đầu tìm slot trống:", [
+                        'start_from' => $currentTime->format('H:i'),
+                        'end_at' => $endOfDay->format('H:i'),
+                        'movie_duration' => $movie->duration_minutes,
+                        'movie_title' => $movie->title
+                    ]);
 
                     while ($currentTime->copy()->addMinutes($movie->duration_minutes)->lte($endOfDay)) {
-                        $startTime = $currentTime->copy();
-                        $endTime = $currentTime->copy()->addMinutes($movie->duration_minutes);
+                        Log::info("While loop iteration:", [
+                            'current_time' => $currentTime->format('H:i'),
+                            'proposed_end_time' => $currentTime->copy()->addMinutes($movie->duration_minutes)->format('H:i'),
+                            'end_of_day' => $endOfDay->format('H:i'),
+                            'condition_met' => $currentTime->copy()->addMinutes($movie->duration_minutes)->lte($endOfDay) ? 'YES' : 'NO'
+                        ]);
 
-                        Log::info("Kiểm tra khung giờ: {$startTime} - {$endTime} cho phòng ID: {$room->id}");
+                        // Kiểm tra giới hạn số suất
+                        if ($maxShowtimes !== 'auto' && $showtimesCreatedForRoom >= (int)$maxShowtimes) {
+                            Log::info("Đã đạt giới hạn {$maxShowtimes} suất cho phòng {$room->name}");
+                            break;
+                        }
 
-                        $existingShowtime = Showtime::where('room_id', $room->id)
-                            ->where(function ($query) use ($startTime, $endTime) {
-                                $query->whereBetween('start_time', [$startTime, $endTime])
-                                      ->orWhereBetween('end_time', [$startTime, $endTime])
-                                      ->orWhere(function ($q) use ($startTime, $endTime) {
-                                          $q->where('start_time', '<=', $startTime)
-                                            ->where('end_time', '>=', $endTime);
-                                      });
-                            })
-                            ->first();
+                        $proposedStart = $currentTime->copy();
+                        $proposedEnd = $proposedStart->copy()->addMinutes($movie->duration_minutes);
 
-                        if ($existingShowtime) {
-                            Log::warning("Trùng suất chiếu: {$startTime} - {$endTime} với suất chiếu ID: {$existingShowtime->id} ({$existingShowtime->start_time} - {$existingShowtime->end_time}) cho phòng ID: {$room->id}");
-                            $currentTime->addMinutes($totalDuration);
+                        Log::info("Kiểm tra slot:", [
+                            'proposed_start' => $proposedStart->format('H:i'),
+                            'proposed_end' => $proposedEnd->format('H:i'),
+                            'room' => $room->name
+                        ]);
+
+                        // Kiểm tra xem thời gian đề xuất có trùng với khoảng thời gian bận không
+                        $hasConflict = false;
+                        $conflictDetails = [];
+                        foreach ($busyIntervals as $index => $busy) {
+                            // Kiểm tra overlap
+                            if ($proposedStart->lt($busy['end']) && $proposedEnd->gt($busy['start'])) {
+                                $hasConflict = true;
+                                $conflictDetails[] = [
+                                    'busy_start' => $busy['start']->format('H:i'),
+                                    'busy_end' => $busy['end']->format('H:i'),
+                                    'overlap_type' => 'conflict'
+                                ];
+                                // Nhảy đến sau khoảng thời gian bận và làm tròn
+                                $nextTime = $busy['end']->copy();
+                                
+                                // Làm tròn thời gian để hợp lý hơn (chỉ làm tròn lên 5 phút gần nhất)
+                                $minutes = $nextTime->minute;
+                                $roundedMinutes = ceil($minutes / 5) * 5;
+                                
+                                if ($roundedMinutes >= 60) {
+                                    $currentTime = $nextTime->copy()->addHour()->setMinute(0)->setSecond(0);
+                                } else {
+                                    $currentTime = $nextTime->copy()->setMinute($roundedMinutes)->setSecond(0);
+                                }
+                                
+                                Log::info("Conflict detected! Jumping to: " . $currentTime->format('H:i'));
+                                break;
+                            }
+                        }
+
+                        if ($hasConflict) {
+                            Log::warning("Slot bị conflict:", [
+                                'proposed' => $proposedStart->format('H:i') . ' - ' . $proposedEnd->format('H:i'),
+                                'conflicts' => $conflictDetails,
+                                'jump_to' => $currentTime->format('H:i')
+                            ]);
                             continue;
                         }
 
-                        // Lấy base_price từ room type sử dụng PricingService
-                        $pricingService = new ShowtimePricingService();
-                        $basePriceFromRoomType = $pricingService->calculateBasePriceForRoom($room);
+                        Log::info("Slot trống được tìm thấy! Tạo suất chiếu...");
 
-                        Showtime::create([
-                            'movie_id' => $movie->id,
-                            'room_id' => $room->id,
-                            'start_time' => $startTime,
-                            'end_time' => $endTime,
-                            'base_price' => $basePriceFromRoomType,
-                            'status' => 'scheduled',
-                            'created_at' => now($timezone),
-                            'updated_at' => now($timezone),
-                        ]);
-                        $showtimesCreatedForRoom++;
+                        if (!$hasConflict) {
+                            // Tạo suất chiếu
+                            Showtime::create([
+                                'movie_id' => $movie->id,
+                                'room_id' => $room->id,
+                                'start_time' => $proposedStart,
+                                'end_time' => $proposedEnd,
+                                'base_price' => $basePriceFromRoomType,
+                                'status' => 'scheduled',
+                                'created_at' => now($timezone),
+                                'updated_at' => now($timezone),
+                            ]);
+                            $showtimesCreatedForRoom++;
 
-                        Log::info("Tạo suất chiếu thành công: {$startTime} - {$endTime} cho phòng ID: {$room->id}");
-                        $currentTime->addMinutes($totalDuration);
+                            Log::info("Tạo suất chiếu thành công: {$proposedStart->format('H:i')} - {$proposedEnd->format('H:i')} cho phòng {$room->name}");
+
+                            // Thêm suất chiếu mới vào danh sách bận để tránh trùng lặp
+                            $busyIntervals[] = [
+                                'start' => $proposedStart->copy(),
+                                'end' => $proposedEnd->copy()->addMinutes(30) // buffer 30 phút
+                            ];
+                            
+                            // Sắp xếp lại danh sách theo thời gian
+                            usort($busyIntervals, function($a, $b) {
+                                return $a['start']->timestamp - $b['start']->timestamp;
+                            });
+
+                            // Di chuyển đến thời gian tiếp theo và làm tròn
+                            $nextTime = $proposedEnd->copy()->addMinutes(30);
+                            
+                            // Làm tròn thời gian bắt đầu tiếp theo để hợp lý hơn (chỉ làm tròn lên 5 phút gần nhất)
+                            $minutes = $nextTime->minute;
+                            $roundedMinutes = ceil($minutes / 5) * 5;
+                            
+                            if ($roundedMinutes >= 60) {
+                                $currentTime = $nextTime->copy()->addHour()->setMinute(0)->setSecond(0);
+                            } else {
+                                $currentTime = $nextTime->copy()->setMinute($roundedMinutes)->setSecond(0);
+                            }
+                            
+                            Log::info("Di chuyển đến thời gian tiếp theo: " . $currentTime->format('H:i'));
+                        }
                     }
 
+                    Log::info("Thoát khỏi while loop:", [
+                        'final_current_time' => $currentTime->format('H:i'),
+                        'final_proposed_end' => $currentTime->copy()->addMinutes($movie->duration_minutes)->format('H:i'),
+                        'end_of_day' => $endOfDay->format('H:i'),
+                        'showtimes_created_for_room' => $showtimesCreatedForRoom,
+                        'max_showtimes' => $maxShowtimes,
+                        'reason' => $currentTime->copy()->addMinutes($movie->duration_minutes)->gt($endOfDay) ? 'Not enough time' : 'Max showtimes reached'
+                    ]);
+
                     $totalShowtimesCreated += $showtimesCreatedForRoom;
-                    Log::info("Tạo được {$showtimesCreatedForRoom} suất chiếu cho phòng ID: {$room->id}");
+                    Log::info("Hoàn thành tạo suất chiếu cho phòng {$room->name}: {$showtimesCreatedForRoom} suất chiếu được tạo" . ($maxShowtimes !== 'auto' ? " (giới hạn: {$maxShowtimes})" : " (tự động)"));
+                    
+                    if ($showtimesCreatedForRoom === 0) {
+                        Log::warning("Không tạo được suất chiếu nào cho phòng {$room->name}. Lý do có thể:", [
+                            'start_time' => $startOfDay->format('H:i'),
+                            'end_time' => $endOfDay->format('H:i'),
+                            'existing_showtimes_count' => $existingShowtimes->count(),
+                            'movie_duration' => $movie->duration_minutes,
+                            'max_showtimes_setting' => $maxShowtimes
+                        ]);
+                    }
                 }
 
                 if ($totalShowtimesCreated === 0) {
-                    $reason = 'Không thể tạo suất chiếu';
-                    if ($startOfDay->gt($endOfDay)) {
-                        $reason .= ' vì thời gian bắt đầu vượt quá thời gian kết thúc.';
-                    } else {
-                        $reason .= ' do trùng lịch hoặc thời gian không phù hợp.';
-                    }
-                    throw new \Exception($reason);
+                    Log::error("KHÔNG TẠO ĐƯỢC SUẤT CHIẾU NÀO!", [
+                        'total_rooms' => count($roomIds),
+                        'movie_id' => $movie->id,
+                        'movie_title' => $movie->title,
+                        'movie_duration' => $movie->duration_minutes,
+                        'date' => $date->format('d/m/Y'),
+                        'max_showtimes' => $maxShowtimes,
+                        'timezone' => $timezone
+                    ]);
+                    throw new \Exception('Không thể tạo suất chiếu nào. Có thể do tất cả khung giờ đã có suất chiếu hoặc thời gian không phù hợp.');
                 }
 
                 return $totalShowtimesCreated;
@@ -431,6 +587,57 @@ class ShowtimeController extends Controller
                     'current_status' => $showtime->status->value
                 ]);
             }
+
+        } catch (\Exception $e) {
+            Log::error('Lỗi khi cập nhật trạng thái suất chiếu: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Có lỗi xảy ra khi cập nhật trạng thái suất chiếu',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Cập nhật trạng thái thủ công cho suất chiếu
+     */
+    public function updateStatus(Request $request, $id)
+    {
+        try {
+            $showtime = Showtime::findOrFail($id);
+            
+            $request->validate([
+                'status' => 'required|in:scheduled,ongoing,completed,cancelled,postponed'
+            ]);
+
+            // Kiểm tra logic nghiệp vụ
+            if ($request->status === 'scheduled' && $showtime->start_time->isPast()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Không thể đặt trạng thái "scheduled" cho suất chiếu đã qua.'
+                ]);
+            }
+
+            // Kiểm tra xem có vé đã được đặt không
+            if ($request->status === 'cancelled' && $showtime->tickets()->exists()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Không thể hủy suất chiếu đã có vé được đặt. Vui lòng liên hệ khách hàng để xử lý hoàn tiền.'
+                ]);
+            }
+
+            $oldStatus = $showtime->status->value;
+            $showtime->status = $request->status;
+            $showtime->save();
+
+            Log::info("Cập nhật trạng thái suất chiếu ID: {$id} từ '{$oldStatus}' thành '{$request->status}'");
+
+            return response()->json([
+                'success' => true,
+                'message' => "Đã cập nhật trạng thái suất chiếu từ '{$oldStatus}' thành '{$request->status}'",
+                'old_status' => $oldStatus,
+                'new_status' => $request->status
+            ]);
 
         } catch (\Exception $e) {
             Log::error('Lỗi khi cập nhật trạng thái suất chiếu: ' . $e->getMessage());

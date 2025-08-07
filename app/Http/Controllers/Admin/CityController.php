@@ -7,10 +7,6 @@ use App\Models\Country;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
-use App\Models\Notification;
-use App\Enums\NotificationType;
-use Illuminate\Support\Facades\Auth;
-
 class CityController extends Controller
 {
     public function index(Request $request)
@@ -40,21 +36,7 @@ class CityController extends Controller
             'country_id' => 'required|exists:countries,id',
         ]);
 
-        $city = City::create($validated);
-
-        // Tạo thông báo khi thêm mới thành phố
-        Notification::create([
-            'user_id' => Auth::id(),
-            'entity_type' => City::class,
-            'entity_id' => $city->id,
-            'title' => 'Thêm mới thành phố',
-            'message' => 'Thành phố "' . $city->name . '" đã được thêm mới.',
-            'type' => NotificationType::System,
-            'priority' => 'low',
-            'old_status' => null,
-            'new_status' => json_encode($city->getAttributes()),
-            'event_details' => json_encode(['action' => 'create', 'city_id' => $city->id]),
-        ]);
+        City::create($validated);
 
         return redirect()->route('admin.cities.index')->with('success', 'Đã thêm thành phố mới.');
     }
@@ -76,22 +58,7 @@ class CityController extends Controller
             'country_id' => 'required|exists:countries,id',
         ]);
 
-        $oldData = $city->getOriginal();
         $city->update($validated);
-
-        // Tạo thông báo khi cập nhật thành phố
-        Notification::create([
-            'user_id' => Auth::id(),
-            'entity_type' => City::class,
-            'entity_id' => $city->id,
-            'title' => 'Cập nhật thành phố',
-            'message' => 'Thành phố "' . $city->name . '" đã được cập nhật.',
-            'type' => NotificationType::System,
-            'priority' => 'low',
-            'old_status' => json_encode($oldData),
-            'new_status' => json_encode($city->getAttributes()),
-            'event_details' => json_encode(['action' => 'update', 'city_id' => $city->id]),
-        ]);
 
         return redirect()->route('admin.cities.index')->with('success', 'Cập nhật thành công.');
     }
@@ -100,22 +67,7 @@ class CityController extends Controller
     public function destroy($id)
     {
         $city = City::findOrFail($id);
-        $oldData = $city->getOriginal();
         $city->delete();
-
-        // Tạo thông báo khi xóa mềm thành phố
-        Notification::create([
-            'user_id' => Auth::id(),
-            'entity_type' => City::class,
-            'entity_id' => $city->id,
-            'title' => 'Xóa thành phố',
-            'message' => 'Thành phố "' . $city->name . '" đã bị xóa (tạm thời).',
-            'type' => NotificationType::System,
-            'priority' => 'low',
-            'old_status' => json_encode($oldData),
-            'new_status' => null,
-            'event_details' => json_encode(['action' => 'delete', 'city_id' => $city->id]),
-        ]);
 
         return redirect()->route('admin.cities.trash')->with('success', 'Đã xóa thành phố (tạm thời).');
     }
@@ -141,20 +93,6 @@ class CityController extends Controller
         $city = City::onlyTrashed()->findOrFail($id);
         $city->restore();
 
-        // Tạo thông báo khi khôi phục thành phố
-        Notification::create([
-            'user_id' => Auth::id(),
-            'entity_type' => City::class,
-            'entity_id' => $city->id,
-            'title' => 'Khôi phục thành phố',
-            'message' => 'Thành phố "' . $city->name . '" đã được khôi phục.',
-            'type' => NotificationType::System,
-            'priority' => 'low',
-            'old_status' => null,
-            'new_status' => json_encode($city->getAttributes()),
-            'event_details' => json_encode(['action' => 'restore', 'city_id' => $city->id]),
-        ]);
-
         return redirect()->route('admin.cities.trash')->with('success', 'Đã khôi phục thành phố.');
     }
 
@@ -162,22 +100,7 @@ class CityController extends Controller
     public function forceDelete($id)
     {
         $city = City::onlyTrashed()->findOrFail($id);
-        $oldData = $city->getOriginal();
         $city->forceDelete();
-
-        // Tạo thông báo khi xóa vĩnh viễn thành phố
-        Notification::create([
-            'user_id' => Auth::id(),
-            'entity_type' => City::class,
-            'entity_id' => $city->id,
-            'title' => 'Xóa vĩnh viễn thành phố',
-            'message' => 'Thành phố "' . $city->name . '" đã bị xóa vĩnh viễn.',
-            'type' => NotificationType::System,
-            'priority' => 'low',
-            'old_status' => json_encode($oldData),
-            'new_status' => null,
-            'event_details' => json_encode(['action' => 'force_delete', 'city_id' => $city->id]),
-        ]);
 
         return redirect()->route('admin.cities.trash')->with('success', 'Đã xóa vĩnh viễn thành phố.');
     }

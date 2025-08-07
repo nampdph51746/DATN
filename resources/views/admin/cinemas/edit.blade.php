@@ -103,12 +103,9 @@
 
                                 <div class="col-md-6 mb-3">
                                     <label for="status" class="form-label">Trạng thái</label>
-                                    @php
-                                        $status = old('status', $cinema->status instanceof \App\Enums\CinemaStatus ? $cinema->status->value : $cinema->status);
-                                    @endphp
                                     <select name="status" id="status" class="form-select @error('status') is-invalid @enderror">
-                                        <option value="active" {{ $status == 'active' ? 'selected' : '' }}>Hoạt động</option>
-                                        <option value="inactive" {{ $status == 'inactive' ? 'selected' : '' }}>Ngừng hoạt động</option>
+                                        <option value="active" {{ old('status', $cinema->status) == 'active' ? 'selected' : '' }}>Hoạt động</option>
+                                        <option value="inactive" {{ old('status', $cinema->status) == 'inactive' ? 'selected' : '' }}>Ngừng hoạt động</option>
                                     </select>
                                     @error('status') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>

@@ -2,32 +2,15 @@
 
 namespace App\Models;
 
-use Illuminate\Support\Facades\Log;
-use Spatie\Permission\Traits\HasRoles;
-use Illuminate\Notifications\Notifiable;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Spatie\Permission\Traits\HasRoles;
+use Illuminate\Support\Facades\Log;
 
 
 class User extends Authenticatable
 {
-     
-    use HasFactory, HasRoles, Notifiable;
-
-    protected $fillable = [
-        'name',
-        'email',
-        'password',
-        'phone_number',
-        'address',
-        'avatar_url',
-        'date_of_birth',
-        'status',
-        'email_verified_at',
-        'last_login_at',
-        'customer_rank_id',
-        'google_id'
-    ];
+    use HasFactory, HasRoles;
 
     /**
      * Cập nhật hạng của user dựa trên tổng số tiền đã tiêu (booking thành công)
@@ -60,6 +43,20 @@ class User extends Authenticatable
         }
     }
 
+    protected $fillable = [
+        'name',
+        'email',
+        'password',
+        'phone_number',
+        'address',
+        'avatar_url',
+        'date_of_birth',
+        'status',
+        'email_verified_at',
+        'last_login_at',
+        'customer_rank_id',
+        'google_id',
+    ];
 
     protected $casts = [
         'status' => \App\Enums\UserStatus::class,
