@@ -327,77 +327,64 @@ class HomeController extends Controller
 
     public function movies(Request $request)
     {
-        $query = $request->input('query');
+        $query = $request->input('search');
+        $genreId = $request->input('genre');
+
+        // Base query cho tất cả phim
+        $baseQuery = Movie::query()->with(['genres']);
+
+        // Áp dụng tìm kiếm theo tên phim
+        if ($query) {
+            $baseQuery->where('name', 'like', '%' . $query . '%');
+        }
+
+        // Áp dụng lọc theo thể loại
+        if ($genreId) {
+            $baseQuery->whereHas('genres', function ($q) use ($genreId) {
+                $q->where('genres.id', $genreId);
+            });
+        }
 
         // Phim đang chiếu: Sắp xếp theo số lượng vé bán ra
-        $showingMovies = Movie::query()
-            ->with(['genres'])
-            ->when($query, function ($q) use ($query) {
-                $q->where('name', 'like', "%{$query}%")
-                    ->orWhereHas('genres', function ($g) use ($query) {
-                        $g->where('name', 'like', "%{$query}%");
-                    });
-            })
+        $showingMovies = (clone $baseQuery)
             ->where('status', MovieStatus::Showing)
-            ->withCount(['showtimes' => function ($q) {
-                $q->where('start_time', '>=', Carbon::now()->subDays(30))
-                    ->whereHas('tickets'); // Đếm vé bán ra trong 30 ngày
-            }])
-            ->orderBy('showtimes_count', 'desc')
-            ->take(8)
+            ->orderBy('release_date', 'desc')
+            ->take(12)
             ->get();
 
         // Phim mới: Sắp xếp theo created_at mới nhất
-        $recentMovies = Movie::query()
-            ->with(['genres'])
-            ->when($query, function ($q) use ($query) {
-                $q->where('name', 'like', "%{$query}%")
-                    ->orWhereHas('genres', function ($g) use ($query) {
-                        $g->where('name', 'like', "%{$query}%");
-                    });
-            })
-            ->whereIn('status', [MovieStatus::Showing, MovieStatus::Upcoming])
+        $recentMovies = (clone $baseQuery)
+            ->where('status', MovieStatus::Showing)
             ->orderBy('created_at', 'desc')
             ->take(8)
             ->get();
 
         // Phim phổ biến: Dựa trên số vé bán ra trong 30 ngày
-        $popularMovies = Movie::query()
-            ->with(['genres'])
-            ->when($query, function ($q) use ($query) {
-                $q->where('name', 'like', "%{$query}%")
-                    ->orWhereHas('genres', function ($g) use ($query) {
-                        $g->where('name', 'like', "%{$query}%");
-                    });
-            })
+        $popularMovies = (clone $baseQuery)
             ->where('status', MovieStatus::Showing)
-            ->withCount(['showtimes' => function ($q) {
-                $q->where('start_time', '>=', Carbon::now()->subDays(30))
-                    ->whereHas('tickets');
+            ->withCount(['showtimes as tickets_sold' => function ($q) {
+                $q->join('bookings', 'showtimes.id', '=', 'bookings.showtime_id')
+                  ->where('bookings.created_at', '>=', now()->subDays(30));
             }])
-            ->orderBy('showtimes_count', 'desc')
+            ->orderBy('tickets_sold', 'desc')
             ->take(8)
             ->get();
 
         // Phim xu hướng: Dựa trên số vé bán ra trong 7 ngày
-        $trendMovies = Movie::query()
-            ->with(['genres'])
-            ->when($query, function ($q) use ($query) {
-                $q->where('name', 'like', "%{$query}%")
-                    ->orWhereHas('genres', function ($g) use ($query) {
-                        $g->where('name', 'like', "%{$query}%");
-                    });
-            })
-            ->whereIn('status', [MovieStatus::Showing, MovieStatus::Upcoming])
-            ->withCount(['showtimes' => function ($q) {
-                $q->where('start_time', '>=', Carbon::now()->subDays(7))
-                    ->whereHas('tickets');
+        $trendMovies = (clone $baseQuery)
+            ->where('status', MovieStatus::Showing)
+            ->withCount(['showtimes as tickets_sold_week' => function ($q) {
+                $q->join('bookings', 'showtimes.id', '=', 'bookings.showtime_id')
+                  ->where('bookings.created_at', '>=', now()->subDays(7));
             }])
-            ->orderBy('showtimes_count', 'desc')
+            ->orderBy('tickets_sold_week', 'desc')
             ->take(8)
             ->get();
 
-        return view('client.movies', compact('showingMovies', 'recentMovies', 'popularMovies', 'trendMovies', 'query'));
+        // Lấy danh sách thể loại để hiển thị trong dropdown
+        $genres = \App\Models\Genre::all();
+
+        return view('client.movies', compact('showingMovies', 'recentMovies', 'popularMovies', 'trendMovies', 'query', 'genreId', 'genres'));
     }
 
     private function formatCinemas($roomsData)

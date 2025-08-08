@@ -10,7 +10,7 @@ class TicketController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Ticket::query();
+        $query = Ticket::with(['showtime']);
 
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
@@ -29,6 +29,16 @@ class TicketController extends Controller
         }
         if ($request->filled('status')) {
             $query->where('status', $request->status);
+        }
+
+        // Tự động cập nhật vé chưa sử dụng thành đã hủy nếu đã qua thời gian chiếu
+        $ticketsToUpdate = Ticket::where('status', 'valid')
+            ->whereHas('showtime', function($q) {
+                $q->where('start_time', '<=', now());
+            })->get();
+        foreach ($ticketsToUpdate as $ticket) {
+            $ticket->status = 'cancelled';
+            $ticket->save();
         }
 
         $tickets = $query->paginate(20);

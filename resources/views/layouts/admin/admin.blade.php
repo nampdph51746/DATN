@@ -11,6 +11,7 @@
     <meta name="description" content="A fully responsive premium admin dashboard template" />
     <meta name="author" content="Techzaa" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <!-- App favicon -->
     <link rel="shortcut icon" href="{{ asset('assets/images/favicon.ico') }}">
@@ -879,6 +880,15 @@
                                 </li>
                             </ul>
                         </div>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('admin.qr.scanner') }}">
+                            <span class="nav-icon">
+                                <iconify-icon icon="solar:qr-code-bold-duotone"></iconify-icon>
+                            </span>
+                            <span class="nav-text">Quét QR Code</span>
+                        </a>
                     </li>
 
                     <li class="nav-item">

@@ -241,6 +241,7 @@
 
 								@auth
 								<li><a href="/profile" style="display: block; padding: 10px; text-decoration: none;">Tài khoản</a></li>
+								<li><a href="/my-bookings" style="display: block; padding: 10px; text-decoration: none;">Lịch sử đơn hàng</a></li>
 								@hasanyrole(['admin', 'staff'])
 								<li><a href="{{ route('admin.dashboard') }}" style="display: block; padding: 10px; text-decoration: none;">Quản lý</a></li>
 								@endhasanyrole
