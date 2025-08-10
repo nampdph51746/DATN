@@ -78,7 +78,7 @@
                                 <span class="avatar-title rounded-circle bg-success text-white">
                                     <i class="bi bi-check-circle fs-4"></i>
                                 </span>
-                            </div>
+                        </div>
                         </div>
                         <div class="flex-grow-1 ms-3">
                             <h6 class="mb-0 text-muted fw-semibold">Hoạt động</h6>
@@ -122,7 +122,7 @@
                                 <span class="avatar-title rounded-circle bg-info text-white">
                                     <i class="bi bi-search fs-4"></i>
                                 </span>
-                            </div>
+                        </div>
                         </div>
                         <div class="flex-grow-1 ms-3">
                             <h6 class="mb-0 text-muted fw-semibold">Tìm kiếm</h6>
@@ -236,32 +236,26 @@
                                             </div>
                                         </td>
                                         <td class="text-center pe-4">
-                                            <div class="dropdown">
-                                                <button class="btn btn-light btn-sm dropdown-toggle rounded-pill" 
-                                                        type="button" data-bs-toggle="dropdown">
-                                                    <i class="bi bi-three-dots"></i>
-                                                </button>
-                                                <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-4">
-                                                    <li>
-                                                        <a class="dropdown-item rounded-3" href="{{ route('admin.countries.edit', $country->id) }}">
-                                                            <i class="bi bi-pencil-square text-warning me-2"></i>
-                                                            Chỉnh sửa
-                                                        </a>
-                                                    </li>
-                                                    <li>
-                                                        <form action="{{ route('admin.countries.destroy', $country->id) }}" 
-                                                              method="POST" 
-                                                              class="d-inline"
-                                                              onsubmit="return confirm('Bạn có chắc chắn muốn xóa quốc gia này?')">
-                                                            @csrf
-                                                            @method('DELETE')
-                                                            <button type="submit" class="dropdown-item rounded-3 text-danger">
-                                                                <i class="bi bi-trash3 text-danger me-2"></i>
-                                                                Xóa
-                                                            </button>
-                                                        </form>
-                                                    </li>
-                                                </ul>
+                                            <div class="d-flex gap-1 justify-content-center">
+                                                <a href="{{ route('admin.countries.edit', $country->id) }}"
+                                                   class="btn btn-sm rounded-3 edit-btn" 
+                                                   title="Chỉnh sửa"
+                                                   data-bs-toggle="tooltip">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <form action="{{ route('admin.countries.destroy', $country->id) }}" 
+                                                      method="POST" 
+                                                      class="d-inline"
+                                                      onsubmit="return confirm('Bạn có chắc chắn muốn xóa quốc gia này?')">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" 
+                                                            class="btn btn-sm rounded-3 delete-btn" 
+                                                            title="Xóa"
+                                                            data-bs-toggle="tooltip">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </form>
                                             </div>
                                         </td>
                                     </tr>
@@ -395,6 +389,59 @@
     background-color: rgba(var(--bs-info-rgb), 0.1) !important;
 }
 
+/* Action Buttons - THÊM PHẦN NÀY: */
+.edit-btn {
+    background-color: #212529 !important;
+    border: 1px solid #212529 !important;
+    color: white !important;
+    transition: all 0.3s ease;
+    min-width: 36px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+}
+
+.edit-btn:hover {
+    background-color: #343a40 !important;
+    border-color: #343a40 !important;
+    color: white !important;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 6px rgba(33, 37, 41, 0.3);
+}
+
+.delete-btn {
+    background-color: #dc3545 !important;
+    border: 1px solid #dc3545 !important;
+    color: white !important;
+    transition: all 0.3s ease;
+    min-width: 36px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.delete-btn:hover {
+    background-color: #c82333 !important;
+    border-color: #bd2130 !important;
+    color: white !important;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 6px rgba(220, 53, 69, 0.3);
+}
+
+.edit-btn i,
+.delete-btn i {
+    font-size: 14px;
+    color: white !important;
+}
+
+/* Tooltip styling */
+.tooltip {
+    font-size: 12px;
+}
+
 @media (max-width: 768px) {
     .table td, .table th {
         padding: 0.5rem 0.25rem;
@@ -405,6 +452,25 @@
         padding: 0.5rem 1rem;
         font-size: 0.85rem;
     }
+    
+    .edit-btn,
+    .delete-btn {
+        min-width: 32px;
+        height: 28px;
+    }
 }
 </style>
+
+<!-- Font Awesome CDN -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
 @endsection

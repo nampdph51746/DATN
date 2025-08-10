@@ -244,36 +244,15 @@
                                             </div>
                                         </td>
                                         <td class="text-center pe-4">
-                                            <div class="dropdown">
-                                                <button class="btn btn-light btn-sm dropdown-toggle rounded-pill" 
-                                                        type="button" data-bs-toggle="dropdown">
-                                                    <i class="bi bi-three-dots"></i>
-                                                </button>
-                                                <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-4">
-                                                    @can('edit age limit')
-                                                        <li>
-                                                            <a class="dropdown-item rounded-3" href="{{ route('admin.age_limits.edit', $ageLimit->id) }}">
-                                                                <i class="bi bi-pencil-square text-warning me-2"></i>
-                                                                Chỉnh sửa
-                                                            </a>
-                                                        </li>
-                                                    @endcan
-                                                    @can('delete age limit')
-                                                        <li>
-                                                            <form action="{{ route('admin.age_limits.destroy', $ageLimit->id) }}" 
-                                                                  method="POST" 
-                                                                  class="d-inline"
-                                                                  onsubmit="return confirm('Bạn có chắc chắn muốn xóa giới hạn độ tuổi này?')">
-                                                                @csrf
-                                                                @method('DELETE')
-                                                                <button type="submit" class="dropdown-item rounded-3 text-danger">
-                                                                    <i class="bi bi-trash3 text-danger me-2"></i>
-                                                                    Xóa
-                                                                </button>
-                                                            </form>
-                                                        </li>
-                                                    @endcan
-                                                </ul>
+                                            <div class="d-flex gap-1 justify-content-center">
+                                                @can('edit age limit')
+                                                    <a href="{{ route('admin.age_limits.edit', $ageLimit->id) }}"
+                                                       class="btn btn-sm rounded-3 edit-btn" 
+                                                       title="Chỉnh sửa"
+                                                       data-bs-toggle="tooltip">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                @endcan
                                             </div>
                                         </td>
                                     </tr>
@@ -313,6 +292,59 @@
 @endsection
 
 @section('scripts')
+<!-- Font Awesome CDN -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // Hiện/ẩn nút xóa đã chọn
+    function updateDeleteAgeLimitButton() {
+        const checked = document.querySelectorAll('.age-limit-checkbox:checked');
+        const form = document.getElementById('delete-selected-age-limit-form');
+        if (checked.length > 0) {
+            form.style.display = 'inline-block';
+        } else {
+            form.style.display = 'none';
+        }
+    }
+
+    // Chọn tất cả
+    document.getElementById('checkAllAgeLimits')?.addEventListener('change', function() {
+        document.querySelectorAll('.age-limit-checkbox').forEach(cb => {
+            cb.checked = this.checked;
+        });
+        updateDeleteAgeLimitButton();
+    });
+
+    // Check từng dòng
+    document.querySelectorAll('.age-limit-checkbox').forEach(cb => {
+        cb.addEventListener('change', updateDeleteAgeLimitButton);
+    });
+
+    document.getElementById('delete-selected-age-limit-form').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const checked = Array.from(document.querySelectorAll('.age-limit-checkbox:checked')).map(cb => cb.value);
+
+        if (checked.length === 0) {
+            alert('Bạn chưa chọn mục nào!');
+            return;
+        }
+
+        if (confirm('Bạn có chắc muốn xóa các giới hạn đã chọn?')) {
+            document.getElementById('selected-age-limit-ids').value = checked.join(',');
+            this.submit();
+        }
+    });
+});
+</script>
+
 <style>
 /* Modern UI Styles */
 .card {
@@ -385,21 +417,35 @@
     height: 100%;
 }
 
-.dropdown-menu {
-    border: none;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+/* THÊM ACTION BUTTONS CSS: */
+/* Action Buttons */
+.edit-btn {
+    background-color: #212529 !important;
+    border: 1px solid #212529 !important;
+    color: white !important;
+    transition: all 0.3s ease;
+    min-width: 36px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
 }
 
-.dropdown-item {
-    transition: all 0.2s ease;
-    border-radius: 0.5rem;
-    margin: 2px 0;
+.edit-btn:hover {
+    background-color: #343a40 !important;
+    border-color: #343a40 !important;
+    color: white !important;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 6px rgba(33, 37, 41, 0.3);
 }
 
-.dropdown-item:hover {
-    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-    transform: translateX(4px);
+.edit-btn i {
+    font-size: 14px;
+    color: white !important;
 }
+
+/* XÓA DROPDOWN STYLES */
 
 .alert {
     border-radius: 0.75rem;
@@ -431,6 +477,11 @@
     max-width: 200px;
 }
 
+/* Tooltip styling */
+.tooltip {
+    font-size: 12px;
+}
+
 @media (max-width: 768px) {
     .table td, .table th {
         padding: 0.5rem 0.25rem;
@@ -445,50 +496,11 @@
     .description-content {
         max-width: 120px;
     }
+    
+    .edit-btn {
+        min-width: 32px;
+        height: 28px;
+    }
 }
 </style>
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    // Hiện/ẩn nút xóa đã chọn
-    function updateDeleteAgeLimitButton() {
-        const checked = document.querySelectorAll('.age-limit-checkbox:checked');
-        const form = document.getElementById('delete-selected-age-limit-form');
-        if (checked.length > 0) {
-            form.style.display = 'inline-block';
-        } else {
-            form.style.display = 'none';
-        }
-    }
-
-    // Chọn tất cả
-    document.getElementById('checkAllAgeLimits')?.addEventListener('change', function() {
-        document.querySelectorAll('.age-limit-checkbox').forEach(cb => {
-            cb.checked = this.checked;
-        });
-        updateDeleteAgeLimitButton();
-    });
-
-    // Check từng dòng
-    document.querySelectorAll('.age-limit-checkbox').forEach(cb => {
-        cb.addEventListener('change', updateDeleteAgeLimitButton);
-    });
-
-    document.getElementById('delete-selected-age-limit-form').addEventListener('submit', function (e) {
-        e.preventDefault();
-
-        const checked = Array.from(document.querySelectorAll('.age-limit-checkbox:checked')).map(cb => cb.value);
-
-        if (checked.length === 0) {
-            alert('Bạn chưa chọn mục nào!');
-            return;
-        }
-
-        if (confirm('Bạn có chắc muốn xóa các giới hạn đã chọn?')) {
-            document.getElementById('selected-age-limit-ids').value = checked.join(',');
-            this.submit();
-        }
-    });
-});
-</script>
 @endsection
