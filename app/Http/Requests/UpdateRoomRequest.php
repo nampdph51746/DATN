@@ -1,0 +1,132 @@
+<?php
+
+namespace App\Http\Requests;
+
+use Illuminate\Foundation\Http\FormRequest;
+
+class UpdateRoomRequest extends FormRequest
+{
+    /**
+     * Determine if the user is authorized to make this request.
+     */
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     */
+    public function rules(): array
+    {
+        return [
+             'cinema_id' => 'required|integer',
+            'room_type_id' => 'nullable|integer',
+            'name' => 'required|string|max:100',
+            'capacity' => [
+                'required',
+                'integer',
+                'min:1',
+                function ($attribute, $value, $fail) {
+                    $this->validateCapacityForCoupleSeats($attribute, $value, $fail);
+                }
+            ],
+            'status' => 'nullable|string|max:20',
+        ];
+    }
+
+        /**
+     * Validate capacity for rooms with couple seat types
+     */
+    private function validateCapacityForCoupleSeats($attribute, $value, $fail)
+    {
+        $roomTypeId = $this->input('room_type_id');
+        
+        if (!$roomTypeId) {
+            return; // Skip validation if no room type selected
+        }
+        
+        try {
+            // Lấy allowed seat types thông qua constraints table
+            $constraints = \App\Models\RoomSeatTypeConstraint::where('room_type_id', $roomTypeId)
+                ->with('seatType')
+                ->get();
+                
+            if ($constraints->isEmpty()) {
+                return; // Không có constraints thì skip validation
+            }
+            
+            $coupleSeatsCount = 0;
+            $hasCoupleSeats = false;
+            $coupleSeatsNames = [];
+            
+            foreach ($constraints as $constraint) {
+                if ($constraint->seatType && $this->isCoupleSeaType($constraint->seatType->name)) {
+                    $hasCoupleSeats = true;
+                    $coupleSeatsNames[] = $constraint->seatType->name;
+                    $coupleSeatsCount++;
+                }
+            }
+            
+            // Nếu có ghế đôi, capacity phải chẵn
+            if ($hasCoupleSeats && $value % 2 !== 0) {
+                $coupleSeatsStr = implode(', ', $coupleSeatsNames);
+                $suggestedCapacity = $value + 1; // Đề xuất số chẵn gần nhất
+                
+                $roomType = \App\Models\RoomType::find($roomTypeId);
+                $roomTypeName = $roomType ? $roomType->name : 'Unknown';
+                
+                $fail("Phòng loại '{$roomTypeName}' có chứa ghế đôi ({$coupleSeatsStr}) nên sức chứa phải là số chẵn. Đề xuất: {$suggestedCapacity} ghế.");
+            }
+            
+            // Kiểm tra capacity có hợp lý với ghế hiện có không
+            if ($this->route('room')) {
+                $room = $this->route('room');
+                $currentSeats = $room->seats()->count();
+                
+                if ($value < $currentSeats) {
+                    $fail("Sức chứa mới ({$value}) không thể nhỏ hơn số ghế hiện có ({$currentSeats}).");
+                }
+            }
+            
+        } catch (\Exception $e) {
+            // Log error và vẫn fail validation để đảm bảo an toàn
+            \Log::error('Error validating capacity for couple seats: ' . $e->getMessage(), [
+                'room_type_id' => $roomTypeId,
+                'capacity' => $value,
+                'trace' => $e->getTraceAsString()
+            ]);
+            $fail('Có lỗi khi kiểm tra sức chứa cho ghế đôi. Vui lòng thử lại.');
+        }
+    }
+
+    /**
+     * Check if seat type is couple seat
+     */
+    private function isCoupleSeaType(string $seatTypeName): bool
+    {
+        $typeName = strtolower($seatTypeName);
+        return str_contains($typeName, 'couple') || 
+               str_contains($typeName, 'sweetbox') || 
+               str_contains($typeName, 'bed') ||
+               str_contains($typeName, 'sofa');
+    }
+     public function messages(): array
+    {
+        return [
+            'cinema_id.required' => 'Vui lòng chọn rạp chiếu.',
+            'cinema_id.integer' => 'Rạp chiếu không hợp lệ.',
+            'room_type_id.integer' => 'Loại phòng không hợp lệ.',
+            'name.required' => 'Vui lòng nhập tên phòng.',
+            'name.string' => 'Tên phòng phải là chuỗi ký tự.',
+            'name.max' => 'Tên phòng không được vượt quá 100 ký tự.',
+            'capacity.required' => 'Vui lòng nhập sức chứa.',
+            'capacity.integer' => 'Sức chứa phải là số nguyên.',
+            'capacity.min' => 'Sức chứa phải lớn hơn 0.',
+            'status.string' => 'Trạng thái phải là chuỗi ký tự.',
+            'status.max' => 'Trạng thái không được vượt quá 20 ký tự.',
+        ];
+    }    
+}

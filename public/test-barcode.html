@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Barcode</title>
+</head>
+<body>
+    <h1>Test Barcode Display</h1>
+    <p>Booking Code: BK1754063915</p>
+    
+    <script>
+        // Tạo barcode test
+        fetch('/test-barcode-api')
+            .then(response => response.json())
+            .then(data => {
+                if (data.barcode) {
+                    document.getElementById('barcode-container').innerHTML = 
+                        '<img src="data:image/png;base64,' + data.barcode + '" alt="Barcode" style="max-width: 300px;">';
+                }
+            });
+    </script>
+    
+    <div id="barcode-container">
+        <p>Loading barcode...</p>
+    </div>
+</body>
+</html>

@@ -1,0 +1,86 @@
+@extends('layouts.admin.admin')
+
+@section('content')
+    <div class="container-xxl">
+        <div class="row">
+
+            <!-- Right Form Section -->
+            <div class="col-xl-9 col-lg-8 mx-auto">
+                <form action="{{ route('users.update', $user->id) }}" method="POST" enctype="multipart/form-data">
+                    @csrf
+                    @method('PUT')
+
+                    <!-- User Information -->
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h4 class="card-title">User Information</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-lg-6 mb-3">
+                                    <label for="customer_rank_id" class="form-label">Customer Rank</label>
+                                    <select name="customer_rank_id" id="customer_rank_id"
+                                        class="form-control @error('customer_rank_id') is-invalid @enderror">
+                                        <option value="">Select rank</option>
+                                        @foreach ($customerRanks as $rank)
+                                            <option value="{{ $rank->id }}" {{ old('customer_rank_id', $user->customer_rank_id) == $rank->id ? 'selected' : '' }}>
+                                                {{ $rank->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('customer_rank_id')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <!-- Role -->
+                                <div class="col-lg-6 mb-3">
+                                    <label for="role" class="form-label">Role</label>
+                                    <select name="role" id="role" class="form-control @error('role_') is-invalid @enderror">
+                                        <option value="">Select role</option>
+                                        @foreach ($roles as $role)
+                                            <option value="{{ $role->name }}" {{ old('role', $selectedRole) == $role->name ? 'selected' : '' }}>
+                                                {{ $role->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('role')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <!-- Status -->
+<div class="col-lg-6 mb-3">
+                                    <label for="status" class="form-label">Status</label>
+                                    <select name="status" id="status"
+                                        class="form-control @error('status') is-invalid @enderror">
+                                        <option value="">Select status</option>
+                                        @foreach($statuses as $status)
+                                            <option value="{{ $status->value }}" {{ old('status', $user->status->value ?? '') == $status->value ? 'selected' : '' }}>
+                                                {{ $status->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('status')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+
+                                <!-- Action Buttons -->
+                                <div class="p-3 bg-light mb-3 rounded mt-3">
+                                    <div class="row justify-content-end g-2">
+                                        <div class="col-lg-2">
+                                            <button type="submit" class="btn btn-primary w-100">Save</button>
+                                        </div>
+                                        <div class="col-lg-2">
+                                            <a href="{{ route('users.index') }}"
+                                                class="btn btn-outline-secondary w-100">Cancel</a>
+                                        </div>
+                                    </div>
+                                </div>
+                </form>
+            </div>
+        </div>
+    </div>
+@endsection
