@@ -8,6 +8,7 @@ enum ShowtimeStatus: string
     case Ongoing = 'ongoing';      
     case Completed = 'completed';  
     case Cancelled = 'cancelled';  
+    case Postponed = 'postponed';  // Suất chiếu bị hoãn
 
     public function color(): string
     {
@@ -16,6 +17,7 @@ enum ShowtimeStatus: string
             self::Ongoing => 'bg-primary',
             self::Completed => 'bg-secondary',
             self::Cancelled => 'bg-danger',
+            self::Postponed => 'bg-warning',
         };
     }
 }

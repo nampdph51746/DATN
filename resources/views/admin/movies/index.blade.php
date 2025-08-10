@@ -241,7 +241,7 @@
                                         <td>{{ $movie->created_at->format('d/m/Y H:i') }}</td>
                                         <td>
                                             <div class="d-flex gap-2">
-                                                <a href="{{ route('admin.movies.show', ['id' => $movie->id]) }}" class="btn btn-light btn-sm">
+                                                <a href="{{ route('admin.movies.show', $movie->id) }}" class="btn btn-light btn-sm">
                                                     <iconify-icon icon="solar:eye-broken" class="align-middle fs-18"></iconify-icon>
                                                 </a>
                                                 @php
@@ -268,7 +268,7 @@
                                                         <iconify-icon icon="solar:pen-2-broken" class="align-middle fs-18"></iconify-icon>
                                                     </button>
                                                 @else
-                                                    <a href="{{ route('admin.movies.edit', ['id' => $movie->id]) }}" class="btn btn-soft-primary btn-sm" title="Chỉnh sửa phim">
+                                                    <a href="{{ route('admin.movies.edit', $movie->id) }}" class="btn btn-soft-primary btn-sm" title="Chỉnh sửa phim">
                                                         <iconify-icon icon="solar:pen-2-broken" class="align-middle fs-18"></iconify-icon>
                                                     </a>
                                                 @endif

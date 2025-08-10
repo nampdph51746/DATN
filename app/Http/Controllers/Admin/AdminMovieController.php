@@ -236,10 +236,8 @@ class AdminMovieController extends Controller
     }
 
         // Form sửa phim
-    public function edit($id)
+    public function edit(Movie $movie)
     {
-        $movie = Movie::findOrFail($id);
-        
         // Kiểm tra xem phim có thể chỉnh sửa không
         if (!$movie->canBeEdited()) {
             $reason = '';
@@ -265,10 +263,8 @@ class AdminMovieController extends Controller
     }
 
         // Cập nhật phim
-    public function update(Request $request, $id)
+    public function update(Request $request, Movie $movie)
     {
-        $movie = Movie::findOrFail($id);
-        
         // Kiểm tra xem phim có thể chỉnh sửa không
         if (!$movie->canBeEdited()) {
             $reason = '';
@@ -305,7 +301,6 @@ class AdminMovieController extends Controller
             'average_rating' => 'nullable|numeric|min:0|max:10',
         ]);
 
-        $movie = Movie::findOrFail($id);
         $data = $request->except('poster');
 
         // Đảm bảo thư mục tồn tại
@@ -341,10 +336,8 @@ class AdminMovieController extends Controller
     }
 
     // Xóa phim
-    public function destroy($id)
+    public function destroy(Movie $movie)
     {
-        $movie = Movie::findOrFail($id);
-        
         // Kiểm tra xem phim có thể xóa không
         if (!$movie->canBeEdited()) {
             $movieStatus = is_object($movie->status) ? $movie->status->value : $movie->status;
@@ -379,9 +372,9 @@ class AdminMovieController extends Controller
 
         return redirect()->route('admin.movies.index')->with('success', 'Xóa phim thành công!');
     }
-    public function show(Request $request, $id)
+    public function show(Request $request, Movie $movie)
     {
-        $movie = Movie::with(['genres', 'ageLimit', 'country'])->findOrFail($id);
+        $movie = $movie->load(['genres', 'ageLimit', 'country', 'director', 'actors']);
 
         // Lấy thông tin tìm kiếm/lọc suất chiếu
         $showtimeQuery = $request->input('showtime_query');
