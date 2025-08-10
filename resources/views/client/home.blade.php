@@ -479,97 +479,28 @@
 <section class="w3l-main-slider position-relative" id="home">
     <div class="companies20-content">
         <div class="owl-one owl-carousel owl-theme">
+            @foreach ($banners as $banner)
             <div class="item">
                 <li>
-                    <div class="slider-info banner-view bg bg2">
+                    <div class="slider-info banner-view bg bg2" style="background-image: url('{{ $banner->image_url }}'); background-size: cover; background-position: center;">
                         <div class="banner-info">
-                            <h3>Latest Movie Trailers</h3>
-                            <p>Lorem ipsum dolor sit amet consectetur adipisicing elit.<span class="over-para">
-                                    Consequuntur hic odio
-                                    voluptatem tenetur consequatur.</span></p>
-                            <a href="#small-dialog1" class="popup-with-zoom-anim play-view1">
+                            <!-- <h3>{{ $banner->title }}</h3> -->
+                            <!-- Nếu bạn có mô tả thêm, có thể thêm ở đây -->
+                            <!-- <a href="{{ $banner->link_url }}" class="popup-with-zoom-anim play-view1" target="_blank" rel="noopener noreferrer">
                                 <span class="video-play-icon">
                                     <span class="fa fa-play"></span>
                                 </span>
-                                <h6>Watch Trailer</h6>
-                            </a>
-                            <div id="small-dialog1" class="zoom-anim-dialog mfp-hide">
-                                <iframe src="https://player.vimeo.com/video/358205676" allow="autoplay; fullscreen"
-                                    allowfullscreen=""></iframe>
-                            </div>
+                                <h6>Xem chi tiết</h6>
+                            </a> -->
                         </div>
                     </div>
                 </li>
             </div>
-            <div class="item">
-                <li>
-                    <div class="slider-info  banner-view banner-top1 bg bg2">
-                        <div class="banner-info">
-                            <h3>Latest Online Movies</h3>
-                            <p>Lorem ipsum dolor sit amet consectetur adipisicing elit.<span class="over-para">
-                                    Consequuntur hic odio
-                                    voluptatem tenetur consequatur.</span></p>
-                            <a href="#small-dialog2" class="popup-with-zoom-anim play-view1">
-                                <span class="video-play-icon">
-                                    <span class="fa fa-play"></span>
-                                </span>
-                                <h6>Watch Trailer</h6>
-                            </a>
-                            <div id="small-dialog2" class="zoom-anim-dialog mfp-hide">
-                                <iframe src="https://player.vimeo.com/video/395376850" allow="autoplay; fullscreen"
-                                    allowfullscreen=""></iframe>
-                            </div>
-                        </div>
-                    </div>
-                </li>
-            </div>
-            <div class="item">
-                <li>
-                    <div class="slider-info banner-view banner-top2 bg bg2">
-                        <div class="banner-info">
-                            <h3>Latest Movie Trailers</h3>
-                            <p>Lorem ipsum dolor sit amet consectetur adipisicing elit.<span class="over-para">
-                                    Consequuntur hic odio
-                                    voluptatem tenetur consequatur.</span></p>
-                            <a href="#small-dialog3" class="popup-with-zoom-anim play-view1">
-                                <span class="video-play-icon">
-                                    <span class="fa fa-play"></span>
-                                </span>
-                                <h6>Watch Trailer</h6>
-                            </a>
-                            <div id="small-dialog3" class="zoom-anim-dialog mfp-hide">
-                                <iframe src="https://player.vimeo.com/video/389969665" allow="autoplay; fullscreen"
-                                    allowfullscreen=""></iframe>
-                            </div>
-                        </div>
-                    </div>
-                </li>
-            </div>
-            <div class="item">
-                <li>
-                    <div class="slider-info banner-view banner-top3 bg bg2">
-                        <div class="banner-info">
-                            <h3>Latest Online Movies</h3>
-                            <p>Lorem ipsum dolor sit amet consectetur adipisicing elit.<span class="over-para">
-                                    Consequuntur hic odio
-                                    voluptatem tenetur consequatur.</span></p>
-                            <a href="#small-dialog4" class="popup-with-zoom-anim play-view1">
-                                <span class="video-play-icon">
-                                    <span class="fa fa-play"></span>
-                                </span>
-                                <h6>Watch Trailer</h6>
-                            </a>
-                            <div id="small-dialog4" class="zoom-anim-dialog mfp-hide">
-                                <iframe src="https://player.vimeo.com/video/323491174" allow="autoplay; fullscreen"
-                                    allowfullscreen=""></iframe>
-                            </div>
-                        </div>
-                    </div>
-                </li>
-            </div>
+            @endforeach
         </div>
     </div>
 </section>
+
 
 <!--grids-sec1-->
 <section class="w3l-grids">

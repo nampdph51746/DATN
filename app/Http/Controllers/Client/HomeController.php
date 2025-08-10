@@ -26,6 +26,7 @@ use App\Models\PointHistory;
 use App\Models\CustomerRank;
 use App\Services\ShowtimeAvailabilityService;
 use Illuminate\Support\Facades\Validator;
+
 class HomeController extends Controller
 {
     public function index()
@@ -61,12 +62,12 @@ class HomeController extends Controller
             ->take(6)
             ->get();
 
-        $banners = Banner::where('is_active', true)
+        $banners = Banner::where('is_active', 1)
         ->whereDate('start_date', '<=', $now)
         ->whereDate('end_date', '>=', $now)
         ->orderBy('display_order')
         ->get();
-
+        
         return view('client.home', compact('showingMovies', 'upcomingMovies', 'query', 'banners'));
     }
 
