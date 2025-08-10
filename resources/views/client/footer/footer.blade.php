@@ -22,36 +22,32 @@
 
 
                             <div class="col-md-3 col-sm-6 sub-two-right mt-5">
-                                <h6>Movies</h6>
+                                <h6>CineVN</h6>
                                 <ul>
-                                    <li><a href="#">Movies</a></li>
-                                    <li><a href="#">Videos</a></li>
-                                    <li><a href="#">English Movies</a></li>
-                                    <li><a href="#">Tailor</a></li>
-                                    <li><a href="#">Upcoming Movies</a></li>
-                                    <li><a href="Contact_Us.html">Contact Us</a></li>
+                                    <li><a href="#">Giới thiệu</a></li>
+                                    <li><a href="#">Tiện ích</a></li>
+                                    <li><a href="#">Quà tặng</a></li>
+                                    <li><a href="#">Tuyển dụng</a></li>
+                                    <li><a href="#">Liên hệ quảng cáo</a></li>
                                 </ul>
                             </div>
                             <div class="col-md-3 col-sm-6 sub-two-right mt-5">
-                                <h6>Information</h6>
+                                <h6>Điều khoản sử dụng</h6>
                                 <ul>
-                                    <li><a href="index.html">Home</a> </li>
-                                    <li><a href="about.html">About</a> </li>
-                                    <li><a href="#">Tv Series</a> </li>
-                                    <li><a href="#">Blogs</a> </li>
-                                    <li><a href="sign_in.html">Login</a></li>
-                                    <li><a href="Contact_Us.html">Contact</a></li>
+                                    <li><a href="#">Điều khoản chung</a> </li>
+                                    <li><a href="about.html">Điều khoản Giao dịch</a> </li>
+                                    <li><a href="#">Chính sách thanh toán</a> </li>
+                                    <li><a href="#">Chính sách bảo mật</a> </li>
+                                    <li><a href="sign_in.html">Câu hỏi thường gặp</a></li>
                                 </ul>
                             </div>
                             <div class="col-md-3 col-sm-6 sub-two-right mt-5">
-                                <h6>Locations</h6>
+                                <h6>Chăm sóc khách hàng</h6>
                                 <ul>
-                                    <li><a href="movies.html">Asia</a></li>
-                                    <li><a href="movies.html">France</a></li>
-                                    <li><a href="movies.html">Taiwan</a></li>
-                                    <li><a href="movies.html">United States</a></li>
-                                    <li><a href="movies.html">Korea</a></li>
-                                    <li><a href="movies.html">United Kingdom</a></li>
+                                    <li><a href="#">Hotline: 1900 6017</a></li>
+                                    <li><a href="movies.html">Giờ làm việc: 8:00 - 22:00 (Tất cả các ngày bao gồm cả Lễ Tết)</a></li>
+                                    <li><a href="movies.html">Email hỗ trợ: hoidap@cgv.vn</a></li>
+
                                 </ul>
                             </div>
                             <div class="col-md-3 col-sm-6 sub-two-right mt-5">
@@ -68,27 +64,6 @@
                 </div>
             </div>
         </div>
-        </div>
-        <div class="below-section">
-            <div class="container">
-                <div class="copyright-footer">
-                    <div class="columns text-lg-left">
-                        <p>&copy; 2021 MyShowz. All rights reserved</p>
-                    </div>
-
-                    <ul class="social text-lg-right">
-                        <li><a href="#facebook"><span class="fa fa-facebook" aria-hidden="true"></span></a>
-                        </li>
-                        <li><a href="#linkedin"><span class="fa fa-linkedin" aria-hidden="true"></span></a>
-                        </li>
-                        <li><a href="#twitter"><span class="fa fa-twitter" aria-hidden="true"></span></a>
-                        </li>
-                        <li><a href="#google"><span class="fa fa-google-plus" aria-hidden="true"></span></a>
-                        </li>
-
-                    </ul>
-                </div>
-            </div>
         </div>
         <!-- move top -->
         <button onclick="topFunction()" id="movetop" title="Go to top">
