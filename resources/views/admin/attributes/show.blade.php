@@ -117,7 +117,11 @@
                                     @forelse($attribute->attributeValues as $key => $attributeValue)
                                         <tr>
                                             <td>{{ $key + 1 }}</td>
-                                            <td>{{ $attributeValue->value }}</td>
+                                            <td>
+                                                <a href="{{ route('admin.attribute-values.show', $attributeValue->id) }}" class="text-primary text-decoration-underline">
+                                                    {{ $attributeValue->value }}
+                                                </a>
+                                            </td>
                                             <td>{{ $attributeValue->created_at ? $attributeValue->created_at->format('d/m/Y H:i') : 'Không xác định' }}
                                             </td>
                                             <td>{{ $attributeValue->updated_at ? $attributeValue->updated_at->format('d/m/Y H:i') : 'Không xác định' }}
