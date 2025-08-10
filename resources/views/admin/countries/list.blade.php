@@ -237,25 +237,22 @@
                                         </td>
                                         <td class="text-center pe-4">
                                             <div class="d-flex gap-1 justify-content-center">
+                                                <!-- Nút Xem Chi Tiết (nếu có route) -->
+                                                @if(Route::has('admin.countries.show'))
+                                                <a href="{{ route('admin.countries.show', $country->id) }}"
+                                                   class="btn btn-sm rounded-3 view-detail-btn" 
+                                                   title="Xem chi tiết"
+                                                   data-bs-toggle="tooltip">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                @endif
+                                                <!-- Nút Chỉnh Sửa -->
                                                 <a href="{{ route('admin.countries.edit', $country->id) }}"
                                                    class="btn btn-sm rounded-3 edit-btn" 
                                                    title="Chỉnh sửa"
                                                    data-bs-toggle="tooltip">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
-                                                <form action="{{ route('admin.countries.destroy', $country->id) }}" 
-                                                      method="POST" 
-                                                      class="d-inline"
-                                                      onsubmit="return confirm('Bạn có chắc chắn muốn xóa quốc gia này?')">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" 
-                                                            class="btn btn-sm rounded-3 delete-btn" 
-                                                            title="Xóa"
-                                                            data-bs-toggle="tooltip">
-                                                        <i class="fas fa-trash"></i>
-                                                    </button>
-                                                </form>
                                             </div>
                                         </td>
                                     </tr>
@@ -389,7 +386,29 @@
     background-color: rgba(var(--bs-info-rgb), 0.1) !important;
 }
 
-/* Action Buttons - THÊM PHẦN NÀY: */
+/* Action Buttons - GIỐNG TRANG MOVIES: */
+.view-detail-btn {
+    background-color: #6c757d !important;
+    border: 1px solid #6c757d !important;
+    color: white !important;
+    transition: all 0.3s ease;
+    min-width: 36px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+}
+
+.view-detail-btn:hover {
+    background-color: #5a6268 !important;
+    border-color: #545b62 !important;
+    color: white !important;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 6px rgba(108, 117, 125, 0.3);
+}
+
+/* EDIT BUTTON - MÀU ĐEN: */
 .edit-btn {
     background-color: #212529 !important;
     border: 1px solid #212529 !important;
@@ -411,28 +430,9 @@
     box-shadow: 0 3px 6px rgba(33, 37, 41, 0.3);
 }
 
-.delete-btn {
-    background-color: #dc3545 !important;
-    border: 1px solid #dc3545 !important;
-    color: white !important;
-    transition: all 0.3s ease;
-    min-width: 36px;
-    height: 32px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.delete-btn:hover {
-    background-color: #c82333 !important;
-    border-color: #bd2130 !important;
-    color: white !important;
-    transform: translateY(-1px);
-    box-shadow: 0 3px 6px rgba(220, 53, 69, 0.3);
-}
-
-.edit-btn i,
-.delete-btn i {
+/* ĐẢM BẢO ICON HIỂN THỊ ĐÚNG MÀU: */
+.view-detail-btn i,
+.edit-btn i {
     font-size: 14px;
     color: white !important;
 }
@@ -453,8 +453,8 @@
         font-size: 0.85rem;
     }
     
-    .edit-btn,
-    .delete-btn {
+    .view-detail-btn,
+    .edit-btn {
         min-width: 32px;
         height: 28px;
     }
