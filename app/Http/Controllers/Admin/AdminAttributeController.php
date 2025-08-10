@@ -59,10 +59,31 @@ class AdminAttributeController extends Controller
         return redirect()->route('admin.attributes.index')->with('success', 'Thuộc tính đã được tạo thành công.');
     }
 
-    public function show($id)
+    public function show(Request $request, $id)
     {
-    $attribute = Attribute::with('attributeValues')->findOrFail($id);
-    return view('admin.attributes.show', compact('attribute'));
+        $attribute = Attribute::with('attributeValues')->findOrFail($id);
+
+        // Xử lý thêm giá trị thuộc tính nếu có request POST
+        if ($request->isMethod('post')) {
+            $request->validate([
+                'value' => 'required|string|max:255',
+            ], [
+                'value.required' => 'Giá trị thuộc tính là bắt buộc.',
+                'value.string' => 'Giá trị phải là chuỗi ký tự.',
+                'value.max' => 'Giá trị không được vượt quá 255 ký tự.',
+            ]);
+
+            // Giả sử model Attribute có quan hệ attributeValues và model AttributeValue
+            $attribute->attributeValues()->create([
+                'value' => $request->value,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            return redirect()->route('admin.attributes.show', $id)->with('success', 'Giá trị thuộc tính đã được thêm thành công.');
+        }
+
+        return view('admin.attributes.show', compact('attribute'));
     }
 
     public function edit($id)
