@@ -23,8 +23,10 @@ class Point extends Model
         return $this->belongsTo(User::class);
     }
 
+    // SỬA RELATIONSHIP NÀY:
     public function histories()
     {
-        return $this->hasMany(PointHistory::class);
+        // Liên kết qua user_id thay vì point_id
+        return $this->hasMany(PointHistory::class, 'user_id', 'user_id');
     }
 }

@@ -103,7 +103,7 @@
                             Lịch sử giao dịch điểm
                         </h5>
                         <span class="badge bg-primary-subtle text-primary">
-                            {{ $point->histories()->count() }} giao dịch
+                            {{ isset($histories) ? $histories->count() : \App\Models\PointHistory::where('user_id', $point->user_id)->count() }} giao dịch
                         </span>
                     </div>
                 </div>
@@ -120,7 +120,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($point->histories()->orderByDesc('created_at')->get() as $history)
+                                @forelse(isset($histories) ? $histories : \App\Models\PointHistory::where('user_id', $point->user_id)->orderByDesc('created_at')->get() as $history)
                                     <tr>
                                         <td>
                                             <div class="d-flex flex-column">
