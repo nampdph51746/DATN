@@ -69,7 +69,7 @@ class PromotionController extends Controller
             ]);
         }
         
-        return redirect()->route('promotions.index')->with('success', 'Khuyến mãi đã được tạo thành công.');
+        return redirect()->route('admin.promotions.index')->with('success', 'Khuyến mãi đã được tạo thành công.');
     }
 
     public function edit($id)
@@ -105,7 +105,7 @@ class PromotionController extends Controller
                 \App\Models\CustomerRankPromotion::where('promotion_id', $id)->delete();
             }
             
-            return redirect()->route('promotions.index')->with('success', 'Khuyến mãi đã được cập nhật thành công.');
+            return redirect()->route('admin.promotions.index')->with('success', 'Khuyến mãi đã được cập nhật thành công.');
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'Cập nhật thất bại: ' . $e->getMessage()])->withInput();
         }
@@ -119,7 +119,7 @@ class PromotionController extends Controller
         \App\Models\CustomerRankPromotion::where('promotion_id', $id)->delete();
         
         $promotion->delete(); // Soft delete
-        return redirect()->route('promotions.trashed')->with('success', 'Khuyến mãi đã được xóa mềm thành công.');
+        return redirect()->route('admin.promotions.trashed')->with('success', 'Khuyến mãi đã được xóa mềm thành công.');
     }
 
     public function trashed()
@@ -133,7 +133,7 @@ class PromotionController extends Controller
     {
         $promotion = Promotion::onlyTrashed()->findOrFail($id);
         $promotion->restore();
-        return redirect()->route('promotions.trashed')->with('success', 'Khôi phục thành công!');
+        return redirect()->route('admin.promotions.trashed')->with('success', 'Khôi phục thành công!');
     }
 
     public function forceDelete($id)
@@ -144,6 +144,6 @@ class PromotionController extends Controller
         \App\Models\CustomerRankPromotion::where('promotion_id', $id)->delete();
         
         $promotion->forceDelete();
-        return redirect()->route('promotions.trashed')->with('success', 'Đã xóa vĩnh viễn!');
+        return redirect()->route('admin.promotions.trashed')->with('success', 'Đã xóa vĩnh viễn!');
     }
 }

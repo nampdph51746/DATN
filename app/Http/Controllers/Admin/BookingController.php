@@ -31,8 +31,6 @@ class BookingController extends Controller
         ->latest()
         ->paginate(10);
 
-        
-
         return view('client.bookings.index', compact('bookings'));
     }
 
@@ -51,12 +49,13 @@ class BookingController extends Controller
         
         return view('client.bookings.show', compact('booking'));
     }
+    
     public function index(Request $request)
     {
-        $query = Booking::with(['tickets.showtime']);
+        $query = Booking::with(['tickets.showtime.movie', 'user']);
 
         // Tìm kiếm theo ID, mã booking, hoặc user_id
-        if ($request->has('search')) {
+        if ($request->has('search') && $request->search) {
             $search = $request->search;
 
             $query->where(function ($q) use ($search) {
@@ -64,8 +63,23 @@ class BookingController extends Controller
                     $q->where('id', $search)
                         ->orWhere('user_id', $search);
                 }
-                $q->orWhere('booking_code', 'like', "%$search%");
+                $q->orWhere('booking_code', 'like', "%$search%")
+                  ->orWhereHas('user', function($userQuery) use ($search) {
+                      $userQuery->where('name', 'like', "%$search%")
+                               ->orWhere('email', 'like', "%$search%")
+                               ->orWhere('phone', 'like', "%$search%");
+                  });
             });
+        }
+
+        // Lọc theo payment_status
+        if ($request->has('payment_status') && $request->payment_status !== null) {
+            $query->where('payment_status', $request->payment_status);
+        }
+
+        // Lọc theo ngày
+        if ($request->has('date') && $request->date) {
+            $query->whereDate('created_at', $request->date);
         }
 
         // Lọc theo status
@@ -86,92 +100,124 @@ class BookingController extends Controller
             'tickets.seat',
             'bookingItems.productVariant.product',
             'payments.paymentMethod',
-            'promotion'
-            // Thêm eager load cho sản phẩm
+            'promotion',
+            'user'
         ])->findOrFail($id);
 
         return view('admin.bookings.show', compact('booking'));
     }
 
-
-
-    public function editStatus(Booking $booking)
+    /**
+     * Hiển thị form edit booking
+     */
+    public function edit(Booking $booking)
     {
+        $booking->load(['user', 'tickets.showtime.movie', 'tickets.seat', 'payments']);
         return view('admin.bookings.edit', compact('booking'));
     }
 
-    public function updateStatus(Request $request, $id)
+    /**
+     * Cập nhật trạng thái booking
+     */
+    public function updateStatus(Request $request, Booking $booking)
     {
         $request->validate([
-            'status' => ['required', Rule::in([BookingStatus::Pending->value, BookingStatus::Confirmed->value, BookingStatus::Cancelled->value])],
+            'status' => ['required', Rule::in([
+                'pending', 'confirmed', 'cancelled', 'completed'
+            ])],
+            'admin_notes' => 'nullable|string|max:1000'
         ]);
 
-        $booking = Booking::findOrFail($id);
-        $oldStatus = $booking->status->value;
-        $oldData = $booking->getOriginal();
-        $booking->status = BookingStatus::from($request->status);
+        $oldStatus = is_object($booking->status) ? $booking->status->value : (string) $booking->status;
+        
+        // Cập nhật status
+        if (enum_exists('App\Enums\BookingStatus')) {
+            $booking->status = BookingStatus::from($request->status);
+        } else {
+            $booking->status = $request->status;
+        }
+        
+        // Lưu ghi chú admin nếu có
+        if ($request->filled('admin_notes')) {
+            $booking->admin_notes = $request->admin_notes;
+        }
+        
         $booking->save();
 
-        // Tạo thông báo khi cập nhật trạng thái booking
-        Notification::create([
-            'user_id' => Auth::id(),
-            'entity_type' => Booking::class,
-            'entity_id' => $booking->id,
-            'title' => 'Cập nhật trạng thái đơn đặt vé',
-            'message' => 'Đơn đặt vé #' . $booking->id . ' đã được cập nhật trạng thái từ "' . $oldStatus . '" sang "' . $booking->status->value . '".',
-            'type' => NotificationType::Booking,
-            'priority' => 'high',
-            'old_status' => $oldStatus,
-            'new_status' => $booking->status->value,
-            'event_details' => json_encode([
-                'old' => $oldData,
-                'new' => $booking->getAttributes(),
-            ]),
-        ]);
-
-        if ($oldStatus === BookingStatus::Pending->value && $booking->status->value === BookingStatus::Confirmed->value) {
-            $user = $booking->user;
-            if (!$user) {
-                return redirect()->route('admin.bookings.index')->with('error', 'Không tìm thấy người dùng.');
+        // Tạo thông báo
+        try {
+            if (class_exists('App\Models\Notification')) {
+                Notification::create([
+                    'user_id' => Auth::id(),
+                    'entity_type' => Booking::class,
+                    'entity_id' => $booking->id,
+                    'title' => 'Cập nhật trạng thái đơn đặt vé',
+                    'message' => 'Đơn đặt vé #' . $booking->booking_code . ' đã được cập nhật từ "' . $oldStatus . '" sang "' . $request->status . '".',
+                    'type' => 'booking',
+                    'priority' => 'high',
+                ]);
             }
-
-            $pointsToAdd = max(1, floor($booking->final_amount / 10000));
-
-            if ($pointsToAdd > 0 && !PointHistory::where('booking_id', $booking->id)->exists()) {
-                try {
-                    $point = Point::firstOrCreate(
-                        ['user_id' => $user->id],
-                        ['points_expiry_date' => now()->addYear(), 'created_at' => now(), 'updated_at' => now()]
-                    );
-                    $point->total_points = ($point->total_points ?? 0) + $pointsToAdd;
-                    $point->save();
-
-                    PointHistory::create([
-                        'user_id' => $user->id,
-                        'booking_id' => $booking->id,
-                        'points_change' => $pointsToAdd,
-                        'reason_type' => 'earned',
-                        'description' => 'Cộng điểm cho đơn hàng #' . $booking->id,
-                        'created_at' => now(),
-                    ]);
-
-                } catch (\Exception $e) {
-                    return redirect()->route('admin.bookings.index')->with('error', 'Lỗi khi cộng điểm thưởng: ' . $e->getMessage());
-                }
-            }
+        } catch (\Exception $e) {
+            \Log::warning('Could not create notification: ' . $e->getMessage());
         }
 
-        return redirect()->route('admin.bookings.index')->with('success', 'Cập nhật trạng thái thành công.');
+        return redirect()->route('admin.bookings.index')
+                        ->with('success', 'Cập nhật trạng thái đơn đặt vé thành công!');
     }
-    public function print($booking_code)
+
+    /**
+     * Cộng điểm thưởng cho booking được confirmed
+     */
+    private function addPointsForConfirmedBooking(Booking $booking)
     {
+        $user = $booking->user;
+        if (!$user) {
+            return;
+        }
+
+        $pointsToAdd = max(1, floor($booking->final_amount / 10000));
+
+        if ($pointsToAdd > 0 && !PointHistory::where('booking_id', $booking->id)->exists()) {
+            try {
+                $point = Point::firstOrCreate(
+                    ['user_id' => $user->id],
+                    ['points_expiry_date' => now()->addYear(), 'created_at' => now(), 'updated_at' => now()]
+                );
+                $point->total_points = ($point->total_points ?? 0) + $pointsToAdd;
+                $point->save();
+
+                PointHistory::create([
+                    'user_id' => $user->id,
+                    'booking_id' => $booking->id,
+                    'points_change' => $pointsToAdd,
+                    'reason_type' => 'earned',
+                    'description' => 'Cộng điểm cho đơn hàng #' . $booking->booking_code,
+                    'created_at' => now(),
+                ]);
+
+            } catch (\Exception $e) {
+                \Log::error('Error adding points for booking: ' . $e->getMessage());
+            }
+        }
+    }
+
+    public function print($booking_code_or_id)
+    {
+        // Tìm booking theo code hoặc ID
         $booking = Booking::with([
             'tickets.showtime.movie',
             'tickets.showtime.room',
             'tickets.seat',
             'bookingItems.productVariant.product',
             'user',
-        ])->where('booking_code', $booking_code)->firstOrFail();
+        ])->where(function($query) use ($booking_code_or_id) {
+            if (is_numeric($booking_code_or_id)) {
+                $query->where('id', $booking_code_or_id)
+                      ->orWhere('booking_code', $booking_code_or_id);
+            } else {
+                $query->where('booking_code', $booking_code_or_id);
+            }
+        })->firstOrFail();
 
         // Validate thời gian in vé cho tất cả các vé trong booking
         $this->validatePrintTimeForBooking($booking);
@@ -191,25 +237,22 @@ class BookingController extends Controller
         // QR code cho food/drink chung
         $foodDrinksQRCode = null;
         if ($foodDrinks && $foodDrinks->count() > 0) {
-            $qrText =  json_encode($foodDrinks->toArray());
+            $qrText = json_encode($foodDrinks->toArray());
             $qrCodeRaw = $qrService->generateQrCode($qrText, 120);
             $foodDrinksQRCode = $qrCodeRaw ? 'data:image/png;base64,' . $qrCodeRaw : null;
         }
 
-        $pdf = PDF::loadView('admin.bookings.print', [
+        return view('admin.bookings.print', [
             'booking' => $booking,
             'tickets' => $tickets,
             'foodDrinks' => $foodDrinks,
             'ticketQRCodes' => $ticketQRCodes,
             'foodDrinksQRCode' => $foodDrinksQRCode,
         ]);
-
-        return $pdf->download('ve-dat-'. $booking->booking_code .'.pdf');
     }
 
     /**
      * Validate thời gian in vé cho booking
-     * Vé chỉ được in trước suất chiếu 1 tiếng và không được in sau khi suất chiếu đã bắt đầu
      */
     private function validatePrintTimeForBooking($booking)
     {
@@ -219,12 +262,11 @@ class BookingController extends Controller
             $showtime = $ticket->showtime;
             $showtimeStart = $showtime->start_time;
             
-            // Kiểm tra nếu suất chiếu đã bắt đầu
+            // Có thể bỏ comment các validation này nếu cần
             // if ($currentTime >= $showtimeStart) {
             //     abort(403, 'Không thể in vé sau khi suất chiếu đã bắt đầu. Suất chiếu: ' . $showtimeStart->format('d/m/Y H:i'));
             // }
             
-            // // Kiểm tra nếu còn ít hơn 1 tiếng trước suất chiếu
             // $oneHourBeforeShowtime = $showtimeStart->copy()->subHour();
             // if ($currentTime > $oneHourBeforeShowtime) {
             //     abort(403, 'Vé chỉ có thể in trước suất chiếu ít nhất 1 tiếng. Suất chiếu: ' . $showtimeStart->format('d/m/Y H:i'));

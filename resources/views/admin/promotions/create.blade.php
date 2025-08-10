@@ -9,7 +9,7 @@
                     <h4 class="card-title">Thông tin khuyến mãi</h4>
                 </div>
                 <div class="card-body">
-                    <form action="{{ route('promotions.store') }}" method="post">
+                    <form action="{{ route('admin.promotions.store') }}" method="post">
                         @csrf
                         <div class="row">
                             <div class="col-lg-6">
@@ -141,7 +141,7 @@
                                 <button type="submit" class="btn btn-outline-secondary w-100">Lưu</button>
                             </div>
                             <div class="col-lg-2">
-                                <a href="{{ route('promotions.index') }}" class="btn btn-primary w-100">Hủy</a>
+                                <a href="{{ route('admin.promotions.index') }}" class="btn btn-primary w-100">Hủy</a>
                             </div>
                         </div>
                     </form>

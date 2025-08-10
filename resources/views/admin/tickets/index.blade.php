@@ -69,19 +69,19 @@
                     <h4 class="card-title flex-grow-1">Danh sách vé</h4>
                     <div class="d-flex gap-2 align-items-center">
                         <!-- Search Form -->
-                        <form method="GET" action="{{ route('tickets.index') }}" class="d-flex align-items-center gap-2">
+                        <form method="GET" action="{{ route('admin.tickets.index') }}" class="d-flex align-items-center gap-2">
                             <input type="text" name="search" placeholder="Tìm kiếm ID vé hoặc ID suất chiếu" value="{{ request('search') }}" class="form-control form-control-sm" style="width: 200px;">
                             <button type="submit" class="btn btn-sm btn-primary">Tìm</button>
                         </form>
                         {{-- <!-- Add New Button -->
-                        <a href="{{ route('tickets.create') }}" class="btn btn-sm btn-primary">Thêm mới</a> --}}
+                        <a href="{{ route('admin.tickets.create') }}" class="btn btn-sm btn-primary">Thêm mới</a> --}}
                         <!-- Filter Dropdown -->
                         <div class="dropdown">
                             <a href="#" class="dropdown-toggle btn btn-sm btn-outline-light" data-bs-toggle="dropdown" aria-expanded="false">
                                 Lọc
                             </a>
                             <div class="dropdown-menu dropdown-menu-end">
-                                <form method="GET" action="{{ route('tickets.index') }}" class="p-2">
+                                <form method="GET" action="{{ route('admin.tickets.index') }}" class="p-2">
                                     <div class="mb-2">
                                         <label for="id" class="form-label">ID Vé</label>
                                         <input type="text" name="id" id="id" placeholder="ID Vé" value="{{ request('id') }}" class="form-control form-control-sm">
@@ -164,7 +164,7 @@
                                     <td>
                                         <div class="d-flex gap-2">
                                             <!-- View Button -->
-                                            <a href="{{ route('tickets.show', $ticket->id) }}" class="btn btn-light btn-sm" title="Xem chi tiết">
+                                            <a href="{{ route('admin.tickets.show', $ticket->id) }}" class="btn btn-light btn-sm" title="Xem chi tiết">
                                                 <iconify-icon icon="solar:eye-broken" class="align-middle fs-18"></iconify-icon>
                                             </a>
                                             <!-- Print Ticket Button -->
@@ -177,7 +177,7 @@
                                                 <iconify-icon icon="solar:printer-minimalistic-broken" class="align-middle fs-18"></iconify-icon>
                                             </a>
                                             <!-- Edit Button -->
-                                            {{-- <a href="{{ route('tickets.edit', $ticket->id) }}" class="btn btn-soft-primary btn-sm" title="Sửa">
+                                            {{-- <a href="{{ route('admin.tickets.edit', $ticket->id) }}" class="btn btn-soft-primary btn-sm" title="Sửa">
                                                 <iconify-icon icon="solar:pen-2-broken" class="align-middle fs-18"></iconify-icon>
                                             </a> --}}
                                             </form>

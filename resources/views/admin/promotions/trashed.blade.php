@@ -7,7 +7,7 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center gap-1">
                     <h4 class="card-title flex-grow-1">Danh sách khuyến mãi đã xóa mềm</h4>
-                    <a href="{{ route('promotions.index') }}" class="btn btn-sm btn-primary">Quay lại danh sách</a>
+                    <a href="{{ route('admin.promotions.index') }}" class="btn btn-sm btn-primary">Quay lại danh sách</a>
                 </div>
                 <div class="table-responsive">
                     <table class="table align-middle mb-0 table-hover table-centered">
@@ -33,13 +33,13 @@
                                 <td>{{ $promotion->deleted_at->format('d/m/Y H:i') }}</td>
                                 <td>
                                     <div class="d-flex gap-2">
-                                        <form action="{{ route('promotions.restore', $promotion->id) }}" method="POST" style="display:inline;">
+                                        <form action="{{ route('admin.promotions.restore', $promotion->id) }}" method="POST" style="display:inline;">
                                             @csrf
                                             <button type="submit" class="btn btn-soft-success btn-sm" onclick="return confirm('Khôi phục?')">
                                                 <iconify-icon icon="solar:refresh-circle-broken" class="align-middle fs-18"></iconify-icon>
                                             </button>
                                         </form>
-                                        <form action="{{ route('promotions.forceDelete', $promotion->id) }}" method="POST" style="display:inline;">
+                                        <form action="{{ route('admin.promotions.forceDelete', $promotion->id) }}" method="POST" style="display:inline;">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-soft-danger btn-sm" onclick="return confirm('Xóa vĩnh viễn?')">

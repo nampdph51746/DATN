@@ -11,18 +11,18 @@
                 <div class="card-header d-flex justify-content-between align-items-center gap-1">
                     <h4 class="card-title flex-grow-1">Danh sách khuyến mãi</h4>
                     <div class="d-flex gap-2 align-items-center">
-                        <form method="GET" action="{{ route('promotions.index') }}" class="d-flex align-items-center gap-2">
+                        <form method="GET" action="{{ route('admin.promotions.index') }}" class="d-flex align-items-center gap-2">
                             <input type="text" name="search" placeholder="Tìm kiếm tên hoặc mã KM" value="{{ request('search') }}" class="form-control form-control-sm" style="width: 200px;">
                             <button type="submit" class="btn btn-sm btn-primary">Tìm</button>
                         </form>
-                        <a href="{{ route('promotions.create') }}" class="btn btn-sm btn-primary">Thêm mới</a>
-                        <a href="{{ route('promotions.trashed') }}" class="btn btn-outline-danger btn-sm">Xem đã xoá mềm</a>
+                        <a href="{{ route('admin.promotions.create') }}" class="btn btn-sm btn-primary">Thêm mới</a>
+                        <a href="{{ route('admin.promotions.trashed') }}" class="btn btn-outline-danger btn-sm">Xem đã xoá mềm</a>
                         <div class="dropdown">
                             <a href="#" class="dropdown-toggle btn btn-sm btn-outline-light" data-bs-toggle="dropdown" aria-expanded="false">
                                 Lọc
                             </a>
                             <div class="dropdown-menu dropdown-menu-end">
-                                <form method="GET" action="{{ route('promotions.index') }}" class="p-2">
+                                <form method="GET" action="{{ route('admin.promotions.index') }}" class="p-2">
                                     <div class="mb-2">
                                         <label for="status" class="form-label">Trạng thái</label>
                                         <select name="status" id="status" class="form-control form-control-sm">
@@ -116,13 +116,13 @@
                                     </td>
                                     <td>
                                         <div class="d-flex gap-2">
-                                            <a href="{{ route('promotions.show', $promotion->id) }}" class="btn btn-light btn-sm">
+                                            <a href="{{ route('admin.promotions.show', $promotion->id) }}" class="btn btn-light btn-sm">
                                                 <iconify-icon icon="solar:eye-broken" class="align-middle fs-18"></iconify-icon>
                                             </a>
-                                            <a href="{{ route('promotions.edit', $promotion->id) }}" class="btn btn-soft-primary btn-sm">
+                                            <a href="{{ route('admin.promotions.edit', $promotion->id) }}" class="btn btn-soft-primary btn-sm">
                                                 <iconify-icon icon="solar:pen-2-broken" class="align-middle fs-18"></iconify-icon>
                                             </a>
-                                            <form action="{{ route('promotions.destroy', $promotion->id) }}" method="POST" style="display:inline;">
+                                            <form action="{{ route('admin.promotions.destroy', $promotion->id) }}" method="POST" style="display:inline;">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="btn btn-soft-danger btn-sm" onclick="return confirm('Xoá mềm?')">

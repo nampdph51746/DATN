@@ -16,7 +16,8 @@ class AgeLimitController extends Controller
         $this->middleware('can:edit age limit')->only(['edit', 'update']);
         $this->middleware('can:delete age limit')->only('destroy');
     }
-    public function index()
+    
+    public function index(Request $request) // Thêm Request $request vào đây
     {
         $query = AgeLimit::query();
 
@@ -50,7 +51,7 @@ class AgeLimitController extends Controller
     public function edit($id)
     {
         $ageLimit = AgeLimit::findOrFail($id);
-        return view('admin.movies.ageLimit.edit', compact('ageLimit'));
+        return view('admin.ageLimit.edit', compact('ageLimit')); // Sửa path view
     }
 
     public function update(Request $request, $id)

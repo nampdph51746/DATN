@@ -1,90 +1,410 @@
 @extends('layouts.admin.admin')
 
 @section('content')
+<div class="container-fluid px-4">
+    <!-- Alert Messages -->
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm rounded-4 mb-4" role="alert">
+            <div class="d-flex align-items-center">
+                <div class="flex-shrink-0">
+                    <div class="avatar-sm rounded-circle bg-success-subtle">
+                        <span class="avatar-title rounded-circle bg-success text-white">
+                            <i class="bi bi-check-circle-fill fs-5"></i>
+                        </span>
+                    </div>
+                </div>
+                <div class="flex-grow-1 ms-3">
+                    <h6 class="alert-heading mb-1 fw-bold">Thành công!</h6>
+                    <p class="mb-0">{{ session('success') }}</p>
+                </div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
 
-<div class="container-fluid">
-
-     <div class="row">
-          <div class="col-xl-12">
-               <div class="card">
-                    <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
-                    <h4 class="card-title flex-grow-1">Danh sách quốc gia</h4>
-
-                    <form action="{{ route('admin.countries.index') }}" method="GET" class="d-flex align-items-center">
-                        <input type="text" name="keyword" value="{{ request('keyword') }}" class="form-control form-control-sm" placeholder="Tìm tên quốc gia...">
-                        <button type="submit" class="btn btn-sm btn-outline-primary">Tìm</button>
-                    </form>
-
-                    <a href="countries-add" class="btn btn-sm btn-primary">
-                        Thêm Quốc Gia
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                <div>
+                    <h4 class="fw-bold text-dark mb-1">
+                        <i class="bi bi-globe text-primary me-2"></i>
+                        Quản lý quốc gia
+                    </h4>
+                    <p class="text-muted mb-0">Quản lý danh sách các quốc gia trong hệ thống</p>
+                </div>
+                <div class="d-flex gap-2 flex-wrap">
+                    <a href="{{ route('admin.countries.trash') }}" class="btn btn-outline-danger btn-lg rounded-pill shadow-sm">
+                        <i class="bi bi-trash3 me-2"></i> Thùng rác
                     </a>
+                    <a href="{{ route('admin.countries.create') }}" class="btn btn-primary btn-lg rounded-pill shadow-sm">
+                        <i class="bi bi-plus-circle me-2"></i> Thêm quốc gia
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
 
-                    <div class="dropdown">
-                        <a href="#" class="dropdown-toggle btn btn-sm btn-outline-light" data-bs-toggle="dropdown" aria-expanded="false">
-                            This Month
-                        </a>
-                        <div class="dropdown-menu dropdown-menu-end">
-                            <a href="#!" class="dropdown-item">Download</a>
-                            <a href="#!" class="dropdown-item">Export</a>
-                            <a href="#!" class="dropdown-item">Import</a>
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-lg-6 col-md-6">
+            <div class="card border-0 shadow-sm h-100 rounded-4 overflow-hidden">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="avatar-lg rounded-circle bg-primary-subtle">
+                                <span class="avatar-title rounded-circle bg-primary text-white">
+                                    <i class="bi bi-globe fs-4"></i>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-0 text-muted fw-semibold">Tổng quốc gia</h6>
+                            <h3 class="mb-0 fw-bold text-primary">{{ $countries->total() }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="progress rounded-0" style="height: 4px;">
+                    <div class="progress-bar bg-primary" style="width: 100%"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-lg-6 col-md-6">
+            <div class="card border-0 shadow-sm h-100 rounded-4 overflow-hidden">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="avatar-lg rounded-circle bg-success-subtle">
+                                <span class="avatar-title rounded-circle bg-success text-white">
+                                    <i class="bi bi-check-circle fs-4"></i>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-0 text-muted fw-semibold">Hoạt động</h6>
+                            <h3 class="mb-0 fw-bold text-success">{{ $countries->total() }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="progress rounded-0" style="height: 4px;">
+                    <div class="progress-bar bg-success" style="width: 85%"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-lg-6 col-md-6">
+            <div class="card border-0 shadow-sm h-100 rounded-4 overflow-hidden">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="avatar-lg rounded-circle bg-warning-subtle">
+                                <span class="avatar-title rounded-circle bg-warning text-white">
+                                    <i class="bi bi-calendar-week fs-4"></i>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-0 text-muted fw-semibold">Tuần này</h6>
+                            <h3 class="mb-0 fw-bold text-warning">3</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="progress rounded-0" style="height: 4px;">
+                    <div class="progress-bar bg-warning" style="width: 60%"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-lg-6 col-md-6">
+            <div class="card border-0 shadow-sm h-100 rounded-4 overflow-hidden">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="avatar-lg rounded-circle bg-info-subtle">
+                                <span class="avatar-title rounded-circle bg-info text-white">
+                                    <i class="bi bi-search fs-4"></i>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-0 text-muted fw-semibold">Tìm kiếm</h6>
+                            <h3 class="mb-0 fw-bold text-info">{{ request('keyword') ? 'Có' : 'Không' }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="progress rounded-0" style="height: 4px;">
+                    <div class="progress-bar bg-info" style="width: {{ request('keyword') ? '100' : '0' }}%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Table Card -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-white border-bottom-0 py-4 rounded-top-4">
+                    <div class="row align-items-center">
+                        <div class="col-lg-6 col-md-8">
+                            <h5 class="card-title mb-0 fw-bold text-dark">
+                                <i class="bi bi-table me-2 text-primary"></i>
+                                Danh sách quốc gia
+                            </h5>
+                        </div>
+                        <div class="col-lg-6 col-md-4">
+                            <form action="{{ route('admin.countries.index') }}" method="GET" class="d-flex gap-2">
+                                <div class="input-group">
+                                    <input type="text" name="keyword" value="{{ request('keyword') }}" 
+                                           class="form-control rounded-pill" 
+                                           placeholder="Tìm tên quốc gia...">
+                                    <button type="submit" class="btn btn-primary rounded-pill ms-2">
+                                        <i class="bi bi-search"></i>
+                                    </button>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 </div>
 
-                    <div>
-                         <div class="table-responsive">
-                              <div class="table-responsive">
-                        <table class="table align-middle mb-0 table-hover table-centered">
-                            <thead class="bg-light-subtle">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
                                 <tr>
-                                    <th>#</th>
-                                    <th>Tên Quốc gia</th>
-                                    <th>Mã code</th>
-                                    <th>Thời gian tạo</th>
-                                    <th>Thời gian cập nhật</th>
-                                    <th>Thao tác</th>
+                                    <th class="border-0 fw-bold text-dark" style="width: 60px;">
+                                        <i class="bi bi-hash me-1"></i> STT
+                                    </th>
+                                    <th class="border-0 fw-bold text-dark">
+                                        <i class="bi bi-globe me-1"></i> Tên quốc gia
+                                    </th>
+                                    <th class="border-0 fw-bold text-dark">
+                                        <i class="bi bi-code-square me-1"></i> Mã code
+                                    </th>
+                                    <th class="border-0 fw-bold text-dark">
+                                        <i class="bi bi-calendar-plus me-1"></i> Thời gian tạo
+                                    </th>
+                                    <th class="border-0 fw-bold text-dark">
+                                        <i class="bi bi-pencil-square me-1"></i> Cập nhật
+                                    </th>
+                                    <th class="border-0 fw-bold text-dark text-center pe-4">
+                                        <i class="bi bi-gear me-1"></i> Thao tác
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @forelse($countries as $key => $country)
-                                <tr>
-                                    <td>{{ $key + 1 }}</td>
-                                    <td>{{ $country->name }}</td>
-                                    <td>{{ $country->code }}</td>
-                                    <td>{{ $country->created_at }}</td>
-                                    <td>{{ $country->updated_at }}</td>
-                                    <td>
-                                        <div class="d-flex gap-2">
-                                            <a href="{{ route('admin.countries.edit', $country->id) }}" class="btn btn-soft-primary btn-sm">
-                                                <iconify-icon icon="solar:pen-2-broken" class="fs-18"></iconify-icon>
-                                            </a>
-                                            <form action="{{ route('admin.countries.destroy', $country->id) }}" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xóa quốc gia này?')">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-soft-danger btn-sm">
-                                                    <iconify-icon icon="solar:trash-bin-minimalistic-2-broken" class="fs-18"></iconify-icon>
+                                    <tr class="border-bottom border-light">
+                                        <td>
+                                            <div class="d-flex align-items-center justify-content-center">
+                                                <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-2 fw-semibold">
+                                                    {{ $key + 1 }}
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="flex-shrink-0 me-3">
+                                                    <div class="avatar-sm rounded-circle bg-primary-subtle">
+                                                        <span class="avatar-title rounded-circle bg-primary text-white">
+                                                            <i class="bi bi-globe"></i>
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <h6 class="mb-0 fw-bold text-dark">{{ $country->name }}</h6>
+                                                    <small class="text-muted">ID: #{{ $country->id }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info-subtle text-info rounded-pill px-3 py-2 fw-semibold">
+                                                {{ $country->code }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="text-muted">
+                                                <i class="bi bi-calendar-event me-1"></i>
+                                                {{ $country->created_at->format('d/m/Y') }}
+                                                <br>
+                                                <small class="text-muted">{{ $country->created_at->format('H:i') }}</small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="text-muted">
+                                                <i class="bi bi-clock-history me-1"></i>
+                                                {{ $country->updated_at->format('d/m/Y') }}
+                                                <br>
+                                                <small class="text-muted">{{ $country->updated_at->format('H:i') }}</small>
+                                            </div>
+                                        </td>
+                                        <td class="text-center pe-4">
+                                            <div class="dropdown">
+                                                <button class="btn btn-light btn-sm dropdown-toggle rounded-pill" 
+                                                        type="button" data-bs-toggle="dropdown">
+                                                    <i class="bi bi-three-dots"></i>
                                                 </button>
-                                            </form>
-                                        </div>
-                                    </td>
-                                </tr>
+                                                <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-4">
+                                                    <li>
+                                                        <a class="dropdown-item rounded-3" href="{{ route('admin.countries.edit', $country->id) }}">
+                                                            <i class="bi bi-pencil-square text-warning me-2"></i>
+                                                            Chỉnh sửa
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <form action="{{ route('admin.countries.destroy', $country->id) }}" 
+                                                              method="POST" 
+                                                              class="d-inline"
+                                                              onsubmit="return confirm('Bạn có chắc chắn muốn xóa quốc gia này?')">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit" class="dropdown-item rounded-3 text-danger">
+                                                                <i class="bi bi-trash3 text-danger me-2"></i>
+                                                                Xóa
+                                                            </button>
+                                                        </form>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </td>
+                                    </tr>
                                 @empty
-                                <tr>
-                                    <td colspan="6" class="text-center text-muted">Không có quốc gia nào.</td>
-                                </tr>
+                                    <tr>
+                                        <td colspan="6" class="text-center py-5">
+                                            <div class="d-flex flex-column align-items-center">
+                                                <i class="bi bi-globe text-muted fs-1 mb-3"></i>
+                                                <h6 class="text-muted">Không có quốc gia nào</h6>
+                                                <p class="text-muted small mb-0">Hãy thêm quốc gia mới để bắt đầu</p>
+                                            </div>
+                                        </td>
+                                    </tr>
                                 @endforelse
                             </tbody>
                         </table>
                     </div>
-                         </div>
+                </div>
+
+                <!-- Pagination -->
+                @if($countries->hasPages())
+                    <div class="card-footer bg-white border-top py-4 rounded-bottom-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="text-muted small">
+                                Hiển thị {{ $countries->firstItem() }}-{{ $countries->lastItem() }} trong tổng {{ $countries->total() }} quốc gia
+                            </div>
+                            <div>
+                                {{ $countries->appends(request()->query())->links('pagination::bootstrap-5') }}
+                            </div>
+                        </div>
                     </div>
-                    <div class="card-footer border-top">
-                         <div class="d-flex justify-content-end mt-3">
-                              {!! $countries->links('pagination::bootstrap-4') !!}
-                         </div>
-                    </div>
-               </div>
-          </div>
-     </div>
+                @endif
+            </div>
+        </div>
+    </div>
 </div>
+
+<style>
+/* Modern UI Styles */
+.card {
+    transition: all 0.3s ease;
+    border: none !important;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+}
+
+.table > :not(caption) > * > * {
+    padding: 1rem 0.75rem;
+    border-bottom: 1px solid #f1f3f4;
+}
+
+.table tbody tr {
+    transition: all 0.3s ease;
+}
+
+.table tbody tr:hover {
+    background-color: #f8f9fa;
+    transform: translateX(2px);
+}
+
+.btn {
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.btn-lg {
+    padding: 0.75rem 1.5rem;
+    font-size: 0.95rem;
+}
+
+.avatar-sm {
+    width: 2.5rem;
+    height: 2.5rem;
+}
+
+.avatar-lg {
+    width: 3.5rem;
+    height: 3.5rem;
+}
+
+.avatar-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+}
+
+.dropdown-menu {
+    border: none;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+}
+
+.dropdown-item {
+    transition: all 0.2s ease;
+    border-radius: 0.5rem;
+    margin: 2px 0;
+}
+
+.dropdown-item:hover {
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    transform: translateX(4px);
+}
+
+.badge {
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+
+.bg-primary-subtle {
+    background-color: rgba(var(--bs-primary-rgb), 0.1) !important;
+}
+
+.bg-success-subtle {
+    background-color: rgba(var(--bs-success-rgb), 0.1) !important;
+}
+
+.bg-warning-subtle {
+    background-color: rgba(var(--bs-warning-rgb), 0.1) !important;
+}
+
+.bg-info-subtle {
+    background-color: rgba(var(--bs-info-rgb), 0.1) !important;
+}
+
+@media (max-width: 768px) {
+    .table td, .table th {
+        padding: 0.5rem 0.25rem;
+        font-size: 0.85rem;
+    }
+    
+    .btn-lg {
+        padding: 0.5rem 1rem;
+        font-size: 0.85rem;
+    }
+}
+</style>
 @endsection

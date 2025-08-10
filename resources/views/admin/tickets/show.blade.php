@@ -9,7 +9,7 @@
                 <div class="card-header d-flex justify-content-between align-items-center gap-1">
                     <h4 class="card-title flex-grow-1">Chi tiết vé #{{ $ticket->id }}</h4>
                     <div class="d-flex gap-2">
-                        <a href="{{ route('tickets.index') }}" class="btn btn-sm btn-outline-light">
+                        <a href="{{ route('admin.tickets.index') }}" class="btn btn-sm btn-outline-light">
                             <iconify-icon icon="solar:arrow-left-broken" class="align-middle fs-18"></iconify-icon> Quay lại
                         </a>
                     </div>
