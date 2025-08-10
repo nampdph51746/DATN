@@ -252,8 +252,10 @@
                                             </td>
                                             <td class="text-center">
                                                 <a href="{{ route('admin.point_history.show', $history->id) }}"
-                                                   class="btn btn-light btn-sm" title="Xem chi tiết">
-                                                    <i class="bi bi-eye"></i>
+                                                   class="btn btn-sm rounded-3 view-detail-btn" 
+                                                   title="Xem chi tiết"
+                                                   data-bs-toggle="tooltip">
+                                                    <i class="fas fa-eye"></i>
                                                 </a>
                                             </td>
                                         </tr>
@@ -352,4 +354,7 @@
             </div>
         </div>
     </div>
+
+    <!-- Add Font Awesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 @endsection

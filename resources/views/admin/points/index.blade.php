@@ -217,24 +217,19 @@
                                                 </div>
                                             </td>
                                             <td class="text-center">
-                                                <div class="dropdown">
-                                                    <button class="btn btn-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                                        <i class="bi bi-three-dots"></i>
-                                                    </button>
-                                                    <ul class="dropdown-menu">
-                                                        <li>
-                                                            <a class="dropdown-item" href="{{ route('admin.points.show', $point->id) }}">
-                                                                <i class="bi bi-eye me-2"></i>
-                                                                Xem chi tiết
-                                                            </a>
-                                                        </li>
-                                                        <li>
-                                                            <a class="dropdown-item" href="{{ route('admin.point_history.index', ['user_id' => $point->user_id ?? $point->customer_id]) }}">
-                                                                <i class="bi bi-clock-history me-2"></i>
-                                                                Lịch sử điểm
-                                                            </a>
-                                                        </li>
-                                                    </ul>
+                                                <div class="d-flex gap-1 justify-content-center">
+                                                    <a href="{{ route('admin.points.show', $point->id) }}"
+                                                       class="btn btn-sm rounded-3 view-detail-btn" 
+                                                       title="Xem chi tiết"
+                                                       data-bs-toggle="tooltip">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    <a href="{{ route('admin.point_history.index', ['user_id' => $point->user_id ?? $point->customer_id]) }}"
+                                                       class="btn btn-sm rounded-3 history-btn" 
+                                                       title="Lịch sử điểm"
+                                                       data-bs-toggle="tooltip">
+                                                        <i class="fas fa-history"></i>
+                                                    </a>
                                                 </div>
                                             </td>
                                         </tr>
@@ -311,4 +306,73 @@
             </div>
         </div>
     </div>
+    <!-- Add Font Awesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+    /* View Detail Button */
+    .view-detail-btn {
+        background-color: #6c757d !important;
+        border: 1px solid #6c757d !important;
+        color: white !important;
+        transition: all 0.3s ease;
+        min-width: 36px;
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+    }
+
+    .view-detail-btn:hover {
+        background-color: #5a6268 !important;
+        border-color: #545b62 !important;
+        color: white !important;
+        transform: translateY(-1px);
+        box-shadow: 0 3px 6px rgba(108, 117, 125, 0.3);
+    }
+
+    /* History Button */
+    .history-btn {
+        background-color: #17a2b8 !important;
+        border: 1px solid #17a2b8 !important;
+        color: white !important;
+        transition: all 0.3s ease;
+        min-width: 36px;
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+    }
+
+    .history-btn:hover {
+        background-color: #138496 !important;
+        border-color: #117a8b !important;
+        color: white !important;
+        transform: translateY(-1px);
+        box-shadow: 0 3px 6px rgba(23, 162, 184, 0.3);
+    }
+
+    .view-detail-btn i,
+    .history-btn i {
+        font-size: 14px;
+    }
+
+    /* Tooltip styling */
+    .tooltip {
+        font-size: 12px;
+    }
+    </style>
+
+    <!-- Initialize tooltips -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+    </script>
+
 @endsection

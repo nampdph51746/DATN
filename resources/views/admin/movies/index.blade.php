@@ -106,7 +106,7 @@
                                 <span class="avatar-title rounded-circle bg-success text-white">
                                     <i class="bi bi-play-circle fs-4"></i>
                                 </span>
-                            </div>
+                        </div>
                         </div>
                         <div class="flex-grow-1 ms-3">
                             <h6 class="mb-0 text-muted fw-semibold">Đang chiếu</h6>
@@ -150,7 +150,7 @@
                                 <span class="avatar-title rounded-circle bg-danger text-white">
                                     <i class="bi bi-stop-circle fs-4"></i>
                                 </span>
-                            </div>
+                        </div>
                         </div>
                         <div class="flex-grow-1 ms-3">
                             <h6 class="mb-0 text-muted fw-semibold">Đã kết thúc</h6>
@@ -475,45 +475,43 @@
                                             <span class="text-muted">{{ $movie->created_at->format('d/m/Y H:i') }}</span>
                                         </td>
                                         <td class="text-center pe-4">
-                                            <div class="dropdown">
-                                                <button class="btn btn-light btn-sm dropdown-toggle rounded-pill" 
-                                                        type="button" data-bs-toggle="dropdown">
-                                                    <i class="bi bi-three-dots"></i>
-                                                </button>
-                                                <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-4">
-                                                    <li>
-                                                        <a class="dropdown-item rounded-3" href="{{ route('admin.movies.show', $movie->id) }}">
-                                                            <i class="bi bi-eye text-primary me-2"></i>
-                                                            Xem chi tiết
-                                                        </a>
-                                                    </li>
-                                                    @php
-                                                        $canBeEdited = $movie->canBeEdited();
-                                                        $disableReason = '';
-                                                        if (!$canBeEdited) {
-                                                            if ($currentStatus === 'ended') {
-                                                                $disableReason = 'Phim đã kết thúc, không thể chỉnh sửa';
-                                                            } elseif ($currentStatus === 'showing') {
-                                                                $disableReason = 'Phim đang chiếu, không thể chỉnh sửa';
-                                                            } elseif ($movie->hasBookedTickets()) {
-                                                                $disableReason = 'Phim đã có vé được đặt, không thể chỉnh sửa';
-                                                            }
+                                            <div class="d-flex gap-1 justify-content-center">
+                                                <a href="{{ route('admin.movies.show', $movie) }}"
+
+                                                   class="btn btn-sm rounded-3 view-detail-btn" 
+                                                   title="Xem chi tiết"
+                                                   data-bs-toggle="tooltip">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                @php
+                                                    $canBeEdited = $movie->canBeEdited();
+                                                    $disableReason = '';
+                                                    if (!$canBeEdited) {
+                                                        if ($currentStatus === 'ended') {
+                                                            $disableReason = 'Phim đã kết thúc, không thể chỉnh sửa';
+                                                        } elseif ($currentStatus === 'showing') {
+                                                            $disableReason = 'Phim đang chiếu, không thể chỉnh sửa';
+                                                        } elseif ($movie->hasBookedTickets()) {
+                                                            $disableReason = 'Phim đã có vé được đặt, không thể chỉnh sửa';
                                                         }
-                                                    @endphp
-                                                    <li>
-                                                        @if(!$canBeEdited)
-                                                            <span class="dropdown-item-text text-muted rounded-3">
-                                                                <i class="bi bi-pencil-square text-muted me-2"></i>
-                                                                {{ $disableReason }}
-                                                            </span>
-                                                        @else
-                                                            <a class="dropdown-item rounded-3" href="{{ route('admin.movies.edit', $movie->id) }}">
-                                                                <i class="bi bi-pencil-square text-warning me-2"></i>
-                                                                Chỉnh sửa
-                                                            </a>
-                                                        @endif
-                                                    </li>
-                                                </ul>
+                                                    }
+                                                @endphp
+                                                @if(!$canBeEdited)
+                                                    <span class="btn btn-sm rounded-3 edit-disabled-btn" 
+                                                          title="{{ $disableReason }}"
+                                                          data-bs-toggle="tooltip"
+                                                          style="background-color: #dc3545 !important; border-color: #dc3545 !important; color: white !important;">
+                                                        <i class="fas fa-edit" style="color: white !important;"></i>
+                                                    </span>
+                                                @else
+                                                    <a href="{{ route('admin.movies.edit', $movie) }}"
+                                                       class="btn btn-sm rounded-3 edit-btn" 
+                                                       title="Chỉnh sửa"
+                                                       data-bs-toggle="tooltip"
+                                                       style="background-color: #212529 !important; border-color: #212529 !important; color: white !important;">
+                                                        <i class="fas fa-edit" style="color: white !important;"></i>
+                                                    </a>
+                                                @endif
                                             </div>
                                         </td>
                                     </tr>
@@ -554,6 +552,9 @@
 @endsection
 
 @section('scripts')
+<!-- Add Font Awesome CDN -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
 <style>
 /* Modern UI Styles */
 .movie-poster-small {
@@ -675,23 +676,119 @@
     background-color: rgba(0,0,0,0.05);
 }
 
-@media (max-width: 768px) {
-    .movie-poster-small {
-        width: 35px;
-        height: 50px;
-    }
-    
-    .table td, .table th {
-        padding: 0.5rem 0.25rem;
-        font-size: 0.85rem;
-    }
-    
-    .btn-lg {
-        padding: 0.5rem 1rem;
-        font-size: 0.85rem;
-    }
+/* Action Buttons */
+.view-detail-btn {
+    background-color: #6c757d !important;
+    border: 1px solid #6c757d !important;
+    color: white !important;
+    transition: all 0.3s ease;
+    min-width: 36px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
 }
+
+.view-detail-btn:hover {
+    background-color: #5a6268 !important;
+    border-color: #545b62 !important;
+    color: white !important;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 6px rgba(108, 117, 125, 0.3);
+}
+
+/* EDIT BUTTON - MÀU ĐEN KHI CÓ THỂ SỬA: */
+.edit-btn {
+    background-color: #212529 !important;
+    border: 1px solid #212529 !important;
+    color: white !important;
+    transition: all 0.3s ease;
+    min-width: 36px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+}
+
+.edit-btn:hover {
+    background-color: #343a40 !important;
+    border-color: #343a40 !important;
+    color: white !important;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 6px rgba(33, 37, 41, 0.3);
+}
+
+/* DISABLED EDIT BUTTON - MÀU ĐỎ KHI KHÔNG THỂ SỬA: */
+.edit-disabled-btn {
+    background-color: #dc3545 !important;
+    border: 1px solid #dc3545 !important;
+    color: white !important;
+    min-width: 36px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: not-allowed;
+    opacity: 1 !important; /* Thay đổi từ 0.8 thành 1 */
+    transition: all 0.3s ease;
+}
+
+.edit-disabled-btn:hover {
+    background-color: #c82333 !important;
+    border-color: #bd2130 !important;
+    color: white !important;
+    opacity: 1 !important;
+    box-shadow: 0 3px 6px rgba(220, 53, 69, 0.3);
+    transform: none; /* Không có transform để nhấn mạnh là disabled */
+}
+
+/* ĐẢM BẢO ICON HIỂN THỊ ĐÚNG MÀU: */
+.view-detail-btn i,
+.edit-btn i {
+    font-size: 14px;
+    color: white !important;
+}
+
+.edit-disabled-btn i {
+    font-size: 14px;
+    color: white !important; /* Đảm bảo icon màu trắng trên nền đỏ */
+}
+
+/* Tooltip styling */
+.tooltip {
+    font-size: 12px;
+}
+
+/* Đảm bảo override mọi style Bootstrap có thể conflict */
+.btn.edit-disabled-btn {
+    background-color: #dc3545 !important;
+    border-color: #dc3545 !important;
+    color: white !important;
+}
+
+.btn.edit-disabled-btn:hover,
+.btn.edit-disabled-btn:focus,
+.btn.edit-disabled-btn:active {
+    background-color: #c82333 !important;
+    border-color: #bd2130 !important;
+    color: white !important;
+}
+
+/* Tất cả styles khác giữ nguyên... */
 </style>
+
+<!-- Initialize tooltips -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
