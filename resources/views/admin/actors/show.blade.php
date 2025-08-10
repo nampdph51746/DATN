@@ -202,7 +202,6 @@
                                         <th class="border-0 fw-bold">Thể loại</th>
                                         <th class="border-0 fw-bold">Năm phát hành</th>
                                         <th class="border-0 fw-bold">Trạng thái</th>
-                                        <th class="border-0 fw-bold text-center">Thao tác</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -244,12 +243,6 @@
                                                     <i class="bi bi-x-circle me-1"></i>Ngưng hoạt động
                                                 </span>
                                             @endif
-                                        </td>
-                                        <td class="text-center">
-                                            <a href="{{ route('admin.movies.show', $movie->id) }}" 
-                                               class="btn btn-outline-info btn-sm rounded-pill">
-                                                <i class="bi bi-eye"></i>
-                                            </a>
                                         </td>
                                     </tr>
                                     @endforeach

@@ -221,7 +221,6 @@
                                         <th class="ps-4 py-4 fw-bold text-uppercase small border-0">Phim</th>
                                         <th class="py-4 fw-bold text-uppercase small border-0">Thông tin</th>
                                         <th class="py-4 fw-bold text-uppercase small border-0">Trạng thái</th>
-                                        <th class="py-4 fw-bold text-uppercase small border-0 text-center">Thao tác</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -272,20 +271,6 @@
                                                     {{ $statusText }}
                                                 </span>
                                             </td>
-                                            <td class="py-4">
-                                                <div class="d-flex justify-content-center gap-2">
-                                                    <a href="{{ route('admin.movies.show', $movie->id) }}" 
-                                                       class="btn btn-outline-primary btn-sm rounded-pill px-3"
-                                                       data-bs-toggle="tooltip" title="Xem chi tiết phim">
-                                                        <i class="bi bi-eye"></i>
-                                                    </a>
-                                                    <a href="{{ route('admin.movies.edit', $movie->id) }}" 
-                                                       class="btn btn-outline-warning btn-sm rounded-pill px-3"
-                                                       data-bs-toggle="tooltip" title="Chỉnh sửa phim">
-                                                        <i class="bi bi-pencil"></i>
-                                                    </a>
-                                                </div>
-                                            </td>
                                         </tr>
                                     @endforeach
                                 </tbody>
@@ -315,7 +300,7 @@
 
 @section('scripts')
 <style>
-/* Modern UI Styles */
+/* GIỮ NGUYÊN CÁC STYLES KHÁC: */
 .bg-gradient-info {
     background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
 }
@@ -344,93 +329,9 @@
     transform: translateX(2px);
 }
 
-.btn {
-    transition: all 0.3s ease;
-    font-weight: 500;
-}
-
-.btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-}
-
-.btn-lg {
-    padding: 0.75rem 1.5rem;
-    font-size: 0.95rem;
-}
-
-.rounded-pill {
-    border-radius: 50rem !important;
-}
-
-.rounded-4 {
-    border-radius: 0.75rem !important;
-}
-
-.badge {
-    font-weight: 500;
-    letter-spacing: 0.5px;
-}
-
-.avatar-sm {
-    width: 2.5rem;
-    height: 2.5rem;
-}
-
-.avatar-md {
-    width: 3rem;
-    height: 3rem;
-}
-
-.avatar-lg {
-    width: 3.5rem;
-    height: 3.5rem;
-}
-
-.avatar-xl {
-    width: 5rem;
-    height: 5rem;
-}
-
-.avatar-title {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 100%;
-}
-
-.bg-primary-subtle {
-    background-color: rgba(var(--bs-primary-rgb), 0.1) !important;
-}
-
-.bg-info-subtle {
-    background-color: rgba(var(--bs-info-rgb), 0.1) !important;
-}
-
-.bg-light-subtle {
-    background-color: #f8f9fa !important;
-}
-
-@media (max-width: 768px) {
-    .container-fluid {
-        padding: 1rem !important;
-    }
-    
-    .table td, .table th {
-        padding: 0.5rem 0.25rem;
-        font-size: 0.85rem;
-    }
-    
-    .btn-lg {
-        padding: 0.5rem 1rem;
-        font-size: 0.9rem;
-    }
-    
-    .avatar-xl {
-        width: 4rem;
-        height: 4rem;
-    }
+/* Tooltip styling - GIỮ NGUYÊN: */
+.tooltip {
+    font-size: 12px;
 }
 </style>
 
