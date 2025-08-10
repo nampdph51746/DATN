@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Client;
 
 use App\Models\Room;
+use App\Models\Banner;
 use App\Models\Movie;
 use App\Models\Product;
 use App\Models\SeatType;
@@ -30,6 +31,7 @@ class HomeController extends Controller
     public function index()
     {
         $query = request('query');
+        $now = Carbon::now();
 
         // Truy vấn phim đang chiếu
         $showingMovies = Movie::query()
@@ -59,7 +61,13 @@ class HomeController extends Controller
             ->take(6)
             ->get();
 
-        return view('client.home', compact('showingMovies', 'upcomingMovies', 'query'));
+        $banners = Banner::where('is_active', true)
+        ->whereDate('start_date', '<=', $now)
+        ->whereDate('end_date', '>=', $now)
+        ->orderBy('display_order')
+        ->get();
+
+        return view('client.home', compact('showingMovies', 'upcomingMovies', 'query', 'banners'));
     }
 
     // MovieController.php

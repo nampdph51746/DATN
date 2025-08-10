@@ -616,27 +616,27 @@
                     </div>
                     @endforeach
                     @if($showingMovies->unique('id')->count() > 5)
-<div class="swiper-slide">
-    <div class="item vhny-grid">
-        <div class="box16 more-slide-container">
-            <figure>
-                <img class="more-slide-img"
-                    src="https://cdn.pixabay.com/photo/2017/07/13/23/11/cinema-2502213_1280.jpg"
-                    alt="Xem thêm phim">
-            </figure>
-            <div class="more-slide-overlay">
-                <div class="more-slide-info">
-                    <h3>Khám phá thêm phim hay</h3>
-                    <p>Xem toàn bộ danh sách phim đang chiếu!</p>
-                    <a href="{{ route('movies.filter', ['status' => 'showing']) }}" class="more-btn">
-                        <i class="fa fa-arrow-right" aria-hidden="true"></i> Xem thêm
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-@endif
+                    <div class="swiper-slide">
+                        <div class="item vhny-grid">
+                            <div class="box16 more-slide-container">
+                                <figure>
+                                    <img class="more-slide-img"
+                                        src="https://cdn.pixabay.com/photo/2017/07/13/23/11/cinema-2502213_1280.jpg"
+                                        alt="Xem thêm phim">
+                                </figure>
+                                <div class="more-slide-overlay">
+                                    <div class="more-slide-info">
+                                        <h3>Khám phá thêm phim hay</h3>
+                                        <p>Xem toàn bộ danh sách phim đang chiếu!</p>
+                                        <a href="{{ route('movies.filter', ['status' => 'showing']) }}" class="more-btn">
+                                            <i class="fa fa-arrow-right" aria-hidden="true"></i> Xem thêm
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
                 </div>
 
                 <!-- Nút điều hướng -->
@@ -680,27 +680,27 @@
 
                     <!-- Slide Xem thêm -->
                     @if($upcomingMovies->unique('id')->count() > 5)
-<div class="swiper-slide">
-    <div class="item vhny-grid">
-        <div class="box16 more-slide-container">
-            <figure>
-                <img class="more-slide-img"
-                    src="https://cdn.pixabay.com/photo/2017/07/13/23/11/cinema-2502213_1280.jpg"
-                    alt="Xem thêm phim">
-            </figure>
-            <div class="more-slide-overlay">
-                <div class="more-slide-info">
-                    <h3>Khám phá thêm phim sắp chiếu</h3>
-                    <p>Xem toàn bộ danh sách phim sắp ra mắt!</p>
-                    <a href="" class="more-btn">
-                        <i class="fa fa-arrow-right" aria-hidden="true"></i> Xem thêm
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-@endif
+                    <div class="swiper-slide">
+                        <div class="item vhny-grid">
+                            <div class="box16 more-slide-container">
+                                <figure>
+                                    <img class="more-slide-img"
+                                        src="https://cdn.pixabay.com/photo/2017/07/13/23/11/cinema-2502213_1280.jpg"
+                                        alt="Xem thêm phim">
+                                </figure>
+                                <div class="more-slide-overlay">
+                                    <div class="more-slide-info">
+                                        <h3>Khám phá thêm phim sắp chiếu</h3>
+                                        <p>Xem toàn bộ danh sách phim sắp ra mắt!</p>
+                                        <a href="" class="more-btn">
+                                            <i class="fa fa-arrow-right" aria-hidden="true"></i> Xem thêm
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
                 </div>
 
                 <!-- Nút điều hướng -->
@@ -713,7 +713,7 @@
 
 
 <!--grids-sec2-->
-<!-- <section class="w3l-mid-slider position-relative">
+<section class="w3l-mid-slider position-relative">
     <div class="companies20-content">
         <div class="owl-mid owl-carousel owl-theme">
             <div class="item">
@@ -766,7 +766,7 @@
             </div>
         </div>
     </div>
-</section> -->
+</section>
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
