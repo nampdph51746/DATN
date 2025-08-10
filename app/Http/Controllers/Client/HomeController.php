@@ -67,6 +67,66 @@ class HomeController extends Controller
         return view('client.home', compact('showingMovies', 'upcomingMovies', 'query', 'genreId', 'genres'));
     }
 
+    public function movies(Request $request)
+    {
+        $query = $request->input('search');
+        $genreId = $request->input('genre');
+
+        // Base query cho tất cả phim
+        $baseQuery = Movie::query()->with(['genres']);
+
+        // Áp dụng tìm kiếm theo tên phim
+        if ($query) {
+            $baseQuery->where('name', 'like', '%' . $query . '%');
+        }
+
+        // Áp dụng lọc theo thể loại
+        if ($genreId) {
+            $baseQuery->whereHas('genres', function ($q) use ($genreId) {
+                $q->where('genres.id', $genreId);
+            });
+        }
+
+        // Phim đang chiếu: Sắp xếp theo ngày phát hành
+        $showingMovies = (clone $baseQuery)
+            ->where('status', MovieStatus::Showing)
+            ->orderBy('release_date', 'desc')
+            ->take(12)
+            ->get();
+
+        // Phim mới: Sắp xếp theo created_at mới nhất
+        $recentMovies = (clone $baseQuery)
+            ->where('status', MovieStatus::Showing)
+            ->orderBy('created_at', 'desc')
+            ->take(8)
+            ->get();
+
+        // Phim phổ biến: Dựa trên số lượng showtimes (thay vì booking vì column showtime_id không tồn tại)
+        $popularMovies = (clone $baseQuery)
+            ->where('status', MovieStatus::Showing)
+            ->withCount(['showtimes' => function ($q) {
+                $q->where('start_time', '>=', now()->subDays(30));
+            }])
+            ->orderBy('showtimes_count', 'desc')
+            ->take(8)
+            ->get();
+
+        // Phim xu hướng: Dựa trên số lượng showtimes trong 7 ngày
+        $trendMovies = (clone $baseQuery)
+            ->where('status', MovieStatus::Showing)
+            ->withCount(['showtimes as recent_showtimes_count' => function ($q) {
+                $q->where('start_time', '>=', now()->subDays(7));
+            }])
+            ->orderBy('recent_showtimes_count', 'desc')
+            ->take(8)
+            ->get();
+
+        // Lấy danh sách thể loại để hiển thị trong dropdown
+        $genres = \App\Models\Genre::all();
+
+        return view('client.movies', compact('showingMovies', 'recentMovies', 'popularMovies', 'trendMovies', 'query', 'genreId', 'genres'));
+    }
+
     public function show(Request $request, $id)
     {
         // Lấy thông tin phim (kèm quốc gia, giới hạn độ tuổi)
@@ -87,12 +147,12 @@ class HomeController extends Controller
         if (Auth::check()) {
             $user = Auth::user();
             
-            // Kiểm tra đã xem phim chưa
-            $hasWatchedMovie = Booking::where('user_id', $user->id)
-                ->whereHas('showtime', function ($query) use ($id) {
-                    $query->where('movie_id', $id);
-                })
-                ->where('status', 'confirmed')
+            // Kiểm tra đã xem phim chưa - sử dụng cấu trúc đúng
+            $hasWatchedMovie = DB::table('bookings')
+                ->join('showtimes', 'bookings.showtime_id', '=', 'showtimes.id')
+                ->where('bookings.user_id', $user->id)
+                ->where('showtimes.movie_id', $id)
+                ->where('bookings.status', 'confirmed')
                 ->exists();
 
             // Kiểm tra đã đánh giá chưa
@@ -328,88 +388,6 @@ class HomeController extends Controller
         }
 
         return $showtimesData;
-    }
-
-    public function movies(Request $request)
-    {
-        $query = $request->input('search');
-        $genreId = $request->input('genre');
-
-        // Base query cho tất cả phim
-        $baseQuery = Movie::query()->with(['genres']);
-
-        // Áp dụng tìm kiếm theo tên phim
-        if ($query) {
-            $baseQuery->where('name', 'like', '%' . $query . '%');
-        }
-
-        // Áp dụng lọc theo thể loại
-        if ($genreId) {
-            $baseQuery->whereHas('genres', function ($q) use ($genreId) {
-                $q->where('genres.id', $genreId);
-            });
-        }
-
-        // Phim đang chiếu: Sắp xếp theo số lượng vé bán ra
-        $showingMovies = (clone $baseQuery)
-            ->where('status', MovieStatus::Showing)
-            ->orderBy('release_date', 'desc')
-            ->take(12)
-            ->get();
-
-        // Phim mới: Sắp xếp theo created_at mới nhất
-        $recentMovies = (clone $baseQuery)
-            ->where('status', MovieStatus::Showing)
-            ->orderBy('created_at', 'desc')
-            ->take(8)
-            ->get();
-
-        // Phim phổ biến: Dựa trên số vé bán ra trong 30 ngày
-        $popularMovies = (clone $baseQuery)
-            ->where('status', MovieStatus::Showing)
-            ->withCount(['showtimes as tickets_sold' => function ($q) {
-                $q->join('bookings', 'showtimes.id', '=', 'bookings.showtime_id')
-                  ->where('bookings.created_at', '>=', now()->subDays(30));
-            }])
-            ->orderBy('tickets_sold', 'desc')
-            ->take(8)
-            ->get();
-
-        // Phim xu hướng: Dựa trên số vé bán ra trong 7 ngày
-        $trendMovies = (clone $baseQuery)
-            ->where('status', MovieStatus::Showing)
-            ->withCount(['showtimes as tickets_sold_week' => function ($q) {
-                $q->join('bookings', 'showtimes.id', '=', 'bookings.showtime_id')
-                  ->where('bookings.created_at', '>=', now()->subDays(7));
-            }])
-            ->orderBy('tickets_sold_week', 'desc')
-            ->take(8)
-            ->get();
-
-        // Lấy danh sách thể loại để hiển thị trong dropdown
-        $genres = \App\Models\Genre::all();
-
-        return view('client.movies', compact('showingMovies', 'recentMovies', 'popularMovies', 'trendMovies', 'query', 'genreId', 'genres'));
-    }
-
-    private function formatCinemas($roomsData)
-    {
-        return $roomsData->pluck('cinema')->unique('id')->filter()->values()->map(function ($cinema) {
-            $cinema = (array) $cinema;
-            return [
-                'id' => $cinema['id'] ?? null,
-                'name' => $cinema['name'] ?? '',
-                'address' => $cinema['address'] ?? '',
-                'city_id' => $cinema['city_id'] ?? null,
-                'hotline' => $cinema['hotline'] ?? '',
-                'email' => $cinema['email'] ?? '',
-                'map_url' => $cinema['map_url'] ?? '',
-                'image_url' => $cinema['image_url'] ?? '',
-                'opening_hours' => $cinema['opening_hours'] ?? '',
-                'description' => $cinema['description'] ?? '',
-                'status' => $cinema['status'] ?? '',
-            ];
-        });
     }
 
     public function applyDiscountCode(Request $request)

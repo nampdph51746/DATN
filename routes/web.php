@@ -1,6 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\QrCodeController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\CityController;
@@ -360,6 +363,186 @@ Route::prefix('admin/reviews')->name('admin.reviews.')->group(function () {
     Route::delete('/bulk-delete', [App\Http\Controllers\Admin\AdminReviewController::class, 'bulkDelete'])->name('bulk-delete');
     Route::get('/recalculate-ratings/all', [App\Http\Controllers\Admin\AdminReviewController::class, 'recalculateAllRatings'])->name('recalculate-all');
     Route::get('/reset-stats/all', [App\Http\Controllers\Admin\AdminReviewController::class, 'resetAllStats'])->name('reset-stats');
+});
+
+// API routes for search
+Route::get('/api/genres', function() {
+    try {
+        // Kiểm tra bảng genres có tồn tại không
+        if (!Schema::hasTable('genres')) {
+            return response()->json([
+                ['id' => 1, 'name' => 'Hành động'],
+                ['id' => 2, 'name' => 'Tình cảm'],
+                ['id' => 3, 'name' => 'Hài hước'],
+                ['id' => 4, 'name' => 'Kinh dị'],
+                ['id' => 5, 'name' => 'Khoa học viễn tưởng'],
+                ['id' => 6, 'name' => 'Phiêu lưu'],
+            ]);
+        }
+        
+        $genres = DB::table('genres')->select('id', 'name')->get();
+        return response()->json($genres);
+    } catch (\Exception $e) {
+        \Log::error('Genres API error: ' . $e->getMessage());
+        return response()->json([
+            ['id' => 1, 'name' => 'Hành động'],
+            ['id' => 2, 'name' => 'Tình cảm'],
+            ['id' => 3, 'name' => 'Hài hước'],
+            ['id' => 4, 'name' => 'Kinh dị'],
+            ['id' => 5, 'name' => 'Khoa học viễn tưởng'],
+            ['id' => 6, 'name' => 'Phiêu lưu'],
+        ]);
+    }
+});
+
+Route::get('/api/search-movies', function(Illuminate\Http\Request $request) {
+    try {
+        $query = $request->input('search', '');
+        $genreId = $request->input('genre', '');
+        
+        \Log::info('Search request', ['query' => $query, 'genreId' => $genreId]);
+        
+        // Kiểm tra bảng movies có tồn tại không
+        if (!Schema::hasTable('movies')) {
+            return response()->json(['movies' => []]);
+        }
+        
+        // Query với các cột đúng theo database
+        $moviesQuery = DB::table('movies')
+            ->select('id', 'name', 'poster_url', 'image_path', 'duration_minutes', 'status');
+        
+        // Tìm kiếm theo tên phim (không phân biệt hoa thường)
+        if (!empty($query)) {
+            $moviesQuery->where(function($q) use ($query) {
+                $q->where('name', 'LIKE', '%' . $query . '%')
+                  ->orWhere('name', 'LIKE', '%' . strtolower($query) . '%')
+                  ->orWhere('name', 'LIKE', '%' . strtoupper($query) . '%')
+                  ->orWhere('name', 'LIKE', '%' . ucwords(strtolower($query)) . '%');
+            });
+        }
+        
+        // Lọc theo thể loại (nếu có bảng movie_genres)
+        if (!empty($genreId) && Schema::hasTable('movie_genres')) {
+            $movieIds = DB::table('movie_genres')
+                ->where('genre_id', $genreId)
+                ->pluck('movie_id')
+                ->toArray();
+            
+            if (!empty($movieIds)) {
+                $moviesQuery->whereIn('id', $movieIds);
+            }
+        }
+        
+        $movies = $moviesQuery
+            ->where('status', '!=', 'ended')
+            ->orderBy('name', 'asc')
+            ->limit(15)
+            ->get();
+        
+        // Xử lý và thêm thông tin genres cho mỗi phim
+        $moviesWithGenres = $movies->map(function($movie) {
+            // Xử lý hình ảnh: ưu tiên poster_url, fallback sang image_path
+            $movie->image = $movie->poster_url ?: $movie->image_path;
+            
+            // Khởi tạo genres array
+            $movie->genres = [];
+            
+            // Nếu có bảng movie_genres và genres, lấy thông tin thể loại
+            if (Schema::hasTable('movie_genres') && Schema::hasTable('genres')) {
+                try {
+                    $genreIds = DB::table('movie_genres')
+                        ->where('movie_id', $movie->id)
+                        ->pluck('genre_id')
+                        ->toArray();
+                    
+                    if (!empty($genreIds)) {
+                        $movie->genres = DB::table('genres')
+                            ->whereIn('id', $genreIds)
+                            ->select('id', 'name')
+                            ->get()
+                            ->toArray();
+                    }
+                } catch (\Exception $e) {
+                    \Log::warning('Error loading genres for movie ' . $movie->id . ': ' . $e->getMessage());
+                }
+            }
+            
+            // Xóa các field không cần thiết
+            unset($movie->poster_url, $movie->image_path);
+            
+            return $movie;
+        });
+        
+        \Log::info('Search results', ['count' => $moviesWithGenres->count()]);
+        
+        return response()->json(['movies' => $moviesWithGenres]);
+        
+    } catch (\Exception $e) {
+        \Log::error('Search API error: ' . $e->getMessage());
+        \Log::error('Search API stack trace: ' . $e->getTraceAsString());
+        
+        return response()->json([
+            'error' => true,
+            'message' => 'Lỗi tìm kiếm: ' . $e->getMessage(),
+            'movies' => []
+        ], 200);
+    }
+});
+
+Route::get('/api/showing-movies', function() {
+    try {
+        // Kiểm tra bảng movies có tồn tại không
+        if (!Schema::hasTable('movies')) {
+            return response()->json(['movies' => []]);
+        }
+        
+        $movies = DB::table('movies')
+            ->select('id', 'name', 'poster_url', 'image_path', 'duration_minutes', 'status', 'release_date')
+            ->where('status', 'showing')
+            ->orderBy('release_date', 'desc')
+            ->limit(8)
+            ->get();
+        
+        // Xử lý và thêm thông tin genres cho mỗi phim
+        $moviesWithGenres = $movies->map(function($movie) {
+            // Xử lý hình ảnh: ưu tiên poster_url, fallback sang image_path
+            $movie->image = $movie->poster_url ?: $movie->image_path;
+            
+            // Khởi tạo genres array
+            $movie->genres = [];
+            
+            // Nếu có bảng movie_genres và genres, lấy thông tin thể loại
+            if (Schema::hasTable('movie_genres') && Schema::hasTable('genres')) {
+                try {
+                    $genreIds = DB::table('movie_genres')
+                        ->where('movie_id', $movie->id)
+                        ->pluck('genre_id')
+                        ->toArray();
+                    
+                    if (!empty($genreIds)) {
+                        $movie->genres = DB::table('genres')
+                            ->whereIn('id', $genreIds)
+                            ->select('id', 'name')
+                            ->get()
+                            ->toArray();
+                    }
+                } catch (\Exception $e) {
+                    \Log::warning('Error loading genres for movie ' . $movie->id . ': ' . $e->getMessage());
+                }
+            }
+            
+            // Xóa các field không cần thiết
+            unset($movie->poster_url, $movie->image_path);
+            
+            return $movie;
+        });
+        
+        return response()->json(['movies' => $moviesWithGenres]);
+        
+    } catch (\Exception $e) {
+        \Log::error('Showing movies API error: ' . $e->getMessage());
+        return response()->json(['movies' => []], 200);
+    }
 });
 
 require __DIR__.'/auth.php';
