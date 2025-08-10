@@ -100,7 +100,7 @@
                                 <span class="avatar-title rounded-circle bg-warning text-white">
                                     <i class="bi bi-calendar-week fs-4"></i>
                                 </span>
-                            </div>
+                        </div>
                         </div>
                         <div class="flex-grow-1 ms-3">
                             <h6 class="mb-0 text-muted fw-semibold">Tuần này</h6>
@@ -122,7 +122,7 @@
                                 <span class="avatar-title rounded-circle bg-primary text-white">
                                     <i class="bi bi-search fs-4"></i>
                                 </span>
-                            </div>
+                        </div>
                         </div>
                         <div class="flex-grow-1 ms-3">
                             <h6 class="mb-0 text-muted fw-semibold">Tìm kiếm</h6>
@@ -237,36 +237,19 @@
                                             </div>
                                         </td>
                                         <td class="text-center pe-4">
-                                            <div class="dropdown position-static">
-                                                <button class="btn btn-light btn-sm dropdown-toggle rounded-pill border-0 shadow-sm" 
-                                                        type="button" 
-                                                        data-bs-toggle="dropdown" 
-                                                        aria-expanded="false"
-                                                        data-bs-auto-close="true">
-                                                    <i class="bi bi-three-dots-vertical"></i>
-                                                </button>
-                                                <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-4 fade-in">
-                                                    <li>
-                                                        <a class="dropdown-item rounded-3 py-2" href="{{ route('admin.cities.edit', $city->id) }}">
-                                                            <i class="bi bi-pencil-square text-warning me-2"></i>
-                                                            <span>Chỉnh sửa</span>
-                                                        </a>
-                                                    </li>
-                                                    <li><hr class="dropdown-divider"></li>
-                                                    <li>
-                                                        <form action="{{ route('admin.cities.destroy', $city->id) }}" 
-                                                              method="POST" 
-                                                              class="d-inline w-100"
-                                                              onsubmit="return confirm('Bạn có chắc chắn muốn xóa thành phố này?')">
-                                                            @csrf
-                                                            @method('DELETE')
-                                                            <button type="submit" class="dropdown-item rounded-3 py-2 text-danger w-100 border-0 bg-transparent">
-                                                                <i class="bi bi-trash3 text-danger me-2"></i>
-                                                                <span>Xóa</span>
-                                                            </button>
-                                                        </form>
-                                                    </li>
-                                                </ul>
+                                            <div class="d-flex gap-1 justify-content-center">
+                                                <a href="{{ route('admin.cities.show', $city->id) }}"
+                                                   class="btn btn-sm rounded-3 view-detail-btn" 
+                                                   title="Xem chi tiết"
+                                                   data-bs-toggle="tooltip">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <a href="{{ route('admin.cities.edit', $city->id) }}"
+                                                   class="btn btn-sm rounded-3 edit-btn" 
+                                                   title="Chỉnh sửa"
+                                                   data-bs-toggle="tooltip">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
                                             </div>
                                         </td>
                                     </tr>
@@ -363,53 +346,58 @@
     height: 100%;
 }
 
-/* Dropdown Improvements */
-.dropdown {
-    position: static !important;
-}
-
-.dropdown-menu {
-    border: none !important;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.15) !important;
-    z-index: 9999 !important;
-    min-width: 160px;
-    padding: 0.5rem 0;
-    margin-top: 0.5rem !important;
-}
-
-.dropdown-menu.show {
-    animation: slideIn 0.3s ease-out;
-}
-
-@keyframes slideIn {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.dropdown-item {
-    transition: all 0.2s ease;
-    border-radius: 0.5rem;
-    margin: 2px 8px;
-    padding: 0.5rem 1rem;
-    display: flex;
+/* Action Buttons - GIỐNG TRANG MOVIES: */
+.view-detail-btn {
+    background-color: #6c757d !important;
+    border: 1px solid #6c757d !important;
+    color: white !important;
+    transition: all 0.3s ease;
+    min-width: 36px;
+    height: 32px;
+    display: inline-flex;
     align-items: center;
+    justify-content: center;
+    text-decoration: none;
 }
 
-.dropdown-item:hover {
-    background: linear-gradient(135deg, #f8f9fa, #e9ecef) !important;
-    transform: translateX(4px);
-    color: inherit;
+.view-detail-btn:hover {
+    background-color: #5a6268 !important;
+    border-color: #545b62 !important;
+    color: white !important;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 6px rgba(108, 117, 125, 0.3);
 }
 
-.dropdown-divider {
-    margin: 0.5rem 0;
-    border-top: 1px solid #e9ecef;
+.edit-btn {
+    background-color: #212529 !important;
+    border: 1px solid #212529 !important;
+    color: white !important;
+    transition: all 0.3s ease;
+    min-width: 36px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+}
+
+.edit-btn:hover {
+    background-color: #343a40 !important;
+    border-color: #343a40 !important;
+    color: white !important;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 6px rgba(33, 37, 41, 0.3);
+}
+
+.view-detail-btn i,
+.edit-btn i {
+    font-size: 14px;
+    color: white !important;
+}
+
+/* Tooltip styling */
+.tooltip {
+    font-size: 12px;
 }
 
 .badge {
@@ -433,12 +421,6 @@
     background-color: rgba(var(--bs-primary-rgb), 0.1) !important;
 }
 
-/* Table overflow fix */
-.table-responsive {
-    overflow-x: auto;
-    overflow-y: visible;
-}
-
 @media (max-width: 768px) {
     .table td, .table th {
         padding: 0.5rem 0.25rem;
@@ -449,6 +431,25 @@
         padding: 0.5rem 1rem;
         font-size: 0.85rem;
     }
+    
+    .view-detail-btn,
+    .edit-btn {
+        min-width: 32px;
+        height: 28px;
+    }
 }
 </style>
+
+<!-- Font Awesome CDN -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
 @endsection
