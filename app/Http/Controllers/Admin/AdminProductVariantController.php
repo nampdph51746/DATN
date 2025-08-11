@@ -33,8 +33,14 @@ class AdminProductVariantController extends Controller
         $products = Product::all();
         $selectedProductId = $request->input('product_id');
         $attributes = Attribute::with('attributeValues')->get();
+        
+        // Thêm dòng này để lấy selectedProduct
+        $selectedProduct = null;
+        if ($selectedProductId) {
+            $selectedProduct = Product::find($selectedProductId);
+        }
 
-        return view('admin.product_variants.create', compact('products', 'selectedProductId', 'attributes'));
+        return view('admin.product_variants.create', compact('products', 'selectedProductId', 'selectedProduct', 'attributes'));
     }
 
     public function store(Request $request)
@@ -302,5 +308,15 @@ class AdminProductVariantController extends Controller
         }
 
         return redirect()->route('admin.product-variants.index')->with('success', 'Biến thể sản phẩm đã được cập nhật thành công.');
+    }
+
+    public function show($id)
+    {
+        $productVariant = ProductVariant::with([
+            'product.category',
+            'productVariantOptions.attributeValue.attribute'
+        ])->findOrFail($id);
+        
+        return view('admin.product_variants.show', compact('productVariant'));
     }
 }
