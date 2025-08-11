@@ -41,7 +41,11 @@ class ComboController extends Controller
             });
         }
 
-        $combos = $query->with(['comboProductVariant.product', 'comboPackageItems.itemProductVariant.product'])->paginate(10);
+        // Thêm eager loading để tránh lỗi null
+        $combos = $query->with([
+            'comboProductVariant.product', 
+            'comboPackageItems.itemProductVariant.product'
+        ])->paginate(10);
 
         return view('admin.combos.index', compact('products', 'combos'));
     }
