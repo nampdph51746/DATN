@@ -14,6 +14,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Validation\Rule;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log; // ✅ Import Log facade
 
 class BookingController extends Controller
 {
@@ -44,7 +45,8 @@ class BookingController extends Controller
             'tickets.seat.seatType',
             'bookingItems.productVariant.product'
         ])
-        ->where('user_id', $user->id)
+        // ✅ Sửa lỗi dòng 30: Thay ->where('user_id', $user->id) thành null check
+        ->where('user_id', $user ? $user->id : null)
         ->findOrFail($id);
         
         return view('client.bookings.show', compact('booking'));
@@ -158,7 +160,8 @@ class BookingController extends Controller
                 ]);
             }
         } catch (\Exception $e) {
-            \Log::warning('Could not create notification: ' . $e->getMessage());
+            // ✅ Sửa \Log thành Log
+            Log::warning('Could not create notification: ' . $e->getMessage());
         }
 
         return redirect()->route('admin.bookings.index')
@@ -196,7 +199,8 @@ class BookingController extends Controller
                 ]);
 
             } catch (\Exception $e) {
-                \Log::error('Error adding points for booking: ' . $e->getMessage());
+                // ✅ Sửa \Log thành Log
+                Log::error('Error adding points for booking: ' . $e->getMessage());
             }
         }
     }
