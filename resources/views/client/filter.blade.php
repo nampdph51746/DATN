@@ -31,7 +31,7 @@
 
     .section-title {
         position: relative;
-        display: inline-block;
+        display: block;
         font-size: 2rem;
         font-weight: bold;
         padding-bottom: 8px;
@@ -42,7 +42,7 @@
         position: absolute;
         left: 0;
         bottom: 0;
-        width: 50%;
+        width: 100%;
         height: 3px;
         background-color: #dc3545;
         /* Màu gạch ngang */
@@ -92,7 +92,7 @@
         background: #f8f9fa;
         border-radius: 8px;
         padding: 15px 20px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         max-width: 900px;
         margin: 0 auto 30px auto;
     }
@@ -132,7 +132,7 @@
     .filter-input:focus {
         outline: none;
         border-color: #dc3545;
-        box-shadow: 0 0 5px rgba(220,53,69,0.5);
+        box-shadow: 0 0 5px rgba(220, 53, 69, 0.5);
     }
 
     /* Nút Lọc */
@@ -159,63 +159,64 @@
             align-items: stretch;
         }
 
-        .filter-group, .btn-filter {
+        .filter-group,
+        .btn-filter {
             width: 100%;
         }
     }
 
     .no-movies-message {
-    display: flex;
-    justify-content: center; /* căn ngang */
-    align-items: center;     /* căn dọc */
-    min-height: 400px;       /* chiều cao tối thiểu */
-    font-size: 2rem;
-    font-weight: 700;
-    color: #dc3545;
-    text-align: center;
-    padding: 0 20px;
-    width: 100%;
-}
-
-
-
+        display: flex;
+        justify-content: center;
+        /* căn ngang */
+        align-items: center;
+        /* căn dọc */
+        min-height: 400px;
+        /* chiều cao tối thiểu */
+        font-size: 2rem;
+        font-weight: 700;
+        color: #dc3545;
+        text-align: center;
+        padding: 0 20px;
+        width: 100%;
+    }
 </style>
 <section class="w3l-grids">
     <div class="container py-4">
         <h1 class="mb-4 section-title">{{ $title }}</h1>
         @if ($isShowing)
-    <div class="filter-container">
-        @if ($errors->any())
-    <div class="alert alert-danger mb-4 max-w-900 mx-auto">
-        <ul class="mb-0">
-            @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
-@endif
-<h2 style="color:#dc3545; font-weight: 700; text-align:center; margin-bottom:1rem;">
-  Bộ lọc thời gian chiếu phim
-</h2>
-        <div class="filter-row">
-            <div class="filter-group">
-                <label for="filter-date" class="filter-label">Ngày:</label>
-                <input type="date" id="filter-date" class="filter-input" value="{{ request('date') }}">
+        <div class="filter-container">
+            @if ($errors->any())
+            <div class="alert alert-danger mb-4 max-w-900 mx-auto">
+                <ul class="mb-0">
+                    @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
             </div>
-            <div class="filter-group">
-                <label for="from-time" class="filter-label">Từ:</label>
-                <input type="time" id="from-time" name="from_time" class="filter-input" value="{{ request('from_time') }}">
-            </div>
-            <div class="filter-group">
-                <label for="to-time" class="filter-label">Đến:</label>
-                <input type="time" id="to-time" name="to_time" class="filter-input" value="{{ request('to_time') }}">
-            </div>
-            <div class="filter-group" style="align-self: center;">
-                <button class="btn-filter" onclick="applyFilters()">Lọc phim</button>
+            @endif
+            <h2 style="color:#dc3545; font-weight: 700; text-align:center; margin-bottom:1rem;">
+                Bộ lọc thời gian chiếu phim
+            </h2>
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label for="filter-date" class="filter-label">Ngày:</label>
+                    <input type="date" id="filter-date" class="filter-input" value="{{ request('date') }}">
+                </div>
+                <div class="filter-group">
+                    <label for="from-time" class="filter-label">Từ:</label>
+                    <input type="time" id="from-time" name="from_time" class="filter-input" value="{{ request('from_time') }}">
+                </div>
+                <div class="filter-group">
+                    <label for="to-time" class="filter-label">Đến:</label>
+                    <input type="time" id="to-time" name="to_time" class="filter-input" value="{{ request('to_time') }}">
+                </div>
+                <div class="filter-group" style="align-self: center;">
+                    <button class="btn-filter" onclick="applyFilters()">Lọc phim</button>
+                </div>
             </div>
         </div>
-    </div>
-@endif
+        @endif
         <div class="row">
             @forelse($movies as $movie)
             <div class="col-md-3 col-sm-6 mb-4">
@@ -253,11 +254,11 @@
                 </a>
             </div>
 
-           @empty
-    <div class="no-movies-message">
-        Không tìm thấy phim phù hợp.
-    </div>
-@endforelse
+            @empty
+            <div class="no-movies-message">
+                Không tìm thấy phim phù hợp.
+            </div>
+            @endforelse
         </div>
 
         <div class="d-flex justify-content-center">
@@ -267,37 +268,37 @@
 </section>
 <script>
     function applyFilters() {
-    const date = document.getElementById('filter-date').value;
-    const fromTime = document.getElementById('from-time').value;
-    const toTime = document.getElementById('to-time').value;
+        const date = document.getElementById('filter-date').value;
+        const fromTime = document.getElementById('from-time').value;
+        const toTime = document.getElementById('to-time').value;
 
-    const url = new URL(window.location.href);
-    const params = url.searchParams;
+        const url = new URL(window.location.href);
+        const params = url.searchParams;
 
-    if (date) {
-        params.set('date', date);
-    } else {
-        params.delete('date');
+        if (date) {
+            params.set('date', date);
+        } else {
+            params.delete('date');
+        }
+
+        if (fromTime) {
+            params.set('from_time', fromTime);
+        } else {
+            params.delete('from_time');
+        }
+
+        if (toTime) {
+            params.set('to_time', toTime);
+        } else {
+            params.delete('to_time');
+        }
+
+        url.search = params.toString();
+
+        window.location.href = url.toString();
     }
 
-    if (fromTime) {
-        params.set('from_time', fromTime);
-    } else {
-        params.delete('from_time');
-    }
-
-    if (toTime) {
-        params.set('to_time', toTime);
-    } else {
-        params.delete('to_time');
-    }
-
-    url.search = params.toString();
-
-    window.location.href = url.toString();
-}
-
-const dateInput = document.getElementById('filter-date');
+    const dateInput = document.getElementById('filter-date');
     const fromTimeInput = document.getElementById('from-time');
     const toTimeInput = document.getElementById('to-time');
 
@@ -308,16 +309,16 @@ const dateInput = document.getElementById('filter-date');
         const selectedDate = dateInput.value;
         const now = new Date();
         const currentDate = now.toISOString().split('T')[0];
-        const currentTime = now.toTimeString().slice(0,5);
+        const currentTime = now.toTimeString().slice(0, 5);
 
         if (selectedDate === currentDate) {
             fromTimeInput.min = currentTime;
             toTimeInput.min = currentTime;
 
-            if(fromTimeInput.value && fromTimeInput.value < currentTime) {
+            if (fromTimeInput.value && fromTimeInput.value < currentTime) {
                 fromTimeInput.value = currentTime;
             }
-            if(toTimeInput.value && toTimeInput.value < currentTime) {
+            if (toTimeInput.value && toTimeInput.value < currentTime) {
                 toTimeInput.value = currentTime;
             }
         } else {
