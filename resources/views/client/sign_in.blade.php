@@ -48,4 +48,6 @@
             </div>
         </div>
     </div>
+        @include('client.footer.footer')
+
 @endsection
