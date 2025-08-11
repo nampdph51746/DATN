@@ -84,14 +84,18 @@ class AdminProductCategoriesController extends Controller
     public function destroy($id)
     {
         $category = ProductCategory::findOrFail($id);
+        
+        // Sửa tên cột từ product_category_id thành category_id
         $productCount = Product::where('category_id', $id)->count();
 
         if ($productCount > 0) {
-            return redirect()->route('admin.product-categories.index')->with('error', 'Không thể xóa danh mục vì vẫn còn ' . $productCount . ' sản phẩm thuộc danh mục này.');
+            return redirect()->route('admin.product-categories.index')
+                ->with('error', 'Không thể xóa danh mục vì vẫn còn ' . $productCount . ' sản phẩm thuộc danh mục này.');
         }
 
         $category->delete();
-        return redirect()->route('admin.product-categories.index')->with('success', 'Danh mục sản phẩm đã được xóa thành công.');
+        return redirect()->route('admin.product-categories.index')
+            ->with('success', 'Danh mục sản phẩm đã được xóa thành công.');
     }
 
     public function trash()
