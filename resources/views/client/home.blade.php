@@ -474,6 +474,10 @@
         transform: translateY(0);
         pointer-events: auto;
     }
+
+    .w3l-main-slider .banner-view::before {
+        background: none;
+    }
 </style>
 
 <section class="w3l-main-slider position-relative" id="home">

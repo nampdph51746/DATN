@@ -51,13 +51,22 @@
                                 </ul>
                             </div>
                             <div class="col-md-3 col-sm-6 sub-two-right mt-5">
-                                <h6>Newsletter</h6>
-                                <form action="#" class="subscribe mb-3" method="post">
-                                    <input type="email" name="email" placeholder="Your Email Address" required="">
-                                    <button><span class="fa fa-envelope-o"></span></button>
-                                </form>
-                                <p>Enter your email and receive the latest news, updates and special offers from us.
-                                </p>
+                                <h6>Liên hệ với chúng tôi</h6>
+                                <p>Hãy kết nối với chúng tôi qua các mạng xã hội để nhận tin tức và hỗ trợ nhanh nhất.</p>
+                                <div class="social-icons mb-3">
+                                    <a href="" target="_blank" rel="noopener" aria-label="Facebook" class="me-2">
+                                        <span class="fa fa-facebook"></span>
+                                    </a>
+                                    <a href="" target="_blank" rel="noopener" aria-label="Twitter" class="me-2">
+                                        <span class="fa fa-twitter"></span>
+                                    </a>
+                                    <a href="" target="_blank" rel="noopener" aria-label="Instagram" class="me-2">
+                                        <span class="fa fa-instagram"></span>
+                                    </a>
+                                    <a href="" target="_blank" rel="noopener" aria-label="LinkedIn" class="me-2">
+                                        <span class="fa fa-linkedin"></span>
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -71,7 +80,7 @@
         </button>
         <script>
             // When the user scrolls down 20px from the top of the document, show the button
-            window.onscroll = function () {
+            window.onscroll = function() {
                 scrollFunction()
             };
 
@@ -90,6 +99,5 @@
             }
         </script>
         <!-- /move top -->
-
     </section>
 </footer>
