@@ -43,6 +43,22 @@
                                     @enderror
                                 </div>
                             </div>
+
+                            <div class="col-lg-6">
+                                    <div class="mb-3">
+                                        <label for="rank_id" class="form-label">Hạng khách hàng</label>
+                                        <select name="rank_id" id="rank_id" class="form-control">
+                                            <option value="">-- Chọn hạng --</option>
+                                            @foreach ($ranks as $id => $name)
+                                                <option value="{{ $id }}"
+                                                    {{ old('rank_id', $promotion->rank_id ?? '') == $id ? 'selected' : '' }}>
+                                                    {{ $name }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+
                             <div class="col-lg-6">
                                 <div class="mb-3">
                                     <label for="rank_id" class="form-label">Hạng khách hàng</label>

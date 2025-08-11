@@ -161,11 +161,25 @@
     <div class="flex w-full gap-6">
         <!-- Movie Banner -->
         <div class="banner-container">
-            <img src="{{ $booking->tickets->first()?->showtime?->movie?->poster_url ?? 'https://via.placeholder.com/500x750?text=Movie+Poster' }}"
-                 alt="{{ $booking->tickets->first()?->showtime?->movie?->name ?? 'Movie Poster' }}"
+            @php
+                $movie = $booking->tickets->first()?->showtime?->movie;
+                $posterUrl = null;
+                
+                if ($movie) {
+                    if ($movie->image_path) {
+                        $posterUrl = \Storage::url($movie->image_path);
+                    } elseif ($movie->poster_url) {
+                        $posterUrl = $movie->poster_url;
+                    }
+                }
+                
+                $posterUrl = $posterUrl ?? 'https://via.placeholder.com/500x750?text=Movie+Poster';
+            @endphp
+            <img src="{{ $posterUrl }}"
+                 alt="{{ $movie?->name ?? 'Movie Poster' }}"
                  class="movie-poster">
             <div class="banner-overlay">
-                <h2 class="movie-title">{{ $booking->tickets->first()?->showtime?->movie?->name ?? 'Unknown Movie' }}</h2>
+                <h2 class="movie-title">{{ $movie?->name ?? 'Unknown Movie' }}</h2>
             </div>
         </div>
 

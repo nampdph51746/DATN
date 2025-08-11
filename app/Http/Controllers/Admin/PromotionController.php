@@ -2,19 +2,17 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Models\Promotion;
-use App\Models\CustomerRank;
-use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
+use App\Enums\NotificationType;
 use App\Enums\PromotionDiscountType;
 use App\Http\Controllers\Controller;
-use App\Models\CustomerRankPromotion;
+use App\Models\Promotion;
 use Illuminate\Contracts\Cache\Store;
+use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use App\Http\Requests\Promotions\StorePromotionsRequest;
 use App\Http\Requests\Promotions\UpdatePromotionsRequest;
-use \App\Models\Notification;
-use \App\Enums\NotificationType;
-use \Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Notification;
 
 class PromotionController extends Controller
 {
@@ -55,7 +53,7 @@ class PromotionController extends Controller
     public function create()
     {
         $discountTypes = PromotionDiscountType::cases();
-        $ranks = CustomerRank::pluck('name', 'id'); // Thêm dòng này
+        $ranks = \App\Models\CustomerRank::pluck('name', 'id'); // Thêm dòng này
         return view('admin.promotions.create', compact('discountTypes', 'ranks'));
     }
 
@@ -64,32 +62,16 @@ class PromotionController extends Controller
         $data = $request->validated();
 
         $promotion = Promotion::create($data);
-
+        
         // Nếu có chọn hạng khách hàng, tạo liên kết trong bảng customer_rank_promotions
         if (!empty($data['rank_id'])) {
-            CustomerRankPromotion::create([
+            \App\Models\CustomerRankPromotion::create([
                 'customer_rank_id' => $data['rank_id'],
                 'promotion_id' => $promotion->id,
                 'description' => 'Khuyến mãi dành cho hạng ' . \App\Models\CustomerRank::find($data['rank_id'])->name
             ]);
         }
-
-        // Tạo thông báo mức độ cao khi thêm khuyến mãi
-        Notification::create([
-            'user_id' => Auth::id(),
-            'entity_type' => Promotion::class,
-            'entity_id' => $promotion->id,
-            'title' => 'Thêm khuyến mãi',
-            'message' => 'Khuyến mãi #' . $promotion->id . ' đã được tạo.',
-            'type' => NotificationType::Promotion,
-            'priority' => 'high',
-            'old_status' => null,
-            'new_status' => $promotion->status,
-            'event_details' => json_encode([
-                'new' => $promotion->getAttributes(),
-            ]),
-        ]);
-
+        
         return redirect()->route('promotions.index')->with('success', 'Khuyến mãi đã được tạo thành công.');
     }
 
@@ -97,7 +79,7 @@ class PromotionController extends Controller
     {
         $promotion = Promotion::findOrFail($id);
         $discountTypes = PromotionDiscountType::cases();
-        $ranks = CustomerRank::pluck('name', 'id'); // Thêm dòng này
+        $ranks = \App\Models\CustomerRank::pluck('name', 'id'); // Thêm dòng này
         return view('admin.promotions.edit', compact('promotion', 'discountTypes', 'ranks'));
     }
 
@@ -110,39 +92,23 @@ class PromotionController extends Controller
         try {
             $oldData = $promotion->getOriginal();
             $promotion->update($data);
-
+            
             // Xử lý cập nhật liên kết customer_rank_promotions
             if (!empty($data['rank_id'])) {
                 // Xóa liên kết cũ nếu có
-                CustomerRankPromotion::where('promotion_id', $id)->delete();
+                \App\Models\CustomerRankPromotion::where('promotion_id', $id)->delete();
+                
                 // Tạo liên kết mới
-                CustomerRankPromotion::create([
+                \App\Models\CustomerRankPromotion::create([
                     'customer_rank_id' => $data['rank_id'],
                     'promotion_id' => $promotion->id,
-                    'description' => 'Khuyến mãi dành cho hạng ' . CustomerRank::find($data['rank_id'])->name
+                    'description' => 'Khuyến mãi dành cho hạng ' . \App\Models\CustomerRank::find($data['rank_id'])->name
                 ]);
             } else {
                 // Nếu không chọn hạng nào, xóa tất cả liên kết
-                CustomerRankPromotion::where('promotion_id', $id)->delete();
+                \App\Models\CustomerRankPromotion::where('promotion_id', $id)->delete();
             }
-
-            // Tạo thông báo mức độ cao khi cập nhật khuyến mãi
-            Notification::create([
-                'user_id' => Auth::id(),
-                'entity_type' => Promotion::class,
-                'entity_id' => $promotion->id,
-                'title' => 'Cập nhật khuyến mãi',
-                'message' => 'Khuyến mãi #' . $promotion->id . ' đã được cập nhật.',
-                'type' => NotificationType::Promotion,
-                'priority' => 'high',
-                'old_status' => $oldData['status'] ?? null,
-                'new_status' => $promotion->status,
-                'event_details' => json_encode([
-                    'old' => $oldData,
-                    'new' => $promotion->getAttributes(),
-                ]),
-            ]);
-
+            
             return redirect()->route('promotions.index')->with('success', 'Khuyến mãi đã được cập nhật thành công.');
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'Cập nhật thất bại: ' . $e->getMessage()])->withInput();
@@ -152,11 +118,10 @@ class PromotionController extends Controller
     public function destroy($id)
     {
         $promotion = Promotion::findOrFail($id);
-        $oldData = $promotion->getOriginal();
-
+        
         // Xóa tất cả liên kết trong customer_rank_promotions trước khi xóa promotion
-        CustomerRankPromotion::where('promotion_id', $id)->delete();
-
+        \App\Models\CustomerRankPromotion::where('promotion_id', $id)->delete();
+        
         $promotion->delete(); // Soft delete
 
         // Tạo thông báo mức độ cao khi xóa mềm khuyến mãi
@@ -214,13 +179,10 @@ class PromotionController extends Controller
     public function forceDelete($id)
     {
         $promotion = Promotion::onlyTrashed()->findOrFail($id);
-        $oldData = $promotion->getOriginal();
-
+        
         // Xóa tất cả liên kết trong customer_rank_promotions trước khi xóa vĩnh viễn
-        CustomerRankPromotion::where('promotion_id', $id)->delete();
-
-        // Lưu id trước khi xóa vĩnh viễn
-        $promotionId = $promotion->id;
+        \App\Models\CustomerRankPromotion::where('promotion_id', $id)->delete();
+        
         $promotion->forceDelete();
 
         // Tạo thông báo mức độ cao khi xóa cứng khuyến mãi

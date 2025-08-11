@@ -9,8 +9,6 @@ class Ticket extends Model
 {
     use HasFactory;
 
-
-    
     protected $fillable = [
         'booking_id', 
         'showtime_id', 
@@ -53,6 +51,4 @@ class Ticket extends Model
     {
         return $this->showtime?->movie;
     }
-
-    
 }

@@ -36,7 +36,7 @@ class Seat extends Model
     }
 
     public function getNameAttribute()
-{
-    return $this->row_char . $this->seat_number;
-}
+    {
+        return $this->row_char . $this->seat_number;
+    }
 }

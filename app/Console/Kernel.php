@@ -22,6 +22,11 @@ class Kernel extends ConsoleKernel
         $schedule->job(new \App\Jobs\UpdateShowtimeStatusJob)
                  ->everyTwoMinutes()
                  ->withoutOverlapping();
+
+        // Cập nhật trạng thái phim đã hết hạn mỗi ngày lúc 00:00
+        $schedule->command('movies:update-expired')
+                 ->daily()
+                 ->withoutOverlapping();
     }
 
     /**

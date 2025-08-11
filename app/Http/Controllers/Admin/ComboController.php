@@ -28,7 +28,7 @@ class ComboController extends Controller
     public function index(Request $request)
     {
         $products = Product::with('productVariants')->get();
-        $query = Combo::query();
+        $query = \App\Models\Combo::query();
 
         if ($request->filled('search')) {
             $query->where('name', 'like', '%' . $request->input('search') . '%');
@@ -60,13 +60,13 @@ class ComboController extends Controller
         $selectedProduct = null;
         $selectedVariant = null;
         if ($comboProductVariantId) {
-            $selectedVariant = ProductVariant::with('product')->find($comboProductVariantId);
+            $selectedVariant = \App\Models\ProductVariant::with('product')->find($comboProductVariantId);
             if ($selectedVariant) {
                 $selectedProduct = $selectedVariant->product;
                 $productId = $selectedProduct ? $selectedProduct->getKey() : $productId;
             }
         } elseif ($productId) {
-            $selectedProduct = Product::find($productId);
+            $selectedProduct = \App\Models\Product::find($productId);
         }
 
         return view('admin.combos.create', compact('products', 'selectedProduct', 'selectedVariant', 'comboProductVariantId', 'productId'));
@@ -74,6 +74,12 @@ class ComboController extends Controller
 
     public function store(Request $request)
     {
+        \Log::debug('ComboController@store - Request data:', $request->all());
+        \Log::debug('ComboController@store - combo_product_variant_id:', ['combo_product_variant_id' => $request->input('combo_product_variant_id')]);
+        \Log::debug('ComboController@store - items:', ['items' => $request->input('items')]);
+        \Log::debug('ComboController@store - name:', ['name' => $request->input('name')]);
+        \Log::debug('ComboController@store - price:', ['price' => $request->input('price')]);
+        \Log::debug('ComboController@store - stock_quantity:', ['stock_quantity' => $request->input('stock_quantity')]);
         try {
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
@@ -98,7 +104,9 @@ class ComboController extends Controller
                 'items.*.quantity.required' => 'Vui lòng nhập số lượng.',
                 'items.*.quantity.min' => 'Số lượng phải lớn hơn hoặc bằng 1.',
             ]);
+            \Log::debug('ComboController@store - Dữ liệu đã validate:', $validated);
         } catch (\Exception $e) {
+            \Log::error('ComboController@store - Validation error', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             throw $e;
         }
 
@@ -111,37 +119,30 @@ class ComboController extends Controller
             $comboPrice = $request->input('price');
             $comboStock = $request->input('stock_quantity');
 
+            \Log::debug('ComboController@store - comboProductVariantId', ['comboProductVariantId' => $comboProductVariantId]);
+            \Log::debug('ComboController@store - items', ['items' => $items]);
             $comboVariant = ProductVariant::find($comboProductVariantId);
+            \Log::debug('ComboController@store - comboVariant', ['comboVariant' => $comboVariant]);
 
             if (!$comboVariant) {
+                Log::error('ComboController@store - Không tìm thấy comboVariant');
                 throw new \Exception('Không tìm thấy biến thể đại diện cho combo');
             }
 
+            Log::debug('ComboController@store - comboVariant->is_active', ['is_active' => $comboVariant->is_active]);
             if (!$comboVariant->is_active) {
+                Log::error('ComboController@store - Biến thể không ở trạng thái hoạt động');
                 return back()->withErrors(['combo_product_variant_id' => 'Biến thể không ở trạng thái hoạt động.'])->withInput();
             }
 
             // Tạo combo mới
-            $combo = Combo::create([
+            $combo = \App\Models\Combo::create([
                 'name' => $comboName ?? $comboVariant->sku,
                 'combo_product_variant_id' => $comboProductVariantId,
                 'price' => $comboPrice ?? $comboVariant->price,
                 'stock_quantity' => $comboStock ?? $comboVariant->stock_quantity,
             ]);
-
-            // Tạo thông báo khi thêm mới combo
-            Notification::create([
-                'user_id' => Auth::id(),
-                'entity_type' => Combo::class,
-                'entity_id' => $combo->id,
-                'title' => 'Thêm mới combo',
-                'message' => 'Combo "' . $combo->name . '" đã được thêm mới.',
-                'type' => NotificationType::System,
-                'priority' => 'low',
-                'old_status' => null,
-                'new_status' => json_encode($combo->getAttributes()),
-                'event_details' => json_encode(['action' => 'create', 'combo_id' => $combo->id]),
-            ]);
+            Log::info('ComboController@store - Combo created', ['combo_id' => $combo->getKey()]);
 
 
             // Kiểm tra combo đã tồn tại chưa
@@ -152,7 +153,7 @@ class ComboController extends Controller
                     'quantity' => (int)($item['quantity'] ?? 1)
                 ];
             })->sortBy('variant_id')->values()->toArray();
-            $combos = Combo::where('combo_product_variant_id', $comboProductVariantId)->get();
+            $combos = \App\Models\Combo::where('combo_product_variant_id', $comboProductVariantId)->get();
             $isDuplicate = false;
             foreach ($combos as $comboCheck) {
                 $dbItems = $comboCheck->comboPackageItems()->get()->map(function($item) {
@@ -166,13 +167,15 @@ class ComboController extends Controller
                     break;
                 }
             }
+            \Log::debug('ComboController@store - Kết quả kiểm tra duplicate:', ['isDuplicate' => $isDuplicate]);
             if ($isDuplicate) {
                 DB::rollBack();
+                \Log::debug('ComboController@store - Lỗi: combo duplicate');
                 return back()->withErrors(['error' => 'Combo này đã tồn tại. Vui lòng chọn sản phẩm hoặc biến thể khác.'])->withInput();
             }
 
             // Luôn thêm biến thể đại diện vào ComboPackageItem
-            ComboPackageItem::create([
+            \App\Models\ComboPackageItem::create([
                 'combo_id' => $combo->getKey(),
                 'combo_product_variant_id' => $comboProductVariantId,
                 'item_product_variant_id' => $comboProductVariantId,
@@ -182,13 +185,14 @@ class ComboController extends Controller
             // Lưu các mục còn lại vào combo
             foreach ($items as $index => $item) {
                 if (!isset($item['item_product_variant_id'])) {
+                    \Log::warning('ComboController@store - item không có item_product_variant_id', ['item' => $item]);
                     continue;
                 }
                 // Bỏ qua nếu là biến thể đại diện (tránh trùng lặp)
                 if ($item['item_product_variant_id'] == $comboProductVariantId) continue;
                 $itemVariant = ProductVariant::find($item['item_product_variant_id']);
                 if (!$itemVariant) continue;
-                ComboPackageItem::create([
+                \App\Models\ComboPackageItem::create([
                     'combo_id' => $combo->getKey(),
                     'combo_product_variant_id' => $comboProductVariantId,
                     'item_product_variant_id' => $item['item_product_variant_id'],
@@ -197,16 +201,22 @@ class ComboController extends Controller
             }
 
             DB::commit();
+            \Log::info('ComboController@store - Combo created successfully for combo ID', ['id' => $combo->getKey()]);
             return redirect()->route('admin.combos.index')->with('success', 'Combo đã được tạo thành công.');
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error('ComboController@store - Exception', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'request' => $request->all()
+            ]);
             return back()->withErrors(['error' => 'Đã xảy ra lỗi khi tạo combo: ' . $e->getMessage()])->withInput();
         }
     }
 
     public function show($id)
     {
-        $combo = Combo::with([
+        $combo = \App\Models\Combo::with([
             'comboProductVariant.product',
             'comboPackageItems.itemProductVariant.product'
         ])->findOrFail($id);
@@ -220,7 +230,7 @@ class ComboController extends Controller
 
     public function edit($id)
     {
-        $combo = Combo::with([
+        $combo = \App\Models\Combo::with([
             'comboProductVariant.product',
             'comboPackageItems.itemProductVariant.product'
         ])->findOrFail($id);
@@ -247,8 +257,7 @@ class ComboController extends Controller
         try {
             DB::beginTransaction();
 
-            $combo = Combo::findOrFail($id);
-            $oldData = $combo->getOriginal();
+            $combo = \App\Models\Combo::findOrFail($id);
 
             $combo->update([
                 'name' => $request->input('name'),
@@ -257,26 +266,12 @@ class ComboController extends Controller
                 'stock_quantity' => $request->input('stock_quantity'),
             ]);
 
-            // Tạo thông báo khi cập nhật combo
-            Notification::create([
-                'user_id' => Auth::id(),
-                'entity_type' => Combo::class,
-                'entity_id' => $combo->id,
-                'title' => 'Cập nhật combo',
-                'message' => 'Combo "' . $combo->name . '" đã được cập nhật.',
-                'type' => NotificationType::System,
-                'priority' => 'low',
-                'old_status' => json_encode($oldData),
-                'new_status' => json_encode($combo->getAttributes()),
-                'event_details' => json_encode(['action' => 'update', 'combo_id' => $combo->id]),
-            ]);
-
             // Xóa các mục cũ
-            ComboPackageItem::where('combo_id', $combo->getKey())->delete();
+            \App\Models\ComboPackageItem::where('combo_id', $combo->getKey())->delete();
 
             $items = $request->input('items');
             foreach ($items as $item) {
-                ComboPackageItem::create([
+                \App\Models\ComboPackageItem::create([
                     'combo_id' => $combo->getKey(),
                     'combo_product_variant_id' => $combo->combo_product_variant_id,
                     'item_product_variant_id' => $item['item_product_variant_id'],
@@ -297,25 +292,10 @@ class ComboController extends Controller
         try {
             DB::beginTransaction();
 
-            $combo = Combo::findOrFail($id);
-            $oldData = $combo->getOriginal();
+            $combo = \App\Models\Combo::findOrFail($id);
 
-            ComboPackageItem::where('combo_id', $combo->getKey())->delete();
+            \App\Models\ComboPackageItem::where('combo_id', $combo->getKey())->delete();
             $combo->delete();
-
-            // Tạo thông báo khi xóa combo
-            Notification::create([
-                'user_id' => Auth::id(),
-                'entity_type' => Combo::class,
-                'entity_id' => $combo->id,
-                'title' => 'Xóa combo',
-                'message' => 'Combo "' . $combo->name . '" đã bị xóa.',
-                'type' => NotificationType::System,
-                'priority' => 'low',
-                'old_status' => json_encode($oldData),
-                'new_status' => null,
-                'event_details' => json_encode(['action' => 'delete', 'combo_id' => $combo->id]),
-            ]);
 
             DB::commit();
             return redirect()->route('admin.combos.index')->with('success', 'Combo đã được xóa thành công.');
@@ -343,7 +323,7 @@ class ComboController extends Controller
         })->sortBy('variant_id')->values()->toArray();
 
         // Tìm các combo cùng combo_product_variant_id
-        $combos = Combo::where('combo_product_variant_id', $comboProductVariantId)->get();
+        $combos = \App\Models\Combo::where('combo_product_variant_id', $comboProductVariantId)->get();
         foreach ($combos as $combo) {
             $dbItems = $combo->comboPackageItems()->get()->map(function($item) {
                 return [

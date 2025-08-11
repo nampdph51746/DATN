@@ -157,18 +157,6 @@ class MovieController extends Controller
 
                 $movie = Movie::create($data);
                 $movie->genres()->sync($request->input('genre_ids', []));
-
-                // Notification for create
-                Notification::create([
-                    'user_id' => Auth::id(),
-                    'entity_type' => 'movie',
-                    'entity_id' => $movie->id,
-                    'title' => 'Tạo phim mới',
-                    'message' => 'Phim "' . $movie->name . '" đã được tạo.',
-                    'type' => NotificationType::System,
-                    'priority' => 'high',
-                    'event_details' => json_encode(['action' => 'create', 'data' => $movie->toArray()]),
-                ]);
             });
 
             return redirect()->route('admin.movies.index')->with('success', 'Thêm phim thành công!');
@@ -252,7 +240,7 @@ class MovieController extends Controller
                 'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
                 'genre_ids' => 'required|array|min:1',
                 'genre_ids.*' => 'exists:genres,id',
-                'average_rating' => 'nullable|numeric|min:0|max:10',
+                'average_rating' => 'nullable|numeric|min:0|max:5',
                 'description' => 'nullable|string',
             ], [
                 // Thông báo lỗi giống bạn đã cung cấp
@@ -295,7 +283,6 @@ class MovieController extends Controller
                 }
 
                 DB::transaction(function () use ($movie, $request) {
-                    $oldData = $movie->toArray();
                     $data = $request->all();
                     $data['status'] = MovieStatus::from($request->status);
                     $data['average_rating'] = $request->average_rating ?? 0;
@@ -318,18 +305,6 @@ class MovieController extends Controller
 
                     $movie->update($data);
                     $movie->genres()->sync($request->input('genre_ids', []));
-
-                    // Notification for update
-                    Notification::create([
-                        'user_id' => Auth::id(),
-                        'entity_type' => 'movie',
-                        'entity_id' => $movie->id,
-                        'title' => 'Cập nhật phim',
-                        'message' => 'Phim "' . $movie->name . '" đã được cập nhật.',
-                        'type' => NotificationType::System,
-                        'priority' => 'high',
-                        'event_details' => json_encode(['action' => 'update', 'old' => $oldData, 'new' => $movie->toArray()]),
-                    ]);
                 });
 
                 return redirect()->route('admin.movies.index')
