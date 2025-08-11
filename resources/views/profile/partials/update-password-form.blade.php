@@ -1,13 +1,13 @@
 <section>
     <header>
-        <h2 class="text-lg font-medium text-gray-900">
-            {{ __('Update Password') }}
-        </h2>
+    <h2 class="text-lg font-medium text-gray-900">
+        {{ __('Cập nhật mật khẩu') }}
+    </h2>
 
-        <p class="mt-1 text-sm text-gray-600">
-            {{ __('Ensure your account is using a long, random password to stay secure.') }}
-        </p>
-    </header>
+    <p class="mt-1 text-sm text-gray-600">
+        {{ __('Đảm bảo tài khoản của bạn đang sử dụng một mật khẩu dài và ngẫu nhiên để giữ an toàn.') }}
+    </p>
+</header>
 
     <form method="post" action="{{ route('password.update') }}" class="mt-6 space-y-6">
         @csrf
