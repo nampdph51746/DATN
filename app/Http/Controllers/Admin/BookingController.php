@@ -31,8 +31,6 @@ class BookingController extends Controller
         ->latest()
         ->paginate(10);
 
-        
-
         return view('client.bookings.index', compact('bookings'));
     }
 
