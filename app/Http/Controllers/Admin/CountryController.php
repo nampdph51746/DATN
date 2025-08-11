@@ -110,4 +110,92 @@ class CountryController extends Controller
         alert('Quốc gia đã bị xóa vĩnh viễn.');
         return redirect()->route('admin.countries.trash')->with('success', 'Đã xóa quốc gia vĩnh viễn.');
     }
+
+    // Xóa nhiều quốc gia cùng lúc
+    public function bulkDelete(Request $request)
+    {
+        $ids = explode(',', $request->input('ids'));
+        
+        if (empty($ids)) {
+            return redirect()->route('admin.countries.index')
+                ->with('error', 'Không có quốc gia nào được chọn để xóa.');
+        }
+
+        try {
+            $countries = Country::whereIn('id', $ids)->get();
+            
+            if ($countries->isEmpty()) {
+                return redirect()->route('admin.countries.index')
+                    ->with('error', 'Không tìm thấy quốc gia nào để xóa.');
+            }
+
+            // Kiểm tra xem có quốc gia nào đang được sử dụng không
+            $usedCountries = [];
+            foreach ($countries as $country) {
+                // Kiểm tra nếu có movies sử dụng country này
+                if ($country->movies()->exists()) {
+                    $usedCountries[] = $country->name;
+                }
+            }
+
+            if (!empty($usedCountries)) {
+                return redirect()->route('admin.countries.index')
+                    ->with('error', 'Không thể xóa các quốc gia sau vì đang được sử dụng: ' . implode(', ', $usedCountries));
+            }
+
+            // Thực hiện xóa mềm
+            Country::whereIn('id', $ids)->delete();
+
+            return redirect()->route('admin.countries.index')
+                ->with('success', 'Đã xóa ' . count($ids) . ' quốc gia thành công.');
+
+        } catch (\Exception $e) {
+            return redirect()->route('admin.countries.index')
+                ->with('error', 'Có lỗi xảy ra khi xóa quốc gia: ' . $e->getMessage());
+        }
+    }
+
+    // Khôi phục nhiều quốc gia cùng lúc
+    public function bulkRestore(Request $request)
+    {
+        $ids = explode(',', $request->input('ids'));
+        
+        if (empty($ids)) {
+            return redirect()->route('admin.countries.trash')
+                ->with('error', 'Không có quốc gia nào được chọn để khôi phục.');
+        }
+
+        try {
+            $restoredCount = Country::onlyTrashed()->whereIn('id', $ids)->restore();
+            
+            return redirect()->route('admin.countries.trash')
+                ->with('success', 'Đã khôi phục ' . count($ids) . ' quốc gia thành công.');
+
+        } catch (\Exception $e) {
+            return redirect()->route('admin.countries.trash')
+                ->with('error', 'Có lỗi xảy ra khi khôi phục quốc gia: ' . $e->getMessage());
+        }
+    }
+
+    // Xóa vĩnh viễn nhiều quốc gia cùng lúc
+    public function bulkForceDelete(Request $request)
+    {
+        $ids = explode(',', $request->input('ids'));
+        
+        if (empty($ids)) {
+            return redirect()->route('admin.countries.trash')
+                ->with('error', 'Không có quốc gia nào được chọn để xóa vĩnh viễn.');
+        }
+
+        try {
+            Country::onlyTrashed()->whereIn('id', $ids)->forceDelete();
+            
+            return redirect()->route('admin.countries.trash')
+                ->with('success', 'Đã xóa vĩnh viễn ' . count($ids) . ' quốc gia thành công.');
+
+        } catch (\Exception $e) {
+            return redirect()->route('admin.countries.trash')
+                ->with('error', 'Có lỗi xảy ra khi xóa vĩnh viễn quốc gia: ' . $e->getMessage());
+        }
+    }
 }

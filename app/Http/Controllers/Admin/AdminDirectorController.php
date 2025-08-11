@@ -37,7 +37,25 @@ class AdminDirectorController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
-        return view('admin.directors.index', compact('directors'));
+        // ✅ Thêm biến cần thiết cho stats
+        $totalDirectors = Director::count();
+        $activeDirectors = Director::where('is_active', true)->count();
+        $inactiveDirectors = Director::where('is_active', false)->count();
+        
+        // ✅ Lấy danh sách quốc gia để filter
+        $nationalities = Director::select('nationality')
+            ->whereNotNull('nationality')
+            ->distinct()
+            ->orderBy('nationality')
+            ->pluck('nationality');
+
+        return view('admin.directors.index', compact(
+            'directors', 
+            'totalDirectors', 
+            'activeDirectors', 
+            'inactiveDirectors',
+            'nationalities'
+        ));
     }
 
     /**

@@ -54,17 +54,17 @@
             color: #DC3545;
         }
 
-        .director-avatar {
+        .director-image-small {
             width: 45px;
-            height: 45px;
+            height: 65px;
             object-fit: cover;
-            border-radius: 50%;
+            border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             transition: var(--transition);
         }
 
-        .director-avatar:hover {
-            transform: scale(1.1);
+        .director-image-small:hover {
+            transform: scale(1.05);
         }
 
         .table > :not(caption) > * > * {
@@ -81,17 +81,20 @@
             transform: translateX(2px);
         }
 
-        .btn-primary {
-            background: var(--primary-orange);
-            border: none;
-            border-radius: 50px;
-            padding: 0.75rem 1.5rem;
+        .btn {
             font-weight: 600;
             transition: var(--transition);
         }
 
+        .btn-primary {
+            background: var(--primary-orange);
+            border: none;
+            border-radius: 50px;
+        }
+
         .btn-primary:hover {
             background: var(--primary-teal);
+            color: white;
             transform: translateY(-2px);
             box-shadow: 0 8px 20px rgba(0, 172, 193, 0.3);
         }
@@ -100,7 +103,6 @@
             background: var(--primary-teal);
             border: none;
             border-radius: 50px;
-            transition: var(--transition);
         }
 
         .btn-success:hover {
@@ -114,7 +116,6 @@
             border: none;
             border-radius: 50px;
             color: #1a202c;
-            transition: var(--transition);
         }
 
         .btn-info:hover {
@@ -127,7 +128,6 @@
             border-color: var(--primary-teal);
             color: var(--primary-teal);
             border-radius: 50px;
-            transition: var(--transition);
         }
 
         .btn-outline-primary:hover {
@@ -136,7 +136,7 @@
             transform: translateY(-2px);
         }
 
-        .view-detail-btn, .edit-btn {
+        .view-detail-btn, .edit-btn, .edit-disabled-btn {
             border-radius: 8px;
             min-width: 36px;
             height: 32px;
@@ -160,16 +160,36 @@
         }
 
         .edit-btn {
-            background: #212529;
-            border: 1px solid #212529;
+            background: var(--primary-orange);
+            border: 1px solid var(--primary-orange);
             color: white;
         }
 
         .edit-btn:hover {
-            background: var(--primary-orange);
-            border-color: var(--primary-orange);
+            background: var(--primary-teal);
+            border-color: var(--primary-teal);
             color: white;
             transform: scale(1.1);
+        }
+
+        .edit-disabled-btn {
+            background: #DC3545;
+            border: 1px solid #DC3545;
+            color: white;
+            cursor: not-allowed;
+            opacity: 1;
+        }
+
+        .edit-disabled-btn:hover {
+            background: #c82333;
+            border-color: #bd2130;
+            color: white;
+            transform: none;
+        }
+
+        .view-detail-btn i, .edit-btn i, .edit-disabled-btn i {
+            font-size: 14px;
+            color: white !important;
         }
 
         .avatar-lg {
@@ -183,6 +203,15 @@
             color: white;
             font-size: 1.8rem;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .avatar-sm {
+            width: 2.5rem;
+            height: 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
         }
 
         .dropdown-menu {
@@ -232,8 +261,8 @@
             border: none;
             border-radius: 8px;
             margin: 0 3px;
-            transition: var(--transition);
             color: var(--primary-teal);
+            transition: var(--transition);
         }
 
         .page-link:hover {
@@ -278,9 +307,9 @@
                 font-size: 1.4rem;
             }
 
-            .director-avatar {
+            .director-image-small {
                 width: 35px;
-                height: 35px;
+                height: 50px;
             }
 
             .btn-lg {
@@ -294,7 +323,7 @@
         }
     </style>
 
-    <!-- Alert Messages với animation -->
+    <!-- Alert Messages -->
     @if(session('success'))
         <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
             <div class="d-flex align-items-center">
@@ -353,12 +382,6 @@
                     <a href="{{ route('admin.directors.create') }}" class="btn btn-primary btn-lg rounded-pill">
                         <i class="fas fa-plus-circle me-2"></i> Thêm đạo diễn mới
                     </a>
-                    <a href="{{ route('admin.movies.create') }}" class="btn btn-success btn-lg rounded-pill">
-                        <i class="fas fa-film me-2"></i> Thêm phim
-                    </a>
-                    <a href="{{ route('admin.actors.create') }}" class="btn btn-info btn-lg rounded-pill">
-                        <i class="fas fa-users me-2"></i> Thêm diễn viên
-                    </a>
                 </div>
             </div>
         </div>
@@ -366,13 +389,13 @@
 
     <!-- Stats Cards -->
     <div class="row mb-4">
-        <div class="col-xl-3 col-lg-6 col-md-6">
+        <div class="col-xl-4 col-lg-6 col-md-6">
             <div class="card border-0 h-100 rounded-4 overflow-hidden">
                 <div class="card-body p-4">
                     <div class="d-flex align-items-center">
                         <div class="flex-shrink-0">
                             <div class="avatar-lg">
-                                <i class="fas fa-users fs-4"></i>
+                                <i class="fas fa-person-video2 fs-4"></i>
                             </div>
                         </div>
                         <div class="flex-grow-1 ms-3">
@@ -386,7 +409,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-xl-3 col-lg-6 col-md-6">
+        <div class="col-xl-4 col-lg-6 col-md-6">
             <div class="card border-0 h-100 rounded-4 overflow-hidden">
                 <div class="card-body p-4">
                     <div class="d-flex align-items-center">
@@ -406,7 +429,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-xl-3 col-lg-6 col-md-6">
+        <div class="col-xl-4 col-lg-6 col-md-6">
             <div class="card border-0 h-100 rounded-4 overflow-hidden">
                 <div class="card-body p-4">
                     <div class="d-flex align-items-center">
@@ -416,33 +439,13 @@
                             </div>
                         </div>
                         <div class="flex-grow-1 ms-3">
-                            <h6 class="mb-0 text-muted fw-semibold">Ngưng hoạt động</h6>
-                            <h3 class="mb-0 fw-bold" style="color: #DC3545;">{{ $directors->where('is_active', false)->count() }}</h3>
+                            <h6 class="mb-0 text-muted fw-semibold">Không hoạt động</h6>
+                            <h3 class="mb-0 fw-bold" style="color: var(--accent-yellow);">{{ $directors->where('is_active', false)->count() }}</h3>
                         </div>
                     </div>
                 </div>
                 <div class="progress rounded-0" style="height: 4px;">
-                    <div class="progress-bar" style="background: #DC3545; width: {{ $directors->total() > 0 ? ($directors->where('is_active', false)->count() / $directors->total()) * 100 : 0 }}%"></div>
-                </div>
-            </div>
-        </div>
-        <div class="col-xl-3 col-lg-6 col-md-6">
-            <div class="card border-0 h-100 rounded-4 overflow-hidden">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0">
-                            <div class="avatar-lg">
-                                <i class="fas fa-film fs-4"></i>
-                            </div>
-                        </div>
-                        <div class="flex-grow-1 ms-3">
-                            <h6 class="mb-0 text-muted fw-semibold">Tổng phim đã làm</h6>
-                            <h3 class="mb-0 fw-bold" style="color: var(--accent-yellow);">{{ $directors->sum(function($director) { return $director->movies->count(); }) }}</h3>
-                        </div>
-                    </div>
-                </div>
-                <div class="progress rounded-0" style="height: 4px;">
-                    <div class="progress-bar" style="background: var(--accent-yellow); width: 85%"></div>
+                    <div class="progress-bar" style="background: var(--accent-yellow); width: {{ $directors->total() > 0 ? ($directors->where('is_active', false)->count() / $directors->total()) * 100 : 0 }}%"></div>
                 </div>
             </div>
         </div>
@@ -474,8 +477,8 @@
                                                value="{{ request('query') }}">
                                         <select name="status" class="form-select rounded-end-pill">
                                             <option value="">Tất cả</option>
-                                            <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Đang hoạt động</option>
-                                            <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>Ngưng hoạt động</option>
+                                            <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Hoạt động</option>
+                                            <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>Không hoạt động</option>
                                         </select>
                                     </div>
                                     <button type="submit" class="btn btn-primary btn-lg rounded-pill">
@@ -491,31 +494,10 @@
                                     </button>
                                     <div class="dropdown-menu dropdown-menu-end p-4">
                                         <h6 class="dropdown-header fw-bold" style="color: var(--primary-teal);">
-                                            <i class="fas fa-check-circle me-1"></i> Trạng thái
-                                        </h6>
-                                        <a href="{{ route('admin.directors.index', array_filter(['query' => request('query')])) }}" 
-                                           class="dropdown-item rounded-3 {{ !request('status') ? 'active' : '' }}">
-                                            Tất cả
-                                        </a>
-                                        <a href="{{ route('admin.directors.index', array_filter(['status' => 'active', 'query' => request('query')])) }}" 
-                                           class="dropdown-item rounded-3 {{ request('status') == 'active' ? 'active' : '' }}">
-                                            Đang hoạt động
-                                        </a>
-                                        <a href="{{ route('admin.directors.index', array_filter(['status' => 'inactive', 'query' => request('query')])) }}" 
-                                           class="dropdown-item rounded-3 {{ request('status') == 'inactive' ? 'active' : '' }}">
-                                            Ngưng hoạt động
-                                        </a>
-
-                                        <div class="dropdown-divider my-3"></div>
-                                        <h6 class="dropdown-header fw-bold" style="color: var(--primary-orange);">
                                             <i class="fas fa-globe me-1"></i> Quốc tịch
                                         </h6>
                                         <a href="{{ route('admin.directors.index', array_filter(['query' => request('query'), 'status' => request('status')])) }}" 
                                            class="dropdown-item rounded-3 {{ !request('nationality') ? 'active' : '' }}">Tất cả</a>
-                                        @php
-                                            $allDirectors = \App\Models\Director::all();
-                                            $nationalities = $allDirectors->pluck('nationality')->filter()->unique()->sort();
-                                        @endphp
                                         @foreach ($nationalities as $nationality)
                                             <a href="{{ route('admin.directors.index', array_filter(['nationality' => $nationality, 'query' => request('query'), 'status' => request('status')])) }}" 
                                                class="dropdown-item rounded-3 {{ request('nationality') == $nationality ? 'active' : '' }}">{{ $nationality }}</a>
@@ -561,13 +543,13 @@
                                         <i class="fas fa-globe me-1" style="color: var(--primary-orange);"></i> Quốc tịch
                                     </th>
                                     <th class="border-0 fw-bold text-dark">
-                                        <i class="fas fa-calendar-alt me-1" style="color: var(--accent-yellow);"></i> Ngày sinh
+                                        <i class="fas fa-birthday-cake me-1" style="color: var(--accent-yellow);"></i> Ngày sinh
                                     </th>
                                     <th class="border-0 fw-bold text-dark">
                                         <i class="fas fa-film me-1" style="color: var(--primary-teal);"></i> Số phim
                                     </th>
                                     <th class="border-0 fw-bold text-dark">
-                                        <i class="fas fa-flag me-1" style="color: var(--primary-orange);"></i> Trạng thái
+                                        <i class="fas fa-toggle-on me-1" style="color: var(--primary-orange);"></i> Trạng thái
                                     </th>
                                     <th class="border-0 fw-bold text-dark">
                                         <i class="fas fa-calendar-plus me-1" style="color: var(--accent-yellow);"></i> Thời gian tạo
@@ -578,71 +560,58 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse ($directors as $director)
+                                @foreach ($directors as $index => $director)
                                     <tr class="border-bottom border-light">
                                         <td class="ps-4">
                                             <div class="form-check">
-                                                @if($director->movies->count() == 0)
-                                                    <input type="checkbox" class="form-check-input director-checkbox" value="{{ $director->id }}">
+                                                @php
+                                                    $canBeDeleted = $director->movies->count() == 0;
+                                                @endphp
+                                                @if(!$canBeDeleted)
+                                                    <input type="checkbox" class="form-check-input" disabled title="Đạo diễn có phim, không thể xóa">
                                                 @else
-                                                    <input type="checkbox" class="form-check-input" disabled title="Không thể xóa do có phim liên kết">
+                                                    <input type="checkbox" class="form-check-input director-checkbox" value="{{ $director->id }}">
                                                 @endif
                                             </div>
                                         </td>
                                         <td>
                                             <div class="d-flex align-items-center">
                                                 <div class="flex-shrink-0 me-3">
-                                                    <div class="position-relative">
-                                                        <img src="{{ $director->image_path ? Storage::url($director->image_path) : asset('assets/images/d directors-placeholder.png') }}" 
+                                                    @if($director->image_path)
+                                                        <img src="{{ Storage::url($director->image_path) }}" 
                                                              alt="{{ $director->name }}" 
-                                                             class="director-avatar">
-                                                        @if($director->is_active)
-                                                            <span class="position-absolute bottom-0 end-0 p-1 bg-success border-2 border-white rounded-circle">
-                                                                <span class="visually-hidden">Active</span>
-                                                            </span>
-                                                        @else
-                                                            <span class="position-absolute bottom-0 end-0 p-1 bg-danger border-2 border-white rounded-circle">
-                                                                <span class="visually-hidden">Inactive</span>
-                                                            </span>
-                                                        @endif
-                                                    </div>
+                                                             class="director-image-small">
+                                                    @else
+                                                        <div class="director-image-small bg-secondary d-flex align-items-center justify-content-center">
+                                                            <i class="fas fa-user text-white"></i>
+                                                        </div>
+                                                    @endif
                                                 </div>
                                                 <div>
                                                     <h6 class="mb-1 fw-bold" style="color: var(--primary-teal);">{{ $director->name }}</h6>
                                                     @if($director->movies->count() > 0)
                                                         <span class="badge bg-info-subtle text-info rounded-pill">
-                                                            <i class="fas fa-film me-1"></i>Có {{ $director->movies->count() }} phim
+                                                            <i class="fas fa-film me-1"></i>Có phim
                                                         </span>
                                                     @endif
                                                 </div>
                                             </div>
                                         </td>
                                         <td>
-                                            @if($director->nationality)
-                                                <div class="d-flex align-items-center">
-                                                    <i class="fas fa-globe text-primary me-2"></i>
-                                                    <span class="fw-medium">{{ $director->nationality }}</span>
-                                                </div>
-                                            @else
-                                                <span class="text-muted">N/A</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            @if($director->birth_date)
-                                                <div class="d-flex align-items-center">
-                                                    <i class="fas fa-calendar-alt text-success me-2"></i>
-                                                    <div>
-                                                        <span class="fw-medium">{{ $director->birth_date->format('d/m/Y') }}</span>
-                                                        <small class="d-block text-muted">{{ $director->birth_date->age }} tuổi</small>
-                                                    </div>
-                                                </div>
-                                            @else
-                                                <span class="text-muted">N/A</span>
-                                            @endif
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-globe text-primary me-2" style="color: var(--primary-orange);"></i>
+                                                <span class="fw-medium">{{ $director->nationality ?? 'N/A' }}</span>
+                                            </div>
                                         </td>
                                         <td>
                                             <div class="d-flex align-items-center">
-                                                <i class="fas fa-film text-info me-2"></i>
+                                                <i class="fas fa-birthday-cake text-warning me-2" style="color: var(--accent-yellow);"></i>
+                                                <span class="fw-medium">{{ $director->birth_date ? $director->birth_date->format('d/m/Y') : 'N/A' }}</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-film text-success me-2" style="color: var(--primary-teal);"></i>
                                                 <span class="fw-medium">{{ $director->movies->count() }} phim</span>
                                             </div>
                                         </td>
@@ -653,31 +622,46 @@
                                                 </span>
                                             @else
                                                 <span class="badge bg-danger rounded-pill px-3 py-2">
-                                                    <i class="fas fa-times-circle me-1"></i>Ngưng hoạt động
+                                                    <i class="fas fa-times-circle me-1"></i>Không hoạt động
                                                 </span>
                                             @endif
                                         </td>
                                         <td>
-                                            <span class="text-muted">{{ $director->created_at->format('d/m/Y H:i') }}</span>
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-calendar-plus text-info me-2" style="color: var(--accent-yellow);"></i>
+                                                <span class="text-muted">{{ $director->created_at->format('d/m/Y H:i') }}</span>
+                                            </div>
                                         </td>
                                         <td class="text-center pe-4">
                                             <div class="d-flex gap-1 justify-content-center">
-                                                <a href="{{ route('admin.directors.show', $director->id) }}"
+                                                <a href="{{ route('admin.directors.show', $director) }}"
                                                    class="btn btn-sm view-detail-btn" 
                                                    title="Xem chi tiết"
                                                    data-bs-toggle="tooltip">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
-                                                <a href="{{ route('admin.directors.edit', $director->id) }}"
-                                                   class="btn btn-sm edit-btn" 
-                                                   title="Chỉnh sửa"
-                                                   data-bs-toggle="tooltip">
-                                                    <i class="fas fa-edit"></i>
-                                                </a>
+                                                @php
+                                                    $canBeEdited = $director->movies->count() == 0;
+                                                @endphp
+                                                @if(!$canBeEdited)
+                                                    <span class="btn btn-sm edit-disabled-btn" 
+                                                          title="Đạo diễn có phim, không thể chỉnh sửa"
+                                                          data-bs-toggle="tooltip">
+                                                        <i class="fas fa-edit"></i>
+                                                    </span>
+                                                @else
+                                                    <a href="{{ route('admin.directors.edit', $director) }}"
+                                                       class="btn btn-sm edit-btn" 
+                                                       title="Chỉnh sửa"
+                                                       data-bs-toggle="tooltip">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                @endif
                                             </div>
                                         </td>
                                     </tr>
-                                @empty
+                                @endforeach
+                                @if($directors->isEmpty())
                                     <tr>
                                         <td colspan="8" class="text-center py-5">
                                             <div class="d-flex flex-column align-items-center">
@@ -687,7 +671,7 @@
                                             </div>
                                         </td>
                                     </tr>
-                                @endforelse
+                                @endif
                             </tbody>
                         </table>
                     </div>
@@ -750,38 +734,6 @@ document.addEventListener('DOMContentLoaded', function () {
             return false;
         }
         document.getElementById('selected-director-ids').value = checked.join(',');
-    });
-
-    // Intersection Observer for animations
-    const observerOptions = {
-        threshold: 0.2,
-        rootMargin: '0px 0px -30px 0px'
-    };
-
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.style.opacity = '1';
-                entry.target.style.transform = 'translateY(0)';
-            }
-        });
-    }, observerOptions);
-
-    // Observe table rows and cards
-    const tableRows = document.querySelectorAll('.table tbody tr');
-    tableRows.forEach((row, index) => {
-        row.style.opacity = '0';
-        row.style.transform = 'translateY(20px)';
-        row.style.transition = `all 0.6s ease ${index * 0.1}s`;
-        observer.observe(row);
-    });
-
-    const cards = document.querySelectorAll('.card');
-    cards.forEach((card, index) => {
-        card.style.opacity = '0';
-        card.style.transform = 'translateY(20px)';
-        card.style.transition = `all 0.6s ease ${index * 0.1}s`;
-        observer.observe(card);
     });
 });
 </script>

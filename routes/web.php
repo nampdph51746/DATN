@@ -295,6 +295,28 @@ Route::prefix('admin/customer_rank_promotions')->middleware(['auth', 'role:admin
     Route::delete('/{customer_rank_id}/{promotion_id}', [CustomerRankPromotionController::class, 'destroy'])->name('customer_rank_promotions.destroy');
 });
 
+// ===== COUNTRIES ===== 
+Route::prefix('admin/countries')->name('admin.countries.')->middleware(['auth', 'role:admin,staff'])->group(function () {
+    // Main CRUD routes
+    Route::get('/', [CountryController::class, 'index'])->name('index');
+    Route::get('/create', [CountryController::class, 'create'])->name('create');
+    Route::post('/', [CountryController::class, 'store'])->name('store');
+    Route::get('/{id}', [CountryController::class, 'show'])->name('show')->where('id', '[0-9]+');
+    Route::get('/{id}/edit', [CountryController::class, 'edit'])->name('edit')->where('id', '[0-9]+');
+    Route::put('/{id}', [CountryController::class, 'update'])->name('update')->where('id', '[0-9]+');
+    Route::delete('/{id}', [CountryController::class, 'destroy'])->name('destroy')->where('id', '[0-9]+');
+    
+    // Bulk actions
+    Route::delete('/bulk-delete', [CountryController::class, 'bulkDelete'])->name('bulkDelete');
+    Route::post('/bulk-restore', [CountryController::class, 'bulkRestore'])->name('bulkRestore');
+    Route::delete('/bulk-force-delete', [CountryController::class, 'bulkForceDelete'])->name('bulkForceDelete');
+    
+    // Trash routes
+    Route::get('/trash', [CountryController::class, 'trash'])->name('trash');
+    Route::post('/trash/{id}/restore', [CountryController::class, 'restore'])->name('restore')->where('id', '[0-9]+');
+    Route::delete('/trash/{id}/force-delete', [CountryController::class, 'forceDelete'])->name('forceDelete')->where('id', '[0-9]+');
+});
+
 // ===== TEST ROUTES =====
 Route::get('/test-barcode-api', function () {
     $barcodeService = new \App\Services\BarcodeService();
