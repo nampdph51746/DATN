@@ -7,7 +7,7 @@
         display: flex;
         flex-direction: column;
         min-height: 100vh;
-        padding: 2rem;
+        padding: 4rem 2rem;
         background-color: #f9fafb;
         transition: background-color 0.3s;
     }
@@ -18,7 +18,7 @@
 
     .profile-box {
         max-width: 720px;
-        margin: auto;
+        margin: 3rem auto;
         background-color: #ffffff;
         border-radius: 12px;
         padding: 2.5rem;
@@ -341,4 +341,6 @@
         </div>
     </div>
 </div>
+    @include('client.footer.footer')
+
 @endsection
