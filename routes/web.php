@@ -163,10 +163,26 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
         Route::delete('countries/{id}/force-delete', [CountryController::class, 'forceDelete'])->name('countries.forceDelete');
         Route::resource('countries', CountryController::class);
 
-        Route::get('cities/trash', [CityController::class, 'trash'])->name('cities.trash');
-        Route::patch('cities/{id}/restore', [CityController::class, 'restore'])->name('cities.restore');
-        Route::delete('cities/{id}/force-delete', [CityController::class, 'forceDelete'])->name('cities.forceDelete');
-        Route::resource('cities', CityController::class);
+        // ===== CITIES ROUTES (Cập nhật) =====
+        Route::prefix('cities')->name('cities.')->group(function () {
+            // Main CRUD routes
+            Route::get('/', [CityController::class, 'index'])->name('index');
+            Route::get('/create', [CityController::class, 'create'])->name('create');
+            Route::post('/', [CityController::class, 'store'])->name('store');
+            Route::get('/{id}/edit', [CityController::class, 'edit'])->name('edit')->where('id', '[0-9]+');
+            Route::put('/{id}', [CityController::class, 'update'])->name('update')->where('id', '[0-9]+');
+            Route::delete('/{id}', [CityController::class, 'destroy'])->name('destroy')->where('id', '[0-9]+');
+            
+            // Bulk actions
+            Route::delete('/bulk-delete', [CityController::class, 'bulkDelete'])->name('bulkDelete');
+            Route::post('/bulk-restore', [CityController::class, 'bulkRestore'])->name('bulkRestore');
+            Route::delete('/bulk-force-delete', [CityController::class, 'bulkForceDelete'])->name('bulkForceDelete');
+            
+            // Trash routes
+            Route::get('/trash', [CityController::class, 'trash'])->name('trash');
+            Route::patch('/trash/{id}/restore', [CityController::class, 'restore'])->name('restore')->where('id', '[0-9]+');
+            Route::delete('/trash/{id}/force-delete', [CityController::class, 'forceDelete'])->name('forceDelete')->where('id', '[0-9]+');
+        });
 
         Route::get('cinemas/trash', [CinemaController::class, 'trash'])->name('cinemas.trash');
         Route::patch('cinemas/{id}/restore', [CinemaController::class, 'restore'])->name('cinemas.restore');

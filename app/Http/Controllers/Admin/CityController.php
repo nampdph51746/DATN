@@ -104,4 +104,92 @@ class CityController extends Controller
 
         return redirect()->route('admin.cities.trash')->with('success', 'Đã xóa vĩnh viễn thành phố.');
     }
+
+    // Xóa nhiều thành phố cùng lúc
+    public function bulkDelete(Request $request)
+    {
+        $ids = explode(',', $request->input('ids'));
+        
+        if (empty($ids)) {
+            return redirect()->route('admin.cities.index')
+                ->with('error', 'Không có thành phố nào được chọn để xóa.');
+        }
+
+        try {
+            $cities = City::whereIn('id', $ids)->get();
+            
+            if ($cities->isEmpty()) {
+                return redirect()->route('admin.cities.index')
+                    ->with('error', 'Không tìm thấy thành phố nào để xóa.');
+            }
+
+            // Kiểm tra xem có thành phố nào đang được sử dụng không
+            $usedCities = [];
+            foreach ($cities as $city) {
+                // Kiểm tra nếu có cinemas sử dụng city này
+                if ($city->cinemas()->exists()) {
+                    $usedCities[] = $city->name;
+                }
+            }
+
+            if (!empty($usedCities)) {
+                return redirect()->route('admin.cities.index')
+                    ->with('error', 'Không thể xóa các thành phố sau vì đang được sử dụng: ' . implode(', ', $usedCities));
+            }
+
+            // Thực hiện xóa mềm
+            City::whereIn('id', $ids)->delete();
+
+            return redirect()->route('admin.cities.index')
+                ->with('success', 'Đã xóa ' . count($ids) . ' thành phố thành công.');
+
+        } catch (\Exception $e) {
+            return redirect()->route('admin.cities.index')
+                ->with('error', 'Có lỗi xảy ra khi xóa thành phố: ' . $e->getMessage());
+        }
+    }
+
+    // Khôi phục nhiều thành phố cùng lúc
+    public function bulkRestore(Request $request)
+    {
+        $ids = explode(',', $request->input('ids'));
+        
+        if (empty($ids)) {
+            return redirect()->route('admin.cities.trash')
+                ->with('error', 'Không có thành phố nào được chọn để khôi phục.');
+        }
+
+        try {
+            $restoredCount = City::onlyTrashed()->whereIn('id', $ids)->restore();
+            
+            return redirect()->route('admin.cities.trash')
+                ->with('success', 'Đã khôi phục ' . count($ids) . ' thành phố thành công.');
+
+        } catch (\Exception $e) {
+            return redirect()->route('admin.cities.trash')
+                ->with('error', 'Có lỗi xảy ra khi khôi phục thành phố: ' . $e->getMessage());
+        }
+    }
+
+    // Xóa vĩnh viễn nhiều thành phố cùng lúc
+    public function bulkForceDelete(Request $request)
+    {
+        $ids = explode(',', $request->input('ids'));
+        
+        if (empty($ids)) {
+            return redirect()->route('admin.cities.trash')
+                ->with('error', 'Không có thành phố nào được chọn để xóa vĩnh viễn.');
+        }
+
+        try {
+            City::onlyTrashed()->whereIn('id', $ids)->forceDelete();
+            
+            return redirect()->route('admin.cities.trash')
+                ->with('success', 'Đã xóa vĩnh viễn ' . count($ids) . ' thành phố thành công.');
+
+        } catch (\Exception $e) {
+            return redirect()->route('admin.cities.trash')
+                ->with('error', 'Có lỗi xảy ra khi xóa vĩnh viễn thành phố: ' . $e->getMessage());
+        }
+    }
 }
