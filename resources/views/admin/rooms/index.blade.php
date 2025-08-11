@@ -4,35 +4,390 @@
 <div class="container-fluid px-4 py-4">
     @include('admin.partials.notifications')
 
+    <style>
+        :root {
+            --primary-orange: #FF6F00;
+            --primary-teal: #00ACC1;
+            --accent-yellow: #FFCA28;
+            --neutral-bg: #F8FAFC;
+            --card-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+            --border-radius: 16px;
+            --transition: all 0.3s ease;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--neutral-bg);
+        }
+
+        /* Hero Section */
+        .hero-section {
+            background: linear-gradient(135deg, var(--primary-orange) 0%, var(--primary-teal) 100%);
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            position: relative;
+            overflow: hidden;
+            min-height: 220px;
+            padding: 2.5rem;
+        }
+
+        .hero-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="heroGrid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23heroGrid)"/></svg>');
+            opacity: 0.5;
+        }
+
+        .hero-pattern {
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 350px;
+            height: 350px;
+            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%);
+            animation: float 8s ease-in-out infinite;
+        }
+
+        .hero-decoration-1, .hero-decoration-2 {
+            position: absolute;
+            background: rgba(255,255,255,0.15);
+            border-radius: 50%;
+            animation: pulse 5s ease-in-out infinite;
+        }
+
+        .hero-decoration-1 {
+            top: 15%;
+            left: 5%;
+            width: 100px;
+            height: 100px;
+        }
+
+        .hero-decoration-2 {
+            bottom: 20%;
+            right: 15%;
+            width: 70px;
+            height: 70px;
+            animation-delay: 2s;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero-icon-wrapper {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 3.5rem;
+            height: 3.5rem;
+            background: rgba(255,255,255,0.9);
+            border-radius: 12px;
+            margin-right: 1rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            color: var(--primary-orange);
+            font-size: 1.6rem;
+            transition: var(--transition);
+        }
+
+        .hero-icon-wrapper-small {
+            width: 2.2rem;
+            height: 2.2rem;
+            font-size: 1rem;
+            margin-right: 0.5rem;
+            background: rgba(255,255,255,0.9);
+            border-radius: 8px;
+        }
+
+        .hero-btn {
+            background: var(--accent-yellow);
+            color: #1a202c;
+            font-weight: 600;
+            border-radius: 50px;
+            padding: 0.75rem 1.5rem;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-btn:hover {
+            background: var(--primary-orange);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(255, 111, 0, 0.3);
+        }
+
+        .hero-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .hero-btn:hover::before {
+            left: 100%;
+        }
+
+        /* Stats Cards */
+        .stats-card {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            transition: var(--transition);
+        }
+
+        .stats-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .stats-card-body {
+            padding: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .stats-icon {
+            width: 4rem;
+            height: 4rem;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            color: white;
+            background: linear-gradient(135deg, var(--primary-teal), var(--primary-orange));
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .stats-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--primary-orange);
+            margin-bottom: 0.5rem;
+        }
+
+        .stats-label {
+            color: #4a5568;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .stats-trend {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        /* Search Section */
+        .search-section {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            padding: 1.5rem;
+        }
+
+        .search-input-group {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .search-input {
+            border-radius: 50px;
+            border: 1px solid #e0e0e0;
+            padding: 0.75rem 3rem;
+            transition: var(--transition);
+        }
+
+        .search-input:focus {
+            border-color: var(--primary-orange);
+            box-shadow: 0 0 0 4px rgba(255, 111, 0, 0.2);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            color: var(--primary-teal);
+            font-size: 1.2rem;
+        }
+
+        .search-btn {
+            position: absolute;
+            right: 0.5rem;
+            background: var(--primary-orange);
+            border: none;
+            border-radius: 50px;
+            padding: 0.5rem 1rem;
+            color: white;
+            transition: var(--transition);
+        }
+
+        .search-btn:hover {
+            background: var(--primary-teal);
+            transform: scale(1.1);
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .filter-select {
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            padding: 0.5rem;
+            transition: var(--transition);
+        }
+
+        .filter-select:focus {
+            border-color: var(--primary-orange);
+            box-shadow: 0 0 0 4px rgba(255, 111, 0, 0.2);
+        }
+
+        /* Table */
+        .modern-table {
+            background: white;
+            border-radius: var(--border-radius);
+        }
+
+        .modern-table th, .modern-table td {
+            padding: 1.2rem;
+            vertical-align: middle;
+        }
+
+        .table-row:hover {
+            background: rgba(0, 172, 193, 0.05);
+        }
+
+        .status-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .status-active {
+            background: rgba(0, 172, 193, 0.1);
+            color: var(--primary-teal);
+        }
+
+        .status-maintenance {
+            background: rgba(255, 202, 40, 0.1);
+            color: var(--accent-yellow);
+        }
+
+        .status-inactive {
+            background: rgba(220, 53, 69, 0.1);
+            color: #DC3545;
+        }
+
+        .view-detail-btn, .edit-btn {
+            background: var(--primary-teal);
+            color: white;
+            border-radius: 8px;
+            transition: var(--transition);
+        }
+
+        .view-detail-btn:hover, .edit-btn:hover {
+            background: var(--primary-orange);
+            transform: scale(1.1);
+        }
+
+        /* Animations */
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-15px) rotate(180deg); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.1; }
+            50% { transform: scale(1.15); opacity: 0.25; }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .stats-card, .table-row {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero-section {
+                padding: 2rem;
+                min-height: 180px;
+            }
+
+            .hero-text h1 {
+                font-size: 2rem;
+            }
+
+            .stats-card-body {
+                padding: 1.5rem;
+                gap: 1rem;
+            }
+
+            .stats-icon {
+                width: 3rem;
+                height: 3rem;
+                font-size: 1.4rem;
+            }
+
+            .stats-number {
+                font-size: 2rem;
+            }
+        }
+    </style>
+
     <!-- Hero Header Section -->
     <div class="row mb-5">
         <div class="col-12">
-            <div class="hero-section position-relative overflow-hidden rounded-5 p-5">
+            <div class="hero-section position-relative overflow-hidden">
                 <div class="hero-bg"></div>
-                <div class="hero-content position-relative z-index-2">
+                <div class="hero-content">
                     <div class="d-flex align-items-center justify-content-between flex-wrap gap-4">
                         <div class="hero-text">
                             <h1 class="display-5 fw-bold text-white mb-3">
-                                <i class="fas fa-door-open me-3"></i>
+                                <span class="hero-icon-wrapper">
+                                    <i class="fas fa-theater-masks"></i>
+                                </span>
                                 Quản lý phòng chiếu
                             </h1>
-                            <p class="lead text-white-50 mb-0">
-                                <i class="fas fa-cog me-2"></i>
-                                Hệ thống quản lý tập trung các phòng chiếu trong rạp
+                            <p class="lead text-white mb-0">
+                                <span class="hero-icon-wrapper-small">
+                                    <i class="fas fa-tachometer-alt"></i>
+                                </span>
+                                Hệ thống quản lý tập trung các phòng chiếu
                             </p>
                         </div>
                         <div class="hero-actions d-flex gap-3">
                             @can('create room')
                             <a href="{{ route('admin.rooms.create') }}"
-                               class="btn btn-light btn-lg rounded-pill px-4 shadow hero-btn">
-                                <i class="fas fa-plus-circle me-2 text-orange"></i>
-                                <span class="text-orange fw-bold">Thêm phòng mới</span>
+                               class="btn hero-btn">
+                                <i class="fas fa-plus-circle me-2"></i>
+                                <span class="fw-bold">Thêm phòng mới</span>
                             </a>
                             @endcan
                         </div>
                     </div>
                 </div>
                 <div class="hero-pattern"></div>
+                <div class="hero-decoration-1"></div>
+                <div class="hero-decoration-2"></div>
             </div>
         </div>
     </div>
@@ -42,8 +397,8 @@
         <div class="col-xl-3 col-lg-6 mb-4">
             <div class="stats-card h-100">
                 <div class="stats-card-body">
-                    <div class="stats-icon bg-orange">
-                        <i class="fas fa-door-open"></i>
+                    <div class="stats-icon">
+                        <i class="fas fa-theater-masks"></i>
                     </div>
                     <div class="stats-content">
                         <h3 class="stats-number">{{ $rooms->total() }}</h3>
@@ -59,7 +414,7 @@
         <div class="col-xl-3 col-lg-6 mb-4">
             <div class="stats-card h-100">
                 <div class="stats-card-body">
-                    <div class="stats-icon bg-success">
+                    <div class="stats-icon">
                         <i class="fas fa-check-circle"></i>
                     </div>
                     <div class="stats-content">
@@ -76,7 +431,7 @@
         <div class="col-xl-3 col-lg-6 mb-4">
             <div class="stats-card h-100">
                 <div class="stats-card-body">
-                    <div class="stats-icon bg-warning">
+                    <div class="stats-icon">
                         <i class="fas fa-tools"></i>
                     </div>
                     <div class="stats-content">
@@ -93,7 +448,7 @@
         <div class="col-xl-3 col-lg-6 mb-4">
             <div class="stats-card h-100">
                 <div class="stats-card-body">
-                    <div class="stats-icon bg-info">
+                    <div class="stats-icon">
                         <i class="fas fa-search"></i>
                     </div>
                     <div class="stats-content">
@@ -117,7 +472,7 @@
     <!-- Advanced Search & Filter Section -->
     <div class="row mb-4">
         <div class="col-12">
-            <div class="search-section rounded-4 p-4">
+            <div class="search-section">
                 <div class="row align-items-center">
                     <!-- Search Box -->
                     <div class="col-lg-5">
@@ -144,9 +499,7 @@
                                     <i class="fas fa-filter me-2"></i>Lọc theo loại phòng
                                 </label>
                                 <select name="room_type_id" class="filter-select" onchange="this.form.submit()">
-                                    <option value="">
-                                        <i class="fas fa-list"></i> -- Tất cả loại phòng --
-                                    </option>
+                                    <option value="">-- Tất cả loại phòng --</option>
                                     @foreach ($roomTypes as $type)
                                     <option value="{{ $type->id }}" {{ request('room_type_id') == $type->id ? 'selected' : '' }}>
                                         {{ $type->name }}
@@ -173,7 +526,7 @@
     <!-- Modern Data Table -->
     <div class="row">
         <div class="col-12">
-            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+            <div class="card border-0 rounded-4 overflow-hidden">
                 <div class="card-header bg-transparent border-0 pt-4 pb-0">
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="card-title mb-0 fw-bold text-dark">
@@ -201,7 +554,7 @@
                                         </div>
                                     </th>
                                     <th class="border-0 px-4 py-3 fw-semibold text-dark">
-                                        <i class="fas fa-door-open me-2 text-orange"></i>Tên phòng
+                                        <i class="fas fa-theater-masks me-2 text-orange"></i>Tên phòng
                                     </th>
                                     <th class="border-0 px-4 py-3 fw-semibold text-dark">
                                         <i class="fas fa-building me-2 text-info"></i>Rạp chiếu
@@ -235,7 +588,7 @@
                                     <td class="px-4 py-3">
                                         <div class="d-flex align-items-center">
                                             <div class="room-avatar me-3">
-                                                <i class="fas fa-door-open"></i>
+                                                <i class="fas fa-theater-masks text-orange"></i>
                                             </div>
                                             <div>
                                                 <h6 class="mb-0 fw-semibold text-dark">{{ $room->name }}</h6>
@@ -295,14 +648,14 @@
                                     <td class="px-4 py-3 text-center">
                                         <div class="d-flex gap-1 justify-content-center">
                                             <a href="{{ route('admin.rooms.show', $room->id) }}"
-                                               class="btn btn-sm rounded-3 view-detail-btn" 
+                                               class="btn btn-sm view-detail-btn" 
                                                title="Xem chi tiết"
                                                data-bs-toggle="tooltip">
                                                 <i class="fas fa-eye"></i>
                                             </a>
                                             @can('edit room')
                                                 <a href="{{ route('admin.rooms.edit', $room->id) }}"
-                                                   class="btn btn-sm rounded-3 edit-btn" 
+                                                   class="btn btn-sm edit-btn" 
                                                    title="Chỉnh sửa"
                                                    data-bs-toggle="tooltip">
                                                     <i class="fas fa-edit"></i>
@@ -316,7 +669,7 @@
                                     <td colspan="8" class="text-center py-5">
                                         <div class="empty-state">
                                             <div class="empty-icon">
-                                                <i class="fas fa-door-open"></i>
+                                                <i class="fas fa-theater-masks text-orange"></i>
                                             </div>
                                             <h5 class="mt-3 text-muted">
                                                 <i class="fas fa-exclamation-triangle me-2"></i>
@@ -357,528 +710,72 @@
 <!-- Font Awesome CDN -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-<style>
-:root {
-    --orange-primary: #f86c2c;
-    --orange-secondary: #ff8547;
-    --orange-light: #ffab7a;
-    --orange-dark: #e55a1f;
-}
-
-/* Hero Section */
-.hero-section {
-    background: linear-gradient(135deg, var(--orange-primary) 0%, var(--orange-dark) 100%);
-    min-height: 200px;
-    position: relative;
-}
-
-.hero-bg {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
-}
-
-.hero-pattern {
-    position: absolute;
-    top: -50%;
-    right: -10%;
-    width: 300px;
-    height: 300px;
-    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-    border-radius: 50%;
-}
-
-.z-index-2 {
-    z-index: 2;
-}
-
-.text-orange {
-    color: var(--orange-primary) !important;
-}
-
-.hero-btn {
-    transition: all 0.3s ease;
-    border: 2px solid rgba(255,255,255,0.2);
-}
-
-.hero-btn:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 30px rgba(248, 108, 44, 0.3);
-    border-color: rgba(255,255,255,0.4);
-}
-
-/* Stats Cards */
-.stats-card {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(15px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 1.5rem;
-    transition: all 0.4s ease;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-}
-
-.stats-card:hover {
-    transform: translateY(-8px) scale(1.02);
-    box-shadow: 0 20px 50px rgba(248, 108, 44, 0.15);
-}
-
-.stats-card-body {
-    padding: 2rem;
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-}
-
-.stats-icon {
-    width: 4rem;
-    height: 4rem;
-    border-radius: 1.2rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    color: white;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-}
-
-.stats-icon.bg-orange {
-    background: linear-gradient(135deg, var(--orange-primary), var(--orange-dark));
-}
-
-.stats-number {
-    font-size: 2.5rem;
-    font-weight: 700;
-    margin-bottom: 0.5rem;
-    color: #1f2937;
-    background: linear-gradient(135deg, #1f2937, #374151);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-.stats-label {
-    color: #6b7280;
-    margin-bottom: 0.5rem;
-    font-weight: 500;
-}
-
-.stats-trend {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.875rem;
-    font-weight: 600;
-}
-
-/* Search Section */
-.search-section {
-    background: rgba(255, 255, 255, 0.9);
-    backdrop-filter: blur(15px);
-    border: 1px solid rgba(248, 108, 44, 0.1);
-    box-shadow: 0 8px 30px rgba(248, 108, 44, 0.1);
-}
-
-.search-input-group {
-    position: relative;
-    display: flex;
-    align-items: center;
-}
-
-.search-icon {
-    position: absolute;
-    left: 1.2rem;
-    color: var(--orange-primary);
-    font-size: 1.1rem;
-    z-index: 3;
-}
-
-.search-input {
-    width: 100%;
-    padding: 1.2rem 1.2rem 1.2rem 3.5rem;
-    padding-right: 4.5rem;
-    border: 2px solid #e5e7eb;
-    border-radius: 2rem;
-    font-size: 1rem;
-    transition: all 0.3s ease;
-    background: white;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-}
-
-.search-input:focus {
-    outline: none;
-    border-color: var(--orange-primary);
-    box-shadow: 0 0 0 4px rgba(248, 108, 44, 0.1), 0 8px 25px rgba(248, 108, 44, 0.15);
-    transform: translateY(-2px);
-}
-
-.search-btn {
-    position: absolute;
-    right: 0.5rem;
-    top: 50%;
-    transform: translateY(-50%);
-    background: linear-gradient(135deg, var(--orange-primary), var(--orange-dark));
-    border: none;
-    border-radius: 50%;
-    width: 3rem;
-    height: 3rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(248, 108, 44, 0.3);
-}
-
-.search-btn:hover {
-    background: linear-gradient(135deg, var(--orange-dark), var(--orange-primary));
-    transform: translateY(-50%) scale(1.1);
-    box-shadow: 0 6px 20px rgba(248, 108, 44, 0.4);
-}
-
-.filter-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.filter-label {
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: #374151;
-    margin-bottom: 0;
-}
-
-.filter-select {
-    padding: 1rem 1.2rem;
-    border: 2px solid #e5e7eb;
-    border-radius: 1.2rem;
-    font-size: 0.95rem;
-    background: white;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-}
-
-.filter-select:focus {
-    outline: none;
-    border-color: var(--orange-primary);
-    box-shadow: 0 0 0 3px rgba(248, 108, 44, 0.1);
-    transform: translateY(-1px);
-}
-
-/* Modern Table */
-.modern-table {
-    border-collapse: separate;
-    border-spacing: 0;
-}
-
-.modern-table thead th {
-    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-    border: none;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    font-size: 0.85rem;
-}
-
-.table-row {
-    transition: all 0.3s ease;
-    border-bottom: 1px solid rgba(0,0,0,0.05);
-}
-
-.table-row:hover {
-    background: linear-gradient(135deg, rgba(248, 108, 44, 0.03), rgba(248, 108, 44, 0.08));
-    transform: translateX(5px);
-    box-shadow: 0 4px 15px rgba(248, 108, 44, 0.1);
-}
-
-.room-avatar {
-    width: 45px;
-    height: 45px;
-    background: linear-gradient(135deg, var(--orange-primary), var(--orange-dark));
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 1.2rem;
-    box-shadow: 0 4px 15px rgba(248, 108, 44, 0.3);
-}
-
-.cinema-info {
-    line-height: 1.4;
-}
-
-.capacity-display {
-    text-align: center;
-}
-
-.status-badge {
-    padding: 0.6rem 1.2rem;
-    border-radius: 2rem;
-    font-size: 0.875rem;
-    font-weight: 600;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-}
-
-.status-active {
-    background: linear-gradient(135deg, #10b981, #059669);
-    color: white;
-}
-
-.status-maintenance {
-    background: linear-gradient(135deg, #f59e0b, #d97706);
-    color: white;
-}
-
-.status-inactive {
-    background: linear-gradient(135deg, #6b7280, #4b5563);
-    color: white;
-}
-
-.id-badge {
-    background: #f3f4f6;
-    padding: 0.5rem 1rem;
-    border-radius: 1rem;
-    font-weight: 600;
-    color: #6b7280;
-    font-size: 0.875rem;
-}
-
-/* Action Buttons */
-.view-detail-btn {
-    background-color: #6c757d !important;
-    border: 1px solid #6c757d !important;
-    color: white !important;
-    transition: all 0.3s ease;
-    min-width: 38px;
-    height: 34px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    text-decoration: none;
-    box-shadow: 0 4px 10px rgba(108, 117, 125, 0.2);
-}
-
-.view-detail-btn:hover {
-    background-color: #5a6268 !important;
-    border-color: #545b62 !important;
-    color: white !important;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(108, 117, 125, 0.3);
-}
-
-.edit-btn {
-    background-color: #212529 !important;
-    border: 1px solid #212529 !important;
-    color: white !important;
-    transition: all 0.3s ease;
-    min-width: 38px;
-    height: 34px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    text-decoration: none;
-    box-shadow: 0 4px 10px rgba(33, 37, 41, 0.2);
-}
-
-.edit-btn:hover {
-    background-color: #343a40 !important;
-    border-color: #343a40 !important;
-    color: white !important;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(33, 37, 41, 0.3);
-}
-
-.view-detail-btn i,
-.edit-btn i {
-    font-size: 14px;
-    color: white !important;
-}
-
-.btn-orange {
-    background: linear-gradient(135deg, var(--orange-primary), var(--orange-dark));
-    border: none;
-    color: white;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(248, 108, 44, 0.3);
-}
-
-.btn-orange:hover {
-    background: linear-gradient(135deg, var(--orange-dark), var(--orange-primary));
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(248, 108, 44, 0.4);
-    color: white;
-}
-
-/* Empty State */
-.empty-state {
-    padding: 4rem 2rem;
-}
-
-.empty-icon {
-    font-size: 4rem;
-    color: var(--orange-light);
-    margin-bottom: 1.5rem;
-}
-
-/* Form Controls */
-.form-check-input:checked {
-    background-color: var(--orange-primary);
-    border-color: var(--orange-primary);
-    box-shadow: 0 0 0 3px rgba(248, 108, 44, 0.1);
-}
-
-/* Tooltip styling */
-.tooltip {
-    font-size: 12px;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .hero-section {
-        padding: 2rem !important;
-        min-height: 150px;
-    }
-
-    .hero-text h1 {
-        font-size: 2rem;
-    }
-
-    .hero-actions {
-        flex-direction: column;
-        width: 100%;
-    }
-
-    .stats-card-body {
-        padding: 1.5rem;
-        gap: 1rem;
-    }
-
-    .stats-icon {
-        width: 3rem;
-        height: 3rem;
-        font-size: 1.25rem;
-    }
-
-    .stats-number {
-        font-size: 2rem;
-    }
-
-    .search-section {
-        padding: 1.5rem !important;
-    }
-
-    .search-section .row {
-        gap: 1rem;
-    }
-
-    .modern-table {
-        font-size: 0.875rem;
-    }
-
-    .view-detail-btn,
-    .edit-btn {
-        min-width: 32px;
-        height: 28px;
-    }
-
-    .room-avatar {
-        width: 35px;
-        height: 35px;
-        font-size: 1rem;
-    }
-}
-
-/* Loading Animation */
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.table-row {
-    animation: fadeInUp 0.3s ease-out;
-}
-
-.table-row:nth-child(even) {
-    animation-delay: 0.1s;
-}
-
-.table-row:nth-child(odd) {
-    animation-delay: 0.2s;
-}
-</style>
-
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     // Initialize tooltips
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.forEach(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+
+    // Parallax effect for hero section
+    window.addEventListener('scroll', function() {
+        const scrolled = window.pageYOffset;
+        const heroPattern = document.querySelector('.hero-pattern');
+        if (heroPattern) {
+            heroPattern.style.transform = `translateY(${scrolled * 0.4}px) rotate(${scrolled * 0.08}deg)`;
+        }
     });
 
-    // Select All functionality
-    const selectAllCheckbox = document.getElementById('selectAll');
-    const roomCheckboxes = document.querySelectorAll('input[id^="room"]');
-
-    if (selectAllCheckbox) {
-        selectAllCheckbox.addEventListener('change', function() {
-            roomCheckboxes.forEach(checkbox => {
-                checkbox.checked = this.checked;
-            });
+    // Enhanced hover effects for stats cards
+    const statsCards = document.querySelectorAll('.stats-card');
+    statsCards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.background = 'rgba(255, 255, 255, 1)';
         });
-    }
-
-    // Individual checkbox handling
-    roomCheckboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', function() {
-            const allChecked = Array.from(roomCheckboxes).every(cb => cb.checked);
-            const someChecked = Array.from(roomCheckboxes).some(cb => cb.checked);
-            
-            if (selectAllCheckbox) {
-                selectAllCheckbox.checked = allChecked;
-                selectAllCheckbox.indeterminate = someChecked && !allChecked;
-            }
+        card.addEventListener('mouseleave', function() {
+            this.style.background = 'white';
         });
     });
 
-    // Smooth scroll for better UX
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
-            e.preventDefault();
-            const target = document.querySelector(this.getAttribute('href'));
-            if (target) {
-                target.scrollIntoView({
-                    behavior: 'smooth'
-                });
-            }
-        });
-    });
-
-    // Auto-submit search after typing (debounced)
+    // Auto-submit search with loading effect
     const searchInput = document.querySelector('input[name="search"]');
-    if (searchInput) {
+    const searchBtn = document.querySelector('.search-btn');
+    if (searchInput && searchBtn) {
         let searchTimeout;
         searchInput.addEventListener('input', function() {
             clearTimeout(searchTimeout);
+            searchBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
             searchTimeout = setTimeout(() => {
+                searchBtn.innerHTML = '<i class="fas fa-arrow-right"></i>';
                 if (this.value.length > 2 || this.value.length === 0) {
                     this.form.submit();
                 }
             }, 1000);
         });
     }
+
+    // Intersection Observer for animations
+    const observerOptions = {
+        threshold: 0.2,
+        rootMargin: '0px 0px -30px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    }, observerOptions);
+
+    // Observe table rows
+    const tableRows = document.querySelectorAll('.table-row');
+    tableRows.forEach((row, index) => {
+        row.style.opacity = '0';
+        row.style.transform = 'translateY(20px)';
+        row.style.transition = `all 0.6s ease ${index * 0.1}s`;
+        observer.observe(row);
+    });
 });
 </script>
 @endsection
