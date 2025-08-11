@@ -253,14 +253,16 @@
 
 </style>
 
-<div class="profile-container">
-    <div class="profile-box">
+<div style="display: flex; flex-direction: row; gap: 0; align-items: stretch; justify-content: center; margin: 100px auto 40px auto; padding: 0; max-width: 1000px;">
+    @include('client.profile.menu')
+
+    <div class="profile-box" style="flex: 1; background: white; border-radius: 0 12px 12px 0; padding: 1.5rem; box-shadow: 0 10px 25px rgba(0,0,0,0.07); margin: 0;">
         <div class="profile-header">
             <h2>Thông tin tài khoản</h2>
         </div>
         <p class="profile-subtitle">Thông tin cá nhân của bạn được hiển thị bên dưới</p>
 
-                @if(session('success'))
+        @if(session('success'))
             <div class="alert alert-success">
                 {{ session('success') }}
             </div>
@@ -276,7 +278,6 @@
             </div>
         @endif
 
-
         <div class="profile-content">
             <form method="POST" action="{{ route('profile.update') }}" class="profile-info" id="profile-form">
                 @csrf
@@ -289,16 +290,13 @@
                         @else
                             {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
                         @endif
-                        
                     </div>
-                    
                     <div class="avatar-text">
                         {{ Auth::user()->name }}
                         <div class="info-value">
-                        {{ Auth::user()->getRoleNames()->first() }}
+                            {{ Auth::user()->getRoleNames()->first() }}
                         </div>
                     </div>
-                    
                 </div>
 
                 <div class="info-item">
@@ -320,16 +318,13 @@
                 </div>
 
                 <div class="info-item">
-
-                     <label class="info-label" for="email">Email</label>
+                    <label class="info-label" for="email">Email</label>
                     <input type="email" class="form-control" name="email" id="email"
                         value="{{ old('email', Auth::user()->email) }}" readonly>
                 </div>
-
-
             </form>
 
-            <div class="profile-actions">
+            <div class="profile-actions" style="display: flex; flex-direction: column; gap: 0.5rem;">
                 <a href="{{ route('client.home') }}" class="btn btn-outline">Quay lại Trang Chủ</a>
                 <button type="submit" form="profile-form" class="btn btn-primary">Cập nhật thông tin</button>
 
@@ -341,6 +336,7 @@
         </div>
     </div>
 </div>
+
     @include('client.footer.footer')
 
 @endsection
