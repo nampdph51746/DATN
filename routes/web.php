@@ -91,15 +91,6 @@ Route::middleware('auth')->group(function () {
 });
 
 
-use Illuminate\Support\Facades\Mail;
-
-Route::get('/test-mail', function () {
-    Mail::raw('This is a test email from CineVN.', function ($message) {
-        $message->to('duongttph52969@gmail.com')->subject('Test Mail from CineVN');
-    });
-
-    return 'Email sent!';
-});
 
 
 Route::middleware(['auth'])->group(function (){
