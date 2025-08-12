@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
+use App\Models\Booking;
 
 class ProfileController extends Controller
 {
@@ -86,10 +87,14 @@ class ProfileController extends Controller
         $rank = \DB::table('customer_ranks')
             ->where('id', $user->customer_rank_id)
             ->value('name');
+        $totalSpent = Booking::where('user_id', $user->id)
+        ->where('status', 'confirmed')
+        ->sum('final_amount');
 
         return view('client.profilegeneral', [
             'user' => $user,
-            'rank' => $rank
+            'rank' => $rank,
+            'totalSpent' => $totalSpent
         ]);
     }
 }
