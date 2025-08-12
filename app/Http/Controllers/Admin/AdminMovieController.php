@@ -2,17 +2,14 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
-use App\Models\Genre;
-use Illuminate\Http\Request;
 use App\Models\Movie;
+use App\Models\Genre;
+use App\Models\Actor;
+use App\Models\Director;
 use App\Models\Country;
 use App\Models\AgeLimit;
-use App\Models\Room;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Storage;
-use App\Models\Showtime;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 
 class AdminMovieController extends Controller
 {
@@ -236,30 +233,34 @@ class AdminMovieController extends Controller
     }
 
         // Form sửa phim
-    public function edit(Movie $movie)
+    public function edit($id)
     {
-        // Kiểm tra xem phim có thể chỉnh sửa không
-        if (!$movie->canBeEdited()) {
-            $reason = '';
-            $movieStatus = is_object($movie->status) ? $movie->status->value : $movie->status;
+        try {
+            $movie = Movie::findOrFail($id);
             
-            if ($movieStatus === 'ended') {
-                $reason = 'Không thể chỉnh sửa phim đã kết thúc!';
-            } elseif ($movieStatus === 'showing') {
-                $reason = 'Không thể chỉnh sửa phim đang chiếu!';
-            } elseif ($movie->hasBookedTickets()) {
-                $reason = 'Không thể chỉnh sửa phim đã có vé được đặt!';
-            }
+            // Load relationships if needed
+            $movie->load(['genres', 'actors', 'director', 'country', 'ageLimit']);
             
-            return redirect()->route('admin.movies.index')->with('error', $reason);
+            // Get data for form selects
+            $genres = Genre::all();
+            $actors = Actor::all();
+            $directors = Director::all();
+            $countries = Country::all();
+            $ageLimits = AgeLimit::all();
+            
+            return view('admin.movies.edit', compact(
+                'movie', 
+                'genres', 
+                'actors', 
+                'directors', 
+                'countries', 
+                'ageLimits'
+            ));
+            
+        } catch (\Exception $e) {
+            return redirect()->route('admin.movies.index')
+                ->with('error', 'Không tìm thấy phim với ID: ' . $id);
         }
-        
-        $countries = Country::all();
-        $ageLimits = AgeLimit::all();
-        $genres = Genre::all();
-        $directors = \App\Models\Director::where('is_active', true)->orderBy('name')->get();
-        $actors = \App\Models\Actor::where('is_active', true)->orderBy('name')->get();
-        return view('admin.movies.edit', compact('movie', 'countries', 'ageLimits', 'genres', 'directors', 'actors'));
     }
 
         // Cập nhật phim

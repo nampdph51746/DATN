@@ -97,7 +97,9 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
         // Dashboard
         Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-        // ===== BOOKINGS ROUTES =====
+    // ===== BOOKINGS ROUTES =====
+    // ===== TICKETS ROUTES =====
+    Route::get('tickets/{ticket}/print', [TicketController::class, 'print'])->name('tickets.print');
         Route::get('bookings', [BookingController::class, 'index'])->name('bookings.index');
         Route::get('bookings/{booking}', [BookingController::class, 'show'])->name('bookings.show');
         Route::get('bookings/{booking}/edit', [BookingController::class, 'edit'])->name('bookings.edit');
@@ -140,7 +142,15 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
 
         // ===== MOVIES =====
         Route::delete('movies/bulk-delete', [AdminMovieController::class, 'bulkDelete'])->name('movies.bulkDelete');
-        Route::resource('movies', AdminMovieController::class);
+        Route::prefix('movies')->name('movies.')->group(function () {
+            Route::get('/', [AdminMovieController::class, 'index'])->name('index');
+            Route::get('/create', [AdminMovieController::class, 'create'])->name('create');
+            Route::post('/', [AdminMovieController::class, 'store'])->name('store');
+            Route::get('/{id}', [AdminMovieController::class, 'show'])->name('show')->where('id', '[0-9]+');
+            Route::get('/{id}/edit', [AdminMovieController::class, 'edit'])->name('edit')->where('id', '[0-9]+');
+            Route::put('/{id}', [AdminMovieController::class, 'update'])->name('update')->where('id', '[0-9]+');
+            Route::delete('/{id}', [AdminMovieController::class, 'destroy'])->name('destroy')->where('id', '[0-9]+');
+        });
 
         // ===== DIRECTORS & ACTORS =====
         Route::delete('directors/bulk-delete', [App\Http\Controllers\Admin\AdminDirectorController::class, 'bulkDelete'])->name('directors.bulkDelete');

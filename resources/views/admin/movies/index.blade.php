@@ -736,7 +736,7 @@
                                         </td>
                                         <td class="text-center pe-4">
                                             <div class="d-flex gap-1 justify-content-center">
-                                                <a href="{{ route('admin.movies.show', $movie) }}"
+                                                <a href="{{ route('admin.movies.show', $movie->id) }}"
                                                    class="btn btn-sm view-detail-btn" 
                                                    title="Xem chi tiết"
                                                    data-bs-toggle="tooltip">
@@ -762,7 +762,7 @@
                                                         <i class="fas fa-edit"></i>
                                                     </span>
                                                 @else
-                                                    <a href="{{ route('admin.movies.edit', $movie) }}"
+                                                    <a href="{{ route('admin.movies.edit', $movie->id) }}"
                                                        class="btn btn-sm edit-btn" 
                                                        title="Chỉnh sửa"
                                                        data-bs-toggle="tooltip">
