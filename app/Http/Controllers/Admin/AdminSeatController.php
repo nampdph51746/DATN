@@ -9,6 +9,7 @@ use App\Enums\SeatStatus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+
 use App\Models\RoomSeatConfiguration;
 use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Facades\Excel;
@@ -111,7 +112,6 @@ class AdminSeatController extends Controller
                     ->withErrors(['room_id' => 'Phòng chiếu không ở trạng thái hoạt động.'])
                     ->withInput();
             }
-            \Log::info("Total createdSeats=$createdSeats");
 
             // Create seats using the management service
             $ignoreConstraints = $request->boolean('ignore_constraints', false);
@@ -122,9 +122,6 @@ class AdminSeatController extends Controller
                     ->withErrors($result['errors'])
                     ->withInput();
             }
-            $suggestionMsg = $nextSuggestedSeatsPerRow
-                ? "Đề xuất số ghế mỗi hàng cho lần thêm tiếp theo: $nextSuggestedSeatsPerRow"
-                : "Không có đề xuất số ghế mỗi hàng tối ưu cho lần thêm tiếp theo.";
 
             \Log::info('Seats created successfully', $result['data']);
             
@@ -178,8 +175,6 @@ class AdminSeatController extends Controller
                     
                     \Log::info('Also updated couple partner seat ' . $couplePartner->id . ' with same status');
                 }
-            } else {
-                return back()->with('import_error', 'Định dạng file không hợp lệ.');
             }
 
             DB::commit();

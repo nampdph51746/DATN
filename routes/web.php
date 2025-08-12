@@ -242,7 +242,7 @@ Route::post('admin/seats/import', [App\Http\Controllers\Admin\AdminSeatControlle
 Route::delete('admin/genres/bulk-delete', [\App\Http\Controllers\Admin\GenreController::class, 'bulkDelete'])->name('admin.genres.bulkDelete');
 
 Route::prefix('admin')->name('admin.')->group(function () {
-    Route::resource('movies', \App\Http\Controllers\Admin\AdminMovieController::class);
+    Route::resource('movies', AdminMovieController::class)->parameters(['movies'=>'id']);
     Route::resource('directors', \App\Http\Controllers\Admin\AdminDirectorController::class);
     Route::resource('actors', \App\Http\Controllers\Admin\AdminActorController::class);
 });
@@ -334,16 +334,16 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
 });
 
-// Test route for barcode
-Route::get('/test-barcode-api', function () {
-    $barcodeService = new \App\Services\BarcodeService();
-    $barcode = $barcodeService->generateBarcode('BK1754063915');
+// // Test route for barcode
+// Route::get('/test-barcode-api', function () {
+//     $barcodeService = new \App\Services\BarcodeService();
+//     $barcode = $barcodeService->generateBarcode('BK1754063915');
     
-    return response()->json([
-        'barcode' => $barcode,
-        'booking_code' => 'BK1754063915'
-    ]);
-});
+//     return response()->json([
+//         'barcode' => $barcode,
+//         'booking_code' => 'BK1754063915'
+//     ]);
+// });
 
 // Admin Reviews Routes
 Route::prefix('admin/reviews')->name('admin.reviews.')->group(function () {

@@ -7,9 +7,6 @@ use App\Models\Genre;
 use App\Models\Movie;
 use App\Models\Country;
 use App\Models\AgeLimit;
-use App\Models\Notification;
-use App\Enums\NotificationType;
-use Illuminate\Support\Facades\Auth;
 use App\Enums\MovieStatus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -331,7 +328,6 @@ class MovieController extends Controller
                     ->with('error', 'Không thể xóa phim vì đã có suất chiếu liên quan.');
             }
 
-            $oldData = $movie->toArray();
             DB::transaction(function () use ($movie) {
                 // Xóa ảnh nếu có
                 if ($movie->image_path && Storage::disk('public')->exists($movie->image_path)) {
@@ -341,18 +337,6 @@ class MovieController extends Controller
                 $movie->genres()->detach();
                 $movie->delete();
             });
-
-            // Notification for delete
-            Notification::create([
-                'user_id' => Auth::id(),
-                'entity_type' => 'movie',
-                'entity_id' => $movie->id,
-                'title' => 'Xóa phim',
-                'message' => 'Phim "' . $oldData['name'] . '" đã bị xóa.',
-                'type' => NotificationType::System,
-                'priority' => 'high',
-                'event_details' => json_encode(['action' => 'delete', 'old' => $oldData]),
-            ]);
 
             return redirect()->route('admin.movies.index')
                 ->with('success', 'Xóa phim thành công!');

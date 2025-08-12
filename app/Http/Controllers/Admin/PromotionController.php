@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Enums\NotificationType;
 use App\Enums\PromotionDiscountType;
 use App\Http\Controllers\Controller;
 use App\Models\Promotion;
@@ -11,8 +10,6 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use App\Http\Requests\Promotions\StorePromotionsRequest;
 use App\Http\Requests\Promotions\UpdatePromotionsRequest;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Notification;
 
 class PromotionController extends Controller
 {
@@ -90,7 +87,6 @@ class PromotionController extends Controller
         $data = $request->validated();
 
         try {
-            $oldData = $promotion->getOriginal();
             $promotion->update($data);
             
             // Xử lý cập nhật liên kết customer_rank_promotions
@@ -123,23 +119,6 @@ class PromotionController extends Controller
         \App\Models\CustomerRankPromotion::where('promotion_id', $id)->delete();
         
         $promotion->delete(); // Soft delete
-
-        // Tạo thông báo mức độ cao khi xóa mềm khuyến mãi
-        Notification::create([
-            'user_id' => Auth::id(),
-            'entity_type' => Promotion::class,
-            'entity_id' => $promotion->id,
-            'title' => 'Xóa khuyến mãi',
-            'message' => 'Khuyến mãi #' . $promotion->id . ' đã bị xóa mềm.',
-            'type' => NotificationType::Promotion,
-            'priority' => 'high',
-            'old_status' => $oldData['status'] ?? null,
-            'new_status' => null,
-            'event_details' => json_encode([
-                'old' => $oldData,
-            ]),
-        ]);
-
         return redirect()->route('promotions.trashed')->with('success', 'Khuyến mãi đã được xóa mềm thành công.');
     }
 
@@ -153,26 +132,7 @@ class PromotionController extends Controller
     public function restore($id)
     {
         $promotion = Promotion::onlyTrashed()->findOrFail($id);
-        $oldData = $promotion->getOriginal();
         $promotion->restore();
-
-        // Tạo thông báo mức độ cao khi khôi phục khuyến mãi
-        Notification::create([
-            'user_id' => Auth::id(),
-            'entity_type' => Promotion::class,
-            'entity_id' => $promotion->id,
-            'title' => 'Khôi phục khuyến mãi',
-            'message' => 'Khuyến mãi #' . $promotion->id . ' đã được khôi phục.',
-            'type' => NotificationType::Promotion,
-            'priority' => 'high',
-            'old_status' => null,
-            'new_status' => $promotion->status,
-            'event_details' => json_encode([
-                'old' => $oldData,
-                'new' => $promotion->getAttributes(),
-            ]),
-        ]);
-
         return redirect()->route('promotions.trashed')->with('success', 'Khôi phục thành công!');
     }
 
@@ -184,23 +144,6 @@ class PromotionController extends Controller
         \App\Models\CustomerRankPromotion::where('promotion_id', $id)->delete();
         
         $promotion->forceDelete();
-
-        // Tạo thông báo mức độ cao khi xóa cứng khuyến mãi
-        Notification::create([
-            'user_id' => Auth::id(),
-            'entity_type' => Promotion::class,
-            'entity_id' => $promotionId,
-            'title' => 'Xóa vĩnh viễn khuyến mãi',
-            'message' => 'Khuyến mãi #' . $promotionId . ' đã bị xóa vĩnh viễn.',
-            'type' => NotificationType::Promotion,
-            'priority' => 'high',
-            'old_status' => $oldData['status'] ?? null,
-            'new_status' => null,
-            'event_details' => json_encode([
-                'old' => $oldData,
-            ]),
-        ]);
-
         return redirect()->route('promotions.trashed')->with('success', 'Đã xóa vĩnh viễn!');
     }
 }
