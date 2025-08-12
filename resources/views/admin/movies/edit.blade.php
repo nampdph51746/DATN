@@ -37,7 +37,7 @@
                     <h4 class="card-title">Chỉnh sửa phim: {{ $movie->name }}</h4>
                 </div>
                 <div class="card-body">
-                    <form id="movieEditForm" action="{{ route('admin.movies.update', ['id' => $movie->id]) }}" method="POST" enctype="multipart/form-data">
+                    <form id="movieEditForm" action="{{ route('admin.movies.update', $movie) }}" method="POST" enctype="multipart/form-data">
                         @csrf
                         @method('PUT')
                         <div class="row">

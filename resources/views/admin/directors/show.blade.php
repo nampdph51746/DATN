@@ -90,7 +90,7 @@
                                                     <span class="badge {{ $statusClass }}">{{ $statusLabel }}</span>
                                                 </td>
                                                 <td>
-                                                    <a href="{{ route('admin.movies.show', $movie->id) }}" class="btn btn-sm btn-outline-primary">
+                                                    <a href="{{ route('admin.movies.show', $movie) }}" class="btn btn-sm btn-outline-primary">
                                                         Xem chi tiết
                                                     </a>
                                                 </td>

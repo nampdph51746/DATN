@@ -242,7 +242,7 @@ Route::post('admin/seats/import', [App\Http\Controllers\Admin\AdminSeatControlle
 Route::delete('admin/genres/bulk-delete', [\App\Http\Controllers\Admin\GenreController::class, 'bulkDelete'])->name('admin.genres.bulkDelete');
 
 Route::prefix('admin')->name('admin.')->group(function () {
-    Route::resource('movies', AdminMovieController::class)->parameters(['movies'=>'id']);
+    Route::resource('movies', AdminMovieController::class);
     Route::resource('directors', \App\Http\Controllers\Admin\AdminDirectorController::class);
     Route::resource('actors', \App\Http\Controllers\Admin\AdminActorController::class);
 });

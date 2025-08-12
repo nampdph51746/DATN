@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Models\Actor;
 use App\Models\Room;
 use App\Models\Genre;
 use App\Models\Movie;
@@ -13,6 +14,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
+use App\Models\Director;
 use Illuminate\Support\Facades\Storage;
 
 class MovieController extends Controller
@@ -211,7 +213,9 @@ class MovieController extends Controller
         $countries = Country::all();
         $ageLimits = AgeLimit::all();
         $genres = Genre::all();
-        return view('admin.movies.edit', compact('movie', 'countries', 'ageLimits', 'genres'));
+        $directors = Director::all();
+        $actors = Actor::all();
+        return view('admin.movies.edit', compact('movie', 'countries', 'ageLimits', 'genres','directors','actors'));
     }
 
     /**

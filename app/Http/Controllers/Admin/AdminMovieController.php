@@ -93,7 +93,7 @@ class AdminMovieController extends Controller
         $ids = explode(',', $request->ids);
 
         // Kiểm tra xem có phim nào không thể xóa không
-        $unableToDeleteMovies = \App\Models\Movie::whereIn('id', $ids)->get()->filter(function($movie) {
+        $unableToDeleteMovies = Movie::whereIn('id', $ids)->get()->filter(function($movie) {
             return !$movie->canBeEdited();
         });
         
@@ -106,7 +106,7 @@ class AdminMovieController extends Controller
         DB::beginTransaction();
         try {
             // Lấy tất cả showtimes liên quan đến các phim cần xóa
-            $showtimes = \App\Models\Showtime::whereIn('movie_id', $ids)->get();
+            $showtimes = Showtime::whereIn('movie_id', $ids)->get();
 
             // Xóa tất cả seat states và tickets liên quan đến các showtimes này
             foreach ($showtimes as $showtime) {
@@ -115,7 +115,7 @@ class AdminMovieController extends Controller
             }
 
             // Xóa các showtimes
-            \App\Models\Showtime::whereIn('movie_id', $ids)->delete();
+            Showtime::whereIn('movie_id', $ids)->delete();
 
             // Xóa các reviews liên quan đến các phim này
             \App\Models\Review::whereIn('movie_id', $ids)->delete();
@@ -124,7 +124,7 @@ class AdminMovieController extends Controller
             DB::table('movie_genres')->whereIn('movie_id', $ids)->delete();
 
             // Xóa các phim
-            \App\Models\Movie::whereIn('id', $ids)->delete();
+            Movie::whereIn('id', $ids)->delete();
 
             DB::commit();
             return redirect()->route('admin.movies.index')->with('success', 'Đã xóa các phim đã chọn!');
@@ -403,7 +403,7 @@ class AdminMovieController extends Controller
             ->orderBy('start_time', 'desc')
             ->paginate(5, ['*'], 'showtime_page');
 
-        $rooms = \App\Models\Room::all();
+        $rooms = Room::all();
 
         return view('admin.movies.show', compact('movie', 'showtimes', 'rooms'));
     }

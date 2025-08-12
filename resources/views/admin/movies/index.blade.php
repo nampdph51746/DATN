@@ -241,7 +241,7 @@
                                         <td>{{ $movie->created_at->format('d/m/Y H:i') }}</td>
                                         <td>
                                             <div class="d-flex gap-2">
-                                                <a href="{{ route('admin.movies.show', ['id' => $movie->id]) }}" class="btn btn-light btn-sm">
+                                                <a href="{{ route('admin.movies.show', $movies) }}" class="btn btn-light btn-sm">
                                                     <iconify-icon icon="solar:eye-broken" class="align-middle fs-18"></iconify-icon>
                                                 </a>
                                                 @php
