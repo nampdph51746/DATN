@@ -131,6 +131,12 @@
     @include('client.profile.menu')
 
     <div class="profile-box">
+        <h3 style="font-size:20px; font-weight:700; margin-bottom:5px;">
+        <i class="fas fa-info-circle" style="color:#6366f1;"></i> Thông tin chung
+    </h3>
+    <p style="color:#6b7280; font-size:14px; margin-bottom:20px;">
+        Thông tin của bạn được hiển thị bên dưới.
+    </p>
         <div class="avatar">
             @if($user->avatar_url)
                 <img src="{{ $user->avatar_url }}" alt="Avatar" style="width:100%; height:100%; object-fit:cover;">
