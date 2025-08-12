@@ -270,7 +270,7 @@
 								z-index: 1000;">
 
 								@auth
-								<li><a href="/profile" style="display: block; padding: 10px; text-decoration: none;">Thông tin tài khoản</a></li>
+								<li><a href="/profile/general" style="display: block; padding: 10px; text-decoration: none;">Thông tin tài khoản</a></li>
 								<li><a href="/my-bookings" style="display: block; padding: 10px; text-decoration: none;">Lịch sử đặt vé</a></li>
 								@hasanyrole(['admin', 'staff'])
 								<li><a href="{{ route('admin.dashboard') }}" style="display: block; padding: 10px; text-decoration: none;">Quản lý</a></li>

@@ -177,7 +177,7 @@
                 </div>
                 <div class="info-item">
                     <i class="fas fa-gem"></i>
-                    <span class="label">Điểm:</span> {{ number_format(250, 0, ',', '.') }} điểm
+                    <span class="label">Điểm:</span> {{ number_format($totalPoints, 0, ',', '.') }} điểm
                 </div>
             </div>
         </div>

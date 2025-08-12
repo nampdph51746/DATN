@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
 use App\Models\Booking;
+use App\Models\Point;
 
 class ProfileController extends Controller
 {
@@ -90,11 +91,14 @@ class ProfileController extends Controller
         $totalSpent = Booking::where('user_id', $user->id)
         ->where('status', 'confirmed')
         ->sum('final_amount');
+        $totalPoints = Point::where('user_id', $user->id)
+    ->value('total_points') ?? 0;
 
         return view('client.profilegeneral', [
             'user' => $user,
             'rank' => $rank,
-            'totalSpent' => $totalSpent
+            'totalSpent' => $totalSpent,
+            'totalPoints' => $totalPoints,
         ]);
     }
 }
