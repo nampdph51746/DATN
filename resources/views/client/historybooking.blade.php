@@ -1,5 +1,5 @@
 @extends('layouts.client.client')
-@section('title', 'Lịch sử giao dịch | CineVN')
+@section('title', 'Lịch sử đặt vé | CineVN')
 
 @section('content')
 <style>
@@ -47,7 +47,7 @@
     }
     .ticket-info {
         flex: 1;
-        min-width: 0; /* để text-overflow hoạt động */
+        min-width: 0;
     }
     .ticket-title {
         font-weight: 700;
@@ -73,85 +73,70 @@
         color: #e11d48;
         margin-top: 8px;
     }
-    .view-btn {
-        display: inline-block;
-        background: #6366f1;
+    .status-badge {
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: bold;
         color: white;
-        padding: 6px 12px;
-        border-radius: 6px;
-        text-decoration: none;
-        font-size: 13px;
-        margin-top: 8px;
+        margin-left: 6px;
     }
-    .view-btn:hover {
-        background: #4f46e5;
-    }
+    .status-pending { background: #f59e0b; }
+    .status-confirmed { background: #10b981; }
+    .status-cancelled { background: #ef4444; }
+    .status-refunded { background: #3b82f6; }
+    .status-expired { background: #6b7280; }
 </style>
 
 <div class="history-container">
     @include('client.profile.menu')
 
     <div class="history-box">
-    <h3 style="font-size:20px; font-weight:700; margin-bottom:15px;">
-        <i class="fas fa-history" style="color:#6366f1;"></i> Lịch sử giao dịch
-    </h3>
+        <h3 style="font-size:20px; font-weight:700; margin-bottom:15px;">
+            <i class="fas fa-history" style="color:#6366f1;"></i> Lịch sử đặt vé
+        </h3>
 
-    @foreach($bookings as $booking)
-    <div class="ticket-card">
-        @php
-            $firstTicket = $booking->tickets->first();
-        @endphp
+        @forelse($bookings as $booking)
+            @php
+                $firstTicket = $booking->tickets->first();
+                $movie = $firstTicket?->showtime?->movie;
+                $seats = $booking->tickets->pluck('seat.seat_number')->filter()->implode(', ');
+                $cinema = $firstTicket?->seat?->room?->cinema?->name ?? 'Chưa xác định';
+                $room = $firstTicket?->seat?->room?->name ?? 'Chưa xác định';
+                $showDate = $firstTicket?->showtime?->show_date;
+                $showTime = $firstTicket?->showtime?->show_time;
+                $status = $booking->status instanceof \BackedEnum ? $booking->status->value : $booking->status;
+            @endphp
 
-        <div class="ticket-poster">
-            @if($firstTicket && $firstTicket->showtime && $firstTicket->showtime->movie)
-                <img src="{{ $firstTicket->showtime->movie->poster_url }}" alt="{{ $firstTicket->showtime->movie->title }}">
-            @else
-                <img src="/images/no-poster.jpg" alt="Không có poster">
-            @endif
-        </div>
-
-        <div class="ticket-info">
-            <div class="ticket-meta">
-                Mã đặt vé: <strong>{{ $booking->booking_code }}</strong>
-                <span style="color:green;">
-                    ({{ is_object($booking->status) ? ucfirst($booking->status->value) : ucfirst($booking->status) }})
-                </span>
+            <div class="ticket-card">
+                <div class="ticket-poster">
+                    <img src="{{ $movie?->poster_url ?? asset('images/default-poster.jpg') }}" alt="{{ $movie?->title ?? 'Poster' }}">
+                </div>
+                <div class="ticket-info">
+                    <div class="ticket-meta">
+                        🆔 Mã đặt vé: <strong>{{ $booking->booking_code }}</strong>
+                        <span class="status-badge status-{{ strtolower($status) }}">
+                            {{ ucfirst($status) }}
+                        </span>
+                    </div>
+                    <div class="ticket-title">{{ $movie?->title ?? 'Chưa xác định' }}</div>
+                    <div class="ticket-meta">
+                        📅 {{ $showDate ? \Carbon\Carbon::parse($showDate)->format('d/m/Y') : '' }}
+                        | ⏰ {{ $showTime ?? '' }}
+                    </div>
+                    <div class="ticket-meta">🎬 {{ $cinema }} - {{ $room }}</div>
+                    <div class="ticket-meta">💺 Ghế: {{ $seats ?: 'Chưa chọn' }}</div>
+                    <div class="ticket-price">💰 {{ number_format($booking->final_amount, 0, ',', '.') }} VNĐ</div>
+                </div>
             </div>
+        @empty
+            <p>Chưa có giao dịch nào.</p>
+        @endforelse
 
-            <div class="ticket-title">
-                @if($firstTicket && $firstTicket->showtime && $firstTicket->showtime->movie)
-                    {{ $firstTicket->showtime->movie->title }}
-                @else
-                    Chưa có thông tin phim
-                @endif
-            </div>
-
-            @if($firstTicket && $firstTicket->showtime)
-                <div class="ticket-meta">
-                    {{ \Carbon\Carbon::parse($firstTicket->showtime->show_date)->format('d/m/Y') }} |
-                    {{ $firstTicket->showtime->show_time }}
-                </div>
-            @endif
-
-            @if($firstTicket && $firstTicket->seat)
-                <div class="ticket-meta">
-                    {{ $firstTicket->seat->room->cinema->name ?? '' }} - {{ $firstTicket->seat->room->name ?? '' }}
-                </div>
-                <div class="ticket-meta">
-                    Ghế: {{ $booking->tickets->pluck('seat.seat_number')->implode(', ') }}
-                </div>
-            @endif
-
-            <div class="ticket-price">{{ number_format($booking->final_amount, 0, ',', '.') }} VNĐ</div>
-            <a href="" class="view-btn">Xem</a>
+        <div style="margin-top:20px;">
+            {{ $bookings->links() }}
         </div>
     </div>
-@endforeach
-
-<div style="margin-top: 20px;">
-    {{ $bookings->links() }}
-</div>
-</div>
 </div>
 
 @include('client.footer.footer')

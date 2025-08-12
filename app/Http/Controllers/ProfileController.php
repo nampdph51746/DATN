@@ -147,22 +147,23 @@ class ProfileController extends Controller
         }
     }
 
-    public function history(Request $request)
+   public function history(Request $request)
 {
     $user = Auth::user();
     $statusFilter = $request->query('status');
 
-    $bookingsQuery = Booking::where('user_id', $user->id)
+    $bookingsQuery = $user->bookings()
         ->with([
             'tickets.showtime.movie',
-            'tickets.seat.room.cinema'
+            'tickets.seat.room.cinema',
+            'items.productVariant.product'
         ]);
 
     if ($statusFilter && in_array($statusFilter, ['pending', 'confirmed', 'cancelled', 'refunded', 'expired'])) {
         $bookingsQuery->where('status', $statusFilter);
     }
 
-    // Phân trang thay vì get() toàn bộ
+    // Thêm phân trang
     $bookings = $bookingsQuery->orderByDesc('created_at')->paginate(5);
 
     return view('client.historybooking', compact('bookings', 'statusFilter'));
