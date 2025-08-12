@@ -148,28 +148,23 @@ class ProfileController extends Controller
     }
 
     public function history(Request $request)
-    {
-        $user = Auth::user();
-        $statusFilter = $request->query('status'); // pending, confirmed, cancelled, refunded, expired
+{
+    $user = Auth::user();
+    $statusFilter = $request->query('status');
 
-        // Lấy lịch sử booking của user
-        $bookingsQuery = Booking::where('user_id', $user->id)
-            ->with([
-                'tickets.showtime.movie',
-                'tickets.seat.room.cinema',
-                'items.productVariant.product'
-            ]);
+    $bookingsQuery = Booking::where('user_id', $user->id)
+        ->with([
+            'tickets.showtime.movie',
+            'tickets.seat.room.cinema'
+        ]);
 
-        // Nếu có filter trạng thái thì áp dụng
-        if ($statusFilter && in_array($statusFilter, ['pending', 'confirmed', 'cancelled', 'refunded', 'expired'])) {
-            $bookingsQuery->where('status', $statusFilter);
-        }
-
-        // Lấy danh sách lịch sử phim (mới nhất trước)
-        $bookings = $bookingsQuery
-            ->orderByDesc('created_at')
-            ->get();
-
-        return view('client.historybooking', compact('bookings', 'statusFilter'));
+    if ($statusFilter && in_array($statusFilter, ['pending', 'confirmed', 'cancelled', 'refunded', 'expired'])) {
+        $bookingsQuery->where('status', $statusFilter);
     }
+
+    // Phân trang thay vì get() toàn bộ
+    $bookings = $bookingsQuery->orderByDesc('created_at')->paginate(5);
+
+    return view('client.historybooking', compact('bookings', 'statusFilter'));
+}
 }
