@@ -77,4 +77,19 @@ class ProfileController extends Controller
 
         return Redirect::to('/');
     }
+
+    public function general()
+    {
+        $user = Auth::user();
+
+        // Lấy thông tin rank qua quan hệ
+        $rank = \DB::table('customer_ranks')
+            ->where('id', $user->customer_rank_id)
+            ->value('name');
+
+        return view('client.profilegeneral', [
+            'user' => $user,
+            'rank' => $rank
+        ]);
+    }
 }

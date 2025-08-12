@@ -8,7 +8,7 @@
         flex-direction: row;
         justify-content: center;
         margin: 100px auto 40px auto;
-        max-width: 800px;
+        max-width: 900px;
     }
 
     .profile-box {
@@ -48,15 +48,36 @@
     .welcome-text {
         font-size: 20px;
         font-weight: 600;
+        margin-bottom: 1.5rem;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        text-align: left;
+    }
+
+    .info-section h4 {
+        margin-bottom: 0.75rem;
+        font-size: 16px;
+        font-weight: 600;
+        border-bottom: 2px solid #e5e7eb;
+        padding-bottom: 0.25rem;
+    }
+
+    .info-item {
         margin-bottom: 0.5rem;
-    }
-
-    .member-rank {
         font-size: 14px;
-        color: #6b7280;
     }
 
-    [data-theme="dark"] .member-rank {
+    .info-label {
+        font-weight: 500;
+        color: #6b7280;
+        margin-right: 0.5rem;
+    }
+
+    [data-theme="dark"] .info-label {
         color: #9ca3af;
     }
 </style>
@@ -66,17 +87,32 @@
 
     <div class="profile-box">
         <div class="avatar">
-            @if(Auth::user()->avatar)
-                <img src="{{ Auth::user()->avatar }}" alt="Avatar" style="width:100%; height:100%; object-fit:cover;">
+            @if($user->avatar_url)
+                <img src="{{ $user->avatar_url }}" alt="Avatar" style="width:100%; height:100%; object-fit:cover;">
             @else
-                {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                {{ strtoupper(substr($user->name, 0, 1)) }}
             @endif
         </div>
         <div class="welcome-text">
-            Xin chào, {{ Auth::user()->name }}!
+            Xin chào, {{ $user->name }}!
         </div>
-        <div class="member-rank">
-            Hạng thành viên: {{ Auth::user()->getRoleNames()->first() ?? 'Thành viên' }}
+
+        <div class="info-grid">
+            <!-- Cột trái: Thông tin tài khoản -->
+            <div class="info-section">
+                <h4>Thông tin tài khoản</h4>
+                <div class="info-item"><span class="info-label">Họ và tên:</span> {{ $user->name }}</div>
+                <div class="info-item"><span class="info-label">Email:</span> {{ $user->email }}</div>
+                <div class="info-item"><span class="info-label">Số điện thoại:</span> {{ $user->phone_number ?? 'Chưa cập nhật' }}</div>
+            </div>
+
+            <!-- Cột phải: Thông tin hạng -->
+            <div class="info-section">
+                <h4>Thông tin thành viên</h4>
+                <div class="info-item"><span class="info-label">Hạng:</span> {{ $rank ?? 'Thành viên' }}</div>
+                <div class="info-item"><span class="info-label">Tổng tiền đã tiêu:</span> {{ number_format(1250000, 0, ',', '.') }} VNĐ</div>
+                <div class="info-item"><span class="info-label">Tổng điểm:</span> {{ number_format(250, 0, ',', '.') }} điểm</div>
+            </div>
         </div>
     </div>
 </div>
