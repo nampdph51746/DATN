@@ -127,7 +127,7 @@
 
     <div class="profile-box">
         <div class="profile-header">
-            <h2>Thông tin tài khoản</h2>
+            <h2>Cập nhật thông tin tài khoản</h2>
             <p class="profile-subtitle">Thông tin cá nhân của bạn được hiển thị bên dưới</p>
         </div>
 

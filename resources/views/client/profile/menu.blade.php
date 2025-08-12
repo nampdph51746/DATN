@@ -63,7 +63,7 @@
 <div class="profile-menu">
     <h3 class="menu-title">Tài khoản CineVN</h3>
     <ul class="menu-list">
-        <li><a href="#" class="menu-item">Thông tin chung</a></li>
+        <li><a href="/profile" class="menu-item">Thông tin chung</a></li>
         <li><a href="#" class="menu-item">Chi tiết tài khoản</a></li>
         <li><a href="#" class="menu-item">Thẻ thành viên</a></li>
         <li><a href="#" class="menu-item">Voucher</a></li>
