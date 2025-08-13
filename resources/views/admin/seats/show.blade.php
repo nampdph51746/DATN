@@ -1,70 +1,115 @@
 @extends('layouts.admin.admin')
 
 @section('content')
-<div class="container-xxl">
-    <div class="row">
+<div class="container-xxl py-4">
+    <div class="row g-4">
         <div class="col-lg-4">
-            <div class="card">
-                <div class="card-body">
-                    <img src="assets/images/seat-icon.png" alt="Seat Icon" class="img-fluid bg-light rounded">
-                    <div class="mt-3">
-                        <h4>Chi tiết ghế {{ $seat->row_char . $seat->seat_number }}</h4>
-                        <p class="text-muted">Thông tin chi tiết về ghế trong phòng {{ $seat->room->name }}.</p>
-                    </div>
+            <div class="card shadow-lg rounded-4 border-0">
+                <div class="card-body text-center">
+                    <img src="/assets/images/seat-icon.png" alt="Seat Icon" class="img-fluid bg-light rounded mb-3" style="width:80px;">
+                    <h4 class="fw-bold mb-2">
+                        <iconify-icon icon="solar:chair-broken" class="fs-24 text-primary me-2"></iconify-icon>
+                        Ghế {{ $seat->row_char . $seat->seat_number }}
+                    </h4>
+                    <p class="text-muted mb-0">Phòng: <span class="fw-medium">{{ $seat->room->name }}</span></p>
+                    <p class="text-muted mb-0">Loại ghế: 
+                        <span class="badge px-3 py-2 rounded-pill" style="background: {{ $seat->seatType->color_code }}; color: #fff;">
+                            <iconify-icon icon="solar:armchair-broken" class="fs-16 me-1"></iconify-icon>
+                            {{ $seat->seatType->name }}
+                        </span>
+                    </p>
+                    <p class="text-muted mb-0">Hàng ghế: 
+                        <span class="fw-medium">
+                            <iconify-icon icon="solar:rows-broken" class="fs-16 me-1"></iconify-icon>
+                            {{ $seat->row_char }}
+                        </span>
+                    </p>
+                    <p class="text-muted mb-0">Số ghế: 
+                        <span class="fw-medium">
+                            <iconify-icon icon="solar:hashtag-broken" class="fs-16 me-1"></iconify-icon>
+                            {{ $seat->seat_number }}
+                        </span>
+                    </p>
+                    <p class="text-muted mb-0 mt-2">Trạng thái: 
+                        @php
+                            $statusColors = [
+                                'available' => ['bg' => '#28a745', 'icon' => 'solar:check-circle-broken'],
+                                'reserved' => ['bg' => '#6c757d', 'icon' => 'solar:clock-broken'],
+                                'booked' => ['bg' => '#ffc107', 'icon' => 'solar:calendar-broken'],
+                                'sold' => ['bg' => '#dc3545', 'icon' => 'solar:close-circle-broken'],
+                            ];
+                            $statusValue = is_object($seat->status) ? $seat->status->value : $seat->status;
+                            $status = $statusColors[$statusValue] ?? ['bg' => '#6c757d', 'icon' => 'solar:info-circle-broken'];
+                        @endphp
+                        <span class="badge px-3 py-2 rounded-pill d-inline-flex align-items-center" style="background: {{ $status['bg'] }}; color: #fff;">
+                            <iconify-icon icon="{{ $status['icon'] }}" class="fs-16 me-1"></iconify-icon>
+                            {{ ucfirst($statusValue) }}
+                        </span>
+                    </p>
+                    <p class="text-muted mb-0 mt-2">Tạo lúc: 
+                        <span class="fw-medium">
+                            <iconify-icon icon="solar:calendar-broken" class="fs-16 me-1"></iconify-icon>
+                            {{ $seat->created_at->format('d/m/Y H:i') }}
+                        </span>
+                    </p>
                 </div>
-                <div class="card-footer border-top">
-                    <div class="row g-2">
-                        <!-- <div class="col-lg-6">
-                            <a href="{{ route('admin.seats.edit', $seat->id) }}" class="btn btn-primary d-flex align-items-center justify-content-center gap-2 w-100">
-                                <i class="bx bx-edit fs-18"></i> Sửa
-                            </a>
-                        </div> -->
-                        <div class="col-lg-6">
-                            <a href="{{ route('admin.seats.index') }}" class="btn btn-outline-secondary d-flex align-items-center justify-content-center gap-2 w-100">
-                                <i class="bx bx-arrow-back fs-18"></i> Quay lại
-                            </a>
-                        </div>
-                    </div>
+                <div class="card-footer border-top bg-light">
+                    <a href="{{ route('admin.seats.index') }}" class="btn btn-outline-secondary d-flex align-items-center justify-content-center gap-2 w-100">
+                        <iconify-icon icon="solar:arrow-left-broken" class="fs-18"></iconify-icon> Quay lại danh sách
+                    </a>
                 </div>
             </div>
         </div>
         <div class="col-lg-8">
-            <div class="card">
+            <div class="card shadow-lg rounded-4 border-0">
                 <div class="card-body">
-                    <h4 class="badge bg-info text-light fs-14 py-1 px-2">Chi tiết</h4>
-                    <p class="mb-1">
-                        <span class="fs-24 text-dark fw-medium">Ghế {{ $seat->row_char . $seat->seat_number }}</span>
-                    </p>
-                    <div class="row align-items-center g-2 mt-3">
-                        <div class="col-lg-6">
-                            <p class="mb-0 fw-medium text-dark fs-16">Phòng chiếu: <span class="text-muted">{{ $seat->room->name }}</span></p>
-                        </div>
-                        <div class="col-lg-6">
-                            <p class="mb-0 fw-medium text-dark fs-16">Loại ghế: <span class="text-muted">{{ $seat->seatType->name }}</span></p>
-                        </div>
+                    <h5 class="fw-bold mb-3">
+                        <iconify-icon icon="solar:info-circle-broken" class="fs-20 text-info me-2"></iconify-icon>
+                        Thông tin chi tiết
+                    </h5>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex align-items-center">
+                            <iconify-icon icon="solar:cinema-broken" class="fs-18 text-primary me-2"></iconify-icon>
+                            <span class="fw-medium">Phòng chiếu:</span>
+                            <span class="ms-auto text-muted">{{ $seat->room->name }}</span>
+                        </li>
+                        <li class="list-group-item d-flex align-items-center">
+                            <iconify-icon icon="solar:armchair-broken" class="fs-18 text-success me-2"></iconify-icon>
+                            <span class="fw-medium">Loại ghế:</span>
+                            <span class="ms-auto text-muted">{{ $seat->seatType->name }}</span>
+                        </li>
+                        <li class="list-group-item d-flex align-items-center">
+                            <iconify-icon icon="solar:rows-broken" class="fs-18 text-warning me-2"></iconify-icon>
+                            <span class="fw-medium">Hàng ghế:</span>
+                            <span class="ms-auto text-muted">{{ $seat->row_char }}</span>
+                        </li>
+                        <li class="list-group-item d-flex align-items-center">
+                            <iconify-icon icon="solar:hashtag-broken" class="fs-18 text-info me-2"></iconify-icon>
+                            <span class="fw-medium">Số ghế:</span>
+                            <span class="ms-auto text-muted">{{ $seat->seat_number }}</span>
+                        </li>
+                        <li class="list-group-item d-flex align-items-center">
+                            <iconify-icon icon="{{ $status['icon'] }}" class="fs-18 me-2" style="color: {{ $status['bg'] }}"></iconify-icon>
+                            <span class="fw-medium">Trạng thái:</span>
+                            <span class="ms-auto badge px-3 py-2 rounded-pill" style="background: {{ $status['bg'] }}; color: #fff;">
+                                {{ ucfirst($statusValue) }}
+                            </span>
+                        </li>
+                        <li class="list-group-item d-flex align-items-center">
+                            <iconify-icon icon="solar:calendar-broken" class="fs-18 text-secondary me-2"></iconify-icon>
+                            <span class="fw-medium">Thời gian tạo:</span>
+                            <span class="ms-auto text-muted">{{ $seat->created_at->format('d/m/Y H:i') }}</span>
+                        </li>
+                    </ul>
+                    <div class="mt-4">
+                        <h6 class="fw-bold text-dark mb-2">
+                            <iconify-icon icon="solar:note-broken" class="fs-18 text-warning me-2"></iconify-icon>
+                            Ghi chú
+                        </h6>
+                        <p class="text-muted">
+                            Ghế <span class="fw-medium">{{ $seat->row_char . $seat->seat_number }}</span> thuộc phòng <span class="fw-medium">{{ $seat->room->name }}</span> với loại ghế <span class="fw-medium">{{ $seat->seatType->name }}</span>. Trạng thái hiện tại là <span class="fw-medium">{{ ucfirst($statusValue) }}</span>.
+                        </p>
                     </div>
-                    <div class="row align-items-center g-2 mt-3">
-                        <div class="col-lg-6">
-                            <p class="mb-0 fw-medium text-dark fs-16">Hàng ghế: <span class="text-muted">{{ $seat->row_char }}</span></p>
-                        </div>
-                        <div class="col-lg-6">
-                            <p class="mb-0 fw-medium text-dark fs-16">Số ghế: <span class="text-muted">{{ $seat->seat_number }}</span></p>
-                        </div>
-                    </div>
-                    <div class="row align-items-center g-2 mt-3">
-                        <div class="col-lg-6">
-                            <p class="mb-0 fw-medium text-dark fs-16">Trạng thái: 
-                                <span class="badge" style="background-color: {{ $seat->status == 'available' ? '#28a745' : ($seat->status == 'booked' ? '#ffc107' : ($seat->status == 'sold' ? '#dc3545' : '#6c757d')) }}; color: #fff;">
-                                    {{ $seat->status }}
-                                </span>
-                            </p>
-                        </div>
-                        <div class="col-lg-6">
-                            <p class="mb-0 fw-medium text-dark fs-16">Thời gian tạo: <span class="text-muted">{{ $seat->created_at->format('d/m/Y H:i') }}</span></p>
-                        </div>
-                    </div>
-                    <h4 class="text-dark fw-medium mt-4">Ghi chú:</h4>
-                    <p class="text-muted">Ghế {{ $seat->row_char . $seat->seat_number }} thuộc phòng {{ $seat->room->name }} với loại ghế {{ $seat->seatType->name }}. Trạng thái hiện tại là {{ $seat->status }}.</p>
                 </div>
             </div>
         </div>
