@@ -4,13 +4,33 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
+use App\Models\Room;
+use App\Models\Banner;
+use App\Models\Movie;
+use App\Models\Product;
+use App\Models\SeatType;
+use App\Models\Showtime;
+use App\Models\Review;
+use App\Enums\MovieStatus;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
+use App\Models\Promotion;
 use App\Models\Booking;
+use App\Enums\PointReasonType;
+use App\Enums\PromotionDiscountType;
 use App\Models\Point;
+use App\Models\CustomerRank;
+use App\Services\ShowtimeAvailabilityService;
+use Illuminate\Support\Facades\Validator;
+use App\Http\Controllers\Controller; // ⚠️ cần import Controller gốc
+use Illuminate\Support\Facades\Auth;
+use App\Models\User;
+use Illuminate\Http\Request;
+
 
 class ProfileController extends Controller
 {
@@ -150,22 +170,20 @@ class ProfileController extends Controller
    public function history(Request $request)
 {
     $user = Auth::user();
-    $statusFilter = $request->query('status');
 
-    $bookingsQuery = $user->bookings()
-        ->with([
-            'tickets.showtime.movie',
-            'tickets.seat.room.cinema',
-            'items.productVariant.product'
-        ]);
+        // Nếu không có người dùng đăng nhập, chuyển hướng hoặc trả về thông báo
+        if (!$user) {
+            return redirect()->route('login')->with('error', 'Vui lòng đăng nhập để xem lịch sử đặt vé.');
+        }
 
-    if ($statusFilter && in_array($statusFilter, ['pending', 'confirmed', 'cancelled', 'refunded', 'expired'])) {
-        $bookingsQuery->where('status', $statusFilter);
-    }
+        // Lấy danh sách đặt vé của người dùng, bao gồm các mối quan hệ cần thiết
+        $bookings = Booking::with(['tickets.showtime.movie', 'tickets.seat.room.cinema'])
+            ->where('user_id', $user->id)
+            ->orderBy('created_at', 'desc')
+            ->paginate(10); // Hiển thị 10 bản ghi mỗi trang
 
-    // Thêm phân trang
-    $bookings = $bookingsQuery->orderByDesc('created_at')->paginate(5);
-
-    return view('client.historybooking', compact('bookings', 'statusFilter'));
+        // Trả về view với dữ liệu
+        return view('client.historybooking', compact('bookings'));
 }
+
 }

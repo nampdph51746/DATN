@@ -90,4 +90,9 @@ class Booking extends Model
     {
         return $this->hasMany(BookingItem::class, 'booking_id');
     }
+
+    public function movie()
+    {
+        return $this->belongsTo(Movie::class, 'movie_id', 'id');
+    }
 }
