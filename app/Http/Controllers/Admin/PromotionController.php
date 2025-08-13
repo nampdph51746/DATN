@@ -80,35 +80,11 @@ class PromotionController extends Controller
         return view('admin.promotions.edit', compact('promotion', 'discountTypes', 'ranks'));
     }
 
-    public function update(UpdatePromotionsRequest $request, $id)
+    public function update(Request $request, $id)
     {
         $promotion = Promotion::findOrFail($id);
-
-        $data = $request->validated();
-
-        try {
-            $promotion->update($data);
-            
-            // Xử lý cập nhật liên kết customer_rank_promotions
-            if (!empty($data['rank_id'])) {
-                // Xóa liên kết cũ nếu có
-                \App\Models\CustomerRankPromotion::where('promotion_id', $id)->delete();
-                
-                // Tạo liên kết mới
-                \App\Models\CustomerRankPromotion::create([
-                    'customer_rank_id' => $data['rank_id'],
-                    'promotion_id' => $promotion->id,
-                    'description' => 'Khuyến mãi dành cho hạng ' . \App\Models\CustomerRank::find($data['rank_id'])->name
-                ]);
-            } else {
-                // Nếu không chọn hạng nào, xóa tất cả liên kết
-                \App\Models\CustomerRankPromotion::where('promotion_id', $id)->delete();
-            }
-            
-            return redirect()->route('admin.promotions.index')->with('success', 'Khuyến mãi đã được cập nhật thành công.');
-        } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Cập nhật thất bại: ' . $e->getMessage()])->withInput();
-        }
+        $promotion->update($request->all());
+        return redirect()->route('admin.promotions.index')->with('success', 'Cập nhật khuyến mãi thành công!');
     }
 
     public function destroy($id)
