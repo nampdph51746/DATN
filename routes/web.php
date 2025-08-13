@@ -513,4 +513,7 @@ Route::get('/api/showing-movies', function() {
     }
 });
 
+Route::get('admin/movies/count-duplicate-name', [\App\Http\Controllers\Admin\MovieController::class, 'countDuplicateName'])
+    ->name('admin.movies.count-duplicate-name');
+
 require __DIR__.'/auth.php';

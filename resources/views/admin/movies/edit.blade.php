@@ -150,14 +150,23 @@
 
                             <div class="row g-4">
                                 <div class="col-lg-6">
-                                    <div class="form-floating">
-                                        <input type="text" name="name" id="name" 
-                                               class="form-control form-control-lg @error('name') is-invalid @enderror" 
-                                               value="{{ old('name', $movie->name) }}" 
-                                               placeholder="Tên phim" required>
-                                        <label for="name">
-                                            <i class="bi bi-film me-2 text-primary"></i>Tên phim <span class="text-danger">*</span>
+                                    <div class="mb-3">
+                                        <label for="name" class="form-label fw-semibold">
+                                            <i class="bi bi-film text-primary me-1"></i>
+                                            Tên phim <span class="text-danger">*</span>
                                         </label>
+                                        <input type="text" name="name" id="name"
+                                               class="form-control form-control-lg rounded-3 @error('name') is-invalid @enderror"
+                                               value="{{ old('name', $movie->name) }}" required maxlength="255"
+                                               placeholder="Nhập tên phim...">
+                                        <div class="form-text">
+                                            Tối đa 255 ký tự.
+                                            <span id="duplicate-movie-count" class="text-danger fw-bold ms-2">
+                                                @if(isset($duplicateCount) && $duplicateCount > 0)
+                                                    Đã có {{ $duplicateCount }} phim trùng tên này!
+                                                @endif
+                                            </span>
+                                        </div>
                                         @error('name')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
@@ -860,6 +869,27 @@ $(document).ready(function() {
         },
         templateSelection: function(data) {
             return data.text;
+        }
+    });
+
+    $('#name').on('input', function() {
+        var name = $(this).val().trim();
+        var movieId = '{{ $movie->id }}';
+        if (name.length > 0) {
+            $.ajax({
+                url: '{{ route("admin.movies.count-duplicate-name") }}',
+                method: 'GET',
+                data: { name: name, exclude_id: movieId },
+                success: function(res) {
+                    if (res.count > 0) {
+                        $('#duplicate-movie-count').text('Đã có ' + res.count + ' phim trùng tên này!');
+                    } else {
+                        $('#duplicate-movie-count').text('');
+                    }
+                }
+            });
+        } else {
+            $('#duplicate-movie-count').text('');
         }
     });
 });

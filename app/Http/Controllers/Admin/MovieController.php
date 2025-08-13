@@ -92,7 +92,13 @@ class MovieController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                // Không cho phép tên phim trùng nhau
+                'unique:movies,name',
+            ],
             'director' => 'nullable|string|max:255',
             'actors' => 'nullable|string',
             'duration_minutes' => 'required|integer|min:1',
@@ -110,9 +116,9 @@ class MovieController extends Controller
             'average_rating' => 'nullable|numeric|min:0|max:10',
             'description' => 'nullable|string',
         ], [
-            // Thông báo lỗi giống bạn đã cung cấp
             'name.required' => 'Tên phim là bắt buộc.',
             'name.max' => 'Tên phim không được vượt quá 255 ký tự.',
+            'name.unique' => 'Tên phim đã tồn tại. Vui lòng nhập tên khác.',
             'director.max' => 'Tên đạo diễn không được vượt quá 255 ký tự.',
             'duration_minutes.required' => 'Thời lượng phim là bắt buộc.',
             'duration_minutes.integer' => 'Thời lượng phim phải là số nguyên.',
@@ -218,12 +224,13 @@ class MovieController extends Controller
         $countries = Country::all();
         $ageLimits = AgeLimit::all();
         $genres = Genre::all();
-        
-        // Thêm các dòng này để lấy directors và actors
         $directors = Director::all();
         $actors = Actor::all();
-        
-        return view('admin.movies.edit', compact('movie', 'countries', 'ageLimits', 'genres', 'directors', 'actors'));
+
+        // Đếm số phim trùng tên (trừ chính nó)
+        $duplicateCount = Movie::where('name', $movie->name)->where('id', '!=', $movie->id)->count();
+
+        return view('admin.movies.edit', compact('movie', 'countries', 'ageLimits', 'genres', 'directors', 'actors', 'duplicateCount'));
     }
 
     /**
@@ -355,5 +362,20 @@ class MovieController extends Controller
             return redirect()->back()
                 ->with('error', 'Có lỗi xảy ra khi xóa phim: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Đếm số lượng phim trùng tên
+     */
+    public function countDuplicateName(Request $request)
+    {
+        $name = $request->input('name');
+        $excludeId = $request->input('exclude_id');
+        $count = Movie::where('name', $name)
+            ->when($excludeId, function ($q) use ($excludeId) {
+                $q->where('id', '!=', $excludeId);
+            })
+            ->count();
+        return response()->json(['count' => $count]);
     }
 }
