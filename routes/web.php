@@ -99,7 +99,9 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
 
     // ===== BOOKINGS ROUTES =====
     // ===== TICKETS ROUTES =====
-    Route::get('tickets/{ticket}/print', [TicketController::class, 'print'])->name('tickets.print');
+    Route::get('tickets', [TicketController::class, 'index'])->name('tickets.index');
+    Route::get('tickets/create', [TicketController::class, 'create'])->name('tickets.create'); // <-- Thêm dòng này
+    Route::post('tickets', [TicketController::class, 'store'])->name('tickets.store'); // Nếu có chức năng lưu
         Route::get('bookings', [BookingController::class, 'index'])->name('bookings.index');
         Route::get('bookings/{booking}', [BookingController::class, 'show'])->name('bookings.show');
         Route::get('bookings/{booking}/edit', [BookingController::class, 'edit'])->name('bookings.edit');
@@ -207,6 +209,8 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
 
         // ===== TICKETS =====
         Route::get('tickets', [TicketController::class, 'index'])->name('tickets.index');
+        Route::get('tickets/create', [TicketController::class, 'create'])->name('tickets.create'); // <-- Thêm dòng này
+        Route::post('tickets', [TicketController::class, 'store'])->name('tickets.store'); // Nếu có chức năng lưu
         Route::get('tickets/{id}', [TicketController::class, 'show'])->name('tickets.show');
 
         // ===== PROMOTIONS =====
