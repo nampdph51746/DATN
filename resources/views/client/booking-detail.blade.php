@@ -80,7 +80,7 @@
     font-weight: 900;
     color: #4f46e5;
     margin-bottom: 12px;
-    text-shadow: 0 0 5px rgba(99, 102, 241, 0.7);
+    /* Không đổ bóng */
 }
 
 .show-info {
@@ -103,23 +103,17 @@
     font-size: 18px;
     margin-bottom: 14px;
     display: inline-block;
-    text-shadow: 0 0 7px rgba(99, 102, 241, 0.7);
+    /* Không đổ bóng */
 }
 
-.seats-list ul,
+.seats-list p,
 .snacks-list ul {
-    list-style: disc inside;
-    padding-left: 0;
-    margin: 0;
-}
-
-.seats-list li,
-.snacks-list li {
     font-size: 16px;
-    color: #4b5563;
-    margin-bottom: 8px;
     font-weight: 600;
-    text-shadow: none;
+    color: #4b5563;
+    margin-top: 8px;
+    margin-bottom: 0;
+    /* Không đổ bóng */
 }
 
 .detail-price {
@@ -128,7 +122,7 @@
     font-size: 24px;
     margin-top: 30px;
     text-align: right;
-    text-shadow: 0 0 7px #dc2626cc;
+    /* Không đổ bóng */
 }
 
 .back-btn {
@@ -188,7 +182,26 @@
                 $statusValue = $booking->status instanceof \BackedEnum ? $booking->status->value : $booking->status;
                 $firstTicket = $booking->tickets->first();
                 $movie = $firstTicket?->showtime?->movie;
-                $seats = $booking->tickets->map(fn($t) => $t->seat?->seat_number)->filter()->values();
+
+                // Lấy danh sách ghế, lọc null, unique rồi sắp xếp theo hàng ghế (chữ cái) rồi số ghế
+                $seats = $booking->tickets
+                    ->map(fn($t) => $t->seat?->seat_number)
+                    ->filter()
+                    ->unique()
+                    ->sort(function($a, $b) {
+                        preg_match('/([A-Za-z]+)(\d+)/', $a, $matchA);
+                        preg_match('/([A-Za-z]+)(\d+)/', $b, $matchB);
+
+                        $rowA = $matchA[1] ?? '';
+                        $numA = intval($matchA[2] ?? 0);
+                        $rowB = $matchB[1] ?? '';
+                        $numB = intval($matchB[2] ?? 0);
+
+                        $cmpRow = strcmp($rowA, $rowB);
+                        if ($cmpRow !== 0) return $cmpRow;
+                        return $numA <=> $numB;
+                    })
+                    ->values();
             @endphp
 
             <div class="detail-header">
@@ -217,11 +230,7 @@
 
             <div class="seats-list">
                 <strong>💺 Danh sách ghế đã đặt:</strong>
-                <ul>
-                    @foreach($seats as $seat)
-                        <li>{{ $seat }}</li>
-                    @endforeach
-                </ul>
+                <p>{{ $seats->join(', ') }}</p>
             </div>
 
             @if($booking->items->count() > 0)
@@ -237,7 +246,7 @@
 
             <div class="detail-price">💰 {{ number_format($booking->final_amount, 0, ',', '.') }} VNĐ</div>
 
-            <a href="" class="back-btn">Quay lại</a>
+            <a href="/profile/history" class="back-btn">Quay lại</a>
         @else
             <p>Không tìm thấy thông tin đặt vé.</p>
         @endif
