@@ -201,4 +201,12 @@ public function detail($id)
     return view('client.booking-detail', compact('booking'));
 }
 
+public function membership()
+{
+    $user = Auth::user();
+    $rank = \DB::table('customer_ranks')->where('id', $user->customer_rank_id)->first();
+
+    return view('client.membercard', compact('user', 'rank'));
+}
+
 }
