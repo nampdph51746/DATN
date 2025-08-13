@@ -258,6 +258,12 @@
     font-weight: 600;
     margin-left: 1.5rem;
 }
+.detail-header, .detail-header::before {
+    pointer-events: none;
+}
+.header-actions .btn {
+    pointer-events: auto;
+}
 @media (max-width: 768px) {
     .detail-header { padding: 2rem !important; }
     .header-content h1 { font-size: 1.75rem; }
