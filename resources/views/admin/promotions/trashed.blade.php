@@ -111,6 +111,11 @@
     top: 0; left: 0; right: 0; bottom: 0;
     background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="2" fill="rgba(255,255,255,0.1)"/></svg>') repeat;
     opacity: 0.3;
+    z-index: 1;
+}
+.header-actions {
+    position: relative;
+    z-index: 2;
 }
 .card {
     border-radius: 1.5rem;
