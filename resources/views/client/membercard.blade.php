@@ -8,84 +8,103 @@
     display: flex;
     justify-content: center;
     margin: 60px auto;
-    max-width: 1000px;
+    max-width: 1100px;
 }
 .history-box {
     flex: 1;
     background: white;
     border-radius: 0 12px 12px 0;
-    padding: 1.5rem;
+    padding: 2rem;
     box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
 [data-theme="dark"] .history-box {
     background-color: #1f2937;
     color: #f9fafb;
 }
-.progress-bar-wrapper {
-    position: relative;
-    height: 12px;
-    background: #ddd;
-    border-radius: 10px;
+.member-card {
+    border-radius: 18px;
+    padding: 30px;
+    color: white;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+    max-width: 500px;
+    margin: auto;
+    animation: fadeInUp 0.5s ease-out;
+}
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.member-card .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.member-card .rank-name {
+    font-size: 28px;
+    font-weight: bold;
+}
+.member-card .discount {
+    background: rgba(0,0,0,0.3);
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 18px;
+}
+.member-card .card-body {
     margin-top: 20px;
+    font-size: 16px;
 }
-.progress-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #ffb400, #ff6600);
-    border-radius: 10px;
-    transition: width 0.5s ease;
+.member-card .card-body p {
+    margin-bottom: 10px;
 }
-.rank-marker {
-    position: absolute;
-    top: -25px;
-    text-align: center;
-    transform: translateX(-50%);
-}
-.rank-marker .dot {
-    width: 10px;
-    height: 10px;
-    background: #000;
-    border-radius: 50%;
-    margin: 4px auto 0;
-}
-.rank-marker span {
-    font-size: 11px;
-    white-space: nowrap;
+.member-card .card-footer {
+    margin-top: 15px;
+    font-size: 14px;
+    opacity: 0.9;
 }
 </style>
+
+@php
+    $rankColors = [
+        'Đồng' => 'linear-gradient(135deg, #CD7F32, #A0522D)',
+        'Bạc' => 'linear-gradient(135deg, #C0C0C0, #A9A9A9)',
+        'Vàng' => 'linear-gradient(135deg, #FFD700, #FFA500)',
+        'Bạch Kim' => 'linear-gradient(135deg, #E5E4E2, #C0C0C0)',
+        'Kim Cương' => 'linear-gradient(135deg, #00BFFF, #1E90FF)',
+        'Lục Bảo' => 'linear-gradient(135deg, #50C878, #228B22)',
+    ];
+    $bgColor = $rankColors[$currentRank->name ?? 'Đồng'] ?? 'linear-gradient(135deg, #FFD700, #FFA500)';
+@endphp
 
 <div class="history-container">
     @include('client.profile.menu')
 
     <div class="history-box">
-        <h3 style="font-size:20px; font-weight:700; margin-bottom:15px;">
+        <h3 style="font-size:22px; font-weight:700; margin-bottom:20px;">
             <i class="fas fa-id-card" style="color:#e11d48;"></i> Thẻ Thành Viên
         </h3>
 
-        @php
-            // Lấy điểm số, tránh lỗi khi points là model
-            $currentPoints = is_numeric($user->points) ? $user->points : ($user->points->points ?? 0);
-            $maxPoints = max(1, $ranks->max('min_points_required'));
-            $percent = min(100, ($currentPoints / $maxPoints) * 100);
-        @endphp
-
-        <p>Cấp độ thẻ: <strong>{{ $user->rank->name ?? 'Chưa có hạng' }}</strong></p>
-
-        {{-- Thanh tiến trình --}}
-        <div class="progress-bar-wrapper">
-            <div class="progress-fill" style="width: {{ $percent }}%;"></div>
-
-            @foreach($ranks as $rank)
+        <div class="member-card" style="background: {{ $bgColor }};">
+            <div class="card-header">
+                <h3 class="rank-name">{{ $currentRank->name ?? 'Chưa có hạng' }}</h3>
+                <span class="discount">{{ $currentRank->discount_percentage ?? 0 }}% OFF</span>
+            </div>
+            <div class="card-body">
+                <p><strong>Điểm hiện tại:</strong> {{ number_format($currentPoints) }}</p>
                 @php
-                    $left = ($rank->min_points_required / $maxPoints) * 100;
+                    $nextRank = $ranks->firstWhere('min_points_required', '>', $currentPoints);
                 @endphp
-                <div class="rank-marker" style="left: {{ $left }}%;">
-                    <span>{{ $rank->name }}</span>
-                    <div class="dot"></div>
-                </div>
-            @endforeach
+                @if($nextRank)
+                    <p><strong>Điểm cần để lên hạng {{ $nextRank->name }}:</strong> {{ number_format($nextRank->min_points_required - $currentPoints) }}</p>
+                @else
+                    <p><strong>Bạn đã đạt hạng cao nhất!</strong></p>
+                @endif
+                <p><strong>Mô tả:</strong> {{ $currentRank->description ?? 'Không có mô tả' }}</p>
+            </div>
+            <div class="card-footer">
+                <small>Hạng này yêu cầu tối thiểu {{ number_format($currentRank->min_points_required ?? 0) }} điểm</small>
+            </div>
         </div>
-
-        <p style="margin-top: 10px;">Điểm hiện tại: <strong>{{ number_format($currentPoints) }}</strong></p>
     </div>
 </div>
 
