@@ -137,13 +137,9 @@
                                         <i class="bi bi-person-video3 text-success me-2"></i>
                                         Đạo diễn <span class="text-danger">*</span>
                                     </label>
-                                    <select name="director_ids[]" id="director_ids"
-                                            class="form-control select2 @error('director_ids') is-invalid @enderror"
-                                            multiple required data-placeholder="Chọn đạo diễn">
+                                    <select name="director_ids[]" id="director_ids" class="form-select" multiple required>
                                         @foreach ($directors as $director)
-                                            <option value="{{ $director->id }}" {{ in_array($director->id, old('director_ids', [])) ? 'selected' : '' }}>
-                                                {{ $director->name }}
-                                            </option>
+                                            <option value="{{ $director->id }}">{{ $director->name }}</option>
                                         @endforeach
                                     </select>
                                     @error('director_ids')

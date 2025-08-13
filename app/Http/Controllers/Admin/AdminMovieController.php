@@ -137,7 +137,6 @@ class AdminMovieController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255|unique:movies,name',
-            'director_id' => 'required|integer|exists:directors,id',
             'actor_ids' => 'required|array|min:1|max:10',
             'actor_ids.*' => 'exists:actors,id',
             'duration_minutes' => 'required|integer|min:1|max:600',
@@ -153,14 +152,14 @@ class AdminMovieController extends Controller
             'status' => 'required|in:showing,upcoming,ended',
             'genre_ids' => 'required|array|min:1|max:5',
             'genre_ids.*' => 'exists:genres,id',
+            'director_ids' => 'required|array|min:1|max:5',
+            'director_ids.*' => 'exists:directors,id',
             'average_rating' => 'nullable|numeric|min:0|max:10',
         ], [
             // Thông báo lỗi tiếng Việt chuyên nghiệp
             'name.required' => 'Tên phim là trường bắt buộc.',
             'name.unique' => 'Tên phim này đã tồn tại trong hệ thống.',
             'name.max' => 'Tên phim không được vượt quá 255 ký tự.',
-            'director_id.required' => 'Vui lòng chọn đạo diễn.',
-            'director_id.exists' => 'Đạo diễn được chọn không tồn tại.',
             'actor_ids.required' => 'Vui lòng chọn ít nhất một diễn viên.',
             'actor_ids.min' => 'Phim phải có ít nhất một diễn viên.',
             'actor_ids.max' => 'Phim không được có quá 10 diễn viên.',
@@ -195,12 +194,16 @@ class AdminMovieController extends Controller
             'genre_ids.min' => 'Phim phải có ít nhất một thể loại.',
             'genre_ids.max' => 'Phim không được có quá 5 thể loại.',
             'genre_ids.*.exists' => 'Một số thể loại được chọn không tồn tại.',
+            'director_ids.required' => 'Vui lòng chọn ít nhất một đạo diễn.',
+            'director_ids.min' => 'Phim phải có ít nhất một đạo diễn.',
+            'director_ids.max' => 'Phim không được có quá 5 đạo diễn.',
+            'director_ids.*.exists' => 'Một số đạo diễn được chọn không tồn tại.',
             'average_rating.numeric' => 'Điểm đánh giá phải là số.',
             'average_rating.min' => 'Điểm đánh giá phải từ 0 trở lên.',
             'average_rating.max' => 'Điểm đánh giá không được vượt quá 10.',
         ]);
 
-        $data = $request->except(['image', 'genre_ids', 'actor_ids']);
+        $data = $request->except(['image', 'genre_ids', 'actor_ids', 'director_ids']);
 
         // Đảm bảo thư mục tồn tại
         $posterDir = storage_path('app/public/posters');
@@ -215,6 +218,11 @@ class AdminMovieController extends Controller
         }
 
         $movie = Movie::create($data);
+
+        // Liên kết với đạo diễn
+        if ($request->has('director_ids')) {
+            $movie->directors()->sync($request->input('director_ids'));
+        }
         
         // Liên kết với thể loại
         if ($request->has('genre_ids')) {
@@ -285,7 +293,6 @@ class AdminMovieController extends Controller
         
         $request->validate([
             'name' => 'required|string|max:255',
-            'director_id' => 'required|integer|exists:directors,id',
             'actor_ids' => 'required|array|min:1|max:10',
             'actor_ids.*' => 'exists:actors,id',
             'duration_minutes' => 'required|integer|min:1|max:600',
@@ -300,6 +307,8 @@ class AdminMovieController extends Controller
             'status' => 'required|in:showing,upcoming,ended',
             'genre_ids' => 'required|array|min:1|max:5',
             'genre_ids.*' => 'exists:genres,id',
+            'director_ids' => 'required|array|min:1|max:5',
+            'director_ids.*' => 'exists:directors,id',
             'average_rating' => 'nullable|numeric|min:0|max:10',
         ]);
 
