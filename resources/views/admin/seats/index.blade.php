@@ -22,7 +22,7 @@
                         Thêm ghế ngồi
                     </a>
                     <div class="dropdown">
-                        <a href="#" class="btn btn-outline-light rounded-pill dropdown-toggle d-flex align-items-center gap-2" data-bs-toggle="dropdown" aria-expanded="false">
+                        <a href="#" class="btn btn-outline-light rounded-pill dropdown-toggle d-flex align-items-center gap-2" data-bs-toggle="dropdown" aria-expanded="false" style="color: #f8f9fa">
                             <iconify-icon icon="solar:filter-broken" class="fs-20"></iconify-icon>
                             Loại ghế
                         </a>
