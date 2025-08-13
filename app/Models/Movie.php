@@ -27,11 +27,6 @@ class Movie extends Model
         return $this->belongsTo(Country::class);
     }
 
-    public function director()
-    {
-        return $this->belongsTo(Director::class);
-    }
-
     public function actors()
     {
         return $this->belongsToMany(Actor::class, 'movie_actors')

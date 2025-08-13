@@ -174,20 +174,21 @@
                                 </div>
                                 
                                 <div class="col-lg-6">
-                                    <div class="form-floating">
-                                        <select name="director_id" id="director_id" 
-                                                class="form-select form-control-lg @error('director_id') is-invalid @enderror" required>
-                                            <option value="">Chọn đạo diễn</option>
+                                    <div class="form-group">
+                                        <label for="director_ids" class="form-label fw-bold mb-3">
+                                            <i class="bi bi-person-video me-2 text-success"></i>Đạo diễn <span class="text-danger">*</span>
+                                        </label>
+                                        <select name="director_ids[]" id="director_ids" 
+                                                class="form-control select2 @error('director_ids') is-invalid @enderror" 
+                                                multiple required>
                                             @foreach ($directors as $director)
-                                                <option value="{{ $director->id }}" {{ old('director_id', $movie->director_id) == $director->id ? 'selected' : '' }}>
+                                                <option value="{{ $director->id }}" 
+                                                    {{ in_array($director->id, old('director_ids', $movie->directors->pluck('id')->toArray())) ? 'selected' : '' }}>
                                                     {{ $director->name }}
                                                 </option>
                                             @endforeach
                                         </select>
-                                        <label for="director_id">
-                                            <i class="bi bi-person-video me-2 text-success"></i>Đạo diễn <span class="text-danger">*</span>
-                                        </label>
-                                        @error('director_id')
+                                        @error('director_ids')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
                                     </div>
@@ -858,7 +859,7 @@ $(document).ready(function() {
     });
 
     // Khởi tạo Select2 cho đạo diễn
-    $('#director_id').select2({
+    $('#director_ids').select2({
         placeholder: 'Chọn đạo diễn (gõ để tìm)', 
         theme: 'bootstrap4',
         allowClear: true,

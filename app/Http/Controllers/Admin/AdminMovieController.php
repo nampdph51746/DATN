@@ -29,7 +29,7 @@ class AdminMovieController extends Controller
         $endDate = $request->input('end_date');
 
         $movies = Movie::query()
-            ->with(['country', 'ageLimit', 'genres', 'director', 'actors'])
+            ->with(['country', 'ageLimit', 'genres', 'directors', 'actors']) // Sửa 'director' thành 'directors'
             ->when($query, function ($queryBuilder, $query) {
                 return $queryBuilder->where('name', 'like', "%{$query}%")
                     ->orWhereHas('director', function($q) use ($query) {
@@ -135,7 +135,7 @@ class AdminMovieController extends Controller
     // Lưu phim mới
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255|unique:movies,name',
             'actor_ids' => 'required|array|min:1|max:10',
             'actor_ids.*' => 'exists:actors,id',
@@ -205,10 +205,9 @@ class AdminMovieController extends Controller
 
         $data = $request->except(['image', 'genre_ids', 'actor_ids', 'director_ids']);
 
-        // Đảm bảo thư mục tồn tại
-        $posterDir = storage_path('app/public/posters');
-        if (!File::exists($posterDir)) {
-            File::makeDirectory($posterDir, 0755, true);
+        // Chuyển status sang Enum nếu dùng Enum cast
+        if (isset($data['status'])) {
+            $data['status'] = \App\Enums\MovieStatus::from($data['status']);
         }
 
         // Xử lý upload ảnh poster
@@ -217,7 +216,13 @@ class AdminMovieController extends Controller
             $data['image_path'] = $path;
         }
 
+        // Tạo phim trước, rồi mới liên kết
         $movie = Movie::create($data);
+
+        // Kiểm tra $movie->id
+        if (!$movie || !$movie->id) {
+            return back()->withInput()->with('error', 'Không thể tạo phim. Vui lòng kiểm tra lại dữ liệu.');
+        }
 
         // Liên kết với đạo diễn
         if ($request->has('director_ids')) {
@@ -246,17 +251,12 @@ class AdminMovieController extends Controller
     {
         try {
             $movie = Movie::findOrFail($id);
-            
-            // Load relationships if needed
-            $movie->load(['genres', 'actors', 'director', 'country', 'ageLimit']);
-            
-            // Get data for form selects
+            $movie->load(['genres', 'actors', 'directors', 'country', 'ageLimit']); // Sửa 'director' thành 'directors'
             $genres = Genre::all();
             $actors = Actor::all();
             $directors = Director::all();
             $countries = Country::all();
             $ageLimits = AgeLimit::all();
-            
             return view('admin.movies.edit', compact(
                 'movie', 
                 'genres', 
@@ -265,7 +265,6 @@ class AdminMovieController extends Controller
                 'countries', 
                 'ageLimits'
             ));
-            
         } catch (\Exception $e) {
             return redirect()->route('admin.movies.index')
                 ->with('error', 'Không tìm thấy phim với ID: ' . $id);
@@ -275,7 +274,6 @@ class AdminMovieController extends Controller
         // Cập nhật phim
     public function update(Request $request, Movie $movie)
     {
-        // Kiểm tra xem phim có thể chỉnh sửa không
         if (!$movie->canBeEdited()) {
             $reason = '';
             $movieStatus = is_object($movie->status) ? $movie->status->value : $movie->status;
@@ -309,10 +307,13 @@ class AdminMovieController extends Controller
             'genre_ids.*' => 'exists:genres,id',
             'director_ids' => 'required|array|min:1|max:5',
             'director_ids.*' => 'exists:directors,id',
-            'average_rating' => 'nullable|numeric|min:0|max:10',
         ]);
+        $data = $request->except(['poster', 'director_ids', 'genre_ids', 'actor_ids']);
 
-        $data = $request->except('poster');
+        // Chuyển status sang Enum nếu dùng Enum cast
+        if (isset($data['status'])) {
+            $data['status'] = \App\Enums\MovieStatus::from($data['status']);
+        }
 
         // Đảm bảo thư mục tồn tại
         $posterDir = storage_path('app/public/posters');
@@ -332,12 +333,15 @@ class AdminMovieController extends Controller
         }
 
         $movie->update($data);
-        
+
+        // Liên kết với đạo diễn
+        if ($request->has('director_ids')) {
+            $movie->directors()->sync($request->input('director_ids'));
+        }
         // Liên kết với thể loại
         if ($request->has('genre_ids')) {
             $movie->genres()->sync($request->input('genre_ids'));
         }
-        
         // Liên kết với diễn viên
         if ($request->has('actor_ids')) {
             $movie->actors()->sync($request->input('actor_ids'));
@@ -385,7 +389,7 @@ class AdminMovieController extends Controller
     }
     public function show(Request $request, Movie $movie)
     {
-        $movie = $movie->load(['genres', 'ageLimit', 'country', 'director', 'actors']);
+        $movie = $movie->load(['genres', 'ageLimit', 'country', 'directors', 'actors']); // Sửa 'director' thành 'directors'
 
         // Lấy thông tin tìm kiếm/lọc suất chiếu
         $showtimeQuery = $request->input('showtime_query');

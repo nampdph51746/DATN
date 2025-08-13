@@ -661,9 +661,14 @@
                                             </div>
                                         </td>
                                         <td>
-                                            <div class="d-flex align-items-center">
-                                                <i class="fas fa-user-tie text-primary me-2" style="color: var(--primary-orange);"></i>
-                                                <span class="fw-medium">{{ $movie->director?->name ?? 'N/A' }}</span>
+                                            <div class="d-flex align-items-center flex-wrap gap-1">
+                                                @if($movie->directors->isNotEmpty())
+                                                    @foreach($movie->directors as $director)
+                                                        <span class="badge bg-primary-subtle text-primary rounded-pill">{{ $director->name }}</span>
+                                                    @endforeach
+                                                @else
+                                                    <span class="text-muted">N/A</span>
+                                                @endif
                                             </div>
                                         </td>
                                         <td>

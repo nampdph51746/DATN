@@ -198,4 +198,11 @@ class CountryController extends Controller
                 ->with('error', 'Có lỗi xảy ra khi xóa vĩnh viễn quốc gia: ' . $e->getMessage());
         }
     }
+
+    // Hiển thị chi tiết quốc gia
+    public function show($id)
+    {
+        $country = Country::findOrFail($id);
+        return view('admin.countries.show', compact('country'));
+    }
 }

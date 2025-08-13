@@ -3,8 +3,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateMovieDirectorsTable extends Migration
-{
+return new class extends Migration {
     public function up()
     {
         Schema::create('movie_directors', function (Blueprint $table) {
@@ -23,4 +22,4 @@ class CreateMovieDirectorsTable extends Migration
     {
         Schema::dropIfExists('movie_directors');
     }
-}
+};
