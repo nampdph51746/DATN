@@ -7,7 +7,7 @@
     .history-container {
         display: flex;
         justify-content: center;
-        margin: 60px auto;
+        margin: 100px auto 60px auto;
         max-width: 1000px;
     }
 

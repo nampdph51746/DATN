@@ -7,27 +7,27 @@
 .history-container {
     display: flex;
     justify-content: center;
-    margin: 60px auto;
-    max-width: 1100px;
+    margin: 100px auto 60px auto;
+    max-width: 1000px;
 }
 .history-box {
     flex: 1;
     background: white;
     border-radius: 0 12px 12px 0;
-    padding: 2rem;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 [data-theme="dark"] .history-box {
     background-color: #1f2937;
     color: #f9fafb;
 }
 .member-card {
-    border-radius: 18px;
-    padding: 30px;
+    border-radius: 12px;
+    padding: 20px;
     color: white;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.25);
-    max-width: 500px;
-    margin: auto;
+    background: linear-gradient(135deg, #FFD700, #FFA500);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+    width: 100%; /* Chiếm full box */
     animation: fadeInUp 0.5s ease-out;
 }
 @keyframes fadeInUp {
@@ -40,26 +40,25 @@
     align-items: center;
 }
 .member-card .rank-name {
-    font-size: 28px;
+    font-size: 22px;
     font-weight: bold;
 }
 .member-card .discount {
     background: rgba(0,0,0,0.3);
-    padding: 6px 14px;
+    padding: 4px 10px;
     border-radius: 8px;
     font-weight: bold;
-    font-size: 18px;
 }
 .member-card .card-body {
-    margin-top: 20px;
-    font-size: 16px;
-}
-.member-card .card-body p {
-    margin-bottom: 10px;
-}
-.member-card .card-footer {
     margin-top: 15px;
     font-size: 14px;
+}
+.member-card .card-body p {
+    margin-bottom: 6px;
+}
+.member-card .card-footer {
+    margin-top: 10px;
+    font-size: 12px;
     opacity: 0.9;
 }
 </style>
