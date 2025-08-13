@@ -256,4 +256,16 @@ class ContentFilterService
             Log::info('Sensitive word removed: ' . $word);
         }
     }
+
+    /**
+     * Liệt kê tất cả từ khóa nhạy cảm
+     */
+    public function listSensitiveWords()
+    {
+        // Nếu bạn lưu từ khóa nhạy cảm trong bảng sensitive_words
+        return \DB::table('sensitive_words')->pluck('word')->toArray();
+
+        // Hoặc nếu bạn lưu trong thuộc tính/mảng nội bộ
+        // return $this->getSensitiveWords(); // Nếu getSensitiveWords là public/protected
+    }
 }
