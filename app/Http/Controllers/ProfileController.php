@@ -236,5 +236,28 @@ public function membership()
     ));
 }
 
+public function voucher()
+{
+    $user = Auth::user();
+
+    $vouchers = \App\Models\Promotion::where('status', 'active')
+        ->where(function ($query) {
+            $now = now();
+            $query->where(function ($q) use ($now) {
+                $q->whereNull('start_date')->orWhere('start_date', '<=', $now);
+            });
+        })
+        ->where(function ($query) {
+            $now = now();
+            $query->where(function ($q) use ($now) {
+                $q->whereNull('end_date')->orWhere('end_date', '>=', $now);
+            });
+        })
+        ->orderBy('start_date', 'desc')
+        ->paginate(10);
+
+    return view('client.voucher', compact('vouchers', 'user'));
+}
+
 
 }

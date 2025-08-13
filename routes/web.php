@@ -127,8 +127,8 @@ Route::middleware(['auth'])->group(function (){
         ->name('profile.membership');
 
     // Voucher
-    Route::get('/profile/vouchers', [ProfileController::class, 'vouchers'])
-        ->name('profile.vouchers');
+    Route::get('/profile/voucher', [ProfileController::class, 'voucher'])
+        ->name('profile.voucher');
 
     // Lịch sử giao dịch
     Route::get('/profile/history', [ProfileController::class, 'history'])
