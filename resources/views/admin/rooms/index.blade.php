@@ -405,7 +405,6 @@
                         <p class="stats-label">Tổng phòng chiếu</p>
                         <div class="stats-trend">
                             <i class="fas fa-trending-up text-success"></i>
-                            <span class="text-success">+12%</span>
                         </div>
                     </div>
                 </div>
@@ -422,7 +421,6 @@
                         <p class="stats-label">Đang hoạt động</p>
                         <div class="stats-trend">
                             <i class="fas fa-trending-up text-success"></i>
-                            <span class="text-success">+8%</span>
                         </div>
                     </div>
                 </div>
@@ -437,10 +435,6 @@
                     <div class="stats-content">
                         <h3 class="stats-number">{{ $rooms->where('status', 'maintenance')->count() }}</h3>
                         <p class="stats-label">Đang bảo trì</p>
-                        <div class="stats-trend">
-                            <i class="fas fa-minus text-warning"></i>
-                            <span class="text-warning">0%</span>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -454,15 +448,6 @@
                     <div class="stats-content">
                         <h3 class="stats-number">{{ request('search') ? 'ON' : 'OFF' }}</h3>
                         <p class="stats-label">Tìm kiếm</p>
-                        <div class="stats-trend">
-                            @if(request('search'))
-                                <i class="fas fa-search text-info"></i>
-                                <span class="text-info">Active</span>
-                            @else
-                                <i class="fas fa-circle text-muted"></i>
-                                <span class="text-muted">Inactive</span>
-                            @endif
-                        </div>
                     </div>
                 </div>
             </div>
