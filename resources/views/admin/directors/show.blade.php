@@ -17,7 +17,14 @@
                                 </span>
                             </div>
                             <div class="text-white">
-                                <h2 class="fw-bold mb-2">Chi tiết đạo diễn</h2>
+                                <h2 class="fw-bold mb-2 d-flex align-items-center gap-2">
+                                    <span class="avatar-md rounded-circle bg-primary-subtle d-flex align-items-center justify-content-center">
+                                        <span class="avatar-title rounded-circle bg-primary text-white">
+                                            <i class="fas fa-id-card"></i>
+                                        </span>
+                                    </span>
+                                    Chi tiết đạo diễn
+                                </h2>
                                 <p class="mb-0 opacity-90 fs-5">Thông tin chi tiết về {{ $director->name }}</p>
                             </div>
                         </div>
@@ -36,7 +43,6 @@
                         </div>
                     </div>
                 </div>
-                <!-- Icon lớn căn giữa chiều cao, không đè lên badge -->
             </div>
         </div>
     </div>
@@ -47,7 +53,11 @@
             <div class="card border-0 shadow-lg rounded-4 h-100">
                 <div class="card-header bg-white border-0 py-4">
                     <h5 class="mb-0 fw-bold text-dark d-flex align-items-center gap-2">
-                        <i class="fas fa-id-card text-primary"></i>
+                        <span class="avatar-sm rounded-circle bg-primary-subtle d-flex align-items-center justify-content-center">
+                            <span class="avatar-title rounded-circle bg-primary text-white">
+                                <i class="fas fa-id-card"></i>
+                            </span>
+                        </span>
                         Thông tin cá nhân
                     </h5>
                 </div>
@@ -169,11 +179,11 @@
                 <div class="card border-0 shadow-lg rounded-4 mb-4">
                     <div class="card-header bg-white border-0 py-4">
                         <div class="d-flex align-items-center gap-3">
-                            <div class="avatar-md rounded-circle bg-info-subtle">
+                            <span class="avatar-md rounded-circle bg-info-subtle d-flex align-items-center justify-content-center">
                                 <span class="avatar-title rounded-circle bg-info text-white">
                                     <i class="fas fa-book"></i>
                                 </span>
-                            </div>
+                            </span>
                             <div>
                                 <h4 class="mb-0 fw-bold text-dark">Tiểu sử</h4>
                                 <p class="text-muted mb-0">Thông tin về sự nghiệp và cuộc đời</p>
@@ -193,11 +203,11 @@
                 <div class="card-header bg-white border-0 py-4">
                     <div class="d-flex align-items-center justify-content-between">
                         <div class="d-flex align-items-center gap-3">
-                            <div class="avatar-md rounded-circle bg-primary-subtle">
+                            <span class="avatar-md rounded-circle bg-primary-subtle d-flex align-items-center justify-content-center">
                                 <span class="avatar-title rounded-circle bg-primary text-white">
                                     <i class="fas fa-film"></i>
                                 </span>
-                            </div>
+                            </span>
                             <div>
                                 <h4 class="mb-0 fw-bold text-dark">Danh sách phim</h4>
                                 <p class="text-muted mb-0">{{ $director->movies->count() }} phim đã thực hiện</p>
