@@ -186,4 +186,19 @@ class ProfileController extends Controller
         return view('client.historybooking', compact('bookings'));
 }
 
+public function detail($id)
+    {
+        $user = Auth::user();
+
+        if (!$user) {
+            return redirect()->route('login')->with('error', 'Vui lòng đăng nhập để xem chi tiết.');
+        }
+
+        $booking = Booking::with(['tickets.showtime.movie', 'tickets.seat.room.cinema'])
+            ->where('user_id', $user->id)
+            ->findOrFail($id);
+
+        return view('client.booking-detail', compact('booking'));
+    }
+
 }

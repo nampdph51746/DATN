@@ -176,7 +176,7 @@
                 <div class="ticket-meta">🎬 {{ $cinema }} - {{ $room }}</div>
                 <div class="ticket-meta">💺 Ghế: {{ $seats ?: 'Chưa chọn' }}</div>
                 <div class="ticket-price">💰 {{ number_format($booking->final_amount, 0, ',', '.') }} VNĐ</div>
-                <a href="" class="detail-btn">Xem chi tiết</a>
+                <a href="{{ route('client.booking.detail', $booking->id) }}" class="detail-btn">Xem chi tiết</a>
             </div>
         </div>
     @endforeach

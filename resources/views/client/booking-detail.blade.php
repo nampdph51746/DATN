@@ -83,35 +83,39 @@
         </h3>
 
         @if($booking)
-            <div class="detail-card">
-                <div class="detail-item">
-                    🆔 Mã đặt vé: <strong>{{ $booking->booking_code }}</strong>
-                    <span class="status-badge status-{{ strtolower($booking->status) }}">
-                        {{ ucfirst($booking->status) }}
-                    </span>
-                </div>
-                @foreach($booking->tickets as $ticket)
-                    @php
-                        $movie = $ticket->showtime?->movie;
-                        $cinema = $ticket->seat?->room?->cinema?->name ?? 'Chưa xác định';
-                        $room = $ticket->seat?->room?->name ?? 'Chưa xác định';
-                        $showDate = $ticket->showtime?->show_date;
-                        $showTime = $ticket->showtime?->show_time;
-                        $seats = $ticket->seat?->seat_number ?? 'Chưa chọn';
-                    @endphp
-                    <div class="detail-title">{{ $movie?->name ?? 'Chưa xác định' }}</div>
-                    <div class="detail-item">
-                        📅 {{ $showDate ? \Carbon\Carbon::parse($showDate)->format('d/m/Y') : '' }}
-                        | ⏰ {{ $showTime ?? '' }}
-                    </div>
-                    <div class="detail-item">🎬 {{ $cinema }} - {{ $room }}</div>
-                    <div class="detail-item">💺 Ghế: {{ $seats }}</div>
-                @endforeach
-                <div class="detail-price">💰 {{ number_format($booking->final_amount, 0, ',', '.') }} VNĐ</div>
+        <div class="detail-card">
+            <div class="detail-item">
+                🆔 Mã đặt vé: <strong>{{ $booking->booking_code }}</strong>
+                @php
+                $statusValue = $booking->status instanceof \BackedEnum ? $booking->status->value : $booking->status;
+                @endphp
+
+                <span class="status-badge status-{{ strtolower($statusValue) }}">
+                    {{ ucfirst($statusValue) }}
+                </span>
             </div>
-            <a href="{{ route('client.history') }}" class="back-btn">Quay lại</a>
+            @foreach($booking->tickets as $ticket)
+            @php
+            $movie = $ticket->showtime?->movie;
+            $cinema = $ticket->seat?->room?->cinema?->name ?? 'Chưa xác định';
+            $room = $ticket->seat?->room?->name ?? 'Chưa xác định';
+            $showDate = $ticket->showtime?->show_date;
+            $showTime = $ticket->showtime?->show_time;
+            $seats = $ticket->seat?->seat_number ?? 'Chưa chọn';
+            @endphp
+            <div class="detail-title">{{ $movie?->name ?? 'Chưa xác định' }}</div>
+            <div class="detail-item">
+                📅 {{ $showDate ? \Carbon\Carbon::parse($showDate)->format('d/m/Y') : '' }}
+                | ⏰ {{ $showTime ?? '' }}
+            </div>
+            <div class="detail-item">🎬 {{ $cinema }} - {{ $room }}</div>
+            <div class="detail-item">💺 Ghế: {{ $seats }}</div>
+            @endforeach
+            <div class="detail-price">💰 {{ number_format($booking->final_amount, 0, ',', '.') }} VNĐ</div>
+        </div>
+        <a href="{{ route('client.historybooking') }}" class="back-btn">Quay lại</a>
         @else
-            <p>Không tìm thấy thông tin đặt vé.</p>
+        <p>Không tìm thấy thông tin đặt vé.</p>
         @endif
     </div>
 </div>

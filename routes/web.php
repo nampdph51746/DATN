@@ -40,6 +40,7 @@ use App\Http\Controllers\Admin\AdminProductVariantController;
 use App\Http\Controllers\Admin\CustomerRankPromotionController;
 use App\Http\Controllers\Admin\AdminProductCategoriesController;
 use App\Http\Controllers\Client\BookingHistoryController;
+use Symfony\Component\HttpKernel\Profiler\Profile;
 
 Route::get('/', [HomeController::class, 'index'])->name('client.home');
 Route::get('/movies', [HomeController::class, 'filter'])->name('movies.filter');
@@ -132,6 +133,8 @@ Route::middleware(['auth'])->group(function (){
     // Lịch sử giao dịch
     Route::get('/profile/history', [ProfileController::class, 'history'])
         ->name('profile.history');
+
+    Route::get('/booking/{id}/detail', [ProfileController::class, 'detail'])->name('client.booking.detail');
 
     // Update và Delete (có sẵn)
     Route::patch('/profile', [ProfileController::class, 'update'])
