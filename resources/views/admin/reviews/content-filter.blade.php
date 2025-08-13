@@ -116,7 +116,10 @@
                     @php
                         $totalReviews = \App\Models\Review::count();
                         $pendingReviews = \App\Models\Review::where('status', 'pending')->count();
-                        $autoFlaggedReviews = \App\Models\Review::where('admin_note', 'like', 'Tự động chờ duyệt:%')->count();
+                        // Sửa lỗi: kiểm tra cột admin_note có tồn tại trước khi truy vấn
+                        $autoFlaggedReviews = \Illuminate\Support\Facades\Schema::hasColumn('reviews', 'admin_note')
+                            ? \App\Models\Review::where('admin_note', 'like', 'Tự động chờ duyệt:%')->count()
+                            : 0;
                         $rejectedReviews = \App\Models\Review::where('status', 'rejected')->count();
                     @endphp
                     

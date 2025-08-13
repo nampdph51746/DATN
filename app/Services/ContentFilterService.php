@@ -262,10 +262,11 @@ class ContentFilterService
      */
     public function listSensitiveWords()
     {
-        // Nếu bạn lưu từ khóa nhạy cảm trong bảng sensitive_words
-        return \DB::table('sensitive_words')->pluck('word')->toArray();
-
-        // Hoặc nếu bạn lưu trong thuộc tính/mảng nội bộ
-        // return $this->getSensitiveWords(); // Nếu getSensitiveWords là public/protected
+        // Sửa lỗi: kiểm tra bảng tồn tại trước khi truy vấn
+        if (\Illuminate\Support\Facades\Schema::hasTable('sensitive_words')) {
+            return \DB::table('sensitive_words')->pluck('word')->toArray();
+        }
+        // Nếu bảng chưa tồn tại, trả về mảng rỗng
+        return [];
     }
 }
