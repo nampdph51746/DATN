@@ -13,7 +13,7 @@
                         <div class="d-flex align-items-center gap-4">
                             <div class="avatar-xl rounded-circle bg-white bg-opacity-20 backdrop-blur">
                                 <span class="avatar-title rounded-circle text-white">
-                                    <i class="bi bi-person-video fs-2"></i>
+                                    <i class="fas fa-user-tie fs-2"></i>
                                 </span>
                             </div>
                             <div class="text-white">
@@ -23,7 +23,7 @@
                         </div>
                         <div class="d-none d-lg-block">
                             <span class="badge bg-light text-success rounded-pill px-4 py-3 fs-5 fw-semibold shadow">
-                                <i class="bi bi-plus-circle me-2"></i>
+                                <i class="fas fa-plus-circle me-2"></i>
                                 Tạo mới
                             </span>
                         </div>
@@ -43,8 +43,9 @@
                 <!-- Preview Card -->
                 <div class="card border-0 shadow-lg rounded-4 mb-4">
                     <div class="card-header bg-white border-0 py-4">
+                        <!-- Preview Card -->
                         <h5 class="mb-0 fw-bold text-dark d-flex align-items-center gap-2">
-                            <i class="bi bi-image text-primary"></i>
+                            <i class="fas fa-image text-primary"></i>
                             Ảnh xem trước
                         </h5>
                     </div>
@@ -56,7 +57,7 @@
                                  class="img-fluid rounded-circle shadow-lg mb-3" 
                                  style="width: 180px; height: 180px; object-fit: cover; border: 4px solid #fff;">
                             <div class="position-absolute bottom-0 end-0 bg-primary rounded-circle p-2 shadow">
-                                <i class="bi bi-camera text-white"></i>
+                                <i class="fas fa-camera text-white"></i>
                             </div>
                         </div>
                         <h6 class="fw-bold text-muted">Ảnh đạo diễn</h6>
@@ -67,8 +68,9 @@
                 <!-- Action Buttons Card -->
                 <div class="card border-0 shadow-sm rounded-4">
                     <div class="card-header bg-white border-0 py-4">
+                        <!-- Action Buttons Card -->
                         <h5 class="mb-0 fw-bold text-dark d-flex align-items-center gap-2">
-                            <i class="bi bi-lightning-charge text-warning"></i>
+                            <i class="fas fa-bolt text-warning"></i>
                             Thao tác
                         </h5>
                     </div>
@@ -76,13 +78,13 @@
                         <div class="d-grid gap-3">
                             <button type="submit" form="directorCreateForm" 
                                     class="btn btn-success btn-lg rounded-pill d-flex align-items-center justify-content-center gap-2 shadow-sm">
-                                <i class="bi bi-check-circle"></i>
+                                <i class="fas fa-check-circle"></i>
                                 Thêm đạo diễn
                             </button>
                             
                             <a href="{{ route('admin.directors.index') }}" 
                                class="btn btn-outline-secondary btn-lg rounded-pill d-flex align-items-center justify-content-center gap-2">
-                                <i class="bi bi-arrow-left"></i>
+                                <i class="fas fa-arrow-left"></i>
                                 Quay lại danh sách
                             </a>
                         </div>
@@ -118,7 +120,7 @@
                                 <div class="d-flex align-items-center gap-3">
                                     <div class="avatar-sm rounded-circle bg-primary-subtle">
                                         <span class="avatar-title rounded-circle bg-primary text-white">
-                                            <i class="bi bi-person-badge"></i>
+                                            <i class="fas fa-id-card"></i>
                                         </span>
                                     </div>
                                     <div>
@@ -136,7 +138,7 @@
                                                value="{{ old('name') }}" 
                                                placeholder="Tên đạo diễn" required maxlength="255">
                                         <label for="name">
-                                            <i class="bi bi-person me-2 text-primary"></i>Tên đạo diễn <span class="text-danger">*</span>
+                                            <i class="fas fa-user me-2 text-primary"></i>Tên đạo diễn <span class="text-danger">*</span>
                                         </label>
                                         @error('name')
                                             <div class="invalid-feedback">{{ $message }}</div>
@@ -150,7 +152,7 @@
                                                class="form-control form-control-lg @error('birth_date') is-invalid @enderror" 
                                                value="{{ old('birth_date') }}">
                                         <label for="birth_date">
-                                            <i class="bi bi-calendar-event me-2 text-success"></i>Ngày sinh
+                                            <i class="fas fa-calendar-alt me-2 text-success"></i>Ngày sinh
                                         </label>
                                         @error('birth_date')
                                             <div class="invalid-feedback">{{ $message }}</div>
@@ -165,7 +167,7 @@
                                                value="{{ old('nationality') }}" 
                                                placeholder="Ví dụ: Việt Nam, Mỹ, Nhật Bản...">
                                         <label for="nationality">
-                                            <i class="bi bi-globe me-2 text-info"></i>Quốc tịch
+                                            <i class="fas fa-globe-americas me-2 text-info"></i>Quốc tịch
                                         </label>
                                         @error('nationality')
                                             <div class="invalid-feedback">{{ $message }}</div>
@@ -176,14 +178,14 @@
                                 <div class="col-lg-6">
                                     <div class="upload-container">
                                         <label for="image" class="form-label fw-bold mb-3">
-                                            <i class="bi bi-cloud-upload me-2 text-success"></i>Ảnh đạo diễn
+                                            <i class="fas fa-cloud-upload-alt me-2 text-success"></i>Ảnh đạo diễn
                                         </label>
                                         <div class="upload-area rounded-3 border-2 border-dashed border-primary p-4 text-center bg-light-subtle">
                                             <input type="file" name="image" id="image" 
                                                    class="form-control @error('image') is-invalid @enderror" 
                                                    accept="image/jpeg,image/png,image/jpg,image/gif" style="display: none;">
                                             <div class="upload-content" onclick="document.getElementById('image').click()">
-                                                <i class="bi bi-cloud-upload fs-1 text-primary mb-3"></i>
+                                                <i class="fas fa-cloud-upload-alt fs-1 text-primary mb-3"></i>
                                                 <h6 class="fw-bold text-primary">Nhấp để chọn ảnh</h6>
                                                 <p class="text-muted small mb-0">JPG, PNG, GIF tối đa 2MB</p>
                                             </div>
@@ -202,7 +204,7 @@
                                 <div class="d-flex align-items-center gap-3">
                                     <div class="avatar-sm rounded-circle bg-info-subtle">
                                         <span class="avatar-title rounded-circle bg-info text-white">
-                                            <i class="bi bi-journal-text"></i>
+                                            <i class="fas fa-book"></i>
                                         </span>
                                     </div>
                                     <div>
@@ -218,7 +220,7 @@
                                           style="height: 150px;" 
                                           placeholder="Nhập tiểu sử của đạo diễn...">{{ old('biography') }}</textarea>
                                 <label for="biography">
-                                    <i class="bi bi-journal-text me-2 text-info"></i>Tiểu sử đạo diễn
+                                    <i class="fas fa-book-open me-2 text-info"></i>Tiểu sử đạo diễn
                                 </label>
                                 @error('biography')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -232,7 +234,7 @@
                                 <div class="d-flex align-items-center gap-3">
                                     <div class="avatar-sm rounded-circle bg-warning-subtle">
                                         <span class="avatar-title rounded-circle bg-warning text-white">
-                                            <i class="bi bi-toggles2"></i>
+                                            <i class="fas fa-toggle-on"></i>
                                         </span>
                                     </div>
                                     <div>
@@ -248,7 +250,7 @@
                                            class="form-check-input" value="1" 
                                            {{ old('is_active', true) ? 'checked' : '' }}>
                                     <label for="is_active" class="form-check-label fw-semibold">
-                                        <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                        <i class="fas fa-check-circle text-success me-2"></i>
                                         Đạo diễn đang hoạt động
                                     </label>
                                     <div class="form-text">Bật tính năng này để đạo diễn có thể được chọn khi tạo phim mới</div>
@@ -260,10 +262,10 @@
                         <div class="d-flex justify-content-end gap-3 pt-4 border-top">
                             <a href="{{ route('admin.directors.index') }}" 
                                class="btn btn-outline-secondary btn-lg rounded-pill px-4">
-                                <i class="bi bi-x-circle me-2"></i>Hủy bỏ
+                                <i class="fas fa-times-circle me-2"></i>Hủy bỏ
                             </a>
                             <button type="submit" class="btn btn-success btn-lg rounded-pill px-5 shadow">
-                                <i class="bi bi-check-circle me-2"></i>Thêm đạo diễn
+                                <i class="fas fa-check-circle me-2"></i>Thêm đạo diễn
                             </button>
                         </div>
                     </form>

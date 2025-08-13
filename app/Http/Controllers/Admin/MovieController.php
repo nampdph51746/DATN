@@ -321,8 +321,7 @@ class MovieController extends Controller
                 $movie->genres()->sync($request->input('genre_ids', []));
             });
 
-            return redirect()->route('admin.movies.index')
-                ->with('success', 'Cập nhật phim thành công!');
+            return redirect()->route('admin.movies.edit', ['id' => $movie->id]);
         } catch (\Exception $e) {
             Log::error('Lỗi khi cập nhật phim: ' . $e->getMessage());
             return redirect()->back()

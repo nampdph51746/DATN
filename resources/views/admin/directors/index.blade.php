@@ -489,7 +489,8 @@
                                 <!-- Advanced Filter Dropdown -->
                                 <div class="dropdown">
                                     <button class="btn btn-outline-primary btn-lg dropdown-toggle rounded-pill" 
-                                            type="button" data-bs-toggle="dropdown">
+                                            type="button" data-bs-toggle="dropdown"
+                                            style="color: white">
                                         <i class="fas fa-filter me-1"></i> Lọc nâng cao
                                     </button>
                                     <div class="dropdown-menu dropdown-menu-end p-4">

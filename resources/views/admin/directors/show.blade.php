@@ -7,13 +7,13 @@
     <!-- Header Section -->
     <div class="row mb-4">
         <div class="col-12">
-            <div class="card border-0 bg-gradient-info rounded-4 shadow-lg overflow-hidden">
-                <div class="card-body p-5">
+            <div class="card border-0 bg-gradient-info rounded-4 shadow-lg overflow-hidden position-relative">
+                <div class="card-body p-5 position-relative" style="z-index:2;">
                     <div class="d-flex align-items-center justify-content-between">
                         <div class="d-flex align-items-center gap-4">
-                            <div class="avatar-xl rounded-circle bg-white bg-opacity-20 backdrop-blur">
+                            <div class="avatar-xl rounded-circle bg-white bg-opacity-20 backdrop-blur d-flex align-items-center justify-content-center" style="min-width:80px; min-height:80px;">
                                 <span class="avatar-title rounded-circle text-white">
-                                    <i class="bi bi-person-video fs-2"></i>
+                                    <i class="fas fa-user-tie fs-2"></i>
                                 </span>
                             </div>
                             <div class="text-white">
@@ -24,21 +24,19 @@
                         <div class="d-none d-lg-block">
                             @if($director->is_active)
                                 <span class="badge bg-success bg-opacity-90 rounded-pill px-4 py-3 fs-5 fw-semibold shadow">
-                                    <i class="bi bi-check-circle me-2"></i>
+                                    <i class="fas fa-check-circle me-2"></i>
                                     Đang hoạt động
                                 </span>
                             @else
                                 <span class="badge bg-danger bg-opacity-90 rounded-pill px-4 py-3 fs-5 fw-semibold shadow">
-                                    <i class="bi bi-x-circle me-2"></i>
+                                    <i class="fas fa-times-circle me-2"></i>
                                     Ngưng hoạt động
                                 </span>
                             @endif
                         </div>
                     </div>
                 </div>
-                <div class="position-absolute top-0 end-0 opacity-10">
-                    <i class="bi bi-person-video" style="font-size: 12rem;"></i>
-                </div>
+                <!-- Icon lớn căn giữa chiều cao, không đè lên badge -->
             </div>
         </div>
     </div>
@@ -49,7 +47,7 @@
             <div class="card border-0 shadow-lg rounded-4 h-100">
                 <div class="card-header bg-white border-0 py-4">
                     <h5 class="mb-0 fw-bold text-dark d-flex align-items-center gap-2">
-                        <i class="bi bi-person-badge text-primary"></i>
+                        <i class="fas fa-id-card text-primary"></i>
                         Thông tin cá nhân
                     </h5>
                 </div>
@@ -63,11 +61,11 @@
                         <!-- Status indicator -->
                         @if($director->is_active)
                             <div class="position-absolute bottom-0 end-0 bg-success rounded-circle p-3 shadow border border-white border-3">
-                                <i class="bi bi-check-circle text-white fs-5"></i>
+                                <i class="fas fa-check-circle text-white fs-5"></i>
                             </div>
                         @else
                             <div class="position-absolute bottom-0 end-0 bg-danger rounded-circle p-3 shadow border border-white border-3">
-                                <i class="bi bi-x-circle text-white fs-5"></i>
+                                <i class="fas fa-times-circle text-white fs-5"></i>
                             </div>
                         @endif
                     </div>
@@ -76,11 +74,11 @@
                     
                     @if($director->is_active)
                         <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-20 rounded-pill px-3 py-2 mb-3 fw-semibold">
-                            <i class="bi bi-check-circle me-1"></i>Đang hoạt động
+                            <i class="fas fa-check-circle me-1"></i>Đang hoạt động
                         </span>
                     @else
                         <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-20 rounded-pill px-3 py-2 mb-3 fw-semibold">
-                            <i class="bi bi-x-circle me-1"></i>Ngưng hoạt động
+                            <i class="fas fa-times-circle me-1"></i>Ngưng hoạt động
                         </span>
                     @endif
                     
@@ -91,7 +89,7 @@
                                 <div class="d-flex align-items-center gap-3 p-3 bg-light-subtle rounded-3">
                                     <div class="avatar-sm rounded-circle bg-primary bg-opacity-10">
                                         <span class="avatar-title rounded-circle bg-primary text-white">
-                                            <i class="bi bi-globe"></i>
+                                            <i class="fas fa-globe-americas"></i>
                                         </span>
                                     </div>
                                     <div>
@@ -107,7 +105,7 @@
                                 <div class="d-flex align-items-center gap-3 p-3 bg-light-subtle rounded-3">
                                     <div class="avatar-sm rounded-circle bg-success bg-opacity-10">
                                         <span class="avatar-title rounded-circle bg-success text-white">
-                                            <i class="bi bi-calendar-event"></i>
+                                            <i class="fas fa-calendar-alt"></i>
                                         </span>
                                     </div>
                                     <div>
@@ -123,7 +121,7 @@
                             <div class="d-flex align-items-center gap-3 p-3 bg-light-subtle rounded-3">
                                 <div class="avatar-sm rounded-circle bg-info bg-opacity-10">
                                     <span class="avatar-title rounded-circle bg-info text-white">
-                                        <i class="bi bi-film"></i>
+                                        <i class="fas fa-film"></i>
                                     </span>
                                 </div>
                                 <div>
@@ -137,7 +135,7 @@
                             <div class="d-flex align-items-center gap-3 p-3 bg-light-subtle rounded-3">
                                 <div class="avatar-sm rounded-circle bg-warning bg-opacity-10">
                                     <span class="avatar-title rounded-circle bg-warning text-white">
-                                        <i class="bi bi-calendar-plus"></i>
+                                        <i class="fas fa-calendar-plus"></i>
                                     </span>
                                 </div>
                                 <div>
@@ -153,11 +151,11 @@
                     <div class="d-grid gap-2">
                         <a href="{{ route('admin.directors.edit', $director->id) }}" 
                            class="btn btn-warning btn-lg rounded-pill">
-                            <i class="bi bi-pencil me-2"></i>Chỉnh sửa thông tin
+                            <i class="fas fa-pencil-alt me-2"></i>Chỉnh sửa thông tin
                         </a>
                         <a href="{{ route('admin.directors.index') }}" 
                            class="btn btn-outline-secondary btn-lg rounded-pill">
-                            <i class="bi bi-arrow-left me-2"></i>Quay lại danh sách
+                            <i class="fas fa-arrow-left me-2"></i>Quay lại danh sách
                         </a>
                     </div>
                 </div>
@@ -173,7 +171,7 @@
                         <div class="d-flex align-items-center gap-3">
                             <div class="avatar-md rounded-circle bg-info-subtle">
                                 <span class="avatar-title rounded-circle bg-info text-white">
-                                    <i class="bi bi-journal-text"></i>
+                                    <i class="fas fa-book"></i>
                                 </span>
                             </div>
                             <div>
@@ -197,7 +195,7 @@
                         <div class="d-flex align-items-center gap-3">
                             <div class="avatar-md rounded-circle bg-primary-subtle">
                                 <span class="avatar-title rounded-circle bg-primary text-white">
-                                    <i class="bi bi-film"></i>
+                                    <i class="fas fa-film"></i>
                                 </span>
                             </div>
                             <div>
@@ -207,6 +205,7 @@
                         </div>
                         @if($director->movies->count() > 0)
                             <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-20 rounded-pill px-3 py-2 fw-semibold">
+                                <i class="fas fa-film me-1"></i>
                                 {{ $director->movies->count() }} phim
                             </span>
                         @endif
@@ -241,12 +240,12 @@
                                             <td class="py-4">
                                                 <div>
                                                     <div class="d-flex align-items-center gap-2 mb-1">
-                                                        <i class="bi bi-calendar-event text-primary"></i>
+                                                        <i class="fas fa-calendar-alt text-primary"></i>
                                                         <span class="small">{{ $movie->release_date->format('d/m/Y') }}</span>
                                                     </div>
                                                     @if($movie->average_rating)
                                                         <div class="d-flex align-items-center gap-2">
-                                                            <i class="bi bi-star-fill text-warning"></i>
+                                                            <i class="fas fa-star text-warning"></i>
                                                             <span class="small">{{ $movie->average_rating }}/10</span>
                                                         </div>
                                                     @endif
@@ -266,8 +265,15 @@
                                                         'ended' => 'Đã kết thúc',
                                                         default => 'Không xác định'
                                                     };
+                                                    $statusIcon = match($movie->status->value) {
+                                                        'upcoming' => 'fas fa-clock',
+                                                        'showing' => 'fas fa-play-circle',
+                                                        'ended' => 'fas fa-stop-circle',
+                                                        default => 'fas fa-question-circle'
+                                                    };
                                                 @endphp
-                                                <span class="badge {{ $statusClass }} bg-opacity-10 text-{{ str_replace('bg-', '', $statusClass) }} border border-{{ str_replace('bg-', '', $statusClass) }} border-opacity-20 rounded-pill px-3 py-2 fw-semibold">
+                                                <span class="badge {{ $statusClass }} bg-opacity-10 text-{{ str_replace('bg-', '', $statusClass) }} border border-{{ str_replace('bg-', '', $statusClass) }} border-opacity-20 rounded-pill px-3 py-2 fw-semibold d-flex align-items-center gap-2">
+                                                    <i class="{{ $statusIcon }}"></i>
                                                     {{ $statusText }}
                                                 </span>
                                             </td>
@@ -281,7 +287,7 @@
                             <div class="d-flex flex-column align-items-center gap-3">
                                 <div class="avatar-xl rounded-circle bg-light">
                                     <span class="avatar-title rounded-circle text-muted">
-                                        <i class="bi bi-film fs-1"></i>
+                                        <i class="fas fa-film fs-1"></i>
                                     </span>
                                 </div>
                                 <div>
@@ -345,3 +351,5 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 @endsection
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
