@@ -204,9 +204,37 @@ public function detail($id)
 public function membership()
 {
     $user = Auth::user();
-    $rank = \DB::table('customer_ranks')->where('id', $user->customer_rank_id)->first();
 
-    return view('client.membercard', compact('user', 'rank'));
+    // Lấy danh sách hạng theo số điểm tối thiểu tăng dần
+    $ranks = \App\Models\CustomerRank::orderBy('min_points_required', 'asc')->get();
+
+    // Lấy số điểm hiện tại (nếu không có thì mặc định là 0)
+    $currentPoints = \App\Models\Point::where('user_id', $user->id)->value('total_points') ?? 0;
+
+    // Lấy hạng hiện tại từ quan hệ
+    $currentRank = $user->customerRank ?? null;
+
+    // Xác định mốc hạng tiếp theo
+    $nextRank = $ranks->firstWhere('min_points_required', '>', $currentPoints);
+
+    // Tính phần trăm tiến trình
+    if ($nextRank) {
+        $currentRankPoints = $currentRank ? $currentRank->min_points_required : 0;
+        $pointsNeededForNext = $nextRank->min_points_required - $currentRankPoints;
+        $progress = ($currentPoints - $currentRankPoints) / $pointsNeededForNext * 100;
+    } else {
+        $progress = 100; // Đã đạt hạng cao nhất
+    }
+
+    return view('client.membercard', compact(
+        'user',
+        'ranks',
+        'currentPoints',
+        'currentRank',
+        'nextRank',
+        'progress'
+    ));
 }
+
 
 }

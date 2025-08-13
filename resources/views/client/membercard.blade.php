@@ -1,60 +1,92 @@
 @extends('layouts.client.client')
 
-@section('title', 'Lịch sử đặt vé | CineVN')
+@section('title', 'Thẻ thành viên | CineVN')
 
 @section('content')
 <style>
-.member-card {
-    max-width: 350px;
-    border-radius: 12px;
-    padding: 20px;
-    color: white;
-    background: linear-gradient(135deg, #FFD700, #FFA500);
-    box-shadow: 0 6px 15px rgba(0,0,0,0.2);
-}
-.member-card .card-header {
+.history-container {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    justify-content: center;
+    margin: 60px auto;
+    max-width: 1000px;
 }
-.member-card .rank-name {
-    font-size: 22px;
-    font-weight: bold;
+.history-box {
+    flex: 1;
+    background: white;
+    border-radius: 0 12px 12px 0;
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
-.member-card .discount {
-    background: rgba(0,0,0,0.3);
-    padding: 4px 10px;
-    border-radius: 8px;
-    font-weight: bold;
+[data-theme="dark"] .history-box {
+    background-color: #1f2937;
+    color: #f9fafb;
 }
-.member-card .card-body {
-    margin-top: 15px;
-    font-size: 14px;
+.progress-bar-wrapper {
+    position: relative;
+    height: 12px;
+    background: #ddd;
+    border-radius: 10px;
+    margin-top: 20px;
 }
-.member-card .card-footer {
-    margin-top: 10px;
-    font-size: 12px;
-    opacity: 0.9;
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ffb400, #ff6600);
+    border-radius: 10px;
+    transition: width 0.5s ease;
+}
+.rank-marker {
+    position: absolute;
+    top: -25px;
+    text-align: center;
+    transform: translateX(-50%);
+}
+.rank-marker .dot {
+    width: 10px;
+    height: 10px;
+    background: #000;
+    border-radius: 50%;
+    margin: 4px auto 0;
+}
+.rank-marker span {
+    font-size: 11px;
+    white-space: nowrap;
 }
 </style>
 
 <div class="history-container">
     @include('client.profile.menu')
 
-    <div class="member-card">
-    <div class="card-header">
-        <h3 class="rank-name">{{ $rank->name }}</h3>
-        <span class="discount">{{ $rank->discount_percentage }}% OFF</span>
+    <div class="history-box">
+        <h3 style="font-size:20px; font-weight:700; margin-bottom:15px;">
+            <i class="fas fa-id-card" style="color:#e11d48;"></i> Thẻ Thành Viên
+        </h3>
+
+        @php
+            // Lấy điểm số, tránh lỗi khi points là model
+            $currentPoints = is_numeric($user->points) ? $user->points : ($user->points->points ?? 0);
+            $maxPoints = max(1, $ranks->max('min_points_required'));
+            $percent = min(100, ($currentPoints / $maxPoints) * 100);
+        @endphp
+
+        <p>Cấp độ thẻ: <strong>{{ $user->rank->name ?? 'Chưa có hạng' }}</strong></p>
+
+        {{-- Thanh tiến trình --}}
+        <div class="progress-bar-wrapper">
+            <div class="progress-fill" style="width: {{ $percent }}%;"></div>
+
+            @foreach($ranks as $rank)
+                @php
+                    $left = ($rank->min_points_required / $maxPoints) * 100;
+                @endphp
+                <div class="rank-marker" style="left: {{ $left }}%;">
+                    <span>{{ $rank->name }}</span>
+                    <div class="dot"></div>
+                </div>
+            @endforeach
+        </div>
+
+        <p style="margin-top: 10px;">Điểm hiện tại: <strong>{{ number_format($currentPoints) }}</strong></p>
     </div>
-    <div class="card-body">
-        <p><strong>Hạng ID:</strong> {{ $rank->id }}</p>
-        <p><strong>Số điểm tối thiểu:</strong> {{ number_format($rank->min_points_required) }}</p>
-        <p><strong>Mô tả:</strong> {{ $rank->description ?? 'Không có mô tả' }}</p>
-    </div>
-    <div class="card-footer">
-        <small>Đạt hạng này khi tích đủ {{ number_format($rank->min_points_required) }} điểm</small>
-    </div>
-</div>
 </div>
 
 @include('client.footer.footer')
