@@ -259,5 +259,4 @@ public function voucher()
     return view('client.voucher', compact('vouchers', 'user'));
 }
 
-
 }

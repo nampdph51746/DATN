@@ -222,7 +222,8 @@
                 <a href="{{ route('movies.show', ['id' => $movie->id]) }}" class="text-decoration-none text-dark">
                     <div class="movie-card shadow-sm h-100">
                         <div class="position-relative">
-                            <img src="{{ $movie->image_path ? Storage::url($movie->image_path) : asset('client_assets/assets/images/default-movie.jpg') }}"
+                            <img                                             src="{{ $movie->image_path ? Storage::url($movie->image_path) : ($movie->poster_url ?? asset('client_assets/assets/images/default-movie.jpg')) }}"
+
                                 class="img-fluid rounded-top movie-poster"
                                 alt="{{ $movie->name }}">
                         </div>
