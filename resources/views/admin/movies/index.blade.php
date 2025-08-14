@@ -614,7 +614,6 @@
                                                     if ($movie->end_date && $movie->end_date < now()) {
                                                         $currentStatus = 'ended';
                                                     }
-                                                    
                                                     $disableReason = '';
                                                     if (!$canBeDeleted) {
                                                         if ($currentStatus === 'ended') {
@@ -774,6 +773,15 @@
                                                        data-bs-toggle="tooltip">
                                                         <i class="fas fa-edit"></i>
                                                     </a>
+                                                @endif
+                                                @if($movie->canBeEdited())
+                                                    <form action="{{ route('admin.movies.destroy', $movie->id) }}" method="POST" style="display:inline;">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Bạn có chắc muốn xóa phim này?')">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    </form>
                                                 @endif
                                             </div>
                                         </td>

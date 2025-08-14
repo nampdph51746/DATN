@@ -196,7 +196,7 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
             Route::post('/scan-ticket', [QrCodeController::class, 'scanTicketByCode'])->name('qr.scanTicket');
         });
         // Route in vé riêng theo ticket_code
-        // Route::get('/tickets/{ticket_code}/print', [TicketPrintController::class, 'printTicket'])->name('tickets.print');
+        Route::get('admin/tickets/{ticket_code}/print', [TicketPrintController::class, 'printTicket'])->name('admin.tickets.print');
         // Route in chung đồ ăn, đồ uống theo booking_code
         Route::get('admin/bookings/{booking_code}/print', [BookingController::class, 'print'])->name('bookings.print');
         // Trang quét QR code cho nhân viên
@@ -293,7 +293,7 @@ Route::get('admin/tickets', [TicketController::class, 'index'])->name('tickets.i
 Route::get('admin/tickets/{id}', [TicketController::class, 'show'])->name('tickets.show');
 Route::resource('admin/tickets', TicketController::class)->names('admin.tickets');
 
-Route::get('admin/promotions/trashed', [PromotionController::class, 'trashed'])->name('promotions.trashed');
+Route::get('admin/promotions/trashed', [PromotionController::class, 'trashed'])->name('admin.promotions.trashed');
 Route::post('admin/promotions/restore/{id}', [PromotionController::class, 'restore'])->name('promotions.restore');
 Route::delete('admin/promotions/force-delete/{id}', [PromotionController::class, 'forceDelete'])->name('promotions.forceDelete');
 Route::resource('admin/promotions', PromotionController::class)->names('admin.promotions');
