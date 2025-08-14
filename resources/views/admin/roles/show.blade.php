@@ -192,7 +192,7 @@
                                             <small class="text-muted d-block">{{ $user->created_at->diffForHumans() }}</small>
                                         </td>
                                         <td class="px-3 py-3 text-center">
-                                            <a href="{{ route('admin.users.show', $user->id) }}" 
+                                            <a href="{{ route('users.show', $user->id) }}" 
                                                class="btn btn-sm rounded-3 view-btn"
                                                title="Xem chi tiết" data-bs-toggle="tooltip">
                                                 <i class="fas fa-eye"></i>

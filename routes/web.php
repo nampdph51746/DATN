@@ -284,7 +284,9 @@ Route::prefix('admin/age-limits')->name('admin.age_limits.')->middleware(['auth'
 });
 
 // ===== USERS =====
-Route::resource('admin/users', UserController::class)->middleware(['auth', 'role:admin,staff']);
+Route::resource('users', UserController::class)->names([
+    'show' => 'users.show',
+]);
 
 // ===== CUSTOMER RANKS =====
 Route::prefix('admin/customers-rank')->name('customers-rank.')->middleware(['auth', 'role:admin,staff'])->group(function () {
