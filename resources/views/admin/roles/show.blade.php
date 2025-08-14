@@ -225,13 +225,13 @@
                     Quay lại
                 </a>
                 @can('edit role')
-                    <a href="{{ route('admin.roles.edit', $role->id) }}" class="btn btn-warning btn-lg rounded-pill me-3">
+                    <a href="{{ route('roles.edit', $role->id) }}" class="btn btn-warning btn-lg rounded-pill me-3">
                         <i class="fas fa-edit me-2"></i>
                         Chỉnh sửa
                     </a>
                 @endcan
                 @can('delete role')
-                    <form action="{{ route('admin.roles.destroy', $role->id) }}" method="POST" class="d-inline"
+                    <form action="{{ route('admin/roles.destroy', $role->id) }}" method="POST" class="d-inline"
                           onsubmit="return confirm('Bạn có chắc muốn xóa vai trò này?');">
                         @csrf
                         @method('DELETE')

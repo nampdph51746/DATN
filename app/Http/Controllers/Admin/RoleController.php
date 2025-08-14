@@ -60,7 +60,15 @@ class RoleController extends Controller
         // Mảng tên quyền để đánh dấu checkbox
         $rolePermissions = $role->permissions->pluck('name')->toArray();
 
-        return view('admin.roles.edit', compact('role', 'permissions', 'rolePermissions'));
+        // Nhóm quyền theo tiền tố (group)
+        $groupedPermissions = [];
+        foreach ($permissions as $permission) {
+            $parts = explode('.', $permission->name);
+            $group = $parts[0] ?? 'Khác';
+            $groupedPermissions[$group][] = $permission;
+        }
+
+        return view('admin.roles.edit', compact('role', 'permissions', 'rolePermissions', 'groupedPermissions'));
     }
 
 
