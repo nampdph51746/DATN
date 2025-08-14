@@ -66,7 +66,13 @@
                                     <i class="bx bx-user-circle text-primary fs-20"></i>
                                     <span class="fw-semibold text-dark">Đạo diễn</span>
                                 </div>
-                                <p class="text-muted mb-0 ps-4">{{ $movie->director?->name ?? 'N/A' }}</p>
+                                @if($movie->directors && $movie->directors->isNotEmpty())
+                                    <p class="text-muted mb-0 ps-4">
+                                        {{ $movie->directors->pluck('name')->join(', ') }}
+                                    </p>
+                                @else
+                                    <p class="text-muted mb-0 ps-4">N/A</p>
+                                @endif
                             </div>
                         </div>
                         <div class="col-md-6">

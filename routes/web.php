@@ -137,7 +137,7 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
         Route::resource('room-types', RoomTypeController::class)->except(['destroy']);
 
         // ===== SHOWTIMES =====
-        Route::delete('showtimes/{id}/deactivate', [ShowtimeController::class, 'deactivate'])->name('showtimes.deactivate');
+        Route::post('showtimes/store-auto', [ShowtimeController::class, 'storeAuto'])->name('showtimes.storeAuto');
         Route::post('showtimes', [ShowtimeController::class, 'storeAuto'])->name('showtimes.storeAuto');
         Route::post('showtimes/update-statuses', [ShowtimeController::class, 'updateStatuses'])->name('showtimes.updateStatuses');
         Route::post('showtimes/{id}/update-status', [ShowtimeController::class, 'updateSingleStatus'])->name('showtimes.updateSingleStatus');

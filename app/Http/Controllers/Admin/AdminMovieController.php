@@ -387,8 +387,9 @@ class AdminMovieController extends Controller
 
         return redirect()->route('admin.movies.index')->with('success', 'Xóa phim thành công!');
     }
-    public function show(Request $request, Movie $movie)
+    public function show(Request $request, $id)
     {
+        $movie = Movie::findOrFail($id);
         $movie = $movie->load(['genres', 'ageLimit', 'country', 'directors', 'actors']); // Sửa 'director' thành 'directors'
 
         // Lấy thông tin tìm kiếm/lọc suất chiếu

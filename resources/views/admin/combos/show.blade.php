@@ -3,19 +3,7 @@
 @section('content')
 <div class="container-fluid px-4 py-4">
     @include('admin.partials.notifications')
-
-    <!-- Simple Header -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="simple-header text-center py-4">
-                <h1 class="display-6 fw-bold text-orange mb-0">
-                    <i class="fas fa-eye me-3"></i>
-                    Chi tiết combo
-                </h1>
-            </div>
-        </div>
-    </div>
-
+    
     <div class="row g-4">
         <!-- Combo Preview Card -->
         <div class="col-xl-4 col-lg-5">
