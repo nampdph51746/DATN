@@ -1,4 +1,4 @@
-@if (isset($userRank) && isset($userRank->discount_percentage))
+    @if (isset($userRank) && isset($userRank->discount_percentage))
         <script>
             window.userRankDiscountPercentage = {{ (float) $userRank->discount_percentage }};
         </script>
@@ -805,7 +805,8 @@
         .promotion-code-input:focus {
             border-color: #e5006e;
             background: #222;
-            box-shadow: 0 0 12px rgba(34, 197, 94, 0.3);
+            box-shadow: 0 0 12px rgba(229, 0, 110, 0.3);
+            transform: translateY(-1px);
         }
 
         .promotion-code-input:hover {
@@ -1599,7 +1600,7 @@
             if (number === null || number === undefined || isNaN(number)) {
                 return "0";
             }
-            return number.toString().replace(/\B(?=(\d{3})+(?!\))/g, ",");
+            return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
         }
 
         // Hàm định dạng ngày
@@ -2434,6 +2435,12 @@
                             discountDisplayEl.textContent = `${numberFormat(maxDiscount)} ₫`;
                         }
 
+                        updateOrderSummary();
+                        if (promotionFeedback) {
+                            promotionFeedback.innerHTML = successMessage;
+                            promotionFeedback.className = 'promotion-feedback success';
+                        }
+
                         // Lock input sau khi áp dụng thành công
                         const promotionCodeInput = document.getElementById('promotion-code-input');
                         const resetPromotionBtn = document.getElementById('reset-promotion-btn');
@@ -2544,81 +2551,74 @@
                 });
         }
 
-        // Hàm khởi tạo nút đổi điểm riêng
-        function initApplyPointsButton() {
-            console.log('Initializing apply points button...');
-            const applyPointsBtn = document.getElementById('apply-points-btn');
-            console.log('Apply points button element:', applyPointsBtn);
-
-            if (!applyPointsBtn) {
-                console.error('Apply points button not found!');
-                return;
+        // Hàm áp dụng mã giảm giá thủ công
+        function initPromotionButtons() {
+            const applyPromotionBtn = document.getElementById('apply-promotion-btn');
+            if (applyPromotionBtn) {
+                applyPromotionBtn.onclick = function() {
+                    applyPromotion();
+                };
+                // Apply CSS classes
+                applyPromotionBtn.className = 'promotion-btn promotion-apply-btn';
+                console.log('Apply promotion button initialized');
             }
 
-            applyPointsBtn.onclick = function() {
-                console.log('Apply points button clicked!');
-                applyPointsBtn.disabled = true;
+            // Hàm reset mã giảm giá để cho phép nhập mã mới
+            const resetPromotionBtn = document.getElementById('reset-promotion-btn');
+            if (resetPromotionBtn) {
+                // Apply CSS class
+                resetPromotionBtn.className = 'promotion-btn promotion-reset-btn';
+                resetPromotionBtn.onclick = function() {
+                    console.log('Reset promotion button clicked');
 
-                const pointsInputEl = document.getElementById('points-input');
-                console.log('Points input element:', pointsInputEl);
+                    // Reset discount từ promotion, giữ lại points
+                    promotionDiscount = 0;
+                    promotionId = null;
+                    discount = pointsDiscount; // Chỉ giữ lại discount từ điểm
 
-                if (!pointsInputEl) {
-                    console.error('Points input not found!');
-                    applyPointsBtn.disabled = false;
-                    return;
-                }
+                    // Safely update discount display elements
+                    const voucherDiscountLine = document.getElementById('voucher-discount-line');
+                    const discountDisplay = document.getElementById('discountDisplay');
 
-                const points = parseInt(pointsInputEl.value) || 0;
-                const availablePointsEl = document.getElementById('available-points');
-                let availablePoints = parseInt(availablePointsEl.textContent) || 0;
-                const subtotalEl = document.getElementById('subtotalDisplay');
-                const subtotal = parseInt(subtotalEl.textContent.replace(/[^\d]/g, '')) || 0;
-                const currentDiscount = promotionDiscount + pointsDiscount; // Tổng giảm giá hiện tại
+                    if (voucherDiscountLine) {
+                        voucherDiscountLine.textContent = '0 ₫';
+                        console.log('Reset voucher-discount-line');
+                    } else {
+                        console.warn('voucher-discount-line element not found');
+                    }
 
-                console.log('Applying points:', {
-                    points: points,
-                    subtotal: subtotal,
-                    promotionDiscount: promotionDiscount,
-                    pointsDiscount: pointsDiscount,
-                    currentTotalDiscount: currentDiscount,
-                    availablePoints: availablePoints,
-                    pointsInputValue: pointsInputEl.value,
-                    subtotalText: subtotalEl.textContent
-                });
+                    if (discountDisplay) {
+                        discountDisplay.textContent = numberFormat(discount) + ' ₫';
+                        console.log('Reset discountDisplay');
+                    } else {
+                        console.warn('discountDisplay element not found');
+                    }
 
-                if (points <= 0) {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Số điểm không hợp lệ',
-                        text: 'Vui lòng nhập số điểm hợp lệ (lớn hơn 0).',
-                        confirmButtonText: 'Đóng',
-                    });
-                    applyPointsBtn.disabled = false;
-                    return;
-                }
+                    // Unlock input
+                    const promotionCodeInput = document.getElementById('promotion-code-input');
+                    if (promotionCodeInput) {
+                        promotionCodeInput.readOnly = false;
+                        promotionCodeInput.classList.remove('applied');
+                        promotionCodeInput.style.background = '#1a1a1a';
+                        promotionCodeInput.style.borderColor = '#444';
+                        promotionCodeInput.style.color = '#fff';
+                        promotionCodeInput.style.fontWeight = '500';
+                        promotionCodeInput.style.boxShadow = 'none';
+                        promotionCodeInput.value = '';
+                        promotionCodeInput.placeholder = 'Nhập mã giảm giá';
+                        setTimeout(() => {
+                            promotionCodeInput.focus();
+                        }, 100);
+                        console.log('Unlocked promotion code input');
+                    } else {
+                        console.warn('promotion-code-input element not found');
+                    }
 
-                if (points > availablePoints || isNaN(availablePoints)) {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Không đủ điểm',
-                        text: `Bạn chỉ có ${availablePoints} điểm khả dụng.`,
-                        confirmButtonText: 'Đóng',
-                    });
-                    applyPointsBtn.disabled = false;
-                    return;
-                }
-
-                // Kiểm tra giới hạn 30% phía frontend
-                const pointDiscount = points * 1000;
-                // Lấy phần trăm giảm giá tối đa theo hạng từ biến PHP (nếu có), mặc định 30
-                let maxDiscountPercent = 30;
-                if (typeof window.userRankDiscountPercentage !== 'undefined' && !isNaN(window
-                        .userRankDiscountPercentage)) {
-                    maxDiscountPercent = window.userRankDiscountPercentage;
-                }
-                const maxTotalDiscount = subtotal * (maxDiscountPercent / 100);
-                const totalDiscount = promotionDiscount + pointDiscount;
-
+                    // Hiển thị lại nút áp dụng và ẩn nút đổi mã
+                    const applyPromotionBtn = document.getElementById('apply-promotion-btn');
+                    if (applyPromotionBtn) {
+                        applyPromotionBtn.style.display = 'block';
+                        applyPromotionBtn.disabled = false;
                         applyPromotionBtn.className = 'promotion-btn promotion-apply-btn';
                         console.log('Showed apply promotion button');
                     }
