@@ -662,17 +662,15 @@
                                         </td>
                                         <td>
                                             <div class="d-flex align-items-center flex-wrap gap-1">
-                                                @if($movie->directors->isNotEmpty())
-                                                    @foreach($movie->directors as $director)
-                                                        <span class="badge bg-primary-subtle text-primary rounded-pill">{{ $director->name }}</span>
-                                                    @endforeach
+                                                @if($movie->director)
+                                                    <span class="badge bg-primary-subtle text-primary rounded-pill">{{ $movie->director->name }}</span>
                                                 @else
                                                     <span class="text-muted">N/A</span>
                                                 @endif
                                             </div>
                                         </td>
                                         <td>
-                                            @if($movie->actors->isNotEmpty())
+                                            @if($movie->actors && $movie->actors->isNotEmpty())
                                                 <div class="d-flex flex-wrap gap-1">
                                                     @foreach($movie->actors->take(2) as $actor)
                                                         <span class="badge bg-primary-subtle text-primary rounded-pill">{{ $actor->name }}</span>
@@ -689,7 +687,7 @@
                                             @endif
                                         </td>
                                         <td>
-                                            @if($movie->genres->isNotEmpty())
+                                            @if($movie->genres && $movie->genres->isNotEmpty())
                                                 <div class="d-flex flex-wrap gap-1">
                                                     @foreach($movie->genres->take(2) as $genre)
                                                         <span class="badge bg-info-subtle text-info rounded-pill">{{ $genre->name }}</span>

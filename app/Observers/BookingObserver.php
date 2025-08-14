@@ -12,10 +12,9 @@ class BookingObserver
      */
     public function updated(Booking $booking)
     {
-        // Chỉ kiểm tra khi booking chuyển sang confirmed
-        if ($booking->status === BookingStatus::Confirmed) {
+        // Chỉ kiểm tra khi booking chuyển sang confirmed (bất kỳ loại nào)
+        if (in_array($booking->status, [BookingStatus::ConfirmedNotPrinted, BookingStatus::ConfirmedPrinted])) {
             if ($booking->user) {
-                \Log::info("BookingObserver: Booking {$booking->id} confirmed, checking rank for user {$booking->user_id}");
                 $booking->user->updateRankByTotalSpent();
             }
         }
@@ -26,8 +25,7 @@ class BookingObserver
      */
     public function created(Booking $booking)
     {
-        if ($booking->status === BookingStatus::Confirmed && $booking->user) {
-            \Log::info("BookingObserver: Booking {$booking->id} created with confirmed status, checking rank for user {$booking->user_id}");
+        if (in_array($booking->status, [BookingStatus::ConfirmedNotPrinted, BookingStatus::ConfirmedPrinted]) && $booking->user) {
             $booking->user->updateRankByTotalSpent();
         }
     }

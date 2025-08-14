@@ -141,12 +141,26 @@
                         <div class="col-lg-3 col-md-6">
                             <div class="filter-group">
                                 <label class="filter-label">
+                                    <i class="bi bi-bookmark me-2"></i> Trạng thái đơn hàng
+                                </label>
+                                <select name="status" class="filter-select">
+                                    <option value="">-- Tất cả --</option>
+                                    <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Chờ xác nhận</option>
+                                    <option value="confirmed_not_printed" {{ request('status') == 'confirmed_not_printed' ? 'selected' : '' }}>Thành công - Chưa in vé</option>
+                                    <option value="confirmed_printed" {{ request('status') == 'confirmed_printed' ? 'selected' : '' }}>Thành công - Đã in vé</option>
+                                    <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>Đã hủy</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-lg-2 col-md-6">
+                            <div class="filter-group">
+                                <label class="filter-label">
                                     <i class="bi bi-calendar-date me-2"></i> Ngày đặt
                                 </label>
                                 <input type="date" name="date" value="{{ request('date') }}" class="filter-select">
                             </div>
                         </div>
-                        <div class="col-lg-2 col-md-6">
+                        <div class="col-lg-1 col-md-6">
                             <div class="d-flex gap-2 flex-wrap">
                                 <button type="submit" class="btn btn-blue rounded-pill px-4 shadow-sm">
                                     <i class="bi bi-search me-2"></i> Tìm
@@ -176,17 +190,27 @@
                                 <span class="code-text">#{{ $booking->booking_code }}</span>
                             </div>
                             <div class="booking-status">
-                                @if($booking->payment_status == 'paid')
-                                    <span class="status-badge status-paid">
-                                        <i class="bi bi-check-circle-fill me-1"></i> Đã thanh toán
+                                
+                                
+                                <!-- Booking Status -->
+                                @php
+                                    $bookingStatus = is_object($booking->status) ? $booking->status->value : (string) $booking->status;
+                                @endphp
+                                @if($bookingStatus == 'pending')
+                                    <span class="status-badge status-booking-pending">
+                                        <i class="bi bi-hourglass-split me-1"></i> Chờ xác nhận
                                     </span>
-                                @elseif($booking->payment_status == 'pending')
-                                    <span class="status-badge status-pending">
-                                        <i class="bi bi-clock-fill me-1"></i> Chờ thanh toán
+                                @elseif($bookingStatus == 'confirmed_not_printed')
+                                    <span class="status-badge status-booking-confirmed">
+                                        <i class="bi bi-check-circle me-1"></i> Chưa in vé
                                     </span>
-                                @else
-                                    <span class="status-badge status-failed">
-                                        <i class="bi bi-x-circle-fill me-1"></i> Thất bại
+                                @elseif($bookingStatus == 'confirmed_printed')
+                                    <span class="status-badge status-booking-printed">
+                                        <i class="bi bi-printer me-1"></i> Đã in vé
+                                    </span>
+                                @elseif($bookingStatus == 'cancelled')
+                                    <span class="status-badge status-booking-cancelled">
+                                        <i class="bi bi-x-circle me-1"></i> Đã hủy
                                     </span>
                                 @endif
                             </div>
@@ -276,11 +300,6 @@
                                class="btn btn-outline-blue btn-sm rounded-pill shadow-sm" 
                                title="Xem chi tiết" data-bs-toggle="tooltip">
                                 <i class="bi bi-eye-fill"></i>
-                            </a>
-                            <a href="{{ route('admin.bookings.edit', $booking->id) }}" 
-                               class="btn btn-outline-warning btn-sm rounded-pill shadow-sm" 
-                               title="Chỉnh sửa" data-bs-toggle="tooltip">
-                                <i class="bi bi-pencil-square"></i>
                             </a>
                             <a href="{{ route('admin.bookings.print', $booking->id) }}" 
                                class="btn btn-outline-success btn-sm rounded-pill shadow-sm" 
@@ -587,6 +606,31 @@
 }
 
 .status-failed {
+    background: rgba(239, 68, 68, 0.1);
+    color: #EF4444;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+/* Booking Status Badges */
+.status-booking-pending {
+    background: rgba(156, 163, 175, 0.1);
+    color: #6B7280;
+    border: 1px solid rgba(156, 163, 175, 0.2);
+}
+
+.status-booking-confirmed {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3B82F6;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.status-booking-printed {
+    background: rgba(34, 197, 94, 0.1);
+    color: #22C55E;
+    border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.status-booking-cancelled {
     background: rgba(239, 68, 68, 0.1);
     color: #EF4444;
     border: 1px solid rgba(239, 68, 68, 0.2);

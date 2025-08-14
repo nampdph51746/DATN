@@ -31,7 +31,7 @@ class MovieController extends Controller
         $endDate = $request->input('end_date');
 
         $movies = Movie::query()
-            ->with(['country', 'ageLimit', 'genres'])
+            ->with(['country', 'ageLimit', 'genres', 'director', 'actors'])
             ->when($query, function ($queryBuilder, $query) {
                 return $queryBuilder->where('name', 'like', "%{$query}%")
                     ->orWhere('director', 'like', "%{$query}%")

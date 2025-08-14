@@ -142,13 +142,13 @@
                                                 required>
                                             <option value="">-- Chọn trạng thái mới --</option>
                                             <option value="pending" {{ old('status', $currentStatus) === 'pending' ? 'selected' : '' }}>
-                                                Đang chờ xử lý
+                                                Chờ xác nhận
                                             </option>
-                                            <option value="confirmed" {{ old('status', $currentStatus) === 'confirmed' ? 'selected' : '' }}>
-                                                Đã xác nhận
+                                            <option value="confirmed_not_printed" {{ old('status', $currentStatus) === 'confirmed_not_printed' ? 'selected' : '' }}>
+                                                Thành công - Chưa in vé
                                             </option>
-                                            <option value="completed" {{ old('status', $currentStatus) === 'completed' ? 'selected' : '' }}>
-                                                Hoàn thành
+                                            <option value="confirmed_printed" {{ old('status', $currentStatus) === 'confirmed_printed' ? 'selected' : '' }}>
+                                                Thành công - Đã in vé
                                             </option>
                                             <option value="cancelled" {{ old('status', $currentStatus) === 'cancelled' ? 'selected' : '' }}>
                                                 Đã hủy
@@ -199,8 +199,8 @@
                                         <i class="bi bi-clock"></i>
                                     </div>
                                     <div class="guideline-content">
-                                        <div class="guideline-status">Đang chờ xử lý</div>
-                                        <div class="guideline-description">Đơn vừa được tạo, chờ xác nhận thanh toán</div>
+                                        <div class="guideline-status">Chờ xác nhận</div>
+                                        <div class="guideline-description">Đơn hàng mới tạo, chờ xử lý</div>
                                     </div>
                                 </div>
                                 
@@ -209,18 +209,18 @@
                                         <i class="bi bi-check-circle"></i>
                                     </div>
                                     <div class="guideline-content">
-                                        <div class="guideline-status">Đã xác nhận</div>
-                                        <div class="guideline-description">Đã xác nhận thanh toán và thông tin đặt vé</div>
+                                        <div class="guideline-status">Thành công - Chưa in vé</div>
+                                        <div class="guideline-description">Đơn hàng đã thanh toán, có thể in vé</div>
                                     </div>
                                 </div>
                                 
                                 <div class="guideline-item">
                                     <div class="guideline-icon completed">
-                                        <i class="bi bi-flag-fill"></i>
+                                        <i class="bi bi-printer"></i>
                                     </div>
                                     <div class="guideline-content">
-                                        <div class="guideline-status">Hoàn thành</div>
-                                        <div class="guideline-description">Khách hàng đã sử dụng vé và hoàn tất giao dịch</div>
+                                        <div class="guideline-status">Thành công - Đã in vé</div>
+                                        <div class="guideline-description">Vé đã được in, sẵn sàng sử dụng</div>
                                     </div>
                                 </div>
                                 
@@ -230,7 +230,7 @@
                                     </div>
                                     <div class="guideline-content">
                                         <div class="guideline-status">Đã hủy</div>
-                                        <div class="guideline-description">Đơn đặt vé bị hủy bỏ vì lý do nào đó</div>
+                                        <div class="guideline-description">Đơn hàng bị hủy bỏ</div>
                                     </div>
                                 </div>
                             </div>

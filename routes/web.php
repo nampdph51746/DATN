@@ -73,19 +73,6 @@ Route::get('/payment-failed', function () {
     return 'Thanh toán thất bại!';
 })->name('client.failed');
 
-// Route::middleware('guest')->group(function () {
-//     Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])
-//         ->name('password.request');
-
-//     Route::post('forgot-password', [PasswordResetLinkController::class, 'store'])
-//         ->name('password.email');
-
-//     Route::get('reset-password/{token}', [NewPasswordController::class, 'create'])
-//         ->name('password.reset');
-
-//     Route::put('reset-password', [NewPasswordController::class, 'store'])
-//         ->name('password.reset.submit');
-// });
 
 Route::post('/apply-promotion', [App\Http\Controllers\Client\HomeController::class, 'applyDiscountCode'])->name('client.applyPromotion');
 
@@ -97,9 +84,7 @@ Route::get('/user-points', [App\Http\Controllers\Client\HomeController::class, '
 Route::get('/user-point-history', [App\Http\Controllers\Client\HomeController::class, 'getUserPointHistory'])->name('client.getUserPointHistory');
 
 
-// Route::get('/dashboard', function () {
-//     return view('dashboard');
-// })->middleware(['auth', 'verified'])->name('dashboard');
+
 Route::middleware('auth')->group(function () {
     Route::get('my-bookings', [BookingController::class, 'myBookings'])->name('client.bookings.index');
     Route::get('my-bookings/show/{id}', [BookingController::class, 'myBookingsShow'])->name('client.bookings.show');

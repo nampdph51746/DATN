@@ -8,12 +8,15 @@ use App\Enums\BookingStatus;
 use App\Models\Notification;
 use App\Models\PointHistory;
 use Illuminate\Http\Request;
+use App\Enums\PointReasonType;
 use App\Enums\NotificationType;
 use App\Services\QrcodeService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+
 
 class BookingController extends Controller
 {
@@ -103,7 +106,12 @@ class BookingController extends Controller
     public function updateStatus(Request $request, $id)
     {
         $request->validate([
-            'status' => ['required', Rule::in([BookingStatus::Pending->value, BookingStatus::Confirmed->value, BookingStatus::Cancelled->value])],
+            'status' => ['required', Rule::in([
+                BookingStatus::Pending->value, 
+                BookingStatus::ConfirmedNotPrinted->value, 
+                BookingStatus::ConfirmedPrinted->value, 
+                BookingStatus::Cancelled->value
+            ])],
         ]);
 
         $booking = Booking::findOrFail($id);
@@ -129,7 +137,10 @@ class BookingController extends Controller
             ]),
         ]);
 
-        if ($oldStatus === BookingStatus::Pending->value && $booking->status->value === BookingStatus::Confirmed->value) {
+        // Cập nhật logic cộng điểm - chỉ cộng khi chuyển từ pending sang confirmed (bất kỳ loại nào)
+        if ($oldStatus === BookingStatus::Pending->value && 
+            in_array($booking->status->value, [BookingStatus::ConfirmedNotPrinted->value, BookingStatus::ConfirmedPrinted->value])) {
+            
             $user = $booking->user;
             if (!$user) {
                 return redirect()->route('admin.bookings.index')->with('error', 'Không tìm thấy người dùng.');
@@ -141,7 +152,7 @@ class BookingController extends Controller
                 try {
                     $point = Point::firstOrCreate(
                         ['user_id' => $user->id],
-                        ['points_expiry_date' => now()->addYear(), 'created_at' => now(), 'updated_at' => now()]
+                        ['total_points' => 0]
                     );
                     $point->total_points = ($point->total_points ?? 0) + $pointsToAdd;
                     $point->save();
@@ -150,13 +161,13 @@ class BookingController extends Controller
                         'user_id' => $user->id,
                         'booking_id' => $booking->id,
                         'points_change' => $pointsToAdd,
-                        'reason_type' => 'earned',
-                        'description' => 'Cộng điểm cho đơn hàng #' . $booking->id,
+                        'reason_type' => PointReasonType::Earned,
+                        'description' => "Cộng điểm cho đơn hàng #{$booking->booking_code}",
                         'created_at' => now(),
                     ]);
 
                 } catch (\Exception $e) {
-                    return redirect()->route('admin.bookings.index')->with('error', 'Lỗi khi cộng điểm thưởng: ' . $e->getMessage());
+                    Log::error("Error adding points for booking {$booking->id}: " . $e->getMessage());
                 }
             }
         }
@@ -191,9 +202,15 @@ class BookingController extends Controller
         // QR code cho food/drink chung
         $foodDrinksQRCode = null;
         if ($foodDrinks && $foodDrinks->count() > 0) {
-            $qrText =  json_encode($foodDrinks->toArray());
+            $qrText = json_encode($foodDrinks->toArray());
             $qrCodeRaw = $qrService->generateQrCode($qrText, 120);
             $foodDrinksQRCode = $qrCodeRaw ? 'data:image/png;base64,' . $qrCodeRaw : null;
+        }
+
+        // Cập nhật trạng thái booking thành "đã in vé" sau khi in thành công
+        if ($booking->status === BookingStatus::ConfirmedNotPrinted) {
+            $booking->status = BookingStatus::ConfirmedPrinted;
+            $booking->save();
         }
 
         $pdf = PDF::loadView('admin.bookings.print', [
@@ -220,15 +237,15 @@ class BookingController extends Controller
             $showtimeStart = $showtime->start_time;
             
             // Kiểm tra nếu suất chiếu đã bắt đầu
-            // if ($currentTime >= $showtimeStart) {
-            //     abort(403, 'Không thể in vé sau khi suất chiếu đã bắt đầu. Suất chiếu: ' . $showtimeStart->format('d/m/Y H:i'));
-            // }
+            if ($currentTime >= $showtimeStart) {
+                abort(403, 'Không thể in vé sau khi suất chiếu đã bắt đầu. Suất chiếu: ' . $showtimeStart->format('d/m/Y H:i'));
+            }
             
-            // // Kiểm tra nếu còn ít hơn 1 tiếng trước suất chiếu
-            // $oneHourBeforeShowtime = $showtimeStart->copy()->subHour();
-            // if ($currentTime > $oneHourBeforeShowtime) {
-            //     abort(403, 'Vé chỉ có thể in trước suất chiếu ít nhất 1 tiếng. Suất chiếu: ' . $showtimeStart->format('d/m/Y H:i'));
-            // }
+            // Kiểm tra nếu còn ít hơn 1 tiếng trước suất chiếu
+            $oneHourBeforeShowtime = $showtimeStart->copy()->subHour();
+            if ($currentTime > $oneHourBeforeShowtime) {
+                abort(403, 'Vé chỉ có thể in trước suất chiếu ít nhất 1 tiếng. Suất chiếu: ' . $showtimeStart->format('d/m/Y H:i'));
+            }
         }
     }
 }

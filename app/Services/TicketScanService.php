@@ -32,8 +32,8 @@ class TicketScanService
                 ];
             }
 
-            // Kiểm tra trạng thái booking
-            if ($booking->status !== BookingStatus::Confirmed) {
+            // Kiểm tra trạng thái booking - chấp nhận cả 2 loại confirmed
+            if (!in_array($booking->status, [BookingStatus::ConfirmedNotPrinted, BookingStatus::ConfirmedPrinted])) {
                 return [
                     'success' => false,
                     'message' => 'Đơn hàng chưa được xác nhận hoặc đã bị hủy'
@@ -208,8 +208,8 @@ class TicketScanService
                 ];
             }
 
-            // Kiểm tra trạng thái booking
-            if ($ticket->booking->status !== BookingStatus::Confirmed) {
+            // Kiểm tra trạng thái booking - chấp nhận cả 2 loại confirmed
+            if (!in_array($ticket->booking->status, [BookingStatus::ConfirmedNotPrinted, BookingStatus::ConfirmedPrinted])) {
                 return [
                     'success' => false,
                     'message' => 'Đơn hàng chưa được xác nhận hoặc đã bị hủy'

@@ -52,7 +52,20 @@
                             @endif
                             <span class="status-badge status-{{ is_object($booking->status) ? $booking->status->value : (string) $booking->status }}">
                                 <i class="bi bi-bookmark"></i>
-                                {{ ucfirst(is_object($booking->status) ? $booking->status->value : (string) $booking->status) }}
+                                @php
+                                    $statusValue = is_object($booking->status) ? $booking->status->value : (string) $booking->status;
+                                @endphp
+                                @if($statusValue == 'pending')
+                                    Chờ xác nhận
+                                @elseif($statusValue == 'confirmed_not_printed')
+                                    Thành công - Chưa in vé
+                                @elseif($statusValue == 'confirmed_printed')
+                                    Thành công - Đã in vé
+                                @elseif($statusValue == 'cancelled')
+                                    Đã hủy
+                                @else
+                                    {{ ucfirst($statusValue) }}
+                                @endif
                             </span>
                         </div>
                     </div>
@@ -152,8 +165,8 @@
                         $steps = [
                             ['label' => 'Đặt vé', 'icon' => 'bi-cart-plus', 'status' => 'completed'],
                             ['label' => 'Thanh toán', 'icon' => 'bi-credit-card', 'status' => $paymentCompleted ? 'completed' : ($statusValue === 'pending' ? 'pending' : 'completed')],
-                            ['label' => 'Xác nhận', 'icon' => 'bi-check-circle', 'status' => $statusValue === 'confirmed' ? 'completed' : ($statusValue === 'pending' ? 'pending' : 'completed')],
-                            ['label' => 'Hoàn tất', 'icon' => 'bi-flag-fill', 'status' => $statusValue === 'completed' ? 'completed' : 'pending']
+                            ['label' => 'Xác nhận', 'icon' => 'bi-check-circle', 'status' => in_array($statusValue, ['confirmed_not_printed', 'confirmed_printed']) ? 'completed' : ($statusValue === 'pending' ? 'pending' : 'completed')],
+                            ['label' => 'In vé', 'icon' => 'bi-printer', 'status' => $statusValue === 'confirmed_printed' ? 'completed' : 'pending']
                         ];
                     @endphp
                     
@@ -575,6 +588,24 @@
     background: rgba(34, 197, 94, 0.1);
     color: #22c55e;
     border-color: rgba(34, 197, 94, 0.2);
+}
+
+.status-confirmed_not_printed {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+    border-color: rgba(59, 130, 246, 0.2);
+}
+
+.status-confirmed_printed {
+    background: rgba(34, 197, 94, 0.1);
+    color: #22c55e;
+    border-color: rgba(34, 197, 94, 0.2);
+}
+
+.status-cancelled {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border-color: rgba(239, 68, 68, 0.2);
 }
 
 .summary-body {
