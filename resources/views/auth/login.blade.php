@@ -346,4 +346,5 @@
         });
     });
 </script>
+@include('client.footer.footer')
 @endsection

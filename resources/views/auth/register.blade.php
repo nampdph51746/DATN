@@ -6,6 +6,7 @@
     .register-container {
         display: flex;
         flex-direction: column;
+        margin-top: 100px;
         min-height: 100vh;
         padding: 2rem;
         background: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%);
@@ -324,4 +325,6 @@
         });
     });
 </script>
+@include('client.footer.footer')
+
 @endsection
