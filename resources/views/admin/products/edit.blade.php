@@ -4,18 +4,6 @@
 <div class="container-fluid px-4 py-4">
     @include('admin.partials.notifications')
 
-    <!-- Simple Header -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="simple-header text-center py-4">
-                <h1 class="display-6 fw-bold text-orange mb-0">
-                    <i class="fas fa-edit me-3"></i>
-                    Chỉnh sửa
-                </h1>
-            </div>
-        </div>
-    </div>
-
     <!-- Rest of content remains the same -->
     <div class="row g-4">
         <!-- Product Preview Card -->
