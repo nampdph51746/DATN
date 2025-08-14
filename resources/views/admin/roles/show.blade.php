@@ -231,14 +231,10 @@
                     </a>
                 @endcan
                 @can('delete role')
-                    <form action="{{ route('admin/roles.destroy', $role->id) }}" method="POST" class="d-inline"
-                          onsubmit="return confirm('Bạn có chắc muốn xóa vai trò này?');">
+                    <form action="{{ route('roles.destroy', $role->id) }}" method="POST">
                         @csrf
                         @method('DELETE')
-                        <button type="submit" class="btn btn-danger btn-lg rounded-pill">
-                            <i class="fas fa-trash me-2"></i>
-                            Xóa vai trò
-                        </button>
+                        <button type="submit" class="btn btn-danger">Xóa</button>
                     </form>
                 @endcan
             </div>

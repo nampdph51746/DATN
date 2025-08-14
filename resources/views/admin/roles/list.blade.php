@@ -131,7 +131,7 @@
                                             </div>
                                             <div class="modal-footer">
                                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                                                <form action="{{ route('roles.softDelete', $role->id) }}" method="POST" style="display:inline;">
+                                                <form action="{{ route('roles.destroy', $role->id) }}" method="POST">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit" class="btn btn-danger">Xóa</button>
