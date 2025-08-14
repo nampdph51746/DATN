@@ -44,10 +44,6 @@
                     <div class="stats-content">
                         <h3 class="stats-number">{{ $bookings->total() }}</h3>
                         <p class="stats-label">Tổng đơn đặt</p>
-                        <div class="stats-trend">
-                            <i class="bi bi-arrow-up-circle-fill text-success"></i>
-                            <span class="text-success">+15%</span>
-                        </div>
                     </div>
                 </div>
                 <div class="stats-overlay"></div>
@@ -62,10 +58,6 @@
                     <div class="stats-content">
                         <h3 class="stats-number">{{ $bookings->where('payment_status', 'paid')->count() }}</h3>
                         <p class="stats-label">Đã thanh toán</p>
-                        <div class="stats-trend">
-                            <i class="bi bi-arrow-up-circle-fill text-success"></i>
-                            <span class="text-success">+8%</span>
-                        </div>
                     </div>
                 </div>
                 <div class="stats-overlay"></div>
@@ -81,8 +73,6 @@
                         <h3 class="stats-number">{{ $bookings->where('payment_status', 'pending')->count() }}</h3>
                         <p class="stats-label">Chờ thanh toán</p>
                         <div class="stats-trend">
-                            <i class="bi bi-dash-circle-fill text-warning"></i>
-                            <span class="text-warning">0%</span>
                         </div>
                     </div>
                 </div>
@@ -99,8 +89,6 @@
                         <h3 class="stats-number">{{ $bookings->where('payment_status', 'failed')->count() }}</h3>
                         <p class="stats-label">Thất bại</p>
                         <div class="stats-trend">
-                            <i class="bi bi-arrow-down-circle-fill text-danger"></i>
-                            <span class="text-danger">-5%</span>
                         </div>
                     </div>
                 </div>

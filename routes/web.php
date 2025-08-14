@@ -195,7 +195,7 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
             Route::post('/check-status', [QrCodeController::class, 'checkTicketStatus'])->name('qr.check');
             Route::post('/scan-ticket', [QrCodeController::class, 'scanTicketByCode'])->name('qr.scanTicket');
         });
-        // Route in vé riêng theo ticket_code
+        // Route in vé riêng theo ticket_code (sửa lại cho đúng)
         Route::get('admin/tickets/{ticket_code}/print', [TicketPrintController::class, 'printTicket'])->name('admin.tickets.print');
         // Route in chung đồ ăn, đồ uống theo booking_code
         Route::get('admin/bookings/{booking_code}/print', [BookingController::class, 'print'])->name('bookings.print');
@@ -281,7 +281,7 @@ Route::get('admin/bookings', [BookingController::class, 'index'])->name('admin.b
 Route::get('admin/bookingShow/{id}', [BookingController::class, 'show'])->name('admin.bookings.show');
 Route::get('admin/bookings/{booking}/edit-status', [BookingController::class, 'editStatus'])->name('admin.bookings.editStatus');
 Route::put('admin/bookings/{booking}/update-status', [BookingController::class, 'updateStatus'])->name('admin.bookings.updateStatus');
-
+Route::get('admin/bookings/{booking}/edit', [BookingController::class, 'edit'])->name('admin.bookings.edit');
 
 
 Route::get('admin/payments', [PaymentController::class, 'index'])->name('admin.payments.index');
