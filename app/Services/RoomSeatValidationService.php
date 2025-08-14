@@ -150,4 +150,136 @@ class RoomSeatValidationService
 
         return $configuration;
     }
+
+    /**
+     * Validate room capacity cho couple seats để tránh ghế lẻ
+     */
+    public function validateRoomCapacityForCoupleSeats(Room $room): array
+    {
+        $errors = [];
+        $suggestions = [];
+        
+        // Lấy các seat types được phép trong room
+        $allowedSeatTypes = $this->getAllowedSeatTypesForRoom($room);
+        
+        // Kiểm tra xem có couple seats không
+        $coupleSeats = $allowedSeatTypes->filter(function ($seatType) {
+            return $this->isCoupleSeats($seatType->name);
+        });
+        
+        if ($coupleSeats->isEmpty()) {
+            return ['errors' => $errors, 'suggestions' => $suggestions];
+        }
+        
+        // Lấy constraints cho couple seats
+        $coupleConstraints = [];
+        foreach ($coupleSeats as $seatType) {
+            $constraint = $this->getSeatTypeConstraints($room, $seatType->id);
+            if ($constraint) {
+                $coupleConstraints[] = [
+                    'seat_type' => $seatType,
+                    'constraint' => $constraint
+                ];
+            }
+        }
+        
+        if (empty($coupleConstraints)) {
+            return ['errors' => $errors, 'suggestions' => $suggestions];
+        }
+        
+        // Tính toán capacity tối ưu cho couple seats
+        $capacity = $room->capacity;
+        $optimalCapacities = $this->calculateOptimalCapacityForCoupleSeats($capacity, $coupleConstraints);
+        
+        // Kiểm tra xem capacity hiện tại có phù hợp không
+        if (!in_array($capacity, $optimalCapacities)) {
+            $errors[] = "Sức chứa phòng ({$capacity}) không phù hợp với ghế đôi theo constraints.";
+            
+            // Đề xuất capacity gần nhất
+            $nearestCapacities = $this->findNearestOptimalCapacities($capacity, $optimalCapacities);
+            if (!empty($nearestCapacities)) {
+                $suggestions[] = "Đề xuất capacity: " . implode(', ', array_slice($nearestCapacities, 0, 3));
+            }
+        }
+        
+        return ['errors' => $errors, 'suggestions' => $suggestions];
+    }
+    
+    /**
+     * Kiểm tra xem seat type có phải couple seats không
+     */
+    private function isCoupleSeats(string $seatTypeName): bool
+    {
+        $coupleKeywords = ['couple', 'đôi', 'bed', 'sofa'];
+        $lowerName = strtolower($seatTypeName);
+        
+        foreach ($coupleKeywords as $keyword) {
+            if (strpos($lowerName, $keyword) !== false) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Tính toán capacity tối ưu cho couple seats
+     */
+    private function calculateOptimalCapacityForCoupleSeats(int $baseCapacity, array $coupleConstraints): array
+    {
+        $optimalCapacities = [];
+        
+        // Dải capacity để kiểm tra (±10 từ base capacity)
+        $minCapacity = max(20, $baseCapacity - 10);
+        $maxCapacity = min(200, $baseCapacity + 10);
+        
+        for ($capacity = $minCapacity; $capacity <= $maxCapacity; $capacity++) {
+            $isOptimal = true;
+            
+            foreach ($coupleConstraints as $constraintData) {
+                $constraint = $constraintData['constraint'];
+                $seatType = $constraintData['seat_type'];
+                
+                // Tính số ghế couple theo percentage
+                $minPercentage = $constraint->min_percentage;
+                $maxPercentage = $constraint->max_percentage;
+                
+                $minCoupleSeats = ceil(($minPercentage / 100) * $capacity);
+                $maxCoupleSeats = floor(($maxPercentage / 100) * $capacity);
+                
+                // Couple seats phải là số chẵn
+                if ($minCoupleSeats % 2 !== 0) $minCoupleSeats++;
+                if ($maxCoupleSeats % 2 !== 0) $maxCoupleSeats--;
+                
+                // Kiểm tra xem có thể phân bổ được không
+                if ($minCoupleSeats > $maxCoupleSeats || $maxCoupleSeats <= 0) {
+                    $isOptimal = false;
+                    break;
+                }
+            }
+            
+            if ($isOptimal) {
+                $optimalCapacities[] = $capacity;
+            }
+        }
+        
+        return $optimalCapacities;
+    }
+    
+    /**
+     * Tìm capacity gần nhất với capacity hiện tại
+     */
+    private function findNearestOptimalCapacities(int $currentCapacity, array $optimalCapacities): array
+    {
+        if (empty($optimalCapacities)) {
+            return [];
+        }
+        
+        // Sắp xếp theo độ gần với capacity hiện tại
+        usort($optimalCapacities, function ($a, $b) use ($currentCapacity) {
+            return abs($a - $currentCapacity) - abs($b - $currentCapacity);
+        });
+        
+        return $optimalCapacities;
+    }
 }

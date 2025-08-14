@@ -6,10 +6,47 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Spatie\Permission\Traits\HasRoles;
+use Illuminate\Support\Facades\Log;
+
 
 class User extends Authenticatable
 {
+<<<<<<< Updated upstream
     use HasFactory, HasRoles, Notifiable;
+=======
+    use HasFactory, HasRoles;
+
+    /**
+     * Cập nhật hạng của user dựa trên tổng số tiền đã tiêu (booking thành công)
+     */
+    public function updateRankByTotalSpent()
+    {
+        $totalSpent = $this->bookings()
+            ->where('status', 'confirmed')
+            ->sum('final_amount');
+
+        $ranks = \App\Models\CustomerRank::orderBy('min_points_required')->get();
+        $newRank = null;
+
+        foreach ($ranks as $rank) {
+            if ($totalSpent >= $rank->min_points_required) {
+                $newRank = $rank;
+            } else {
+                break;
+            }
+        }
+
+        // Debug: Log thông tin
+        Log::info("User {$this->id} - Total spent: $totalSpent, Current rank: {$this->customer_rank_id}, New rank: " . ($newRank ? $newRank->id : 'null'));
+
+        $this->refresh(); // Đảm bảo lấy dữ liệu mới nhất từ DB
+        if ($newRank && (int)$this->customer_rank_id !== (int)$newRank->id) {
+            $this->customer_rank_id = $newRank->id;
+            $result = $this->save();
+            Log::info("User {$this->id} - Save result: " . ($result ? 'success' : 'fail') . ", Updated rank: {$this->customer_rank_id}");
+        }
+    }
+>>>>>>> Stashed changes
 
     protected $fillable = [
         'name',

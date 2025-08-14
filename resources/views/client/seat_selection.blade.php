@@ -24,8 +24,10 @@
                                             data-type="{{ $seat['seat_type'] }}"
                                             data-price="{{ $showtime->base_price * ($seat['price'] ?? 1) }}"
                                             data-original-color="{{ $seat['color_code'] }}"
-                                            style="background-color: {{ $seat['color_code'] }};"
-                                            onclick="selectSeat(this)">
+                                            style="background-color: {{ $seat['status'] === 'maintenance' ? '#6c757d' : $seat['color_code'] }}; {{ $seat['status'] === 'maintenance' || $seat['status'] === 'reserved' || $seat['status'] === 'locked' ? 'opacity: 0.6; pointer-events: none;' : '' }}"
+                                            @if ($seat['status'] !== 'maintenance' && $seat['status'] !== 'reserved' && $seat['status'] !== 'locked')
+                                                onclick="selectSeat(this)"
+                                            @endif>
                                             {{ $col }}
                                         </div>
                                     @else
@@ -49,6 +51,9 @@
                     </div>
                     <div class="legend-item text-gray-light">
                         <span class="legend-color reserved bg-danger"></span> Đã đặt
+                    </div>
+                    <div class="legend-item text-gray-light">
+                        <span class="legend-color maintenance" style="background-color: #6c757d;"></span> Đang bảo trì
                     </div>
                 </div>
             </div>
@@ -136,7 +141,7 @@
                         const seatElement = document.querySelector(`.seat[data-seat-id="${seat.seat_id}"]`);
                         if (!seatElement) return;
 
-                        seatElement.classList.remove('available', 'reserved', 'locked', 'selected');
+                        seatElement.classList.remove('available', 'reserved', 'locked', 'selected', 'maintenance');
 
                         if (seat.status === 'reserved') {
                             seatElement.classList.add('reserved');
@@ -161,6 +166,11 @@
                                     price: seat.price
                                 });
                             }
+                        } else if (seat.status === 'maintenance') {
+                            seatElement.classList.add('maintenance');
+                            seatElement.style.backgroundColor = '#6c757d';
+                            seatElement.style.opacity = '0.6';
+                            seatElement.style.pointerEvents = 'none';
                         } else {
                             seatElement.classList.add('available');
                             const originalColor = seatElement.getAttribute('data-original-color');
@@ -223,7 +233,7 @@
             if (seatElement) {
                 if (data.locked_by !== sessionId) {
                     console.log('Processing seat update for seat_id:', data.seat_id);
-                    seatElement.classList.remove('available', 'reserved', 'selected');
+                    seatElement.classList.remove('available', 'reserved', 'selected', 'maintenance');
                     seatElement.classList.add(data.status);
                     if (data.status === 'reserved') {
                         seatElement.style.backgroundColor = '#dc3545';
@@ -231,10 +241,15 @@
                         selectedSeats = selectedSeats.filter(seat => seat.id !== data.seat_id.toString());
                         updateSummary();
                         sendSeatsToParent();
+                    } else if (data.status === 'maintenance') {
+                        seatElement.style.backgroundColor = '#6c757d';
+                        seatElement.style.opacity = '0.6';
+                        seatElement.style.pointerEvents = 'none';
                     } else if (data.status === 'available') {
                         const originalColor = seatElement.getAttribute('data-original-color');
                         seatElement.style.backgroundColor = originalColor || '#28a745';
                         seatElement.style.opacity = '1';
+                        seatElement.style.pointerEvents = 'auto';
                     }
                 } else {
                     console.log('Ignoring seat update: seat is locked by current session', data.seat_id);
@@ -253,10 +268,29 @@
 
             console.log('Selecting seat:', { seatId, label, type, price });
 
-            if (element.classList.contains('reserved') || element.classList.contains('locked')) {
-                console.log('Seat is reserved or locked:', seatId);
+            if (element.classList.contains('reserved') || element.classList.contains('locked') || element.classList.contains('maintenance')) {
+                console.log('Seat is reserved, locked, or under maintenance:', seatId);
                 return;
             }
+
+            // Kiểm tra nếu là ghế đôi
+            const isCoupleseat = ['Sweetbox', 'Couple Sofa', 'Couple Bed'].includes(type);
+            
+            if (isCoupleseat) {
+                // Xử lý ghế đôi
+                await selectCoupleSeat(element);
+            } else {
+                // Xử lý ghế đơn
+                await selectSingleSeat(element);
+            }
+        }
+
+        async function selectSingleSeat(element) {
+            const seatId = element.getAttribute('data-seat-id');
+            const label = element.getAttribute('data-label');
+            const type = element.getAttribute('data-type');
+            const price = parseFloat(element.getAttribute('data-price'));
+            const originalColor = element.getAttribute('data-original-color');
 
             if (element.classList.contains('selected')) {
                 element.classList.remove('selected');
@@ -270,6 +304,94 @@
                 selectedSeats.push({ id: seatId, label: label, type: type, price: price });
             }
 
+            await updateSeatReservation();
+        }
+
+        async function selectCoupleSeat(element) {
+            const seatId = element.getAttribute('data-seat-id');
+            const label = element.getAttribute('data-label');
+            const type = element.getAttribute('data-type');
+            const price = parseFloat(element.getAttribute('data-price'));
+            const originalColor = element.getAttribute('data-original-color');
+
+            // Tìm ghế đối tác (ghế liền kề)
+            const partnerSeat = findCouplePartner(element);
+            
+            if (!partnerSeat) {
+                console.log('Partner seat not found for couple seat:', seatId);
+                await selectSingleSeat(element);
+                return;
+            }
+
+            // Kiểm tra ghế đối tác có available không
+            if (partnerSeat.classList.contains('reserved') || partnerSeat.classList.contains('locked') || partnerSeat.classList.contains('maintenance')) {
+                console.log('Partner seat is not available:', partnerSeat.getAttribute('data-seat-id'));
+                return;
+            }
+
+            const partnerSeatId = partnerSeat.getAttribute('data-seat-id');
+            const partnerLabel = partnerSeat.getAttribute('data-label');
+            const partnerType = partnerSeat.getAttribute('data-type');
+            const partnerPrice = parseFloat(partnerSeat.getAttribute('data-price'));
+            const partnerOriginalColor = partnerSeat.getAttribute('data-original-color');
+
+            // Kiểm tra trạng thái hiện tại của cả 2 ghế
+            const isCurrentSelected = element.classList.contains('selected');
+            const isPartnerSelected = partnerSeat.classList.contains('selected');
+
+            if (isCurrentSelected && isPartnerSelected) {
+                // Bỏ chọn cả 2 ghế
+                element.classList.remove('selected');
+                element.style.backgroundColor = originalColor || '#28a745';
+                element.style.opacity = '1';
+                
+                partnerSeat.classList.remove('selected');
+                partnerSeat.style.backgroundColor = partnerOriginalColor || '#28a745';
+                partnerSeat.style.opacity = '1';
+                
+                selectedSeats = selectedSeats.filter(seat => seat.id !== seatId && seat.id !== partnerSeatId);
+            } else {
+                // Chọn cả 2 ghế
+                element.classList.add('selected');
+                element.style.backgroundColor = '#e5006e';
+                element.style.opacity = '1';
+                
+                partnerSeat.classList.add('selected');
+                partnerSeat.style.backgroundColor = '#e5006e';
+                partnerSeat.style.opacity = '1';
+                
+                // Thêm vào danh sách nếu chưa có
+                if (!selectedSeats.some(seat => seat.id === seatId)) {
+                    selectedSeats.push({ id: seatId, label: label, type: type, price: price });
+                }
+                if (!selectedSeats.some(seat => seat.id === partnerSeatId)) {
+                    selectedSeats.push({ id: partnerSeatId, label: partnerLabel, type: partnerType, price: partnerPrice });
+                }
+            }
+
+            await updateSeatReservation();
+        }
+
+        function findCouplePartner(seatElement) {
+            const label = seatElement.getAttribute('data-label');
+            const [row, seatNumber] = label.split('-');
+            const currentSeatNum = parseInt(seatNumber);
+            
+            // Logic ghế đôi: số lẻ ghép với số chẵn kế tiếp, số chẵn ghép với số lẻ trước đó
+            let partnerSeatNum;
+            if (currentSeatNum % 2 === 1) {
+                // Ghế lẻ -> tìm ghế chẵn kế tiếp
+                partnerSeatNum = currentSeatNum + 1;
+            } else {
+                // Ghế chẵn -> tìm ghế lẻ trước đó
+                partnerSeatNum = currentSeatNum - 1;
+            }
+            
+            const partnerLabel = row + '-' + String(partnerSeatNum).padStart(2, '0');
+            return document.querySelector(`.seat[data-label="${partnerLabel}"]`);
+        }
+
+        async function updateSeatReservation() {
             // Gửi tất cả seat_ids được chọn
             const seatIds = selectedSeats.map(seat => seat.id);
             console.log('Sending reserve request for seats:', seatIds);
@@ -572,6 +694,12 @@ window.getTimerEndTime = function() {
     background-color: #222222;
     cursor: default;
     border: 1px dashed #444444;
+}
+
+.seat.maintenance {
+    cursor: not-allowed;
+    opacity: 0.6;
+    background-color: #6c757d !important;
 }
 
 .seat-legend {

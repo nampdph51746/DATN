@@ -24,8 +24,12 @@ use App\Models\ShowtimeSeatState;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
+<<<<<<< Updated upstream
 use App\Mail\TicketPurchasedMail;
 use Illuminate\Support\Facades\Mail;
+=======
+use App\Events\BookingConfirmed;
+>>>>>>> Stashed changes
 
 class VnpayController extends Controller
 {
@@ -308,6 +312,10 @@ class VnpayController extends Controller
                 }
 
                 DB::commit();
+                
+                // Fire event để gửi email xác nhận booking
+                event(new BookingConfirmed($booking));
+                
                 session()->forget(['booking_preview', 'selected_seats_info']);
 
                 // Tạo thông báo cho user khi đặt vé thành công

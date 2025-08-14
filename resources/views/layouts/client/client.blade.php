@@ -147,7 +147,7 @@
 								@auth
 								<li><a href="/profile" style="display: block; padding: 10px; text-decoration: none;">Tài khoản</a></li>
 								@hasanyrole(['admin', 'staff'])
-								<li><a href="{{ route('admin.movies.index') }}" style="display: block; padding: 10px; text-decoration: none;">Quản lý</a></li>
+								<li><a href="{{ route('admin.dashboard') }}" style="display: block; padding: 10px; text-decoration: none;">Quản lý</a></li>
 								@endhasanyrole
 								<li>
 									<form method="POST" action="{{ route('logout') }}" style="margin: 0;">

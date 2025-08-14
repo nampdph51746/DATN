@@ -192,7 +192,11 @@
                                         <div class="text-center py-3 text-muted">Không có thông báo nào.</div>
                                     @endforelse
                                     <div class="text-center py-3">
+<<<<<<< Updated upstream
                                         <a href="{{ route('admin.notifications.index') }}" class="btn btn-primary btn-sm">View All
+=======
+                                        <a href="" class="btn btn-primary btn-sm">View All
+>>>>>>> Stashed changes
                                             Notification
                                             <i class="bx bx-right-arrow-alt ms-1"></i></a>
                                     </div>
@@ -607,7 +611,11 @@
                     </li>
 
                     <li class="nav-item">
+<<<<<<< Updated upstream
                         <a class="nav-link" href="">
+=======
+                        <a class="nav-link" href="{{ route('admin.dashboard') }}">
+>>>>>>> Stashed changes
                             <span class="nav-icon">
                                 <iconify-icon icon="solar:chart-square-bold-duotone"></iconify-icon>
                             </span>
@@ -1210,4 +1218,8 @@
 </body>
 <!-- Mirrored from techzaa.in/larkon/admin/index.html by HTTrack Website Copier/3.x [XR&CO'2014], Thu, 29 May 2025 02:26:35 GMT -->
 
+<<<<<<< Updated upstream
 </html>
+=======
+</html>
+>>>>>>> Stashed changes

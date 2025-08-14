@@ -18,6 +18,22 @@ class Showtime extends Model
         'status' => \App\Enums\ShowtimeStatus::class,
     ];
 
+    /**
+     * Get show date from start_time
+     */
+    public function getShowDateAttribute()
+    {
+        return $this->start_time ? $this->start_time->format('Y-m-d') : null;
+    }
+
+    /**
+     * Get formatted start time
+     */
+    public function getFormattedStartTimeAttribute()
+    {
+        return $this->start_time ? $this->start_time->format('H:i') : null;
+    }
+
     public function movie()
     {
         return $this->belongsTo(Movie::class);
@@ -36,6 +52,21 @@ class Showtime extends Model
     public function tickets()
     {
         return $this->hasMany(Ticket::class);
+    }
+
+    /**
+     * Get cinema through room
+     */
+    public function cinema()
+    {
+        return $this->hasOneThrough(
+            Cinema::class,
+            Room::class,
+            'id', // Foreign key on rooms table
+            'id', // Foreign key on cinemas table
+            'room_id', // Local key on showtimes table
+            'cinema_id' // Local key on rooms table
+        );
     }
 
     /**

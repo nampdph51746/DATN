@@ -4,11 +4,19 @@ namespace App\Providers;
 
 use App\Models\Role;
 use App\Models\Showtime;
+use App\Models\Booking;
 use App\Observers\ShowtimeObserver;
+use App\Observers\BookingObserver;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\ServiceProvider;
 use Spatie\Permission\PermissionRegistrar;
+<<<<<<< Updated upstream
 use Illuminate\Database\Eloquent\Relations\Relation;
+=======
+use Illuminate\Support\Facades\Event;
+use App\Events\BookingConfirmed;
+use App\Listeners\SendBookingConfirmationEmail;
+>>>>>>> Stashed changes
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -30,6 +38,7 @@ class AppServiceProvider extends ServiceProvider
         
         // Đăng ký Observer cho Showtime
         Showtime::observe(ShowtimeObserver::class);
+<<<<<<< Updated upstream
 
         // Morph map cho tất cả các model
         Relation::morphMap([
@@ -72,5 +81,13 @@ class AppServiceProvider extends ServiceProvider
             'ticket' => \App\Models\Ticket::class,
             'user' => \App\Models\User::class,
         ]);
+=======
+        
+        // Đăng ký Observer cho Booking
+        Booking::observe(BookingObserver::class);
+        
+        // Đăng ký Event và Listener
+        Event::listen(BookingConfirmed::class, SendBookingConfirmationEmail::class);
+>>>>>>> Stashed changes
     }
 }
