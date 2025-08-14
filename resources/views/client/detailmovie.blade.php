@@ -670,22 +670,6 @@
                         <div class="col-md-4">
                             <div class="text-center p-4 rounded shadow-sm" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
                                 <h3 class="mb-1">{{ number_format($movie->average_rating ?? 0, 1) }}/5</h3>
-                                <div class="stars mb-2">
-                                    @php
-                                    $rating = $movie->average_rating ?? 0;
-                                    $fullStars = floor($rating);
-                                    $hasHalfStar = ($rating - $fullStars) >= 0.5;
-                                    @endphp
-                                    @for($i = 1; $i <= 5; $i++)
-                                        @if($i <=$fullStars)
-                                        <i class="fas fa-star text-warning"></i>
-                                        @elseif($i == $fullStars + 1 && $hasHalfStar)
-                                        <i class="fas fa-star-half-alt text-warning"></i>
-                                        @else
-                                        <i class="far fa-star text-muted"></i>
-                                        @endif
-                                        @endfor
-                                </div>
                                 <p class="mb-0">{{ $movie->reviews()->where('status', 'approved')->count() }} đánh giá</p>
                             </div>
                         </div>

@@ -227,28 +227,23 @@
 						<div id="search" class="pop-overlay">
 							<div class="popup">
 								<form action="#" method="post" class="search-box">
-									<input type="search" placeholder="Search your Keyword" name="search" required="required" autofocus="">
+									<input type="search" placeholder="Tìm kiếm theo tên" name="search" required="required" autofocus="">
 									<button type="submit" class="btn"><span class="fas fa-search" aria-hidden="true"></span></button>
 								</form>
 								<div class="browse-items">
-									<h3 class="hny-title two mt-md-5 mt-4">Browse all:</h3>
+									<h3 class="hny-title two mt-md-5 mt-4">Tìm theo thể loại:</h3>
 									<ul class="search-items">
-										<li><a href="movies.html">Action</a></li>
-										<li><a href="movies.html">Drama</a></li>
-										<li><a href="movies.html">Family</a></li>
-										<li><a href="movies.html">Thriller</a></li>
-										<li><a href="movies.html">Commedy</a></li>
-										<li><a href="movies.html">Romantic</a></li>
-										<li><a href="movies.html">Tv-Series</a></li>
-										<li><a href="movies.html">Horror</a></li>
-										<li><a href="movies.html">Action</a></li>
-										<li><a href="movies.html">Drama</a></li>
-										<li><a href="movies.html">Family</a></li>
-										<li><a href="movies.html">Thriller</a></li>
-										<li><a href="movies.html">Commedy</a></li>
-										<li><a href="movies.html">Romantic</a></li>
-										<li><a href="movies.html">Tv-Series</a></li>
-										<li><a href="movies.html">Horror</a></li>
+										<li><a href="movies.html">Hành động</a></li>
+										<li><a href="movies.html">Tâm lý</a></li>
+										<li><a href="movies.html">Gia đình</a></li>
+										<li><a href="movies.html">Phiêu lưu</a></li>
+										<li><a href="movies.html">Hài</a></li>
+										<li><a href="movies.html">Tội phạm</a></li>
+										<li><a href="movies.html">Kinh dị</a></li>
+										<li><a href="movies.html">Khoa học</a></li>
+										<li><a href="movies.html">Bí ẩn</a></li>
+										<li><a href="movies.html">Siêu nhiên</a></li>
+										<li><a href="movies.html">Hoạt hình</a></li>
 									</ul>
 								</div>
 							</div>
