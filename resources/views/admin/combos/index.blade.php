@@ -1,347 +1,460 @@
 @extends('layouts.admin.admin')
 
 @section('content')
-    <div class="container-xxl py-4">
-        @include('admin.partials.notifications')
+<div class="container-fluid px-4">
+    <style>
+        :root {
+            --primary-orange: #FF6F00;
+            --primary-teal: #00ACC1;
+            --accent-yellow: #FFCA28;
+            --neutral-bg: #F8FAFC;
+            --card-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+            --border-radius: 16px;
+            --transition: all 0.3s ease;
+        }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--neutral-bg);
+        }
+        .card {
+            border: none;
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            transition: var(--transition);
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+        }
+        .card-header {
+            background: linear-gradient(135deg, var(--primary-orange), var(--primary-teal));
+            color: white;
+            border-radius: var(--border-radius) var(--border-radius) 0 0;
+            padding: 1.5rem;
+        }
+        .alert {
+            border-radius: var(--border-radius);
+            border: none;
+            box-shadow: var(--card-shadow);
+            transition: var(--transition);
+        }
+        .alert-success {
+            background: rgba(0, 172, 193, 0.1);
+            color: var(--primary-teal);
+        }
+        .alert-danger {
+            background: rgba(220, 53, 69, 0.1);
+            color: #DC3545;
+        }
+        .combo-avatar {
+            width: 45px;
+            height: 45px;
+            object-fit: cover;
+            border-radius: 50%;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transition: var(--transition);
+        }
+        .combo-avatar:hover {
+            transform: scale(1.1);
+        }
+        .table > :not(caption) > * > * {
+            padding: 1.2rem 1rem;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .table tbody tr {
+            transition: var(--transition);
+        }
+        .table tbody tr:hover {
+            background: rgba(0, 172, 193, 0.05);
+            transform: translateX(2px);
+        }
+        .btn-primary {
+            background: var(--primary-orange);
+            border: none;
+            border-radius: 50px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+        .btn-primary:hover {
+            background: var(--primary-teal);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 172, 193, 0.3);
+        }
+        .btn-success {
+            background: var(--primary-teal);
+            border: none;
+            border-radius: 50px;
+            transition: var(--transition);
+        }
+        .btn-success:hover {
+            background: var(--accent-yellow);
+            color: #1a202c;
+            transform: translateY(-2px);
+        }
+        .btn-info {
+            background: var(--accent-yellow);
+            border: none;
+            border-radius: 50px;
+            color: #1a202c;
+            transition: var(--transition);
+        }
+        .btn-info:hover {
+            background: var(--primary-orange);
+            color: white;
+            transform: translateY(-2px);
+        }
+        .view-detail-btn, .edit-btn {
+            border-radius: 8px;
+            min-width: 36px;
+            height: 32px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+        .view-detail-btn {
+            background: var(--primary-teal);
+            border: 1px solid var(--primary-teal);
+            color: white;
+        }
+        .view-detail-btn:hover {
+            background: var(--accent-yellow);
+            border-color: var(--accent-yellow);
+            color: #1a202c;
+            transform: scale(1.1);
+        }
+        .edit-btn {
+            background: #212529;
+            border: 1px solid #212529;
+            color: white;
+        }
+        .edit-btn:hover {
+            background: var(--primary-orange);
+            border-color: var(--primary-orange);
+            color: white;
+            transform: scale(1.1);
+        }
+        .avatar-lg {
+            width: 4rem;
+            height: 4rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--primary-orange), var(--primary-teal));
+            border-radius: 50%;
+            color: white;
+            font-size: 1.8rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        .form-control {
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            transition: var(--transition);
+        }
+        .form-control:focus {
+            border-color: var(--primary-orange);
+            box-shadow: 0 0 0 4px rgba(255, 111, 0, 0.2);
+        }
+        .input-group-text {
+            background: var(--neutral-bg);
+            border-color: #e0e0e0;
+            border-radius: 8px;
+        }
+        .pagination {
+            --bs-pagination-border-radius: 8px;
+        }
+        .page-link {
+            border: none;
+            border-radius: 8px;
+            margin: 0 3px;
+            transition: var(--transition);
+            color: var(--primary-teal);
+        }
+        .page-link:hover {
+            background: var(--primary-orange);
+            color: white;
+            transform: translateY(-2px);
+        }
+        .page-item.active .page-link {
+            background: var(--primary-teal);
+            border: none;
+            color: white;
+        }
+        .progress {
+            background-color: rgba(0, 0, 0, 0.05);
+            border-radius: 0 0 var(--border-radius) var(--border-radius);
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .card, .alert, .table tbody tr {
+            animation: fadeInUp 0.6s ease-out;
+        }
+        @media (max-width: 768px) {
+            .table-responsive { font-size: 0.9rem; }
+            .combo-avatar { width: 35px; height: 35px; }
+            .avatar-lg { width: 3rem; height: 3rem; font-size: 1.4rem; }
+            .btn-lg { padding: 0.5rem 1rem; font-size: 0.9rem; }
+            .input-group { min-width: 100% !important; }
+            .view-detail-btn, .edit-btn { min-width: 32px; height: 28px; }
+        }
+    </style>
 
-        <!-- Simple Header -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="simple-header text-center py-4">
-                    <h1 class="display-6 fw-bold text-orange mb-0">
-                        <i class="fas fa-boxes me-3"></i>
-                        Danh sách combo
-                    </h1>
+    @include('admin.partials.notifications')
+
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                <div>
+                    <h4 class="fw-bold mb-1" style="color: var(--primary-orange);">
+                        <i class="fas fa-boxes me-2"></i>
+                        Quản lý combo sản phẩm
+                    </h4>
+                    <p class="text-muted mb-0">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Quản lý toàn bộ combo sản phẩm trong hệ thống
+                    </p>
+                </div>
+                <div class="d-flex gap-2 flex-wrap">
+                    @can('create combo')
+                        <a href="{{ route('admin.combos.create') }}" class="btn btn-primary btn-lg rounded-pill">
+                            <i class="fas fa-plus-circle me-2"></i> Thêm combo mới
+                        </a>
+                    @endcan
                 </div>
             </div>
         </div>
+    </div>
 
-        <div class="row">
-            <div class="col-xl-12">
-                <div class="card shadow-sm border-0" style="border-radius: 12px; overflow: hidden;">
-                    <div class="card-header d-flex justify-content-between align-items-center gap-2 p-3" style="background: linear-gradient(135deg, #F97316, #FACC15); color: white;">
-                        <h4 class="card-title mb-0 d-flex align-items-center flex-grow-1">
-                            <iconify-icon icon="solar:box-bold" class="fs-22 me-2"></iconify-icon>
-                            Danh sách combo
-                        </h4>
-                        <div class="d-flex gap-2 align-items-center">
-                            @can('create combo')
-                                <a href="{{ route('admin.combos.create') }}" class="btn btn-sm btn-teal text-white" data-bs-toggle="tooltip" title="Thêm combo mới" style="background-color: #0D9488; border: none;">
-                                    <iconify-icon icon="solar:add-circle-bold" class="fs-18 me-1"></iconify-icon>
-                                    Thêm
-                                </a>
-                            @endcan
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-lg-6 col-md-6">
+            <div class="card border-0 h-100 rounded-4 overflow-hidden">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="avatar-lg">
+                            <i class="fas fa-boxes fs-4"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-0 text-muted fw-semibold">Tổng combo</h6>
+                            <h3 class="mb-0 fw-bold" style="color: var(--primary-teal);">{{ $combos->total() }}</h3>
                         </div>
                     </div>
-                    <div class="card-body">
-                        <!-- Form tìm kiếm và lọc -->
-                        <form method="GET" action="{{ route('admin.combos.index') }}" class="mb-4">
-                            <div class="row g-3 align-items-center">
-                                <div class="col-md-4">
-                                    <div class="input-group input-group-sm">
-                                        <span class="input-group-text bg-white border-teal" style="border-color: #0D9488;">
-                                            <iconify-icon icon="solar:magnifier-bold" class="text-teal fs-18"></iconify-icon>
+                </div>
+                <div class="progress rounded-0" style="height: 4px;">
+                    <div class="progress-bar" style="background: var(--primary-teal); width: 100%"></div>
+                </div>
+            </div>
+        </div>
+        <!-- Có thể thêm các stats khác nếu cần -->
+    </div>
+
+    <!-- Main Table Card -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0">
+                <div class="card-header">
+                    <div class="row align-items-center">
+                        <div class="col-lg-6 col-md-8">
+                            <h5 class="card-title mb-0 fw-bold">
+                                <i class="fas fa-table me-2"></i>
+                                Danh sách combo sản phẩm
+                            </h5>
+                        </div>
+                        <div class="col-lg-6 col-md-4">
+                            <div class="d-flex gap-2 justify-content-end flex-wrap">
+                                <form class="d-flex align-items-center gap-2" method="GET" action="{{ route('admin.combos.index') }}">
+                                    <div class="input-group input-group-lg">
+                                        <span class="input-group-text rounded-start-pill">
+                                            <i class="fas fa-search text-muted"></i>
                                         </span>
-                                        <input type="text" name="search" class="form-control border-teal" placeholder="Tìm kiếm theo tên combo" value="{{ request('search') }}" style="border-color: #0D9488;">
+                                        <input type="search" name="search" 
+                                               class="form-control ps-0" 
+                                               placeholder="Tìm kiếm combo..." 
+                                               value="{{ request('search') }}">
                                     </div>
-                                </div>
-                                <div class="col-md-3">
-                                    @if(isset($products) && $products->isNotEmpty())
-                                        <select name="product_id" class="form-select form-select-sm border-teal" style="border-color: #0D9488; color: #0D9488;" data-choices data-placeholder="Chọn sản phẩm">
-                                            <option value="">Tất cả sản phẩm</option>
-                                            @foreach ($products as $product)
-                                                <option value="{{ $product->id }}" {{ request('product_id') == $product->id ? 'selected' : '' }}>{{ $product->name }}</option>
-                                            @endforeach
-                                        </select>
-                                    @else
-                                        <select class="form-select form-select-sm border-teal" disabled>
-                                            <option>Không có sản phẩm</option>
-                                        </select>
-                                    @endif
-                                </div>
-                                <div class="col-md-2">
-                                    <input type="number" name="min_quantity" class="form-control form-control-sm border-teal" placeholder="Số lượng tối thiểu" value="{{ request('min_quantity') }}" min="1" style="border-color: #0D9488;">
-                                </div>
-                                <div class="col-md-3">
-                                    <button type="submit" class="btn btn-sm btn-teal text-white me-2" style="background-color: #0D9488; border: none;">
-                                        <iconify-icon icon="solar:filter-bold" class="fs-18 me-1"></iconify-icon>
-                                        Lọc
+                                    <button type="submit" class="btn btn-primary btn-lg rounded-pill">
+                                        <i class="fas fa-search"></i>
                                     </button>
-                                    <a href="{{ route('admin.combos.index') }}" class="btn btn-sm btn-outline-yellow" style="border-color: #FACC15; color: #FACC15;">
-                                        <iconify-icon icon="solar:restart-bold" class="fs-18 me-1"></iconify-icon>
-                                        Xóa lọc
-                                    </a>
-                                </div>
+                                </form>
                             </div>
-                        </form>
-
-                        <!-- Bảng danh sách combo -->
-                        <div class="table-responsive">
-                            <table class="table table-hover table-centered mb-0">
-                                <thead style="background-color: #0D9488; color: white; position: sticky; top: 0; z-index: 10;">
-                                    <tr>
-                                        <th class="ps-4" style="width: 8%;">
-                                            <iconify-icon icon="solar:hashtag-bold" class="fs-16 me-1"></iconify-icon>ID
-                                        </th>
-                                        <th style="width: 15%;">
-                                            <iconify-icon icon="solar:image-bold" class="fs-16 me-1"></iconify-icon>Ảnh
-                                        </th>
-                                        <th style="width: 20%;">
-                                            <iconify-icon icon="solar:text-field-bold" class="fs-16 me-1"></iconify-icon>Tên combo
-                                        </th>
-                                        <th style="width: 15%;">
-                                            <iconify-icon icon="solar:box-bold" class="fs-16 me-1"></iconify-icon>Sản phẩm gốc
-                                        </th>
-                                        <th style="width: 10%;">
-                                            <iconify-icon icon="solar:money-bag-bold" class="fs-16 me-1"></iconify-icon>Giá
-                                        </th>
-                                        <th style="width: 10%;">
-                                            <iconify-icon icon="solar:box-bold" class="fs-16 me-1"></iconify-icon>Tồn kho
-                                        </th>
-                                        <th style="width: 7%;">
-                                            <iconify-icon icon="solar:list-bold" class="fs-16 me-1"></iconify-icon>Số mục
-                                        </th>
-                                        <th style="width: 15%;">
-                                            <iconify-icon icon="solar:settings-bold" class="fs-16 me-1"></iconify-icon>Hành động
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse ($combos as $combo)
-                                        <tr class="align-middle" style="transition: background-color 0.3s;">
-                                            <td class="ps-4">{{ $loop->iteration + ($combos->currentPage() - 1) * $combos->perPage() }}</td>
-                                            <td>
-                                                @if ($combo->comboProductVariant && $combo->comboProductVariant->image_url)
-                                                    <img src="{{ asset('storage/' . $combo->comboProductVariant->image_url) }}"
-                                                         alt="{{ $combo->name }}"
-                                                         class="rounded" style="max-width: 80px; max-height: 80px; object-fit: cover;">
-                                                @else
-                                                    <div class="bg-light d-flex align-items-center justify-content-center rounded" style="width: 80px; height: 80px;">
-                                                        <iconify-icon icon="solar:image-linear" class="text-muted fs-24"></iconify-icon>
-                                                    </div>
-                                                @endif
-                                            </td>
-                                            <td>
-                                                <div class="fw-bold text-dark">{{ $combo->name ?? 'Combo không tên' }}</div>
-                                                @if($combo->comboProductVariant)
-                                                    <small class="text-muted">SKU: {{ $combo->comboProductVariant->sku }}</small>
-                                                @endif
-                                            </td>
-                                            <td>
-                                                @if($combo->comboProductVariant && $combo->comboProductVariant->product)
-                                                    <span class="fw-medium">{{ $combo->comboProductVariant->product->name }}</span>
-                                                @else
-                                                    <span class="text-muted">Không xác định</span>
-                                                @endif
-                                            </td>
-                                            <td>
-                                                <span class="fw-bold text-success">
-                                                    {{ number_format($combo->price, 0, ',', '.') }}₫
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <span class="badge bg-warning-subtle text-warning px-3 py-2 rounded-pill">
-                                                    {{ $combo->stock_quantity }}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <span class="badge bg-info-subtle text-info px-3 py-2 rounded-pill">
-                                                    {{ $combo->comboPackageItems->count() }}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <div class="d-flex gap-2">
-                                                    <a href="{{ route('admin.combos.show', $combo->id) }}"
-                                                       class="btn btn-sm btn-outline-primary" data-bs-toggle="tooltip" title="Xem chi tiết combo">
-                                                        <iconify-icon icon="solar:eye-bold" class="fs-18"></iconify-icon>
-                                                    </a>
-                                                    @can('edit combo')
-                                                        <a href="{{ route('admin.combos.edit', $combo->id) }}"
-                                                           class="btn btn-sm btn-outline-warning" data-bs-toggle="tooltip" title="Chỉnh sửa combo">
-                                                            <iconify-icon icon="solar:pen-2-bold" class="fs-18"></iconify-icon>
-                                                        </a>
-                                                    @endcan
-                                                    @can('delete combo')
-                                                        <form action="{{ route('admin.combos.destroy', $combo->id) }}" method="POST" class="d-inline"
-                                                              onsubmit="return confirm('Bạn có chắc muốn xóa combo này?');">
-                                                            @csrf
-                                                            @method('DELETE')
-                                                            <button type="submit" class="btn btn-sm btn-outline-danger" data-bs-toggle="tooltip" title="Xóa combo">
-                                                                <iconify-icon icon="solar:trash-bin-trash-bold" class="fs-18"></iconify-icon>
-                                                            </button>
-                                                        </form>
-                                                    @endcan
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="8" class="text-center py-4 text-muted">
-                                                <iconify-icon icon="solar:box-linear" class="fs-24 me-2"></iconify-icon>
-                                                Không có combo nào
-                                            </td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
                         </div>
                     </div>
-                    <div class="card-footer border-top bg-light p-3">
+                </div>
+
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="border-0 fw-bold text-dark">
+                                        <i class="fas fa-hashtag me-1" style="color: var(--primary-teal);"></i> ID
+                                    </th>
+                                    <th class="border-0 fw-bold text-dark">
+                                        <i class="fas fa-image me-1" style="color: var(--primary-orange);"></i> Ảnh
+                                    </th>
+                                    <th class="border-0 fw-bold text-dark">
+                                        <i class="fas fa-box-open me-1" style="color: var(--accent-yellow);"></i> Tên combo
+                                    </th>
+                                    <th class="border-0 fw-bold text-dark">
+                                        <i class="fas fa-box me-1" style="color: var(--primary-teal);"></i> Sản phẩm gốc
+                                    </th>
+                                    <th class="border-0 fw-bold text-dark">
+                                        <i class="fas fa-money-bill-wave me-1" style="color: var(--accent-yellow);"></i> Giá
+                                    </th>
+                                    <th class="border-0 fw-bold text-dark">
+                                        <i class="fas fa-cubes me-1" style="color: var(--primary-orange);"></i> Tồn kho
+                                    </th>
+                                    <th class="border-0 fw-bold text-dark">
+                                        <i class="fas fa-list me-1" style="color: var(--primary-teal);"></i> Số mục
+                                    </th>
+                                    <th class="border-0 fw-bold text-dark text-center pe-4">
+                                        <i class="fas fa-cogs me-1" style="color: var(--primary-orange);"></i> Thao tác
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse ($combos as $combo)
+                                    <tr class="border-bottom border-light">
+                                        <td>{{ $loop->iteration + ($combos->currentPage() - 1) * $combos->perPage() }}</td>
+                                        <td>
+                                            @if ($combo->comboProductVariant && $combo->comboProductVariant->image_url)
+                                                <img src="{{ asset('storage/' . $combo->comboProductVariant->image_url) }}"
+                                                     alt="{{ $combo->name }}"
+                                                     class="combo-avatar">
+                                            @else
+                                                <div class="bg-light d-flex align-items-center justify-content-center rounded" style="width: 45px; height: 45px;">
+                                                    <i class="fas fa-image text-muted fs-3"></i>
+                                                </div>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            <div class="fw-bold text-dark">{{ $combo->name ?? 'Combo không tên' }}</div>
+                                            @if($combo->comboProductVariant)
+                                                <small class="text-muted">SKU: {{ $combo->comboProductVariant->sku }}</small>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if($combo->comboProductVariant && $combo->comboProductVariant->product)
+                                                <span class="fw-medium">{{ $combo->comboProductVariant->product->name }}</span>
+                                            @else
+                                                <span class="text-muted">Không xác định</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            <span class="fw-bold text-success">
+                                                {{ number_format($combo->price, 0, ',', '.') }}₫
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-warning-subtle text-warning px-3 py-2 rounded-pill">
+                                                {{ $combo->stock_quantity }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info-subtle text-info px-3 py-2 rounded-pill">
+                                                {{ $combo->comboPackageItems->count() }}
+                                            </span>
+                                        </td>
+                                        <td class="text-center pe-4">
+                                            <div class="d-flex gap-1 justify-content-center">
+                                                <a href="{{ route('admin.combos.show', $combo->id) }}"
+                                                   class="btn btn-sm view-detail-btn" data-bs-toggle="tooltip" title="Xem chi tiết combo">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                @can('edit combo')
+                                                    <a href="{{ route('admin.combos.edit', $combo->id) }}"
+                                                       class="btn btn-sm edit-btn" data-bs-toggle="tooltip" title="Chỉnh sửa combo">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                @endcan
+                                                @can('delete combo')
+                                                    <form action="{{ route('admin.combos.destroy', $combo->id) }}" method="POST" class="d-inline"
+                                                          onsubmit="return confirm('Bạn có chắc muốn xóa combo này?');">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger" data-bs-toggle="tooltip" title="Xóa combo">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    </form>
+                                                @endcan
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="8" class="text-center py-4 text-muted">
+                                            <i class="fas fa-box-open fs-1 mb-2"></i>
+                                            Không có combo nào
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <!-- Pagination -->
+                @if($combos->hasPages())
+                    <div class="card-footer bg-white border-top py-4 rounded-bottom-4">
                         <div class="d-flex justify-content-between align-items-center">
-                            <div class="text-muted">
-                                Hiển thị {{ $combos->firstItem() }} - {{ $combos->lastItem() }} của {{ $combos->total() }} combo
+                            <div class="text-muted small">
+                                Hiển thị {{ $combos->firstItem() }}-{{ $combos->lastItem() }} trong tổng {{ $combos->total() }} combo
                             </div>
                             <div>
                                 {{ $combos->links('pagination::bootstrap-5') }}
                             </div>
                         </div>
                     </div>
-                </div>
+                @endif
             </div>
         </div>
     </div>
+</div>
+@endsection
 
-    @push('scripts')
-        <script>
-            // Initialize Bootstrap tooltips
-            document.addEventListener('DOMContentLoaded', function () {
-                var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-                tooltipTriggerList.map(function (tooltipTriggerEl) {
-                    return new bootstrap.Tooltip(tooltipTriggerEl);
-                });
-            });
+@section('scripts')
+<!-- Font Awesome CDN -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Initialize tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.forEach(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
 
-            // Add hover effect for table rows
-            document.querySelectorAll('tbody tr').forEach(row => {
-                row.addEventListener('mouseenter', () => {
-                    row.style.backgroundColor = '#FFF7ED'; // Light orange background on hover
-                });
-                row.addEventListener('mouseleave', () => {
-                    row.style.backgroundColor = '';
-                });
-            });
-        </script>
-    @endpush
+    // Intersection Observer for animations
+    const observerOptions = {
+        threshold: 0.2,
+        rootMargin: '0px 0px -30px 0px'
+    };
 
-    @push('styles')
-        <style>
-            :root {
-                --orange-primary: #ff6b35;
-                --orange-secondary: #ff8c42;
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
             }
+        });
+    }, observerOptions);
 
-            /* Simple Header */
-            .simple-header {
-                background: linear-gradient(135deg, var(--orange-primary), var(--orange-secondary));
-                border-radius: 1rem;
-                box-shadow: 0 8px 25px rgba(255, 107, 53, 0.3);
-                margin-bottom: 2rem;
-            }
+    // Observe table rows and cards
+    const tableRows = document.querySelectorAll('.table tbody tr');
+    tableRows.forEach((row, index) => {
+        row.style.opacity = '0';
+        row.style.transform = 'translateY(20px)';
+        row.style.transition = `all 0.6s ease ${index * 0.1}s`;
+        observer.observe(row);
+    });
 
-            .text-orange {
-                color: white !important;
-                text-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            }
-
-            .simple-header i {
-                background: rgba(255,255,255,0.2);
-                padding: 0.5rem;
-                border-radius: 50%;
-                width: 3rem;
-                height: 3rem;
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                margin-right: 1rem;
-                vertical-align: middle;
-            }
-
-            .table th, .table td {
-                vertical-align: middle;
-                padding: 12px;
-            }
-            .btn-teal {
-                background-color: #0D9488;
-                border-color: #0D9488;
-                transition: all 0.3s ease;
-            }
-            .btn-teal:hover {
-                background-color: #0B8278;
-                border-color: #0B8278;
-            }
-            .btn-outline-teal {
-                border-color: #0D9488;
-                color: #0D9488;
-                transition: all 0.3s ease;
-            }
-            .btn-outline-teal:hover {
-                background-color: #0D9488;
-                color: white;
-            }
-            .btn-outline-yellow {
-                border-color: #FACC15;
-                color: #FACC15;
-                transition: all 0.3s ease;
-            }
-            .btn-outline-yellow:hover {
-                background-color: #FACC15;
-                color: white;
-            }
-            .btn-outline-danger {
-                border-color: #F97316;
-                color: #F97316;
-                transition: all 0.3s ease;
-            }
-            .btn-outline-danger:hover {
-                background-color: #F97316;
-                color: white;
-            }
-            .border-teal {
-                border-color: #0D9488 !important;
-            }
-            .pagination .page-link {
-                color: #0D9488;
-                border-radius: 6px;
-                margin: 0 3px;
-                transition: all 0.3s ease;
-            }
-            .pagination .page-item.active .page-link {
-                background-color: #F97316;
-                border-color: #F97316;
-                color: white;
-            }
-            .pagination .page-link:hover {
-                background-color: #0D9488;
-                border-color: #0D9488;
-                color: white;
-            }
-            .table thead th {
-                font-weight: 600;
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-            }
-            .form-control, .form-select {
-                border-radius: 6px;
-                transition: all 0.3s ease;
-            }
-            .form-control:focus, .form-select:focus {
-                border-color: #F97316;
-                box-shadow: 0 0 0 0.2rem rgba(249, 115, 22, 0.25);
-            }
-
-            /* Badge colors */
-            .bg-warning-subtle {
-                background-color: rgba(245, 158, 11, 0.1) !important;
-            }
-            .text-warning {
-                color: #f59e0b !important;
-            }
-            .bg-info-subtle {
-                background-color: rgba(6, 182, 212, 0.1) !important;
-            }
-            .text-info {
-                color: #06b6d4 !important;
-            }
-        </style>
-    @endpush
+    const cards = document.querySelectorAll('.card');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        card.style.transition = `all 0.6s ease ${index * 0.1}s`;
+        observer.observe(card);
+    });
+});
+</script>
 @endsection

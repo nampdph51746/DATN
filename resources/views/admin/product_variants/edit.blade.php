@@ -11,11 +11,6 @@
                 <div class="card-body p-5">
                     <div class="d-flex align-items-center justify-content-between">
                         <div class="d-flex align-items-center gap-4">
-                            <div class="avatar-xl rounded-circle bg-white bg-opacity-20 backdrop-blur">
-                                <span class="avatar-title rounded-circle text-white">
-                                    <i class="fas fa-box-open fs-2"></i>
-                                </span>
-                            </div>
                             <div class="text-white">
                                 <h2 class="fw-bold mb-2">Chỉnh sửa biến thể sản phẩm</h2>
                                 <p class="mb-0 opacity-90 fs-5">Cập nhật thông tin biến thể: {{ $productVariant->sku }}</p>
@@ -28,9 +23,6 @@
                             </span>
                         </div>
                     </div>
-                </div>
-                <div class="position-absolute top-0 end-0 opacity-10">
-                    <i class="fas fa-box-open" style="font-size: 12rem;"></i>
                 </div>
             </div>
         </div>

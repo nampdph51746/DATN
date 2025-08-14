@@ -212,74 +212,46 @@ class AdminProductVariantController extends Controller
             'product_id' => 'required|exists:products,id',
             'price' => 'required|numeric|min:0',
             'stock_quantity' => 'required|integer|min:0',
-            'image_url' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
             'is_active' => 'required|in:0,1',
             'attribute_values' => 'required|array|min:1',
             'attribute_values.*' => 'exists:attribute_values,id',
-        ], [
-            'product_id.required' => 'Sản phẩm là bắt buộc.',
-            'product_id.exists' => 'Sản phẩm không tồn tại.',
-            'price.required' => 'Giá bán là bắt buộc.',
-            'price.numeric' => 'Giá bán phải là số.',
-            'price.min' => 'Giá bán không được nhỏ hơn 0.',
-            'stock_quantity.required' => 'Số lượng tồn kho là bắt buộc.',
-            'stock_quantity.integer' => 'Số lượng tồn kho phải là số nguyên.',
-            'stock_quantity.min' => 'Số lượng tồn kho không được nhỏ hơn 0.',
-            'image_url.image' => 'File tải lên phải là ảnh.',
-            'image_url.mimes' => 'Ảnh phải có định dạng jpg, jpeg, png hoặc gif.',
-            'image_url.max' => 'Ảnh không được vượt quá 2MB.',
-            'is_active.required' => 'Trạng thái biến thể là bắt buộc.',
-            'is_active.in' => 'Trạng thái biến thể phải là Hoạt động hoặc Không hoạt động.',
-            'attribute_values.required' => 'Vui lòng chọn ít nhất một giá trị thuộc tính.',
-            'attribute_values.*.exists' => 'Giá trị thuộc tính không hợp lệ.',
         ]);
 
         $productVariant = ProductVariant::findOrFail($id);
 
-        // Lấy danh sách attribute_value_id hiện tại
-        $existingOptions = ProductVariantOption::where('product_variant_id', $productVariant->id)
-            ->pluck('attribute_value_id')->toArray();
-
-        $newAttributeValues = $request->attribute_values;
-
-        // So sánh thuộc tính và giá trị thuộc tính
-        $shouldRegenerateSku = (
-            $productVariant->product_id != $request->product_id ||
-            count($existingOptions) !== count($newAttributeValues) ||
-            array_diff($existingOptions, $newAttributeValues) ||
-            array_diff($newAttributeValues, $existingOptions)
-        );
-
-        if ($shouldRegenerateSku) {
-            // Lấy sản phẩm để lấy SKU
-            $product = Product::findOrFail($request->product_id);
-            $productSku = $product->sku;
-
-            // Lấy các giá trị thuộc tính được chọn
-            $attributeValues = AttributeValue::whereIn('id', $newAttributeValues)
-                ->pluck('value')
-                ->map(function ($value) {
-                    return Str::slug($value, '-');
-                })
-                ->toArray();
-
-            // Tạo SKU: product_sku + các giá trị thuộc tính
-            $sku = $productSku . '-' . implode('-', $attributeValues);
-            $sku = mb_strtoupper($sku);
-
-        
-        } else {
-            $sku = $productVariant->sku;
-        }
-
+        // Xử lý ảnh
         $imageUrl = $productVariant->image_url;
         if ($request->hasFile('image')) {
-            if ($productVariant->image_url && Storage::disk('public')->exists($productVariant->image_url)) {
-                Storage::disk('public')->delete($productVariant->image_url);
+            if ($imageUrl && Storage::disk('public')->exists($imageUrl)) {
+                Storage::disk('public')->delete($imageUrl);
             }
             $imageUrl = $request->file('image')->store('product_variants', 'public');
         }
 
+        // Tạo SKU mới nếu thay đổi thuộc tính hoặc sản phẩm
+        $newAttributeValues = $request->attribute_values;
+        $shouldRegenerateSku = (
+            $productVariant->product_id != $request->product_id ||
+            array_diff($productVariant->productVariantOptions->pluck('attribute_value_id')->toArray(), $newAttributeValues) ||
+            array_diff($newAttributeValues, $productVariant->productVariantOptions->pluck('attribute_value_id')->toArray())
+        );
+
+        if ($shouldRegenerateSku) {
+            $product = Product::findOrFail($request->product_id);
+            $productSku = $product->sku;
+            $attributeValues = \App\Models\AttributeValue::whereIn('id', $newAttributeValues)
+                ->pluck('value')
+                ->map(function ($value) {
+                    return \Illuminate\Support\Str::slug($value, '-');
+                })
+                ->toArray();
+            $sku = mb_strtoupper($productSku . '-' . implode('-', $attributeValues));
+        } else {
+            $sku = $productVariant->sku;
+        }
+
+        // Cập nhật biến thể
         $productVariant->update([
             'product_id' => $request->product_id,
             'sku' => $sku,
@@ -287,21 +259,12 @@ class AdminProductVariantController extends Controller
             'stock_quantity' => $request->stock_quantity,
             'image_url' => $imageUrl,
             'is_active' => $request->is_active,
-            'updated_at' => now(),
         ]);
 
-        // Xóa các bản ghi không còn trong request
-        $optionsToDelete = array_diff($existingOptions, $newAttributeValues);
-        if ($optionsToDelete) {
-            ProductVariantOption::where('product_variant_id', $productVariant->id)
-                ->whereIn('attribute_value_id', $optionsToDelete)
-                ->delete();
-        }
-
-        // Thêm các bản ghi mới
-        $optionsToAdd = array_diff($newAttributeValues, $existingOptions);
-        foreach ($optionsToAdd as $attributeValueId) {
-            ProductVariantOption::create([
+        // Xóa hết các option cũ và thêm lại mới
+        \App\Models\ProductVariantOption::where('product_variant_id', $productVariant->id)->delete();
+        foreach ($newAttributeValues as $attributeValueId) {
+            \App\Models\ProductVariantOption::create([
                 'product_variant_id' => $productVariant->id,
                 'attribute_value_id' => $attributeValueId,
             ]);
