@@ -42,8 +42,17 @@ class RoleController extends Controller
     }
     public function create()
     {
-        $permissions = Permission::all();
-        return view('admin.roles.create', compact('permissions'));
+        $permissions = \Spatie\Permission\Models\Permission::all();
+
+        // Nhóm quyền theo tiền tố (group)
+        $groupedPermissions = [];
+        foreach ($permissions as $permission) {
+            $parts = explode('.', $permission->name);
+            $group = $parts[0] ?? 'Khác';
+            $groupedPermissions[$group][] = $permission;
+        }
+
+        return view('admin.roles.create', compact('permissions', 'groupedPermissions'));
     }
 
     public function show($id)
