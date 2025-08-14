@@ -39,6 +39,7 @@ use App\Http\Controllers\Admin\AdminAttributeValueController;
 use App\Http\Controllers\Admin\AdminProductVariantController;
 use App\Http\Controllers\Admin\CustomerRankPromotionController;
 use App\Http\Controllers\Admin\AdminProductCategoriesController;
+use App\Http\Controllers\Admin\QrScanController;
 
 
 Route::get('/', [HomeController::class, 'index'])->name('client.home');
@@ -194,9 +195,17 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
             Route::post('/check-status', [QrCodeController::class, 'checkTicketStatus'])->name('qr.check');
             Route::post('/scan-ticket', [QrCodeController::class, 'scanTicketByCode'])->name('qr.scanTicket');
         });
-        // Route in vé riêng theo ticket_code
-        // Route::get('/tickets/{ticket_code}/print', [TicketPrintController::class, 'printTicket'])->name('tickets.print');
-        // Route in chung đồ ăn, đồ uống theo booking_code
+        
+        // QR Scan mới (cải tiến)
+        Route::prefix('qr-scan')->name('qr-scan.')->group(function () {
+            Route::get('/', [QrScanController::class, 'showScanPage'])->name('index');
+            Route::post('/scan', [QrScanController::class, 'scan'])->name('scan');
+            Route::post('/scan-ticket', [QrScanController::class, 'scanTicket'])->name('scan-ticket');
+            Route::post('/scan-food', [QrScanController::class, 'scanFood'])->name('scan-food');
+            Route::post('/scan-booking', [QrScanController::class, 'scanBooking'])->name('scan-booking');
+            Route::get('/history', [QrScanController::class, 'scanHistory'])->name('history');
+        });
+        
         Route::get('admin/bookings/{booking_code}/print', [BookingController::class, 'print'])->name('bookings.print');
         // Trang quét QR code cho nhân viên
         Route::get('/qr-scanner', function () {
@@ -288,8 +297,8 @@ Route::get('admin/payments/{payment}', [PaymentController::class, 'show'])->name
 Route::get('admin/payments/{payment}/edit-status', [PaymentController::class, 'editStatus'])->name('admin.payments.editStatus');
 Route::put('admin/payments/{payment}/update-status', [PaymentController::class, 'updateStatus'])->name('admin.payments.updateStatus');
 
-Route::get('admin/tickets', [TicketController::class, 'index'])->name('tickets.index');
-Route::get('admin/tickets/{id}', [TicketController::class, 'show'])->name('tickets.show');
+Route::get('admin/tickets', [TicketController::class, 'index'])->name('admin.tickets.index');
+Route::get('admin/tickets/{id}', [TicketController::class, 'show'])->name('admin.tickets.show');
 
 Route::get('admin/promotions/trashed', [PromotionController::class, 'trashed'])->name('promotions.trashed');
 Route::post('admin/promotions/restore/{id}', [PromotionController::class, 'restore'])->name('promotions.restore');
@@ -317,7 +326,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('products/{id}/variants', [AdminProductController::class, 'getVariants'])->name('products.variants');
 });
 
-});
+}); // Đóng group chính middleware auth + role
 
 // Admin Reviews Routes
 Route::prefix('admin/reviews')->name('admin.reviews.')->group(function () {

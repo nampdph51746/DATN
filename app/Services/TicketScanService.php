@@ -15,22 +15,56 @@ class TicketScanService
     /**
      * Quét vé và cập nhật trạng thái
      */
-    public function scanTicket(string $bookingCode): array
+    public function scanTicket(string $qrData): array
     {
         try {
             DB::beginTransaction();
 
+            // Thử decode JSON để xem có phải QR chi tiết không
+            $decodedData = json_decode($qrData, true);
+            $booking = null;
+            
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decodedData)) {
+                // QR code chi tiết
+                if (isset($decodedData['type']) && $decodedData['type'] === 'ticket' && isset($decodedData['ticket_code'])) {
+                    $ticketCode = $decodedData['ticket_code'];
+                } elseif (isset($decodedData['booking_code'])) {
+                    $bookingCode = $decodedData['booking_code'];
+                } else {
+                    return [
+                        'success' => false,
+                        'message' => 'QR code không hợp lệ'
+                    ];
+                }
+            } else {
+                // QR code đơn giản - có thể là booking_code hoặc ticket_code
+                $ticketCode = $qrData;
+                $bookingCode = $qrData;
+            }
+
             // Tìm booking theo mã
-            $booking = Booking::with(['tickets.showtime.movie', 'tickets.showtime.cinema', 'tickets.seat'])
-                ->where('booking_code', $bookingCode)
-                ->first();
+            if (isset($ticketCode)) {
+                // Tìm theo ticket code trước
+                $ticket = \App\Models\Ticket::where('ticket_code', $ticketCode)->first();
+                if ($ticket) {
+                    $booking = $ticket->booking;
+                }
+            }
+            
+            if (!$booking && isset($bookingCode)) {
+                // Tìm theo booking code
+                $booking = Booking::where('booking_code', $bookingCode)->first();
+            }
 
             if (!$booking) {
                 return [
                     'success' => false,
-                    'message' => 'Không tìm thấy đơn hàng với mã: ' . $bookingCode
+                    'message' => 'Không tìm thấy đơn hàng với mã: ' . $qrData
                 ];
             }
+
+            // Load relationships
+            $booking->load(['tickets.showtime.movie', 'tickets.showtime.cinema', 'tickets.seat']);
 
             // Kiểm tra trạng thái booking - chấp nhận cả 2 loại confirmed
             if (!in_array($booking->status, [BookingStatus::ConfirmedNotPrinted, BookingStatus::ConfirmedPrinted])) {

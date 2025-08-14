@@ -214,11 +214,6 @@
                         Quản lý danh sách vé trong hệ thống
                     </p>
                 </div>
-                <div class="d-flex gap-2 flex-wrap">
-                    <a href="{{ route('admin.tickets.create') }}" class="btn btn-primary btn-lg rounded-pill">
-                        <i class="fas fa-plus-circle me-2"></i> Thêm vé mới
-                    </a>
-                </div>
             </div>
         </div>
     </div>
@@ -428,13 +423,6 @@
                                                    title="Xem chi tiết"
                                                    data-bs-toggle="tooltip">
                                                     <i class="fas fa-eye"></i>
-                                                </a>
-                                                <a href="{{ route('admin.tickets.print', $ticket->ticket_code) }}"
-                                                   class="btn btn-sm print-btn" 
-                                                   title="In vé"
-                                                   target="_blank"
-                                                   data-bs-toggle="tooltip">
-                                                    <i class="fas fa-print"></i>
                                                 </a>
                                             </div>
                                         </td>
