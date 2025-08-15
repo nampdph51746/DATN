@@ -151,6 +151,14 @@
         background-color: #b02a37;
     }
 
+    .movie-genre {
+    white-space: nowrap;       /* Chỉ hiển thị 1 dòng */
+    overflow: hidden;          /* Ẩn phần vượt quá */
+    text-overflow: ellipsis;   /* Hiện dấu ... */
+    display: block;            /* Đảm bảo hoạt động trong inline context */
+    max-width: 100%;           /* Giới hạn trong phần card */
+}
+
     /* Responsive nhỏ */
     @media (max-width: 576px) {
         .filter-row {
@@ -230,7 +238,7 @@
 
                         <div class="p-3">
                             <h6 class="movie-title">{{ $movie->name }}</h6>
-                            <p class="mb-1">
+                            <p class="mb-1 movie-genre">
                                 <strong>Thể loại:</strong>
                                 {{ $movie->genres->take(3)->pluck('name')->join(', ') ?: 'N/A' }}
                             </p>

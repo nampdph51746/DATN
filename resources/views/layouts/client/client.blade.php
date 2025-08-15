@@ -209,9 +209,20 @@
 						<li class="nav-item active">
 							<a class="nav-link" href="{{ route('client.home') }}">Trang chủ</a>
 						</li>
-						<li class="nav-item">
-							<a class="nav-link" href="{{ route('movies.filter', ['status' => 'showing']) }}">Phim đang chiếu</a>
-						</li>
+						<li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" 
+           data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            Phim
+        </a>
+        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+            <a class="dropdown-item" href="{{ route('movies.filter', ['status' => 'showing']) }}">
+                🎬 Phim đang chiếu
+            </a>
+            <a class="dropdown-item" href="{{ route('movies.filter', ['status' => 'upcoming']) }}">
+                📅 Phim sắp chiếu
+            </a>
+        </div>
+    </li>
 						<li class="nav-item">
 							<a class="nav-link" href="">Về chúng tôi</a>
 						</li>
