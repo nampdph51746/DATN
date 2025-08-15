@@ -122,32 +122,19 @@ class AdminProductCategoriesController extends Controller
     public function destroy($id)
     {
         $category = ProductCategory::findOrFail($id);
+        
+        // Sửa tên cột từ product_category_id thành category_id
         $productCount = Product::where('category_id', $id)->count();
 
         if ($productCount > 0) {
-            return redirect()->route('admin.product-categories.index')->with('error', 'Không thể xóa danh mục vì vẫn còn ' . $productCount . ' sản phẩm thuộc danh mục này.');
+            return redirect()->route('admin.product-categories.index')
+                ->with('error', 'Không thể xóa danh mục vì vẫn còn ' . $productCount . ' sản phẩm thuộc danh mục này.');
         }
 
         $oldData = $category->getOriginal();
         $category->delete();
-
-        // Tạo thông báo khi xóa mềm danh mục sản phẩm
-        Notification::create([
-            'user_id' => Auth::id(),
-            'entity_type' => ProductCategory::class,
-            'entity_id' => $category->id,
-            'title' => 'Xóa danh mục sản phẩm',
-            'message' => 'Danh mục sản phẩm #' . $category->id . ' đã bị xóa (mềm).',
-            'type' => NotificationType::System,
-            'priority' => 'low',
-            'old_status' => $oldData['name'] ?? null,
-            'new_status' => null,
-            'event_details' => json_encode([
-                'old' => $oldData,
-            ]),
-        ]);
-
-        return redirect()->route('admin.product-categories.index')->with('success', 'Danh mục sản phẩm đã được xóa thành công.');
+        return redirect()->route('admin.product-categories.index')
+            ->with('success', 'Danh mục sản phẩm đã được xóa thành công.');
     }
 
     public function trash()

@@ -25,6 +25,7 @@ class ComboController extends Controller
         $this->middleware('can:edit combo')->only(['edit', 'update']);
         $this->middleware('can:delete combo')->only('destroy');
     }
+
     public function index(Request $request)
     {
         $products = Product::with('productVariants')->get();
@@ -46,7 +47,11 @@ class ComboController extends Controller
             });
         }
 
-        $combos = $query->with(['comboProductVariant.product', 'comboPackageItems.itemProductVariant.product'])->paginate(10);
+        // Thêm eager loading để tránh lỗi null
+        $combos = $query->with([
+            'comboProductVariant.product', 
+            'comboPackageItems.itemProductVariant.product'
+        ])->paginate(10);
 
         return view('admin.combos.index', compact('products', 'combos'));
     }
@@ -74,12 +79,13 @@ class ComboController extends Controller
 
     public function store(Request $request)
     {
-        \Log::debug('ComboController@store - Request data:', $request->all());
-        \Log::debug('ComboController@store - combo_product_variant_id:', ['combo_product_variant_id' => $request->input('combo_product_variant_id')]);
-        \Log::debug('ComboController@store - items:', ['items' => $request->input('items')]);
-        \Log::debug('ComboController@store - name:', ['name' => $request->input('name')]);
-        \Log::debug('ComboController@store - price:', ['price' => $request->input('price')]);
-        \Log::debug('ComboController@store - stock_quantity:', ['stock_quantity' => $request->input('stock_quantity')]);
+        Log::debug('ComboController@store - Request data:', $request->all());
+        Log::debug('ComboController@store - combo_product_variant_id:', ['combo_product_variant_id' => $request->input('combo_product_variant_id')]);
+        Log::debug('ComboController@store - items:', ['items' => $request->input('items')]);
+        Log::debug('ComboController@store - name:', ['name' => $request->input('name')]);
+        Log::debug('ComboController@store - price:', ['price' => $request->input('price')]);
+        Log::debug('ComboController@store - stock_quantity:', ['stock_quantity' => $request->input('stock_quantity')]);
+        
         try {
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
@@ -104,9 +110,13 @@ class ComboController extends Controller
                 'items.*.quantity.required' => 'Vui lòng nhập số lượng.',
                 'items.*.quantity.min' => 'Số lượng phải lớn hơn hoặc bằng 1.',
             ]);
-            \Log::debug('ComboController@store - Dữ liệu đã validate:', $validated);
+            
+            Log::debug('ComboController@store - Dữ liệu đã validate:', $validated);
         } catch (\Exception $e) {
-            \Log::error('ComboController@store - Validation error', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            Log::error('ComboController@store - Validation error', [
+                'error' => $e->getMessage(), 
+                'trace' => $e->getTraceAsString()
+            ]);
             throw $e;
         }
 
@@ -119,10 +129,11 @@ class ComboController extends Controller
             $comboPrice = $request->input('price');
             $comboStock = $request->input('stock_quantity');
 
-            \Log::debug('ComboController@store - comboProductVariantId', ['comboProductVariantId' => $comboProductVariantId]);
-            \Log::debug('ComboController@store - items', ['items' => $items]);
+            Log::debug('ComboController@store - comboProductVariantId', ['comboProductVariantId' => $comboProductVariantId]);
+            Log::debug('ComboController@store - items', ['items' => $items]);
+            
             $comboVariant = ProductVariant::find($comboProductVariantId);
-            \Log::debug('ComboController@store - comboVariant', ['comboVariant' => $comboVariant]);
+            Log::debug('ComboController@store - comboVariant', ['comboVariant' => $comboVariant]);
 
             if (!$comboVariant) {
                 Log::error('ComboController@store - Không tìm thấy comboVariant');
@@ -144,7 +155,6 @@ class ComboController extends Controller
             ]);
             Log::info('ComboController@store - Combo created', ['combo_id' => $combo->getKey()]);
 
-
             // Kiểm tra combo đã tồn tại chưa
             // Chỉ báo lỗi nếu combo mới thực sự trùng với combo đã tồn tại (cùng biến thể đại diện và cùng danh sách mục, số lượng)
             $normalized = collect($items)->map(function($item) {
@@ -153,6 +163,7 @@ class ComboController extends Controller
                     'quantity' => (int)($item['quantity'] ?? 1)
                 ];
             })->sortBy('variant_id')->values()->toArray();
+            
             $combos = \App\Models\Combo::where('combo_product_variant_id', $comboProductVariantId)->get();
             $isDuplicate = false;
             foreach ($combos as $comboCheck) {
@@ -167,10 +178,11 @@ class ComboController extends Controller
                     break;
                 }
             }
-            \Log::debug('ComboController@store - Kết quả kiểm tra duplicate:', ['isDuplicate' => $isDuplicate]);
+            
+            Log::debug('ComboController@store - Kết quả kiểm tra duplicate:', ['isDuplicate' => $isDuplicate]);
             if ($isDuplicate) {
                 DB::rollBack();
-                \Log::debug('ComboController@store - Lỗi: combo duplicate');
+                Log::debug('ComboController@store - Lỗi: combo duplicate');
                 return back()->withErrors(['error' => 'Combo này đã tồn tại. Vui lòng chọn sản phẩm hoặc biến thể khác.'])->withInput();
             }
 
@@ -185,7 +197,7 @@ class ComboController extends Controller
             // Lưu các mục còn lại vào combo
             foreach ($items as $index => $item) {
                 if (!isset($item['item_product_variant_id'])) {
-                    \Log::warning('ComboController@store - item không có item_product_variant_id', ['item' => $item]);
+                    Log::warning('ComboController@store - item không có item_product_variant_id', ['item' => $item]);
                     continue;
                 }
                 // Bỏ qua nếu là biến thể đại diện (tránh trùng lặp)
@@ -201,7 +213,7 @@ class ComboController extends Controller
             }
 
             DB::commit();
-            \Log::info('ComboController@store - Combo created successfully for combo ID', ['id' => $combo->getKey()]);
+            Log::info('ComboController@store - Combo created successfully for combo ID', ['id' => $combo->getKey()]);
             return redirect()->route('admin.combos.index')->with('success', 'Combo đã được tạo thành công.');
         } catch (\Exception $e) {
             DB::rollBack();

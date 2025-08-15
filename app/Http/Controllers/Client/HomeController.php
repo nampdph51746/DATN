@@ -144,10 +144,8 @@ class HomeController extends Controller
     {
         $movie = Movie::findOrFail($id);
         $showtimes = $this->getShowtimes($id);
-        if ($showtimes->isEmpty()) {
-            Log::warning("Không tìm thấy suất chiếu cho phim ID {$id}");
-            return redirect()->back()->with('error', 'Không có suất chiếu nào cho phim này.');
-        }
+
+        $noShowtimes = $showtimes->isEmpty();
 
         $dates = $this->getDates($showtimes);
         $showtimesData = $this->getShowtimesData($showtimes);
@@ -251,7 +249,8 @@ class HomeController extends Controller
             'pointsUsed',
             'promotionId',
             'room',
-            'cinema'
+            'cinema',
+            'noShowtimes' // truyền biến này vào view
         ));
     }
 

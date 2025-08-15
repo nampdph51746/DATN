@@ -45,14 +45,17 @@ class RoleController extends Controller
     }
     public function create()
     {
-        $permissions = Permission::all();
+        $permissions = \Spatie\Permission\Models\Permission::all();
 
-        $groupedPermissions = $permissions->groupBy(function ($permission) {
-            return explode('.', $permission->name)[0]; // Lấy phần "role" từ "role.create"
-        });
+        // Nhóm quyền theo tiền tố (group)
+        $groupedPermissions = [];
+        foreach ($permissions as $permission) {
+            $parts = explode('.', $permission->name);
+            $group = $parts[0] ?? 'Khác';
+            $groupedPermissions[$group][] = $permission;
+        }
 
-
-        return view('admin.roles.create', compact('groupedPermissions'));
+        return view('admin.roles.create', compact('permissions', 'groupedPermissions'));
     }
 
     public function show($id)
@@ -70,11 +73,15 @@ class RoleController extends Controller
         // Mảng tên quyền để đánh dấu checkbox
         $rolePermissions = $role->permissions->pluck('name')->toArray();
 
-        $groupedPermissions = $permissions->groupBy(function ($permission) {
-        return explode('.', $permission->name)[0];
-        });
+        // Nhóm quyền theo tiền tố (group)
+        $groupedPermissions = [];
+        foreach ($permissions as $permission) {
+            $parts = explode('.', $permission->name);
+            $group = $parts[0] ?? 'Khác';
+            $groupedPermissions[$group][] = $permission;
+        }
 
-        return view('admin.roles.edit', compact('role', 'permissions', 'rolePermissions','groupedPermissions'));
+        return view('admin.roles.edit', compact('role', 'permissions', 'rolePermissions', 'groupedPermissions'));
     }
 
 

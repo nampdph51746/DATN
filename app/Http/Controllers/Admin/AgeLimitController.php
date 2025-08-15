@@ -20,9 +20,19 @@ class AgeLimitController extends Controller
         $this->middleware('can:edit age limit')->only(['edit', 'update']);
         $this->middleware('can:delete age limit')->only('destroy');
     }
-    public function index()
+    
+    public function index(Request $request) // Thêm Request $request vào đây
     {
-        $ageLimits = AgeLimit::orderBy('min_age')->paginate(10);
+        $query = AgeLimit::query();
+
+        if ($request->filled('query')) {
+            $q = $request->input('query');
+            $query->where('name', 'like', "%$q%");
+        }
+
+        // Sắp xếp mới nhất lên đầu
+        $ageLimits = $query->orderByDesc('id')->paginate(10);
+
         return view('admin.ageLimit.index', compact('ageLimits'));
     }
 
@@ -60,7 +70,7 @@ class AgeLimitController extends Controller
     public function edit($id)
     {
         $ageLimit = AgeLimit::findOrFail($id);
-        return view('admin.ageLimit.edit', compact('ageLimit'));
+        return view('admin.ageLimit.edit', compact('ageLimit')); // Sửa path view
     }
 
     public function update(Request $request, $id)
