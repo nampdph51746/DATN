@@ -166,6 +166,37 @@
 		display: inline-block !important;
 		visibility: visible !important;
 	}
+
+	.search-box {
+    display: flex;
+    align-items: center; /* Căn giữa nút và input */
+    border: 2px solid #dc3545; /* Viền đỏ */
+    border-radius: 6px;
+    overflow: hidden; /* Bo góc đều */
+    max-width: 400px; /* Giới hạn chiều rộng */
+}
+
+.search-box input[type="search"] {
+    flex: 1; /* Chiếm toàn bộ chiều rộng còn lại */
+    padding: 10px 12px;
+    border: none;
+    outline: none;
+    font-size: 16px;
+}
+
+.search-box button {
+    color: white;
+    padding: 10px 16px;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+}
+
+.search-right .popup form button {
+	top: 1px;
+}
+
 </style> <!-- JavaScript cho kiểm tra đăng nhập và hiển thị popup -->
 <script>
 	function showLoginPrompt(event, redirectUrl) {
@@ -237,10 +268,13 @@
 						<!-- search popup -->
 						<div id="search" class="pop-overlay">
 							<div class="popup">
-								<form action="#" method="post" class="search-box">
-									<input type="search" placeholder="Tìm kiếm theo tên" name="search" required="required" autofocus="">
-									<button type="submit" class="btn"><span class="fas fa-search" aria-hidden="true"></span></button>
+								<form action="{{ route('movies.filter') }}" method="get" class="search-box">
+									<input type="search" placeholder="Tìm kiếm theo tên" name="search" value="{{ request('search') }}">
+									<button type="submit" class="btn">
+										<span class="fas fa-search" aria-hidden="true"></span>
+									</button>
 								</form>
+
 								<div class="browse-items">
 									<h3 class="hny-title two mt-md-5 mt-4">Tìm theo thể loại:</h3>
 									<ul class="search-items">
