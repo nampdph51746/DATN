@@ -651,57 +651,80 @@
 <section class="w3l-mid-slider position-relative">
     <div class="companies20-content">
         <div class="owl-mid owl-carousel owl-theme">
+
+            <!-- Banner 1 - Combo bắp nước -->
             <div class="item">
                 <li>
-                    <div class="slider-info mid-view bg bg2">
+                    <div class="slider-info mid-view bg" 
+                         style="background-image: url('{{ asset('images/banner-combo.jpg') }}'); background-size: cover; background-position: center;">
                         <div class="container">
                             <div class="mid-info">
-                                <span class="sub-text">Hài</span>
-                                <h3>Jumanji: The Next Level</h3>
-                                <p>2019 ‧ Hài/Hành động ‧ 2h 3m</p>
-                                <a class="watch" href="movies.html"><span class="fa fa-play"
-                                        aria-hidden="true"></span>
-                                    Xem Trailer</a>
+                                <span class="sub-text">Combo bắp nước</span>
+                                <h3>Giảm ngay 20% cho thành viên</h3>
+                                <p>Áp dụng từ 15/08 - 30/08 tại tất cả các rạp CineVN</p>
+                                <a class="watch" href="#"><span class="fa fa-ticket-alt"></span> Xem chi tiết</a>
                             </div>
                         </div>
                     </div>
                 </li>
             </div>
+
+            <!-- Banner 2 - Khuyến mãi thành viên -->
             <div class="item">
                 <li>
-                    <div class="slider-info mid-view mid-top1 bg bg2">
+                    <div class="slider-info mid-view bg" 
+                         style="background-image: url('{{ asset('images/banner-member.jpg') }}'); background-size: cover; background-position: center;">
                         <div class="container">
                             <div class="mid-info">
-                                <span class="sub-text">Phiêu lưu</span>
-                                <h3>Dolittle</h3>
-                                <p>2020 ‧ Gia đình/Phiêu lưu ‧ 1h 41m</p>
-                                <a class="watch" href="movies.html"><span class="fa fa-play"
-                                        aria-hidden="true"></span>
-                                    Xem Trailer</a>
+                                <span class="sub-text">Thẻ thành viên</span>
+                                <h3>Nhận ngay 50 điểm khi đăng ký mới</h3>
+                                <p>Đổi điểm để nhận voucher, quà tặng hấp dẫn</p>
+                                <a class="watch" href="#"><span class="fa fa-gift"></span> Tham gia ngay</a>
                             </div>
                         </div>
                     </div>
                 </li>
             </div>
+
+            <!-- Banner 3 - Sự kiện khai trương -->
             <div class="item">
                 <li>
-                    <div class="slider-info mid-view mid-top2 bg bg2">
+                    <div class="slider-info mid-view bg" 
+                         style="background-image: url('{{ asset('images/banner-opening.jpg') }}'); background-size: cover; background-position: center;">
                         <div class="container">
                             <div class="mid-info">
-                                <span class="sub-text">Hành động</span>
-                                <h3>Bad Boys for Life</h3>
-                                <p>2020 ‧ Hài/Hành động ‧ 2h 4m</p>
-                                <a class="watch" href="movies.html"><span class="fa fa-play"
-                                        aria-hidden="true"></span>
-                                    Xem Trailer</a>
+                                <span class="sub-text">Sự kiện</span>
+                                <h3>Khai trương CineVN Hà Nội</h3>
+                                <p>Giảm giá 50% tất cả vé trong tuần đầu</p>
+                                <a class="watch" href="#"><span class="fa fa-star"></span> Tìm hiểu thêm</a>
                             </div>
                         </div>
                     </div>
                 </li>
             </div>
+
+            <!-- Banner 4 - Đặt vé online -->
+            <div class="item">
+                <li>
+                    <div class="slider-info mid-view bg" 
+                         style="background-image: url('{{ asset('images/banner-online.jpg') }}'); background-size: cover; background-position: center;">
+                        <div class="container">
+                            <div class="mid-info">
+                                <span class="sub-text">Đặt vé online</span>
+                                <h3>Chọn ghế yêu thích của bạn</h3>
+                                <p>Nhanh chóng, tiện lợi, thanh toán an toàn</p>
+                                <a class="watch" href="#"><span class="fa fa-play"></span> Đặt vé ngay</a>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+            </div>
+
         </div>
     </div>
 </section>
+
+
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
