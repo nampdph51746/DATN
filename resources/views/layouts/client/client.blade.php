@@ -15,15 +15,15 @@
 	<!-- Font Awesome with higher specificity -->
 	<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 	<!-- Custom CSS override để đảm bảo Font Awesome hoạt động -->
-	 <link
-  rel="stylesheet"
-  href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"
-/>
+	<link
+		rel="stylesheet"
+		href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
 	<style>
 		.container {
 			max-width: 1280px;
 			margin: 0 auto;
 		}
+
 		/* Đảm bảo Font Awesome icons hiển thị đúng */
 		.fa,
 		.fas,
@@ -210,19 +210,19 @@
 							<a class="nav-link" href="{{ route('client.home') }}">Trang chủ</a>
 						</li>
 						<li class="nav-item dropdown">
-        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" 
-           data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-            Phim
-        </a>
-        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-            <a class="dropdown-item" href="{{ route('movies.filter', ['status' => 'showing']) }}">
-                🎬 Phim đang chiếu
-            </a>
-            <a class="dropdown-item" href="{{ route('movies.filter', ['status' => 'upcoming']) }}">
-                📅 Phim sắp chiếu
-            </a>
-        </div>
-    </li>
+							<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+								data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+								Phim
+							</a>
+							<div class="dropdown-menu" aria-labelledby="navbarDropdown">
+								<a class="dropdown-item" href="{{ route('movies.filter', ['status' => 'showing']) }}">
+									🎬 Phim đang chiếu
+								</a>
+								<a class="dropdown-item" href="{{ route('movies.filter', ['status' => 'upcoming']) }}">
+									📅 Phim sắp chiếu
+								</a>
+							</div>
+						</li>
 						<li class="nav-item">
 							<a class="nav-link" href="">Về chúng tôi</a>
 						</li>
@@ -244,17 +244,13 @@
 								<div class="browse-items">
 									<h3 class="hny-title two mt-md-5 mt-4">Tìm theo thể loại:</h3>
 									<ul class="search-items">
-										<li><a href="movies.html">Hành động</a></li>
-										<li><a href="movies.html">Tâm lý</a></li>
-										<li><a href="movies.html">Gia đình</a></li>
-										<li><a href="movies.html">Phiêu lưu</a></li>
-										<li><a href="movies.html">Hài</a></li>
-										<li><a href="movies.html">Tội phạm</a></li>
-										<li><a href="movies.html">Kinh dị</a></li>
-										<li><a href="movies.html">Khoa học</a></li>
-										<li><a href="movies.html">Bí ẩn</a></li>
-										<li><a href="movies.html">Siêu nhiên</a></li>
-										<li><a href="movies.html">Hoạt hình</a></li>
+										@foreach($genres as $genre)
+										<li>
+											<a href="{{ route('movies.filter', ['genreName' => $genre->name]) }}">
+												{{ $genre->name }}
+											</a>
+										</li>
+										@endforeach
 									</ul>
 								</div>
 							</div>

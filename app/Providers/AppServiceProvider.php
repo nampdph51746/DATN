@@ -40,7 +40,7 @@ class AppServiceProvider extends ServiceProvider
 
         // Đăng ký View Composer cho client layout
         view()->composer('layouts.client.client', function ($view) {
-            $genres = \App\Models\Genre::all();
+            $genres = \App\Models\Genre::orderBy('name', 'asc')->get();
             $view->with('genres', $genres);
         });
 
