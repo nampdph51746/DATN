@@ -188,66 +188,65 @@
         width: 100%;
     }
 
-    .medal {
+    /* Base style cho huy hiệu */
+/* Base style cho huy hiệu */
+.top-badge {
     position: absolute;
-    top: 10px;
-    right: 10px;
-    width: 70px;
-    height: 70px;
+    top: 8px;
+    right: 8px;
+    width: 45px;
+    height: 45px;
     border-radius: 50%;
+    font-weight: bold;
+    font-size: 1rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: bold;
     color: #fff;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-    z-index: 10;
-    flex-direction: column;
-    text-align: center;
+    z-index: 20;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.25);
 }
 
-/* Dải ruy băng */
-.medal::before, .medal::after {
+/* Dải ruy băng hai bên */
+.top-badge::before,
+.top-badge::after {
     content: "";
     position: absolute;
-    bottom: -20px;
-    width: 18px;
-    height: 30px;
+    bottom: -12px;
+    width: 12px;
+    height: 18px;
     background: inherit;
-    clip-path: polygon(50% 0, 100% 100%, 0 100%);
+    clip-path: polygon(50% 100%, 0 0, 100% 0);
 }
-.medal::before {
-    left: 12px;
+
+.top-badge::before {
+    left: 8px;
     transform: rotate(-5deg);
 }
-.medal::after {
-    right: 12px;
+
+.top-badge::after {
+    right: 8px;
     transform: rotate(5deg);
 }
 
-/* Số TOP */
-.medal-rank {
-    font-size: 0.85rem;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.4);
-}
-
 /* TOP 1 - Vàng */
-.medal-1 {
+.top-1 {
     background: radial-gradient(circle at 30% 30%, #FFD700, #FFA500);
     color: #000;
 }
 
 /* TOP 2 - Bạc */
-.medal-2 {
+.top-2 {
     background: radial-gradient(circle at 30% 30%, #E0E0E0, #A9A9A9);
     color: #000;
 }
 
 /* TOP 3 - Đồng */
-.medal-3 {
+.top-3 {
     background: radial-gradient(circle at 30% 30%, #CD7F32, #8B4513);
     color: #fff;
 }
+
 
 </style>
 <section class="w3l-grids">
@@ -297,9 +296,9 @@
                                 class="img-fluid rounded-top movie-poster"
                                 alt="{{ $movie->name }}">
 
-                                @if($isShowing && $loop->iteration <= 3)
-    <div class="medal medal-{{ $loop->iteration }}">
-        <span class="medal-rank">TOP {{ $loop->iteration }}</span>
+                               @if($isShowing && $loop->iteration <= 3)
+    <div class="top-badge top-{{ $loop->iteration }}">
+        <span>{{ $loop->iteration }}</span>
     </div>
 @endif
                         </div>
