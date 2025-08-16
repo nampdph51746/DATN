@@ -187,6 +187,21 @@
         padding: 0 20px;
         width: 100%;
     }
+
+    .badge-top {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: linear-gradient(45deg, #ff512f, #dd2476);
+    color: #fff;
+    font-weight: bold;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+    z-index: 10;
+}
+
 </style>
 <section class="w3l-grids">
     <div class="container py-4">
@@ -234,6 +249,11 @@
 
                                 class="img-fluid rounded-top movie-poster"
                                 alt="{{ $movie->name }}">
+
+                                {{-- ✅ Thêm badge TOP cho 3 phim đầu --}}
+                    @if($isShowing && $loop->iteration <= 3)
+                        <span class="badge-top">TOP {{ $loop->iteration }}</span>
+                    @endif
                         </div>
 
                         <div class="p-3">
