@@ -644,12 +644,11 @@
             </div>
         </div>
 
-        {{-- Mô tả phim --}}
-<div class="movie-detail mt-4 mb-5">
-    <h3 style="font-size: 20px; font-weight: bold; margin-bottom: 10px; color: #222;">
-        📝 Mô tả phim
+<div class="movie-detail mt-4 mb-5 text-center">
+    <h3 style="font-size: 24px; font-weight: bold; margin-bottom: 15px; color: #222;">
+        📝 Chi tiết
     </h3>
-    <p style="font-size: 16px; line-height: 1.6; color: #444;">
+    <p style="font-size: 18px; line-height: 1.8; color: #333;">
         {{ $movie->description }}
     </p>
 </div>

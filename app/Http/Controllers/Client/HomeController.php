@@ -63,114 +63,125 @@ class HomeController extends Controller
             ->get();
 
         $banners = Banner::where('is_active', 1)
-        ->whereDate('start_date', '<=', $now)
-        ->whereDate('end_date', '>=', $now)
-        ->orderBy('display_order')
-        ->get();
-        
+            ->whereDate('start_date', '<=', $now)
+            ->whereDate('end_date', '>=', $now)
+            ->orderBy('display_order')
+            ->get();
+
         return view('client.home', compact('showingMovies', 'upcomingMovies', 'query', 'banners'));
     }
 
     // MovieController.php
-public function filter(Request $request, $genreName = null)
-{
-    $data = $request->all();
+    public function filter(Request $request, $genreName = null)
+    {
+        $data = $request->all();
 
-    // Xử lý chuyển chuỗi rỗng thành null cho from_time và to_time
-    $data['from_time'] = $data['from_time'] ?? null;
-    $data['to_time'] = $data['to_time'] ?? null;
-    if ($data['from_time'] === '') $data['from_time'] = null;
-    if ($data['to_time'] === '') $data['to_time'] = null;
+        // Xử lý chuyển chuỗi rỗng thành null cho from_time và to_time
+        $data['from_time'] = $data['from_time'] ?? null;
+        $data['to_time'] = $data['to_time'] ?? null;
+        if ($data['from_time'] === '') $data['from_time'] = null;
+        if ($data['to_time'] === '') $data['to_time'] = null;
 
-    $validator = Validator::make($data, [
-        'status'    => 'nullable|in:showing,upcoming',
-        'search'    => 'nullable|string|max:255',
-        'date'      => 'nullable|date',
-        'from_time' => ['nullable', 'date_format:H:i'],
-        'to_time'   => ['nullable', 'date_format:H:i', 'after_or_equal:from_time'],
-    ], [
-        'status.in' => 'Trạng thái không hợp lệ.',
-        'search.string' => 'Tìm kiếm phải là chuỗi.',
-        'search.max' => 'Từ khóa tìm kiếm quá dài.',
-        'date.date' => 'Ngày không hợp lệ.',
-        'from_time.date_format' => 'Giờ bắt đầu không đúng định dạng.',
-        'to_time.date_format' => 'Giờ kết thúc không đúng định dạng.',
-        'to_time.after_or_equal' => 'Giờ kết thúc phải lớn hơn hoặc bằng giờ bắt đầu.',
-    ]);
+        $validator = Validator::make($data, [
+            'status'    => 'nullable|in:showing,upcoming',
+            'search'    => 'nullable|string|max:255',
+            'date'      => 'nullable|date',
+            'from_time' => ['nullable', 'date_format:H:i'],
+            'to_time'   => ['nullable', 'date_format:H:i', 'after_or_equal:from_time'],
+        ], [
+            'status.in' => 'Trạng thái không hợp lệ.',
+            'search.string' => 'Tìm kiếm phải là chuỗi.',
+            'search.max' => 'Từ khóa tìm kiếm quá dài.',
+            'date.date' => 'Ngày không hợp lệ.',
+            'from_time.date_format' => 'Giờ bắt đầu không đúng định dạng.',
+            'to_time.date_format' => 'Giờ kết thúc không đúng định dạng.',
+            'to_time.after_or_equal' => 'Giờ kết thúc phải lớn hơn hoặc bằng giờ bắt đầu.',
+        ]);
 
-    // Custom rule để nếu nhập giờ thì phải nhập ngày
-    $validator->sometimes('from_time', 'required', function ($input) {
-        return !empty($input->from_time) && empty($input->date);
-    });
-
-    $validator->sometimes('to_time', 'required', function ($input) {
-        return !empty($input->to_time) && empty($input->date);
-    });
-
-    $validator->after(function ($validator) use ($data) {
-        if ((!empty($data['from_time']) || !empty($data['to_time'])) && empty($data['date'])) {
-            $validator->errors()->add('date', 'Vui lòng chọn ngày nếu muốn nhập giờ.');
-        }
-    });
-
-    if ($validator->fails()) {
-        return redirect()->back()
-            ->withErrors($validator)
-            ->withInput();
-    }
-
-    // Tiếp tục xử lý query lọc phim...
-
-    $query = Movie::query()->with('genres', 'showtimes');
-
-    $title = 'Danh sách phim';
-    $isShowing = false;
-
-    if (!empty($data['status'])) {
-        $query->where('status', $data['status']);
-        if ($data['status'] === 'showing') {
-            $title = 'Phim đang chiếu';
-            $isShowing = true;
-        } elseif ($data['status'] === 'upcoming') {
-            $title = 'Phim sắp chiếu';
-        }
-    }
-
-    if ($genreName) {
-        $query->whereHas('genres', function ($q) use ($genreName) {
-            $q->where('name', $genreName);
+        // Custom rule để nếu nhập giờ thì phải nhập ngày
+        $validator->sometimes('from_time', 'required', function ($input) {
+            return !empty($input->from_time) && empty($input->date);
         });
-        $title = 'Phim ' . $genreName;
-    }
 
-    if (!empty($data['search'])) {
-        $query->where('name', 'like', '%' . $data['search'] . '%');
-        $title = 'Kết quả tìm kiếm';
-    }
+        $validator->sometimes('to_time', 'required', function ($input) {
+            return !empty($input->to_time) && empty($input->date);
+        });
 
-    if ($isShowing && !empty($data['date'])) {
-        $date = $data['date'];
-        $fromTime = $data['from_time'] ?? null;
-        $toTime = $data['to_time'] ?? null;
-
-        $query->whereHas('showtimes', function ($q) use ($date, $fromTime, $toTime) {
-            $q->whereDate('start_time', $date);
-
-            if ($fromTime && $toTime) {
-                $q->whereTime('start_time', '>=', $fromTime)
-                  ->whereTime('start_time', '<=', $toTime);
-            } elseif ($fromTime) {
-                $q->whereTime('start_time', '>=', $fromTime);
-            } elseif ($toTime) {
-                $q->whereTime('start_time', '<=', $toTime);
+        $validator->after(function ($validator) use ($data) {
+            if ((!empty($data['from_time']) || !empty($data['to_time'])) && empty($data['date'])) {
+                $validator->errors()->add('date', 'Vui lòng chọn ngày nếu muốn nhập giờ.');
             }
         });
+
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput();
+        }
+
+        // Tiếp tục xử lý query lọc phim...
+
+        $query = Movie::query()->with('genres', 'showtimes');
+
+        $title = 'Danh sách phim';
+        $isShowing = false;
+
+        if (!empty($data['status'])) {
+            $query->where('status', $data['status']);
+            if ($data['status'] === 'showing') {
+                $title = 'Phim đang chiếu';
+                $isShowing = true;
+            } elseif ($data['status'] === 'upcoming') {
+                $title = 'Phim sắp chiếu';
+            }
+        }
+
+        if ($genreName) {
+            $query->whereHas('genres', function ($q) use ($genreName) {
+                $q->where('name', $genreName);
+            });
+            $title = 'Phim ' . $genreName;
+        }
+
+        if (!empty($data['search'])) {
+            $query->where('name', 'like', '%' . $data['search'] . '%');
+            $title = 'Kết quả tìm kiếm';
+        }
+
+        if ($isShowing && !empty($data['date'])) {
+            $date = $data['date'];
+            $fromTime = $data['from_time'] ?? null;
+            $toTime = $data['to_time'] ?? null;
+
+            $query->whereHas('showtimes', function ($q) use ($date, $fromTime, $toTime) {
+                $q->whereDate('start_time', $date);
+
+                if ($fromTime && $toTime) {
+                    $q->whereTime('start_time', '>=', $fromTime)
+                        ->whereTime('start_time', '<=', $toTime);
+                } elseif ($fromTime) {
+                    $q->whereTime('start_time', '>=', $fromTime);
+                } elseif ($toTime) {
+                    $q->whereTime('start_time', '<=', $toTime);
+                }
+            });
+        }
+
+        if ($isShowing) {
+            $query->withCount(['showtimes as tickets_sold' => function ($q) {
+                $q->join('tickets', 'showtimes.id', '=', 'tickets.showtime_id')
+                    ->join('bookings', 'tickets.booking_id', '=', 'bookings.id')
+                    ->where('bookings.status', 'confirmed'); // chỉ tính vé đã xác nhận
+            }])->orderByDesc('tickets_sold')
+                ->orderByDesc('release_date');
+        } else {
+            $query->orderBy('release_date', 'desc');
+        }
+
+        $movies = $query->orderBy('release_date', 'desc')->paginate(12);
+
+        return view('client.filter', compact('movies', 'title', 'isShowing'));
     }
-
-    $movies = $query->orderBy('release_date', 'desc')->paginate(12);
-
-    return view('client.filter', compact('movies', 'title', 'isShowing'));
-}
 
 
     public function show(Request $request, $id)
@@ -189,10 +200,10 @@ public function filter(Request $request, $genreName = null)
         // Kiểm tra user hiện tại có thể review không
         $canReview = false;
         $reviewMessage = '';
-        
+
         if (Auth::check()) {
             $user = Auth::user();
-            
+
             // Kiểm tra đã xem phim chưa
             $hasWatchedMovie = Booking::where('user_id', $user->id)
                 ->whereHas('showtime', function ($query) use ($id) {
@@ -325,25 +336,25 @@ public function filter(Request $request, $genreName = null)
         $promotionId = null;
 
         $bookingData = [
-    'movie_id' => $movie->id,
-    'movie_title' => $movie->title,
-    'showtime_id' => $showtime?->id,
-    'showtime_start' => $showtime?->start_time,
-    'room_name' => $room?->name,
-    'cinema_name' => $cinema?->name,
-    'user_id' => $user?->id,
-    'user_points' => $userPoints,
-    'user_rank' => $userRank?->name ?? null,
-    'products' => $products,
-    'promotion_status' => $promotionStatus,
-    'discount' => $discount,
-    'points_used' => $pointsUsed,
-    'promotion_id' => $promotionId,
-    'seat_types' => $seatTypes,
-];
+            'movie_id' => $movie->id,
+            'movie_title' => $movie->title,
+            'showtime_id' => $showtime?->id,
+            'showtime_start' => $showtime?->start_time,
+            'room_name' => $room?->name,
+            'cinema_name' => $cinema?->name,
+            'user_id' => $user?->id,
+            'user_points' => $userPoints,
+            'user_rank' => $userRank?->name ?? null,
+            'products' => $products,
+            'promotion_status' => $promotionStatus,
+            'discount' => $discount,
+            'points_used' => $pointsUsed,
+            'promotion_id' => $promotionId,
+            'seat_types' => $seatTypes,
+        ];
 
-              session(['booking_data' => $bookingData]);
-              
+        session(['booking_data' => $bookingData]);
+
 
         return view('client.ticket_booking', compact(
             'movie',
@@ -404,7 +415,7 @@ public function filter(Request $request, $genreName = null)
     private function getShowtimesData($showtimes)
     {
         $availabilityService = new ShowtimeAvailabilityService();
-        
+
         $showtimesByDate = $showtimes->groupBy(function ($showtime) {
             return Carbon::parse($showtime->start_time)->format('Y-m-d');
         });
@@ -417,7 +428,7 @@ public function filter(Request $request, $genreName = null)
                     'room_name' => $room->name,
                     'times' => $roomShowtimes->map(function ($showtime) use ($availabilityService) {
                         $availabilityInfo = $availabilityService->getShowtimeAvailabilityInfo($showtime);
-                        
+
                         return [
                             'id' => $showtime->id,
                             'time' => Carbon::parse($showtime->start_time)->format('h:i A'),
@@ -475,7 +486,7 @@ public function filter(Request $request, $genreName = null)
             ->where('status', MovieStatus::Showing)
             ->withCount(['showtimes as tickets_sold' => function ($q) {
                 $q->join('bookings', 'showtimes.id', '=', 'bookings.showtime_id')
-                  ->where('bookings.created_at', '>=', now()->subDays(30));
+                    ->where('bookings.created_at', '>=', now()->subDays(30));
             }])
             ->orderBy('tickets_sold', 'desc')
             ->take(8)
@@ -486,7 +497,7 @@ public function filter(Request $request, $genreName = null)
             ->where('status', MovieStatus::Showing)
             ->withCount(['showtimes as tickets_sold_week' => function ($q) {
                 $q->join('bookings', 'showtimes.id', '=', 'bookings.showtime_id')
-                  ->where('bookings.created_at', '>=', now()->subDays(7));
+                    ->where('bookings.created_at', '>=', now()->subDays(7));
             }])
             ->orderBy('tickets_sold_week', 'desc')
             ->take(8)
@@ -554,7 +565,7 @@ public function filter(Request $request, $genreName = null)
                     ->where('promotion_id', $promotion->id)
                     ->where('status', 'confirmed')
                     ->exists();
-                
+
                 if ($hasUsedPromotion) {
                     return response()->json(['error' => 'Mã giảm giá này đã được sử dụng trong đơn hàng trước đó.'], 400);
                 }
@@ -569,7 +580,7 @@ public function filter(Request $request, $genreName = null)
             // 6. Tính toán giảm giá
             $discount = 0;
             $discountType = is_string($promotion->discount_type) ? $promotion->discount_type : $promotion->discount_type->value;
-            
+
             if ($discountType === 'percentage') {
                 $discount = $orderAmount * ((float)$promotion->discount_value / 100);
                 if ($promotion->max_discount_amount && $discount > (float)$promotion->max_discount_amount) {
@@ -776,7 +787,7 @@ public function filter(Request $request, $genreName = null)
 
             // Debug total count
             $totalPromotions = count($categorizedPromotions['user_rank']) + count($categorizedPromotions['general']) + count($categorizedPromotions['higher_ranks']);
-            
+
             Log::info('[DEBUG] Categorized promotions result:', [
                 'user_rank_count' => count($categorizedPromotions['user_rank']),
                 'general_count' => count($categorizedPromotions['general']),
@@ -817,7 +828,7 @@ public function filter(Request $request, $genreName = null)
         }
 
         $user = Auth::user();
-        
+
         Log::info('[DEBUG] getUserRankPromotions query params:', [
             'userRankId' => $userRankId,
             'now' => $now,
@@ -878,7 +889,7 @@ public function filter(Request $request, $genreName = null)
     private function getGeneralPromotions($now)
     {
         $user = Auth::user();
-        
+
         $promotions = Promotion::where('status', 'active')
             ->where('start_date', '<=', $now)
             ->where('end_date', '>=', $now)
@@ -971,7 +982,7 @@ public function filter(Request $request, $genreName = null)
         // Chỉ lấy các promotion cho rank cao hơn rank hiện tại của user
         // dựa trên min_points_required
         $user = Auth::user();
-        
+
         $promotions = Promotion::with('rank')
             ->where('status', 'active')
             ->where(function ($query) use ($now) {
@@ -1055,7 +1066,7 @@ public function filter(Request $request, $genreName = null)
 
         return number_format((float)$promotion->discount_value) . '₫';
     }
-       public function applyDiscountCodeAutomatically(Request $request)
+    public function applyDiscountCodeAutomatically(Request $request)
     {
         try {
             Log::info('[DEBUG] applyDiscountCodeAutomatically input:', $request->all());
