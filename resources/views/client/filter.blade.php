@@ -188,18 +188,65 @@
         width: 100%;
     }
 
-    .badge-top {
+    .medal {
     position: absolute;
     top: 10px;
     right: 10px;
-    background: linear-gradient(45deg, #ff512f, #dd2476);
-    color: #fff;
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     font-weight: bold;
-    padding: 5px 10px;
-    border-radius: 20px;
-    font-size: 0.9rem;
-    box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+    color: #fff;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
     z-index: 10;
+    flex-direction: column;
+    text-align: center;
+}
+
+/* Dải ruy băng */
+.medal::before, .medal::after {
+    content: "";
+    position: absolute;
+    bottom: -20px;
+    width: 18px;
+    height: 30px;
+    background: inherit;
+    clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+.medal::before {
+    left: 12px;
+    transform: rotate(-5deg);
+}
+.medal::after {
+    right: 12px;
+    transform: rotate(5deg);
+}
+
+/* Số TOP */
+.medal-rank {
+    font-size: 0.85rem;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+}
+
+/* TOP 1 - Vàng */
+.medal-1 {
+    background: radial-gradient(circle at 30% 30%, #FFD700, #FFA500);
+    color: #000;
+}
+
+/* TOP 2 - Bạc */
+.medal-2 {
+    background: radial-gradient(circle at 30% 30%, #E0E0E0, #A9A9A9);
+    color: #000;
+}
+
+/* TOP 3 - Đồng */
+.medal-3 {
+    background: radial-gradient(circle at 30% 30%, #CD7F32, #8B4513);
+    color: #fff;
 }
 
 </style>
@@ -250,10 +297,11 @@
                                 class="img-fluid rounded-top movie-poster"
                                 alt="{{ $movie->name }}">
 
-                                {{-- ✅ Thêm badge TOP cho 3 phim đầu --}}
-                    @if($isShowing && $loop->iteration <= 3)
-                        <span class="badge-top">TOP {{ $loop->iteration }}</span>
-                    @endif
+                                @if($isShowing && $loop->iteration <= 3)
+    <div class="medal medal-{{ $loop->iteration }}">
+        <span class="medal-rank">TOP {{ $loop->iteration }}</span>
+    </div>
+@endif
                         </div>
 
                         <div class="p-3">
