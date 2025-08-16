@@ -575,9 +575,6 @@
             {{-- Nội dung --}}
             <div class="col-md-8">
                 <h1 class="fw-bold mb-2" style="font-size: 32px;">{{ $movie->name }}</h1>
-                <p class="text-muted" style="font-size: 16px; line-height: 1.6;">
-                    {{ $movie->description ?? 'Không có mô tả.' }}
-                </p>
 
                 <div class="movie-info">
                     <div class="movie-info-item">
@@ -646,6 +643,16 @@
 
             </div>
         </div>
+
+        {{-- Mô tả phim --}}
+<div class="movie-detail mt-4 mb-5">
+    <h3 style="font-size: 20px; font-weight: bold; margin-bottom: 10px; color: #222;">
+        📝 Mô tả phim
+    </h3>
+    <p style="font-size: 16px; line-height: 1.6; color: #444;">
+        {{ $movie->description }}
+    </p>
+</div>
 
         {{-- Trailer --}}
         @if ($movie->trailer_url)
