@@ -607,7 +607,7 @@
                     </div>
                     <div class="movie-info-item">
                         <strong>🔞 Giới hạn tuổi:</strong>
-                        <span>{{ $movie->ageLimit?->label ?? 'N/A' }}</span>
+                        <span>{{ $movie->ageLimit?->description ?? 'N/A' }}</span>
                     </div>
                 </div>
 

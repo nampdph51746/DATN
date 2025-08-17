@@ -252,7 +252,7 @@
 <section class="w3l-grids">
     <div class="container py-4">
         <h1 class="mb-4 section-title">{{ $title }}</h1>
-        @if ($isShowing)
+        <!-- @if ($isShowing)
         <div class="filter-container">
             @if ($errors->any())
             <div class="alert alert-danger mb-4 max-w-900 mx-auto">
@@ -284,7 +284,7 @@
                 </div>
             </div>
         </div>
-        @endif
+        @endif -->
         <div class="row">
             @forelse($movies as $movie)
             <div class="col-md-3 col-sm-6 mb-4">
