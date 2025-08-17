@@ -45,17 +45,8 @@ class RoleController extends Controller
     }
     public function create()
     {
-        $permissions = \Spatie\Permission\Models\Permission::all();
-
-        // Nhóm quyền theo tiền tố (group)
-        $groupedPermissions = [];
-        foreach ($permissions as $permission) {
-            $parts = explode('.', $permission->name);
-            $group = $parts[0] ?? 'Khác';
-            $groupedPermissions[$group][] = $permission;
-        }
-
-        return view('admin.roles.create', compact('permissions', 'groupedPermissions'));
+        $permissions = Permission::all();
+        return view('admin.roles.create', compact('permissions'));
     }
 
     public function show($id)
@@ -69,19 +60,10 @@ class RoleController extends Controller
         $role = Role::findById($id);
         $permissions = Permission::all();
 
-
         // Mảng tên quyền để đánh dấu checkbox
         $rolePermissions = $role->permissions->pluck('name')->toArray();
 
-        // Nhóm quyền theo tiền tố (group)
-        $groupedPermissions = [];
-        foreach ($permissions as $permission) {
-            $parts = explode('.', $permission->name);
-            $group = $parts[0] ?? 'Khác';
-            $groupedPermissions[$group][] = $permission;
-        }
-
-        return view('admin.roles.edit', compact('role', 'permissions', 'rolePermissions', 'groupedPermissions'));
+        return view('admin.roles.edit', compact('role', 'permissions', 'rolePermissions'));
     }
 
 
@@ -116,28 +98,20 @@ class RoleController extends Controller
         return redirect()->route('roles.index')->with('success', 'Role created successfully.');
     }
 
-public function update(Request $request, $id)
-{
-    $role = Role::findById($id);
-    $oldData = $role->getOriginal();
+    public function update(Request $request, $id)
+    {
+        $role = Role::findById($id); // dùng Spatie
+        $oldData = $role->getOriginal();
 
-    $request->validate([
-        'name' => 'required|string|max:255',
-        'permissions' => 'array',
-        'permissions.*' => 'string|exists:permissions,name',
-    ]);
-
-    // Nếu là vai trò 'admin', chỉ cho phép cập nhật tên — KHÔNG cho thay đổi permission
-    if ($role->name === 'admin') {
-        if (auth()->user()->hasRole('admin')) {
-            if ($request->has('permissions')) {
-                return redirect()->route('roles.index')->with('error', 'Không thể sửa quyền của vai trò admin.');
-            }
-
+        // Nếu là vai trò admin thì không cho sửa quyền
+        if ($role->name === 'admin' && auth()->user()->hasRole('admin')) {
+            $request->validate([
+                'name' => 'required|string|max:255',
+            ]);
             $role->name = $request->name;
             $role->save();
 
-            // Ghi log thay đổi
+            // Thông báo khi cập nhật tên admin
             Notification::create([
                 'user_id' => Auth::id(),
                 'entity_type' => Role::class,
@@ -154,39 +128,40 @@ public function update(Request $request, $id)
                 ]),
             ]);
 
-            return redirect()->route('roles.index')->with('success', 'Tên vai trò admin đã được cập nhật.');
-        } else {
-            return redirect()->route('roles.index')->with('error', 'Bạn không có quyền sửa vai trò admin.');
+            return redirect()->route('roles.index')->with('success', 'Không thể sửa quyền admin. Đã cập nhật tên.');
         }
+
+        // Cập nhật tên + sync permission
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'permissions' => 'array',
+        ]);
+
+        $role->name = $request->name;
+        $role->save();
+
+        // Đồng bộ permission
+        $role->syncPermissions($request->permissions ?? []);
+
+        // Thông báo khi cập nhật vai trò
+        Notification::create([
+            'user_id' => Auth::id(),
+            'entity_type' => Role::class,
+            'entity_id' => $role->id,
+            'title' => 'Cập nhật vai trò',
+            'message' => 'Vai trò #' . $role->id . ' đã được cập nhật.',
+            'type' => NotificationType::System,
+            'priority' => 'high',
+            'old_status' => null,
+            'new_status' => null,
+            'event_details' => json_encode([
+                'old' => $oldData,
+                'new' => $role->getAttributes(),
+            ]),
+        ]);
+
+        return redirect()->route('roles.index')->with('success', 'Cập nhật vai trò thành công.');
     }
-
-    // Vai trò bình thường → cập nhật cả tên và quyền
-    $role->name = $request->name;
-    $role->save();
-
-    // Đồng bộ quyền (sync thay vì add/remove lẻ)
-    if ($request->has('permissions')) {
-        $role->syncPermissions($request->permissions);
-    }
-
-    Notification::create([
-        'user_id' => Auth::id(),
-        'entity_type' => Role::class,
-        'entity_id' => $role->id,
-        'title' => 'Cập nhật vai trò',
-        'message' => 'Vai trò "' . $role->name . '" đã được cập nhật.',
-        'type' => NotificationType::System,
-        'priority' => 'medium',
-        'old_status' => null,
-        'new_status' => null,
-        'event_details' => json_encode([
-            'old' => $oldData,
-            'new' => $role->getAttributes(),
-        ]),
-    ]);
-
-    return redirect()->route('roles.index')->with('success', 'Vai trò đã được cập nhật.');
-}
 
     public function softDelete(Role $role, $id)
     {
