@@ -61,10 +61,6 @@
                     <div class="stats-content">
                         <h3 class="stats-number">{{ $cinemas->total() }}</h3>
                         <p class="stats-label">Tổng rạp chiếu</p>
-                        <div class="stats-trend">
-                            <i class="bi bi-arrow-up-circle text-success"></i>
-                            <span class="text-success">+12%</span>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -78,10 +74,6 @@
                     <div class="stats-content">
                         <h3 class="stats-number">{{ $cinemas->where('status', 'active')->count() }}</h3>
                         <p class="stats-label">Đang hoạt động</p>
-                        <div class="stats-trend">
-                            <i class="bi bi-arrow-up-circle text-success"></i>
-                            <span class="text-success">+8%</span>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -95,10 +87,6 @@
                     <div class="stats-content">
                         <h3 class="stats-number">{{ $cinemas->where('status', 'inactive')->count() }}</h3>
                         <p class="stats-label">Tạm dừng</p>
-                        <div class="stats-trend">
-                            <i class="bi bi-dash-circle text-warning"></i>
-                            <span class="text-warning">0%</span>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -112,15 +100,6 @@
                     <div class="stats-content">
                         <h3 class="stats-number">{{ request('keyword') ? 'ON' : 'OFF' }}</h3>
                         <p class="stats-label">Tìm kiếm</p>
-                        <div class="stats-trend">
-                            @if(request('keyword'))
-                                <i class="bi bi-search text-info"></i>
-                                <span class="text-info">Đang bật</span>
-                            @else
-                                <i class="bi bi-circle text-muted"></i>
-                                <span class="text-muted">Đang tắt</span>
-                            @endif
-                        </div>
                     </div>
                 </div>
             </div>

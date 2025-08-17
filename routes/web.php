@@ -42,6 +42,9 @@ use App\Http\Controllers\Admin\AdminProductCategoriesController;
 
 
 Route::get('/', [HomeController::class, 'index'])->name('client.home');
+Route::get('/movies/filter/{genreName?}', [HomeController::class, 'filter'])
+    ->where('genreName', '.*') // Cho phép dấu cách, ký tự đặc biệt
+    ->name('movies.filter');Route::get('/movies/{id}', [HomeController::class, 'show'])->name('movies.show');
 Route::get('/movies', [HomeController::class, 'movies'])->name('client.movies');
 Route::get('/movies/{id}', [HomeController::class, 'show'])->name('movies.show');
 Route::get('/movies/{id}/ticket-booking', [HomeController::class, 'ticketBooking'])->name('client.movies.ticketBooking');
@@ -186,7 +189,15 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
     Route::get('cinemas/trash', [CinemaController::class, 'trash'])->name('cinemas.trash');
     Route::patch('cinemas/{id}/restore', [CinemaController::class, 'restore'])->name('cinemas.restore');
     Route::delete('cinemas/{id}/force-delete', [CinemaController::class, 'forceDelete'])->name('cinemas.forceDelete');
-    Route::resource('cinemas', CinemaController::class);
+    Route::resource('cinemas', \App\Http\Controllers\Admin\CinemaController::class)->names([
+        'index'   => 'cinemas.index',
+        'create'  => 'cinemas.create',
+        'store'   => 'cinemas.store',
+        'show'    => 'cinemas.show',
+        'edit'    => 'cinemas.edit',
+        'update'  => 'cinemas.update',
+        'destroy' => 'cinemas.destroy',
+    ]);
 
     // QR code scanning routes (chỉ staff và admin)
     Route::middleware(['auth', 'role:admin,staff'])->group(function () {
