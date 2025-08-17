@@ -453,7 +453,7 @@
                     </div>
 
                     <!-- Bulk Actions -->
-                    <form id="delete-selected-form" action="{{ route('admin.countries.bulkDelete') }}" method="POST" style="display: none;" class="mt-3">
+                    {{-- <form id="delete-selected-form" action="{{ route('admin.countries.bulkDelete') }}" method="POST" style="display: none;" class="mt-3">
                         @csrf
                         @method('DELETE')
                         <input type="hidden" name="ids" id="selected-country-ids">
@@ -467,7 +467,7 @@
                                 <i class="fas fa-trash me-1"></i> Xóa đã chọn
                             </button>
                         </div>
-                    </form>
+                    </form> --}}
                 </div>
 
                 <div class="card-body p-0">
