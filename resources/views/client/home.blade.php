@@ -534,7 +534,7 @@
                                         <div class="ticket-container">
                                             @auth
                                             <a href="{{ route('client.movies.ticketBooking', ['id' => $movie->id]) }}" class="ticket-btn">
-                                                <img src="{{ asset('client_assets/assets/icons/ticket.svg') }}" alt="Đặt vé" style="width:18px; height:18px; margin-right:6px;">
+                                                <img src="{{ asset('client_assets/assets/icons/ticket.svg') }}" alt="" style="width:18px; height:18px; margin-right:6px;">
                                                 Đặt vé
                                             </a>
                                             @else
