@@ -128,7 +128,7 @@
                 </div>
                 
                 <div class="card-body p-4">
-                    <form id="movieEditForm" action="{{ route('admin.movies.update', $movie) }}" method="POST" enctype="multipart/form-data">
+                    <form id="movieEditForm" action="{{ route('admin.movies.update', $movie->id) }}" method="POST" enctype="multipart/form-data">
                         @csrf
                         @method('PUT')
                         
@@ -851,7 +851,7 @@ $(document).ready(function() {
         width: 'resolve',
         templateResult: function(data) {
             if (data.loading) return data.text;
-            return $('<span><i class="bi bi-person me-2 text-primary"></i>' + data.text + '</span>');
+            return $('<span><i class="bx bx-user me-2 text-primary"></i>' + data.text + '</span>');
         },
         templateSelection: function(data) {
             return data.text;
@@ -859,38 +859,17 @@ $(document).ready(function() {
     });
 
     // Khởi tạo Select2 cho đạo diễn
-    $('#director_ids').select2({
+    $('#director_id').select2({
         placeholder: 'Chọn đạo diễn (gõ để tìm)', 
         theme: 'bootstrap4',
         allowClear: true,
         width: 'resolve',
         templateResult: function(data) {
             if (data.loading) return data.text;
-            return $('<span><i class="bi bi-person-video me-2 text-success"></i>' + data.text + '</span>');
+            return $('<span><i class="bx bx-user-voice me-2 text-success"></i>' + data.text + '</span>');
         },
         templateSelection: function(data) {
             return data.text;
-        }
-    });
-
-    $('#name').on('input', function() {
-        var name = $(this).val().trim();
-        var movieId = '{{ $movie->id }}';
-        if (name.length > 0) {
-            $.ajax({
-                url: '{{ route("admin.movies.count-duplicate-name") }}',
-                method: 'GET',
-                data: { name: name, exclude_id: movieId },
-                success: function(res) {
-                    if (res.count > 0) {
-                        $('#duplicate-movie-count').text('Đã có ' + res.count + ' phim trùng tên này!');
-                    } else {
-                        $('#duplicate-movie-count').text('');
-                    }
-                }
-            });
-        } else {
-            $('#duplicate-movie-count').text('');
         }
     });
 });
