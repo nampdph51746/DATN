@@ -517,106 +517,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="row align-items-center g-2 mt-3">
-                            <div class="col-lg-6">
-                                <p class="mb-0 fw-medium text-dark fs-16">Thời lượng: <span
-                                        class="text-muted">{{ $movie->duration_minutes }} phút</span></p>
-                            </div>
-                            <div class="col-lg-6">
-                                <p class="mb-0 fw-medium text-dark fs-16">Ngôn ngữ: <span
-                                        class="text-muted">{{ $movie->language ?? 'N/A' }}</span></p>
-                            </div>
-                        </div>
-                        <div class="row align-items-center g-2 mt-3">
-                            <div class="col-lg-6">
-                                <p class="mb-0 fw-medium text-dark fs-16">Ngày phát hành: <span
-                                        class="text-muted">{{ $movie->release_date->format('d/m/Y') }}</span></p>
-                            </div>
-                            <div class="col-lg-6">
-                                <p class="mb-0 fw-medium text-dark fs-16">Ngày kết thúc: <span
-                                        class="text-muted">{{ $movie->end_date?->format('d/m/Y') ?? 'N/A' }}</span></p>
-                            </div>
-                        </div>
-                        <div class="row align-items-center g-2 mt-3">
-                            <div class="col-lg-6">
-                                <p class="mb-0 fw-medium text-dark fs-16">Quốc gia: <span
-                                        class="text-muted">{{ $movie->country?->name ?? 'N/A' }}</span></p>
-                            </div>
-                            <div class="col-lg-6">
-                                <p class="mb-0 fw-medium text-dark fs-16">Giới hạn tuổi: <span
-                                        class="text-muted">{{ $movie->ageLimit?->name ?? ($movie->ageLimit?->label ?? 'N/A') }}</span>
-                                </p>
-                            </div>
-                        </div>
-                        <div class="row align-items-center g-2 mt-3">
-                            <div class="col-lg-6">
-                                <p class="mb-0 fw-medium text-dark fs-16">Thể loại:
-                                    <span class="text-muted">
-                                        @if ($movie->genres->isNotEmpty())
-                                            {{ $movie->genres->pluck('name')->join(', ') }}
-                                        @else
-                                            N/A
-                                        @endif
-                                    </span>
-                                </p>
-                            </div>
-                            <div class="col-lg-6">
-                                <p class="mb-0 fw-medium text-dark fs-16">Trạng thái:
-                                    <span class="badge"
-                                        style="background-color: {{ $statusColors[$movie->status->value ?? $movie->status] ?? '#6c757d' }}; color: #fff;">
-                                        {{ ucfirst($movie->status->value ?? $movie->status) }}
-                                    </span>
-                                </p>
-                            </div>
-                        </div>
-                        <div class="row align-items-center g-2 mt-3">
-                            <div class="col-lg-6">
-                                <p class="mb-0 fw-medium text-dark fs-16">Điểm đánh giá: <span
-                                        class="text-muted">{{ $movie->average_rating ?? 'N/A' }}</span></p>
-                            </div>
-                            <div class="col-lg-6">
-                                <p class="mb-0 fw-medium text-dark fs-16">Trailer:
-                                    <span class="text-muted">
-                                        @if ($movie->trailer_url)
-                                            <a href="{{ $movie->trailer_url }}" target="_blank">Xem trailer</a>
-                                        @else
-                                            N/A
-                                        @endif
-                                    </span>
-                                </p>
-                            </div>
-                        </div>
-                        <div class="row align-items-center g-2 mt-3">
-                            <div class="col-lg-6">
-                                <p class="mb-0 fw-medium text-dark fs-16">Ảnh:
-                                    <span class="text-muted">
-                                        @if ($movie->image_path)
-                                            <a href="{{ Storage::url($movie->image_path) }}" target="_blank">Xem ảnh</a>
-                                        @else
-                                            N/A
-                                        @endif
-                                    </span>
-                                </p>
-                            </div>
-                            <div class="col-lg-6">
-                                <p class="mb-0 fw-medium text-dark fs-16">Thời gian tạo: <span
-                                        class="text-muted">{{ $movie->created_at ? $movie->created_at->tz('Asia/Ho_Chi_Minh')->format('d/m/Y H:i') : 'N/A' }}</span>
-                                </p>
-                            </div>
-                        </div>
-                        <div class="row align-items-center g-2 mt-3">
-                            <div class="col-lg-6">
-                                <p class="mb-0 fw-medium text-dark fs-16">Thời gian cập nhật: <span
-                                        class="text-muted">{{ $movie->updated_at ? $movie->updated_at->tz('Asia/Ho_Chi_Minh')->format('d/m/Y H:i') : 'N/A' }}</span>
-                                </p>
-                            </div>
-                        </div>
-                        <h4 class="text-dark fw-medium mt-4">Mô tả:</h4>
-                        <p class="text-muted">{{ $movie->description ?? 'Không có mô tả.' }}</p>
-                        <h4 class="text-dark fw-medium mt-4">Ghi chú:</h4>
-                        <p class="text-muted">Phim {{ $movie->name }} có thời lượng {{ $movie->duration_minutes }} phút,
-                            phát hành ngày {{ $movie->release_date->format('d/m/Y') }}. Trạng thái hiện tại là
-                            {{ ucfirst($movie->status->value ?? $movie->status) }}.</p>
+                    </div>
 
                         <!-- Bảng suất chiếu -->
                         <div class="card border-0 shadow-sm">
@@ -743,6 +644,7 @@
             </div>
         </div>
     </div>
+</div>
 
 <!-- Thêm CSS và JS cho Select2 -->
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
@@ -1138,16 +1040,13 @@ document.querySelector('[data-bs-target="#confirmShowtimeModal"]').addEventListe
     const durationMinutes = {{ $movie->duration_minutes }};
     const movieName = "{{ addslashes($movie->name) }}";
 
-            if (selectedRooms.length === 0) {
-                // Hiển thị thông báo lỗi bằng modal
-                const errorModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('errorModal'));
-                document.getElementById('errorMessage').textContent = 'Vui lòng chọn ít nhất một phòng chiếu.';
-                errorModal.show();
-                // Ngăn không cho modal xác nhận hiện ra
-                e.stopPropagation();
-                e.preventDefault();
-                return false;
-            }
+    if (selectedRooms.length === 0) {
+        // Hiển thị thông báo lỗi bằng modal
+        const errorModal = new bootstrap.Modal(document.getElementById('errorModal'), {});
+        document.getElementById('errorMessage').textContent = 'Vui lòng chọn ít nhất một phòng chiếu.';
+        errorModal.show();
+        return;
+    }
 
     const slots = getShowtimeSlots(dateInput, durationMinutes, maxShowtimes);
     if (slots.length === 0) {
@@ -1176,11 +1075,10 @@ document.querySelector('[data-bs-target="#confirmShowtimeModal"]').addEventListe
     });
     document.getElementById('modalTotal').textContent = slots.length;
 
-        // Xử lý xác nhận tạo suất chiếu
-        document.getElementById('confirmCreateShowtime').addEventListener('click', function() {
-            document.getElementById('createShowtimeForm').submit();
-        });
-    </script>
+    // Hiển thị modal xác nhận
+    const confirmModal = new bootstrap.Modal(document.getElementById('confirmShowtimeModal'), {});
+    confirmModal.show();
+});
 
 // Xử lý xác nhận tạo suất chiếu
 document.getElementById('confirmCreateShowtime').addEventListener('click', function() {
@@ -1259,4 +1157,5 @@ function updateShowtimeStatus(showtimeId, status) {
             </div>
         </div>
     </div>
+</div>
 @endsection
