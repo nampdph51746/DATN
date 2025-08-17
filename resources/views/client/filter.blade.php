@@ -152,12 +152,17 @@
     }
 
     .movie-genre {
-    white-space: nowrap;       /* Chỉ hiển thị 1 dòng */
-    overflow: hidden;          /* Ẩn phần vượt quá */
-    text-overflow: ellipsis;   /* Hiện dấu ... */
-    display: block;            /* Đảm bảo hoạt động trong inline context */
-    max-width: 100%;           /* Giới hạn trong phần card */
-}
+        white-space: nowrap;
+        /* Chỉ hiển thị 1 dòng */
+        overflow: hidden;
+        /* Ẩn phần vượt quá */
+        text-overflow: ellipsis;
+        /* Hiện dấu ... */
+        display: block;
+        /* Đảm bảo hoạt động trong inline context */
+        max-width: 100%;
+        /* Giới hạn trong phần card */
+    }
 
     /* Responsive nhỏ */
     @media (max-width: 576px) {
@@ -188,66 +193,15 @@
         width: 100%;
     }
 
-    /* Base style cho huy hiệu */
-/* Base style cho huy hiệu */
-.top-badge {
+    .top-badge-img {
     position: absolute;
-    top: 8px;
-    right: 8px;
-    width: 45px;
-    height: 45px;
-    border-radius: 50%;
-    font-weight: bold;
-    font-size: 1rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #fff;
-    z-index: 20;
-    box-shadow: 0 3px 6px rgba(0,0,0,0.25);
+    top: 10px;
+    right: 10px;
+    width: 55px; /* chỉnh kích thước theo nhu cầu */
+    height: auto;
+    z-index: 30;
+    pointer-events: none; /* không che click */
 }
-
-/* Dải ruy băng hai bên */
-.top-badge::before,
-.top-badge::after {
-    content: "";
-    position: absolute;
-    bottom: -12px;
-    width: 12px;
-    height: 18px;
-    background: inherit;
-    clip-path: polygon(50% 100%, 0 0, 100% 0);
-}
-
-.top-badge::before {
-    left: 8px;
-    transform: rotate(-5deg);
-}
-
-.top-badge::after {
-    right: 8px;
-    transform: rotate(5deg);
-}
-
-/* TOP 1 - Vàng */
-.top-1 {
-    background: radial-gradient(circle at 30% 30%, #FFD700, #FFA500);
-    color: #000;
-}
-
-/* TOP 2 - Bạc */
-.top-2 {
-    background: radial-gradient(circle at 30% 30%, #E0E0E0, #A9A9A9);
-    color: #000;
-}
-
-/* TOP 3 - Đồng */
-.top-3 {
-    background: radial-gradient(circle at 30% 30%, #CD7F32, #8B4513);
-    color: #fff;
-}
-
-
 </style>
 <section class="w3l-grids">
     <div class="container py-4">
@@ -291,54 +245,53 @@
                 <a href="{{ route('movies.show', ['id' => $movie->id]) }}" class="text-decoration-none text-dark">
                     <div class="movie-card shadow-sm h-100">
                         <div class="position-relative">
-                            <img                                             src="{{ $movie->image_path ? Storage::url($movie->image_path) : ($movie->poster_url ?? asset('client_assets/assets/images/default-movie.jpg')) }}"
+    <img src="{{ $movie->image_path ? Storage::url($movie->image_path) : ($movie->poster_url ?? asset('client_assets/assets/images/default-movie.jpg')) }}"
+        class="img-fluid rounded-top movie-poster"
+        alt="{{ $movie->name }}">
 
-                                class="img-fluid rounded-top movie-poster"
-                                alt="{{ $movie->name }}">
+    @if($isShowing && $loop->iteration <= 3)
+        <img src="{{ Storage::url('tops/top' . $loop->iteration . '.png') }}"
+            alt="Top {{ $loop->iteration }}"
+            class="top-badge-img">
+    @endif
+</div>
 
-                               @if($isShowing && $loop->iteration <= 3)
-    <div class="top-badge top-{{ $loop->iteration }}">
-        <span>{{ $loop->iteration }}</span>
-    </div>
-@endif
-                        </div>
+                    <div class="p-3">
+                        <h6 class="movie-title">{{ $movie->name }}</h6>
+                        <p class="mb-1 movie-genre">
+                            <strong>Thể loại:</strong>
+                            {{ $movie->genres->take(3)->pluck('name')->join(', ') ?: 'N/A' }}
+                        </p>
+                        <p class="mb-2"><strong>Thời lượng:</strong> {{ $movie->duration_minutes }} phút</p>
 
-                        <div class="p-3">
-                            <h6 class="movie-title">{{ $movie->name }}</h6>
-                            <p class="mb-1 movie-genre">
-                                <strong>Thể loại:</strong>
-                                {{ $movie->genres->take(3)->pluck('name')->join(', ') ?: 'N/A' }}
-                            </p>
-                            <p class="mb-2"><strong>Thời lượng:</strong> {{ $movie->duration_minutes }} phút</p>
-
-                            @auth
-                            @if ($movie->status->value === 'showing')
-                            <a href="{{ route('client.movies.ticketBooking', ['id' => $movie->id]) }}" class="btn btn-primary w-100">
-                                🎟 ĐẶT VÉ
-                            </a>
-                            @endif
-                            @else
-                            @if ($movie->status->value === 'showing')
-                            <a href="#" class="btn btn-primary w-100" onclick="showLoginPrompt(event, '{{ route('client.movies.ticketBooking', ['id' => $movie->id]) }}')">
-                                🎟 ĐẶT VÉ
-                            </a>
-                            @endif
-                            @endauth
-                        </div>
+                        @auth
+                        @if ($movie->status->value === 'showing')
+                        <a href="{{ route('client.movies.ticketBooking', ['id' => $movie->id]) }}" class="btn btn-primary w-100">
+                            🎟 ĐẶT VÉ
+                        </a>
+                        @endif
+                        @else
+                        @if ($movie->status->value === 'showing')
+                        <a href="#" class="btn btn-primary w-100" onclick="showLoginPrompt(event, '{{ route('client.movies.ticketBooking', ['id' => $movie->id]) }}')">
+                            🎟 ĐẶT VÉ
+                        </a>
+                        @endif
+                        @endauth
                     </div>
-                </a>
             </div>
-
-            @empty
-            <div class="no-movies-message">
-                Không tìm thấy phim phù hợp.
-            </div>
-            @endforelse
+            </a>
         </div>
 
-        <div class="d-flex justify-content-center">
-            {{ $movies->appends(request()->query())->links() }}
+        @empty
+        <div class="no-movies-message">
+            Không tìm thấy phim phù hợp.
         </div>
+        @endforelse
+    </div>
+
+    <div class="d-flex justify-content-center">
+        {{ $movies->appends(request()->query())->links() }}
+    </div>
     </div>
 </section>
 <script>
