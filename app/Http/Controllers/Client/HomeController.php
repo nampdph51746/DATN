@@ -7,7 +7,6 @@ use App\Models\Movie;
 use App\Models\Product;
 use App\Models\SeatType;
 use App\Models\Showtime;
-use App\Models\Review;
 use App\Enums\MovieStatus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -28,83 +27,66 @@ use App\Services\ShowtimeAvailabilityService;
 class HomeController extends Controller
 {
     public function index()
-    {
-        $query = request('query');
+{
+    $query = request('query');
+    $date = request('date');
+    $fromTime = request('from_time');
+    $toTime = request('to_time');
 
-        // Truy vấn phim đang chiếu
-        $showingMovies = Movie::query()
-            ->with('genres')
-            ->when($query, function ($q) use ($query) {
-                $q->where('name', 'like', "%{$query}%")
-                    ->orWhereHas('genres', function ($g) use ($query) {
-                        $g->where('name', 'like', "%{$query}%");
-                    });
-            })
-            ->where('status', MovieStatus::Showing)
-            ->orderBy('release_date', 'desc')
-            ->take(8)
-            ->get();
+    // Truy vấn phim đang chiếu
+    $showingMovies = Movie::query()
+        ->with(['genres', 'showtimes'])
+        ->when($query, function ($q) use ($query) {
+            $q->where('name', 'like', "%{$query}%")
+                ->orWhereHas('genres', function ($g) use ($query) {
+                    $g->where('name', 'like', "%{$query}%");
+                });
+        })
+        ->when($date, function ($q) use ($date) {
+            $q->whereHas('showtimes', function ($s) use ($date) {
+                $s->whereDate('start_time', $date);
+            });
+        })
+        ->when($fromTime && $toTime, function ($q) use ($date, $fromTime, $toTime) {
+            $q->whereHas('showtimes', function ($s) use ($date, $fromTime, $toTime) {
+                $s->whereDate('start_time', $date)
+                  ->whereTime('start_time', '>=', $fromTime)
+                  ->whereTime('start_time', '<=', $toTime);
+            });
+        })
+        ->where('status', MovieStatus::Showing)
+        ->orderBy('release_date', 'desc')
+        ->take(8)
+        ->get();
 
-        // Truy vấn phim sắp chiếu
-        $upcomingMovies = Movie::query()
-            ->with('genres')
-            ->when($query, function ($q) use ($query) {
-                $q->where('name', 'like', "%{$query}%")
-                    ->orWhereHas('genres', function ($g) use ($query) {
-                        $g->where('name', 'like', "%{$query}%");
-                    });
-            })
-            ->where('status', MovieStatus::Upcoming)
-            ->orderBy('release_date', 'asc')
-            ->take(6)
-            ->get();
+    // Truy vấn phim sắp chiếu
+    $upcomingMovies = Movie::query()
+        ->with('genres')
+        ->when($query, function ($q) use ($query) {
+            $q->where('name', 'like', "%{$query}%")
+                ->orWhereHas('genres', function ($g) use ($query) {
+                    $g->where('name', 'like', "%{$query}%");
+                });
+        })
+        ->where('status', MovieStatus::Upcoming)
+        ->orderBy('release_date', 'asc')
+        ->take(6)
+        ->get();
 
-        return view('client.home', compact('showingMovies', 'upcomingMovies', 'query'));
-    }
+    return view('client.home', compact(
+        'showingMovies',
+        'upcomingMovies',
+        'query',
+        'date',
+        'fromTime',
+        'toTime'
+    ));
+}
 
     public function show(Request $request, $id)
     {
         // Lấy thông tin phim (kèm quốc gia, giới hạn độ tuổi)
         $movie = Movie::with(['country', 'ageLimit', 'genres'])->findOrFail($id);
-
-        // Lấy reviews đã được duyệt
-        $reviews = Review::with('user')
-            ->where('movie_id', $id)
-            ->where('status', 'approved')
-            ->orderBy('created_at', 'desc')
-            ->take(5)
-            ->get();
-
-        // Kiểm tra user hiện tại có thể review không
-        $canReview = false;
-        $reviewMessage = '';
-        
-        if (Auth::check()) {
-            $user = Auth::user();
-            
-            // Kiểm tra đã xem phim chưa
-            $hasWatchedMovie = Booking::where('user_id', $user->id)
-                ->whereHas('showtime', function ($query) use ($id) {
-                    $query->where('movie_id', $id);
-                })
-                ->where('status', 'confirmed')
-                ->exists();
-
-            // Kiểm tra đã đánh giá chưa
-            $hasReviewed = Review::where('user_id', $user->id)
-                ->where('movie_id', $id)
-                ->exists();
-
-            if (!$hasWatchedMovie) {
-                $reviewMessage = 'Bạn cần xem phim này trước khi có thể đánh giá.';
-            } elseif ($hasReviewed) {
-                $reviewMessage = 'Bạn đã đánh giá phim này rồi.';
-            } else {
-                $canReview = true;
-            }
-        } else {
-            $reviewMessage = 'Vui lòng đăng nhập để đánh giá.';
-        }
 
         // Lấy danh sách phòng
         $rooms = Room::all();
@@ -133,10 +115,7 @@ class HomeController extends Controller
             'showtimes',
             'rooms',
             'dates',
-            'selectedDate',
-            'reviews',
-            'canReview',
-            'reviewMessage'
+            'selectedDate'
         ));
     }
 
@@ -144,8 +123,10 @@ class HomeController extends Controller
     {
         $movie = Movie::findOrFail($id);
         $showtimes = $this->getShowtimes($id);
-
-        $noShowtimes = $showtimes->isEmpty();
+        if ($showtimes->isEmpty()) {
+            Log::warning("Không tìm thấy suất chiếu cho phim ID {$id}");
+            return redirect()->back()->with('error', 'Không có suất chiếu nào cho phim này.');
+        }
 
         $dates = $this->getDates($showtimes);
         $showtimesData = $this->getShowtimesData($showtimes);
@@ -212,25 +193,25 @@ class HomeController extends Controller
         $promotionId = null;
 
         $bookingData = [
-    'movie_id' => $movie->id,
-    'movie_title' => $movie->title,
-    'showtime_id' => $showtime?->id,
-    'showtime_start' => $showtime?->start_time,
-    'room_name' => $room?->name,
-    'cinema_name' => $cinema?->name,
-    'user_id' => $user?->id,
-    'user_points' => $userPoints,
-    'user_rank' => $userRank?->name ?? null,
-    'products' => $products,
-    'promotion_status' => $promotionStatus,
-    'discount' => $discount,
-    'points_used' => $pointsUsed,
-    'promotion_id' => $promotionId,
-    'seat_types' => $seatTypes,
-];
+            'movie_id' => $movie->id,
+            'movie_title' => $movie->title,
+            'showtime_id' => $showtime?->id,
+            'showtime_start' => $showtime?->start_time,
+            'room_name' => $room?->name,
+            'cinema_name' => $cinema?->name,
+            'user_id' => $user?->id,
+            'user_points' => $userPoints,
+            'user_rank' => $userRank?->name ?? null,
+            'products' => $products,
+            'promotion_status' => $promotionStatus,
+            'discount' => $discount,
+            'points_used' => $pointsUsed,
+            'promotion_id' => $promotionId,
+            'seat_types' => $seatTypes,
+        ];
 
-              session(['booking_data' => $bookingData]);
-              
+        session(['booking_data' => $bookingData]);
+
 
         return view('client.ticket_booking', compact(
             'movie',
@@ -249,8 +230,7 @@ class HomeController extends Controller
             'pointsUsed',
             'promotionId',
             'room',
-            'cinema',
-            'noShowtimes' // truyền biến này vào view
+            'cinema'
         ));
     }
 
@@ -292,7 +272,7 @@ class HomeController extends Controller
     private function getShowtimesData($showtimes)
     {
         $availabilityService = new ShowtimeAvailabilityService();
-        
+
         $showtimesByDate = $showtimes->groupBy(function ($showtime) {
             return Carbon::parse($showtime->start_time)->format('Y-m-d');
         });
@@ -305,7 +285,7 @@ class HomeController extends Controller
                     'room_name' => $room->name,
                     'times' => $roomShowtimes->map(function ($showtime) use ($availabilityService) {
                         $availabilityInfo = $availabilityService->getShowtimeAvailabilityInfo($showtime);
-                        
+
                         return [
                             'id' => $showtime->id,
                             'time' => Carbon::parse($showtime->start_time)->format('h:i A'),
@@ -326,64 +306,77 @@ class HomeController extends Controller
 
     public function movies(Request $request)
     {
-        $query = $request->input('search');
-        $genreId = $request->input('genre');
-
-        // Base query cho tất cả phim
-        $baseQuery = Movie::query()->with(['genres']);
-
-        // Áp dụng tìm kiếm theo tên phim
-        if ($query) {
-            $baseQuery->where('name', 'like', '%' . $query . '%');
-        }
-
-        // Áp dụng lọc theo thể loại
-        if ($genreId) {
-            $baseQuery->whereHas('genres', function ($q) use ($genreId) {
-                $q->where('genres.id', $genreId);
-            });
-        }
+        $query = $request->input('query');
 
         // Phim đang chiếu: Sắp xếp theo số lượng vé bán ra
-        $showingMovies = (clone $baseQuery)
+        $showingMovies = Movie::query()
+            ->with(['genres'])
+            ->when($query, function ($q) use ($query) {
+                $q->where('name', 'like', "%{$query}%")
+                    ->orWhereHas('genres', function ($g) use ($query) {
+                        $g->where('name', 'like', "%{$query}%");
+                    });
+            })
             ->where('status', MovieStatus::Showing)
-            ->orderBy('release_date', 'desc')
-            ->take(12)
+            ->withCount(['showtimes' => function ($q) {
+                $q->where('start_time', '>=', Carbon::now()->subDays(30))
+                    ->whereHas('tickets'); // Đếm vé bán ra trong 30 ngày
+            }])
+            ->orderBy('showtimes_count', 'desc')
+            ->take(8)
             ->get();
 
         // Phim mới: Sắp xếp theo created_at mới nhất
-        $recentMovies = (clone $baseQuery)
-            ->where('status', MovieStatus::Showing)
+        $recentMovies = Movie::query()
+            ->with(['genres'])
+            ->when($query, function ($q) use ($query) {
+                $q->where('name', 'like', "%{$query}%")
+                    ->orWhereHas('genres', function ($g) use ($query) {
+                        $g->where('name', 'like', "%{$query}%");
+                    });
+            })
+            ->whereIn('status', [MovieStatus::Showing, MovieStatus::Upcoming])
             ->orderBy('created_at', 'desc')
             ->take(8)
             ->get();
 
         // Phim phổ biến: Dựa trên số vé bán ra trong 30 ngày
-        $popularMovies = (clone $baseQuery)
+        $popularMovies = Movie::query()
+            ->with(['genres'])
+            ->when($query, function ($q) use ($query) {
+                $q->where('name', 'like', "%{$query}%")
+                    ->orWhereHas('genres', function ($g) use ($query) {
+                        $g->where('name', 'like', "%{$query}%");
+                    });
+            })
             ->where('status', MovieStatus::Showing)
-            ->withCount(['showtimes as tickets_sold' => function ($q) {
-                $q->join('bookings', 'showtimes.id', '=', 'bookings.showtime_id')
-                  ->where('bookings.created_at', '>=', now()->subDays(30));
+            ->withCount(['showtimes' => function ($q) {
+                $q->where('start_time', '>=', Carbon::now()->subDays(30))
+                    ->whereHas('tickets');
             }])
-            ->orderBy('tickets_sold', 'desc')
+            ->orderBy('showtimes_count', 'desc')
             ->take(8)
             ->get();
 
         // Phim xu hướng: Dựa trên số vé bán ra trong 7 ngày
-        $trendMovies = (clone $baseQuery)
-            ->where('status', MovieStatus::Showing)
-            ->withCount(['showtimes as tickets_sold_week' => function ($q) {
-                $q->join('bookings', 'showtimes.id', '=', 'bookings.showtime_id')
-                  ->where('bookings.created_at', '>=', now()->subDays(7));
+        $trendMovies = Movie::query()
+            ->with(['genres'])
+            ->when($query, function ($q) use ($query) {
+                $q->where('name', 'like', "%{$query}%")
+                    ->orWhereHas('genres', function ($g) use ($query) {
+                        $g->where('name', 'like', "%{$query}%");
+                    });
+            })
+            ->whereIn('status', [MovieStatus::Showing, MovieStatus::Upcoming])
+            ->withCount(['showtimes' => function ($q) {
+                $q->where('start_time', '>=', Carbon::now()->subDays(7))
+                    ->whereHas('tickets');
             }])
-            ->orderBy('tickets_sold_week', 'desc')
+            ->orderBy('showtimes_count', 'desc')
             ->take(8)
             ->get();
 
-        // Lấy danh sách thể loại để hiển thị trong dropdown
-        $genres = \App\Models\Genre::all();
-
-        return view('client.movies', compact('showingMovies', 'recentMovies', 'popularMovies', 'trendMovies', 'query', 'genreId', 'genres'));
+        return view('client.movies', compact('showingMovies', 'recentMovies', 'popularMovies', 'trendMovies', 'query'));
     }
 
     private function formatCinemas($roomsData)
@@ -442,7 +435,7 @@ class HomeController extends Controller
                     ->where('promotion_id', $promotion->id)
                     ->where('status', 'confirmed')
                     ->exists();
-                
+
                 if ($hasUsedPromotion) {
                     return response()->json(['error' => 'Mã giảm giá này đã được sử dụng trong đơn hàng trước đó.'], 400);
                 }
@@ -457,7 +450,7 @@ class HomeController extends Controller
             // 6. Tính toán giảm giá
             $discount = 0;
             $discountType = is_string($promotion->discount_type) ? $promotion->discount_type : $promotion->discount_type->value;
-            
+
             if ($discountType === 'percentage') {
                 $discount = $orderAmount * ((float)$promotion->discount_value / 100);
                 if ($promotion->max_discount_amount && $discount > (float)$promotion->max_discount_amount) {
@@ -554,8 +547,17 @@ class HomeController extends Controller
             return response()->json(['error' => 'Số tiền giảm từ điểm vượt quá tổng đơn hàng.'], 400);
         }
 
-        // KHÔNG trừ điểm và KHÔNG tạo PointHistory ở đây. Chỉ xác nhận số điểm có thể dùng.
-        Log::info('[DEBUG] Xác nhận số điểm có thể dùng, sẽ trừ sau khi thanh toán thành công:', [
+        $user->points->decrement('total_points', $pointsToUse);
+
+        PointHistory::create([
+            'user_id' => $user->id,
+            'booking_id' => null,
+            'points_change' => -$pointsToUse,
+            'reason_type' => PointReasonType::Spent,
+            'description' => "Đổi {$pointsToUse} điểm thành {$pointDiscount} VNĐ (1 điểm = 1,000₫)",
+        ]);
+
+        Log::info('[DEBUG] Đổi điểm thành công:', [
             'user_id' => $user->id,
             'pointsToUse' => $pointsToUse,
             'pointDiscount' => $pointDiscount,
@@ -564,7 +566,7 @@ class HomeController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => "Bạn có thể dùng {$pointsToUse} điểm để giảm {$pointDiscount} VNĐ. Điểm sẽ chỉ bị trừ khi thanh toán thành công!",
+            'message' => "Đổi {$pointsToUse} điểm thành công!",
             'discount' => $pointDiscount,
             'points_used' => $pointsToUse,
             'total_discount' => $totalDiscount,
@@ -664,7 +666,7 @@ class HomeController extends Controller
 
             // Debug total count
             $totalPromotions = count($categorizedPromotions['user_rank']) + count($categorizedPromotions['general']) + count($categorizedPromotions['higher_ranks']);
-            
+
             Log::info('[DEBUG] Categorized promotions result:', [
                 'user_rank_count' => count($categorizedPromotions['user_rank']),
                 'general_count' => count($categorizedPromotions['general']),
@@ -705,7 +707,7 @@ class HomeController extends Controller
         }
 
         $user = Auth::user();
-        
+
         Log::info('[DEBUG] getUserRankPromotions query params:', [
             'userRankId' => $userRankId,
             'now' => $now,
@@ -766,7 +768,7 @@ class HomeController extends Controller
     private function getGeneralPromotions($now)
     {
         $user = Auth::user();
-        
+
         $promotions = Promotion::where('status', 'active')
             ->where('start_date', '<=', $now)
             ->where('end_date', '>=', $now)
@@ -859,7 +861,7 @@ class HomeController extends Controller
         // Chỉ lấy các promotion cho rank cao hơn rank hiện tại của user
         // dựa trên min_points_required
         $user = Auth::user();
-        
+
         $promotions = Promotion::with('rank')
             ->where('status', 'active')
             ->where(function ($query) use ($now) {
@@ -943,7 +945,7 @@ class HomeController extends Controller
 
         return number_format((float)$promotion->discount_value) . '₫';
     }
-       public function applyDiscountCodeAutomatically(Request $request)
+    public function applyDiscountCodeAutomatically(Request $request)
     {
         try {
             Log::info('[DEBUG] applyDiscountCodeAutomatically input:', $request->all());
