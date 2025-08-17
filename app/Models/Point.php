@@ -25,6 +25,6 @@ class Point extends Model
 
     public function histories()
     {
-        return $this->hasMany(PointHistory::class);
+        return $this->hasMany(PointHistory::class, 'user_id', 'user_id');
     }
 }
