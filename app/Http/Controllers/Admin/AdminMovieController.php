@@ -10,7 +10,12 @@ use App\Models\Country;
 use App\Models\AgeLimit;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Models\Room;
+use App\Models\Showtime;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class AdminMovieController extends Controller
 {
@@ -219,6 +224,13 @@ class AdminMovieController extends Controller
         // Tạo phim trước, rồi mới liên kết
         $movie = Movie::create($data);
 
+        if (!$movie || !$movie->id) {
+        \Log::error('Movie creation failed', ['data' => $data, 'movie' => $movie]);
+        return back()->with('error', 'Không thể tạo phim.');
+    }
+
+    \Log::info('Movie created successfully', ['movie_id' => $movie->id]);
+
         // Kiểm tra $movie->id
         if (!$movie || !$movie->id) {
             return back()->withInput()->with('error', 'Không thể tạo phim. Vui lòng kiểm tra lại dữ liệu.');
@@ -272,8 +284,15 @@ class AdminMovieController extends Controller
     }
 
         // Cập nhật phim
-    public function update(Request $request, Movie $movie)
+    public function update(Request $request, $id)
     {
+        Log::info('AdminMovieController update method called:', [
+        'movie_id' => $movie->id ?? 'null',
+        'movie_name' => $movie->name ?? 'null'
+        ]);
+
+        $movie = Movie::findOrFail($id);
+        
         if (!$movie->canBeEdited()) {
             $reason = '';
             $movieStatus = is_object($movie->status) ? $movie->status->value : $movie->status;
@@ -288,6 +307,15 @@ class AdminMovieController extends Controller
             
             return redirect()->route('admin.movies.index')->with('error', $reason);
         }
+
+        if ($movie->exists) {
+        $genreIds = $request->input('genre_ids');
+        if (is_array($genreIds) && count($genreIds) > 0) {
+            $movie->genres()->sync($genreIds);
+        }
+    } else {
+        Log::error('Movie chưa được lưu, không thể sync genres', ['movie' => $movie]);
+    }
         
         $request->validate([
             'name' => 'required|string|max:255',
@@ -332,7 +360,11 @@ class AdminMovieController extends Controller
             $data['image_path'] = $posterPath;
         }
 
+
+
         $movie->update($data);
+
+        
 
         // Liên kết với đạo diễn
         if ($request->has('director_ids')) {
