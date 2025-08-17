@@ -96,9 +96,33 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::middleware(['auth'])->group(function (){
-Route::get('/profile', [App\Http\Controllers\Auth\AuthenticatedSessionController::class, 'profile'])->name('profile.edit');
-Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+// Thông tin chung
+    Route::get('/profile', [App\Http\Controllers\Auth\AuthenticatedSessionController::class, 'profile'])
+        ->name('profile.edit');
+
+    // Chi tiết tài khoản
+    Route::get('/profile/general', [ProfileController::class, 'general'])
+        ->name('profile.general');
+
+    // Thẻ thành viên
+    Route::get('/profile/membership', [ProfileController::class, 'membership'])
+        ->name('profile.membership');
+
+    // Voucher
+    Route::get('/profile/voucher', [ProfileController::class, 'voucher'])
+        ->name('profile.voucher');
+
+    // Lịch sử giao dịch
+    Route::get('/profile/history', [ProfileController::class, 'history'])
+        ->name('profile.history');
+
+    Route::get('/booking/{id}/detail', [ProfileController::class, 'detail'])->name('client.booking.detail');
+
+    // Update và Delete (có sẵn)
+    Route::patch('/profile', [ProfileController::class, 'update'])
+        ->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])
+        ->name('profile.destroy');
 });
 
 Route::middleware(['auth', 'role:admin,staff'])->group(function () {
