@@ -12,7 +12,7 @@ class AgeLimit extends Model
     protected $fillable = ['name', 'description', 'min_age'];
 
     public function movies()
-    {
-        return $this->hasMany(Movie::class);
-    }
+{
+    return $this->hasMany(Movie::class, 'age_limit_id');
+}
 }

@@ -185,82 +185,84 @@ class HomeController extends Controller
 
 
     public function show(Request $request, $id)
-    {
-        // Lấy thông tin phim (kèm quốc gia, giới hạn độ tuổi)
-        $movie = Movie::with(['country', 'ageLimit', 'genres'])->findOrFail($id);
+{
+    // Lấy thông tin phim (kèm quốc gia, giới hạn độ tuổi, thể loại)
+    $movie = Movie::with(['country', 'ageLimit', 'genres'])
+        ->findOrFail($id);
 
-        // Lấy reviews đã được duyệt
-        $reviews = Review::with('user')
+    // Lấy 5 review mới nhất đã được duyệt
+    $reviews = Review::with('user')
+        ->where('movie_id', $id)
+        ->where('status', 'approved')
+        ->latest()
+        ->take(5)
+        ->get();
+
+    // Mặc định
+    $canReview = false;
+    $reviewMessage = '';
+
+    if (Auth::check()) {
+        $user = Auth::user();
+
+        // Kiểm tra user đã có vé phim này chưa
+        $hasWatchedMovie = Booking::where('user_id', $user->id)
+            ->where('status', 'confirmed')
+            ->whereHas('showtime', function ($q) use ($id) {
+                $q->where('movie_id', $id);
+            })
+            ->exists();
+
+        // Kiểm tra đã đánh giá chưa
+        $hasReviewed = Review::where('user_id', $user->id)
             ->where('movie_id', $id)
-            ->where('status', 'approved')
-            ->orderBy('created_at', 'desc')
-            ->take(5)
-            ->get();
+            ->exists();
 
-        // Kiểm tra user hiện tại có thể review không
-        $canReview = false;
-        $reviewMessage = '';
-
-        if (Auth::check()) {
-            $user = Auth::user();
-
-            // Kiểm tra đã xem phim chưa
-            $hasWatchedMovie = Booking::where('user_id', $user->id)
-                ->whereHas('showtime', function ($query) use ($id) {
-                    $query->where('movie_id', $id);
-                })
-                ->where('status', 'confirmed')
-                ->exists();
-
-            // Kiểm tra đã đánh giá chưa
-            $hasReviewed = Review::where('user_id', $user->id)
-                ->where('movie_id', $id)
-                ->exists();
-
-            if (!$hasWatchedMovie) {
-                $reviewMessage = 'Bạn cần xem phim này trước khi có thể đánh giá.';
-            } elseif ($hasReviewed) {
-                $reviewMessage = 'Bạn đã đánh giá phim này rồi.';
-            } else {
-                $canReview = true;
-            }
+        if (!$hasWatchedMovie) {
+            $reviewMessage = 'Bạn cần xem phim này trước khi có thể đánh giá.';
+        } elseif ($hasReviewed) {
+            $reviewMessage = 'Bạn đã đánh giá phim này rồi.';
         } else {
-            $reviewMessage = 'Vui lòng đăng nhập để đánh giá.';
+            $canReview = true;
         }
-
-        // Lấy danh sách phòng
-        $rooms = Room::all();
-
-        // Tạo danh sách 15 ngày kế tiếp
-        $dates = collect(range(0, 14))->map(fn($i) => now()->addDays($i));
-
-        // Lấy ngày được chọn từ request (hoặc mặc định hôm nay)
-        $selectedDate = $request->input('date') ?? now()->format('Y-m-d');
-
-        // Truy vấn suất chiếu theo phim và ngày (chỉ lấy những suất chưa đầy)
-        $allShowtimes = $movie->showtimes()
-            ->with(['room.seats', 'showtimeSeatStates'])
-            ->whereDate('start_time', $selectedDate)
-            ->where('status', 'scheduled')
-            ->where('start_time', '>=', Carbon::now())
-            ->orderBy('start_time')
-            ->get();
-
-        // Lọc ra các suất chiếu chưa đầy
-        $availabilityService = new ShowtimeAvailabilityService();
-        $showtimes = $availabilityService->filterAvailableShowtimes($allShowtimes);
-
-        return view('client.detailmovie', compact(
-            'movie',
-            'showtimes',
-            'rooms',
-            'dates',
-            'selectedDate',
-            'reviews',
-            'canReview',
-            'reviewMessage'
-        ));
+    } else {
+        $reviewMessage = 'Vui lòng đăng nhập để đánh giá.';
     }
+
+    // Lấy danh sách phòng
+    $rooms = Room::all();
+
+    // Tạo danh sách 15 ngày kế tiếp
+    $dates = collect(range(0, 14))->map(fn($i) => now()->addDays($i));
+
+    // Ngày được chọn (mặc định hôm nay)
+    $selectedDate = $request->input('date') ?? now()->toDateString();
+
+    // Lấy suất chiếu theo phim & ngày (chỉ lấy suất sắp tới, chưa đầy)
+    $allShowtimes = $movie->showtimes()
+        ->with(['room.seats', 'showtimeSeatStates'])
+        ->where('status', 'scheduled')
+        ->whereDate('start_time', $selectedDate)
+        ->where('start_time', '>=', now())
+        ->orderBy('start_time')
+        ->get();
+
+    // Lọc suất còn trống
+    $availabilityService = new ShowtimeAvailabilityService();
+    $showtimes = $availabilityService->filterAvailableShowtimes($allShowtimes);
+
+    return view('client.detailmovie', compact(
+        'movie',
+        'showtimes',
+        'rooms',
+        'dates',
+        'selectedDate',
+        'reviews',
+        'canReview',
+        'reviewMessage'
+    ));
+}
+
 
     public function ticketBooking($id)
     {
