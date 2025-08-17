@@ -169,15 +169,6 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
     Route::delete('showtimes/{id}/deactivate', [ShowtimeController::class, 'deactivate'])->name('showtimes.deactivate');
     Route::resource('showtimes', ShowtimeController::class)->except(['destroy']);
 
-    // Movies routes from HEAD
-    Route::get('/movies', [MovieController::class, 'index'])->name('movies.index');
-    Route::get('/movies/create', [MovieController::class, 'create'])->name('movies.create');
-    Route::post('/movies', [MovieController::class, 'store'])->name('movies.store');
-    Route::get('/movies/{id}', [MovieController::class, 'show'])->name('movies.show');
-    Route::get('/movies/{id}/edit', [MovieController::class, 'edit'])->name('movies.edit');
-    Route::put('/movies/{id}', [MovieController::class, 'update'])->name('movies.update');
-    Route::delete('/movies/{id}', [MovieController::class, 'destroy'])->name('movies.destroy');
-
     // Tạo suất chiếu tự động (HEAD)
     Route::post('/showtimes', [ShowtimeController::class, 'storeAuto'])->name('showtimes.storeAuto');
     
