@@ -7,9 +7,7 @@ use App\Models\Room;
 use App\Models\Genre;
 use App\Models\Movie;
 use App\Models\Country;
-use App\Models\AgeLimit;
-use App\Models\Director;  // Thêm dòng này
-use App\Models\Actor;     // Thêm dòng này
+use App\Models\AgeLimit;  // Thêm dòng này    // Thêm dòng này
 use App\Enums\MovieStatus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
