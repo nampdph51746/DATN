@@ -184,6 +184,18 @@ class HomeController extends Controller
     }
 
 
+    public function searchAjax(Request $request)
+{
+    $keyword = $request->get('q');
+
+    $movies = \App\Models\Movie::where('name', 'like', "%{$keyword}%")
+        ->limit(5) // giới hạn 5 phim để gợi ý
+        ->get(['id', 'name']);
+
+    return response()->json($movies);
+}
+
+
     public function show(Request $request, $id)
 {
     // Lấy thông tin phim (kèm quốc gia, giới hạn độ tuổi, thể loại)
