@@ -374,7 +374,7 @@ document.getElementById('movie-search').addEventListener('input', function () {
     let query = this.value.trim();
     let resultsBox = document.getElementById('search-results');
 
-    if (query.length < 2) { // chỉ search khi nhập >= 2 ký tự
+    if (query.length < 2) { 
         resultsBox.style.display = 'none';
         resultsBox.innerHTML = '';
         return;
@@ -387,8 +387,24 @@ document.getElementById('movie-search').addEventListener('input', function () {
             if (data.length > 0) {
                 data.forEach(movie => {
                     let li = document.createElement('li');
-                    li.innerHTML = `<a href="/movies/${movie.id}" style="display:block; padding:8px 12px; text-decoration:none; color:#333;">${movie.name}</a>`;
-                    li.addEventListener('mouseover', () => li.style.background = '#f1f1f1');
+                    li.style.listStyle = 'none';
+
+                    li.innerHTML = `
+                        <a href="/movies/${movie.id}" 
+                           style="display:flex; align-items:center; padding:8px 12px; text-decoration:none; color:#333; border-bottom:1px solid #eee;">
+                            <img src="${movie.poster}" 
+                                 alt="${movie.name}" 
+                                 style="width:45px; height:65px; object-fit:cover; border-radius:4px; margin-right:10px;">
+                            <div>
+                                <strong>${movie.name}</strong><br>
+                                <small style="color:${movie.status === 'showing' ? '#28a745' : '#007bff'}">
+                                    ${movie.status === 'showing' ? '🎬 Đang chiếu' : '📅 Sắp chiếu'}
+                                </small>
+                            </div>
+                        </a>
+                    `;
+
+                    li.addEventListener('mouseover', () => li.style.background = '#f8f9fa');
                     li.addEventListener('mouseout', () => li.style.background = 'white');
                     resultsBox.appendChild(li);
                 });
@@ -399,10 +415,12 @@ document.getElementById('movie-search').addEventListener('input', function () {
         });
 });
 
-// Ẩn khi click ra ngoài
+// Ẩn khi click ra ngoài ô input + kết quả
 document.addEventListener('click', function(e) {
-    if (!document.querySelector('form').contains(e.target)) {
-        document.getElementById('search-results').style.display = 'none';
+    let searchBox = document.getElementById('movie-search');
+    let resultsBox = document.getElementById('search-results');
+    if (!searchBox.contains(e.target) && !resultsBox.contains(e.target)) {
+        resultsBox.style.display = 'none';
     }
 });
 </script>
