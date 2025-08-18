@@ -267,18 +267,18 @@
 					</ul>
 
 					<form action="{{ route('movies.filter') }}" method="get" class="mr-3 position-relative" style="width: 250px;">
-						<input type="search"
-							placeholder="Nhập tên phim..."
-							name="search"
-							value="{{ request('search') }}"
-							class="form-control pl-4"
-							style="border-radius: 25px; padding-left: 40px;">
+    <input type="search" 
+           placeholder="Nhập tên phim..." 
+           name="search" 
+           value="{{ request('search') }}" 
+           class="form-control"
+           style="border-radius: 25px; padding-left: 36px;">
 
-						<!-- Icon tìm kiếm nằm trong ô -->
-						<span class="fas fa-search"
-							style="position: absolute; top: 50%; left: 12px; transform: translateY(-50%); color: #888;">
-						</span>
-					</form>
+    <!-- Icon tìm kiếm nằm trong ô -->
+    <span class="fas fa-search"
+          style="position: absolute; top: 50%; left: 12px; transform: translateY(-50%); color: #888;">
+    </span>
+</form>
 
 					<!--/search-right-->
 					<div class="search-right">
