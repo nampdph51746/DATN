@@ -4,13 +4,14 @@ namespace App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Support\Facades\Log;
 
 
 class User extends Authenticatable
 {
-    use HasFactory, HasRoles;
+    use HasFactory, HasRoles,Notifiable;
 
     /**
      * Cập nhật hạng của user dựa trên tổng số tiền đã tiêu (booking thành công)
