@@ -39,7 +39,9 @@ use App\Http\Controllers\Admin\AdminAttributeValueController;
 use App\Http\Controllers\Admin\AdminProductVariantController;
 use App\Http\Controllers\Admin\CustomerRankPromotionController;
 use App\Http\Controllers\Admin\AdminProductCategoriesController;
-
+use App\Http\Controllers\Auth\NewPasswordController;
+use App\Http\Controllers\Auth\PasswordResetLinkController;
+use Symfony\Component\HttpKernel\Profiler\Profile;
 
 Route::get('/', [HomeController::class, 'index'])->name('client.home');
 Route::get('/movies', [HomeController::class, 'filter'])->name('movies.filter');
@@ -49,6 +51,22 @@ Route::get('/movies/filter/{genreName?}', [HomeController::class, 'filter'])
 Route::get('/movies', [HomeController::class, 'movies'])->name('client.movies');
 Route::get('/movies/{id}', [HomeController::class, 'show'])->name('movies.show');
 Route::get('/movies/{id}/ticket-booking', [HomeController::class, 'ticketBooking'])->name('client.movies.ticketBooking');
+
+
+Route::middleware('guest')->group(function () {
+    Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])
+        ->name('password.request');
+
+    Route::post('forgot-password', [PasswordResetLinkController::class, 'store'])
+        ->name('password.email');
+
+    Route::get('reset-password/{token}', [NewPasswordController::class, 'create'])
+        ->name('password.reset');
+
+    Route::put('reset-password', [NewPasswordController::class, 'store'])
+        ->name('password.reset.submit');
+});
+
 
 // Review routes
 Route::middleware('auth')->group(function () {
@@ -97,7 +115,7 @@ Route::middleware('auth')->group(function () {
 
 Route::middleware(['auth'])->group(function (){
 // Thông tin chung
-    Route::get('/profile', [App\Http\Controllers\Auth\AuthenticatedSessionController::class, 'profile'])
+    Route::get('/profile/detail', [App\Http\Controllers\Auth\AuthenticatedSessionController::class, 'profile'])
         ->name('profile.edit');
 
     // Chi tiết tài khoản
@@ -123,6 +141,15 @@ Route::middleware(['auth'])->group(function (){
         ->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])
         ->name('profile.destroy');
+
+    // Show form
+    Route::get('/profile/change-password', [ProfileController::class, 'showChangePassword'])
+        ->name('profile.change-password.edit');
+
+    // Update password
+    Route::patch('/profile/change-password', [ProfileController::class, 'profilew'])
+        ->name('profile.change-password.update');
+
 });
 
 Route::middleware(['auth', 'role:admin,staff'])->group(function () {
