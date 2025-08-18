@@ -266,21 +266,29 @@
 						</li>
 					</ul>
 
-					<form class="mr-3 position-relative" style="width: 250px;">
-    <input type="search" 
-           id="movie-search"
-           placeholder="Nhập tên phim..." 
-           class="form-control"
-           style="border-radius: 25px; padding-left: 36px;">
+					<form class="mr-3 position-relative" 
+      style="width: 250px;" 
+      action="{{ route('movies.filter') }}" 
+      method="get">
+
+    <input type="search"
+        id="movie-search"
+        name="search"
+        placeholder="Nhập tên phim..."
+        class="form-control"
+        style="border-radius: 25px; padding-left: 36px;"
+        value="{{ request('search') }}">
+
     <span class="fas fa-search"
-          style="position: absolute; top: 50%; left: 12px; transform: translateY(-50%); color: #888;">
+        style="position: absolute; top: 50%; left: 12px; transform: translateY(-50%); color: #888;">
     </span>
 
     <!-- Gợi ý hiển thị ở đây -->
-    <ul id="search-results" 
+    <ul id="search-results"
         style="position: absolute; top: 105%; left: 0; width: 100%; background: white; border: 1px solid #ccc; border-radius: 6px; display: none; z-index: 1000; list-style: none; padding: 0; margin: 0;">
     </ul>
 </form>
+
 
 					<!--/search-right-->
 					<div class="search-right">
@@ -370,26 +378,26 @@
 </html>
 
 <script>
-document.getElementById('movie-search').addEventListener('input', function () {
-    let query = this.value.trim();
-    let resultsBox = document.getElementById('search-results');
+	document.getElementById('movie-search').addEventListener('input', function() {
+		let query = this.value.trim();
+		let resultsBox = document.getElementById('search-results');
 
-    if (query.length < 2) { 
-        resultsBox.style.display = 'none';
-        resultsBox.innerHTML = '';
-        return;
-    }
+		if (query.length < 2) {
+			resultsBox.style.display = 'none';
+			resultsBox.innerHTML = '';
+			return;
+		}
 
-    fetch(`{{ route('movies.searchAjax') }}?q=${encodeURIComponent(query)}`)
-        .then(response => response.json())
-        .then(data => {
-            resultsBox.innerHTML = '';
-            if (data.length > 0) {
-                data.forEach(movie => {
-                    let li = document.createElement('li');
-                    li.style.listStyle = 'none';
+		fetch(`{{ route('movies.searchAjax') }}?q=${encodeURIComponent(query)}`)
+			.then(response => response.json())
+			.then(data => {
+				resultsBox.innerHTML = '';
+				if (data.length > 0) {
+					data.forEach(movie => {
+						let li = document.createElement('li');
+						li.style.listStyle = 'none';
 
-                    li.innerHTML = `
+						li.innerHTML = `
                         <a href="/movies/${movie.id}" 
                            style="display:flex; align-items:center; padding:8px 12px; text-decoration:none; color:#333; border-bottom:1px solid #eee;">
                             <img src="${movie.poster}" 
@@ -404,25 +412,25 @@ document.getElementById('movie-search').addEventListener('input', function () {
                         </a>
                     `;
 
-                    li.addEventListener('mouseover', () => li.style.background = '#f8f9fa');
-                    li.addEventListener('mouseout', () => li.style.background = 'white');
-                    resultsBox.appendChild(li);
-                });
-                resultsBox.style.display = 'block';
-            } else {
-                resultsBox.style.display = 'none';
-            }
-        });
-});
+						li.addEventListener('mouseover', () => li.style.background = '#f8f9fa');
+						li.addEventListener('mouseout', () => li.style.background = 'white');
+						resultsBox.appendChild(li);
+					});
+					resultsBox.style.display = 'block';
+				} else {
+					resultsBox.style.display = 'none';
+				}
+			});
+	});
 
-// Ẩn khi click ra ngoài ô input + kết quả
-document.addEventListener('click', function(e) {
-    let searchBox = document.getElementById('movie-search');
-    let resultsBox = document.getElementById('search-results');
-    if (!searchBox.contains(e.target) && !resultsBox.contains(e.target)) {
-        resultsBox.style.display = 'none';
-    }
-});
+	// Ẩn khi click ra ngoài ô input + kết quả
+	document.addEventListener('click', function(e) {
+		let searchBox = document.getElementById('movie-search');
+		let resultsBox = document.getElementById('search-results');
+		if (!searchBox.contains(e.target) && !resultsBox.contains(e.target)) {
+			resultsBox.style.display = 'none';
+		}
+	});
 </script>
 
 <script>
