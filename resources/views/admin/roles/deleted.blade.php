@@ -4,9 +4,6 @@
     <!-- Bắt đầu Container Fluid -->
     <div class="container-xxl">
 
-        @if(session('success'))
-            <div class="alert alert-success">{{ session('success') }}</div>
-        @endif
 
 
         <div class="card overflow-hiddenCoupons">

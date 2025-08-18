@@ -661,6 +661,48 @@
                         </div>
                     </li>
 
+                    <!-- Menu Đạo diễn -->
+                    <li class="nav-item">
+                        <a class="nav-link menu-arrow" href="#sidebarDirectors" role="button" aria-expanded="false"
+                            aria-controls="sidebarDirectors">
+                            <span class="nav-icon">
+                                <iconify-icon icon="solar:user-speak-bold-duotone"></iconify-icon>
+                            </span>
+                            <span class="nav-text">Đạo diễn</span>
+                        </a>
+                        <div class="collapse" id="sidebarDirectors" data-bs-parent="#navbar-nav">
+                            <ul class="nav sub-navbar-nav">
+                                <li class="sub-nav-item">
+                                    <a class="sub-nav-link" href="{{ route('admin.directors.index') }}">Danh sách</a>
+                                </li>
+                                <li class="sub-nav-item">
+                                    <a class="sub-nav-link" href="{{ route('admin.directors.create') }}">Thêm mới</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+
+                    <!-- Menu Diễn viên -->
+                    <li class="nav-item">
+                        <a class="nav-link menu-arrow" href="#sidebarActors" role="button" aria-expanded="false"
+                            aria-controls="sidebarActors">
+                            <span class="nav-icon">
+                                <iconify-icon icon="solar:users-group-two-rounded-bold-duotone"></iconify-icon>
+                            </span>
+                            <span class="nav-text">Diễn viên</span>
+                        </a>
+                        <div class="collapse" id="sidebarActors" data-bs-parent="#navbar-nav">
+                            <ul class="nav sub-navbar-nav">
+                                <li class="sub-nav-item">
+                                    <a class="sub-nav-link" href="{{ route('admin.actors.index') }}">Danh sách</a>
+                                </li>
+                                <li class="sub-nav-item">
+                                    <a class="sub-nav-link" href="{{ route('admin.actors.create') }}">Thêm mới</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+
                     <!-- Menu Độ tuổi -->
                     <li class="nav-item">
                         <a class="nav-link menu-arrow" href="#sidebarAgeLimits" role="button" aria-expanded="false"
@@ -837,10 +879,10 @@
                         <div class="collapse" id="sidebarPromotions" data-bs-parent="#navbar-nav">
                             <ul class="nav sub-navbar-nav">
                                 <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="{{ route('promotions.index') }}">Danh sách</a>
+                                    <a class="sub-nav-link" href="{{ route('admin.promotions.index') }}">Danh sách</a>
                                 </li>
                                 <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="{{ route('promotions.create') }}">Thêm mới</a>
+                                    <a class="sub-nav-link" href="{{ route('admin.promotions.create') }}">Thêm mới</a>
                                 </li>
                             </ul>
                         </div>
@@ -876,7 +918,7 @@
                         <div class="collapse" id="sidebarTickets" data-bs-parent="#navbar-nav">
                             <ul class="nav sub-navbar-nav">
                                 <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="{{ route('tickets.index') }}">Danh sách</a>
+                                    <a class="sub-nav-link" href="{{ route('admin.tickets.index') }}">Danh sách</a>
                                 </li>
                             </ul>
                         </div>

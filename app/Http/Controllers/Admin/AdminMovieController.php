@@ -2,17 +2,20 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
-use App\Models\Genre;
-use Illuminate\Http\Request;
 use App\Models\Movie;
+use App\Models\Genre;
+use App\Models\Actor;
+use App\Models\Director;
 use App\Models\Country;
 use App\Models\AgeLimit;
+use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 use App\Models\Room;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Storage;
 use App\Models\Showtime;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class AdminMovieController extends Controller
 {
@@ -31,7 +34,7 @@ class AdminMovieController extends Controller
         $endDate = $request->input('end_date');
 
         $movies = Movie::query()
-            ->with(['country', 'ageLimit', 'genres', 'director', 'actors'])
+            ->with(['country', 'ageLimit', 'genres', 'directors', 'actors']) // Sửa 'director' thành 'directors'
             ->when($query, function ($queryBuilder, $query) {
                 return $queryBuilder->where('name', 'like', "%{$query}%")
                     ->orWhereHas('director', function($q) use ($query) {
@@ -93,7 +96,7 @@ class AdminMovieController extends Controller
         $ids = explode(',', $request->ids);
 
         // Kiểm tra xem có phim nào không thể xóa không
-        $unableToDeleteMovies = \App\Models\Movie::whereIn('id', $ids)->get()->filter(function($movie) {
+        $unableToDeleteMovies = Movie::whereIn('id', $ids)->get()->filter(function($movie) {
             return !$movie->canBeEdited();
         });
         
@@ -106,7 +109,7 @@ class AdminMovieController extends Controller
         DB::beginTransaction();
         try {
             // Lấy tất cả showtimes liên quan đến các phim cần xóa
-            $showtimes = \App\Models\Showtime::whereIn('movie_id', $ids)->get();
+            $showtimes = Showtime::whereIn('movie_id', $ids)->get();
 
             // Xóa tất cả seat states và tickets liên quan đến các showtimes này
             foreach ($showtimes as $showtime) {
@@ -115,7 +118,7 @@ class AdminMovieController extends Controller
             }
 
             // Xóa các showtimes
-            \App\Models\Showtime::whereIn('movie_id', $ids)->delete();
+            Showtime::whereIn('movie_id', $ids)->delete();
 
             // Xóa các reviews liên quan đến các phim này
             \App\Models\Review::whereIn('movie_id', $ids)->delete();
@@ -124,7 +127,7 @@ class AdminMovieController extends Controller
             DB::table('movie_genres')->whereIn('movie_id', $ids)->delete();
 
             // Xóa các phim
-            \App\Models\Movie::whereIn('id', $ids)->delete();
+            Movie::whereIn('id', $ids)->delete();
 
             DB::commit();
             return redirect()->route('admin.movies.index')->with('success', 'Đã xóa các phim đã chọn!');
@@ -137,9 +140,8 @@ class AdminMovieController extends Controller
     // Lưu phim mới
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255|unique:movies,name',
-            'director_id' => 'required|integer|exists:directors,id',
             'actor_ids' => 'required|array|min:1|max:10',
             'actor_ids.*' => 'exists:actors,id',
             'duration_minutes' => 'required|integer|min:1|max:600',
@@ -155,14 +157,14 @@ class AdminMovieController extends Controller
             'status' => 'required|in:showing,upcoming,ended',
             'genre_ids' => 'required|array|min:1|max:5',
             'genre_ids.*' => 'exists:genres,id',
+            'director_ids' => 'required|array|min:1|max:5',
+            'director_ids.*' => 'exists:directors,id',
             'average_rating' => 'nullable|numeric|min:0|max:10',
         ], [
             // Thông báo lỗi tiếng Việt chuyên nghiệp
             'name.required' => 'Tên phim là trường bắt buộc.',
             'name.unique' => 'Tên phim này đã tồn tại trong hệ thống.',
             'name.max' => 'Tên phim không được vượt quá 255 ký tự.',
-            'director_id.required' => 'Vui lòng chọn đạo diễn.',
-            'director_id.exists' => 'Đạo diễn được chọn không tồn tại.',
             'actor_ids.required' => 'Vui lòng chọn ít nhất một diễn viên.',
             'actor_ids.min' => 'Phim phải có ít nhất một diễn viên.',
             'actor_ids.max' => 'Phim không được có quá 10 diễn viên.',
@@ -197,17 +199,20 @@ class AdminMovieController extends Controller
             'genre_ids.min' => 'Phim phải có ít nhất một thể loại.',
             'genre_ids.max' => 'Phim không được có quá 5 thể loại.',
             'genre_ids.*.exists' => 'Một số thể loại được chọn không tồn tại.',
+            'director_ids.required' => 'Vui lòng chọn ít nhất một đạo diễn.',
+            'director_ids.min' => 'Phim phải có ít nhất một đạo diễn.',
+            'director_ids.max' => 'Phim không được có quá 5 đạo diễn.',
+            'director_ids.*.exists' => 'Một số đạo diễn được chọn không tồn tại.',
             'average_rating.numeric' => 'Điểm đánh giá phải là số.',
             'average_rating.min' => 'Điểm đánh giá phải từ 0 trở lên.',
             'average_rating.max' => 'Điểm đánh giá không được vượt quá 10.',
         ]);
 
-        $data = $request->except(['image', 'genre_ids', 'actor_ids']);
+        $data = $request->except(['image', 'genre_ids', 'actor_ids', 'director_ids']);
 
-        // Đảm bảo thư mục tồn tại
-        $posterDir = storage_path('app/public/posters');
-        if (!File::exists($posterDir)) {
-            File::makeDirectory($posterDir, 0755, true);
+        // Chuyển status sang Enum nếu dùng Enum cast
+        if (isset($data['status'])) {
+            $data['status'] = \App\Enums\MovieStatus::from($data['status']);
         }
 
         // Xử lý upload ảnh poster
@@ -216,7 +221,25 @@ class AdminMovieController extends Controller
             $data['image_path'] = $path;
         }
 
+        // Tạo phim trước, rồi mới liên kết
         $movie = Movie::create($data);
+
+        if (!$movie || !$movie->id) {
+        \Log::error('Movie creation failed', ['data' => $data, 'movie' => $movie]);
+        return back()->with('error', 'Không thể tạo phim.');
+    }
+
+    \Log::info('Movie created successfully', ['movie_id' => $movie->id]);
+
+        // Kiểm tra $movie->id
+        if (!$movie || !$movie->id) {
+            return back()->withInput()->with('error', 'Không thể tạo phim. Vui lòng kiểm tra lại dữ liệu.');
+        }
+
+        // Liên kết với đạo diễn
+        if ($request->has('director_ids')) {
+            $movie->directors()->sync($request->input('director_ids'));
+        }
         
         // Liên kết với thể loại
         if ($request->has('genre_ids')) {
@@ -236,36 +259,40 @@ class AdminMovieController extends Controller
     }
 
         // Form sửa phim
-    public function edit(Movie $movie)
+    public function edit($id)
     {
-        // Kiểm tra xem phim có thể chỉnh sửa không
-        if (!$movie->canBeEdited()) {
-            $reason = '';
-            $movieStatus = is_object($movie->status) ? $movie->status->value : $movie->status;
-            
-            if ($movieStatus === 'ended') {
-                $reason = 'Không thể chỉnh sửa phim đã kết thúc!';
-            } elseif ($movieStatus === 'showing') {
-                $reason = 'Không thể chỉnh sửa phim đang chiếu!';
-            } elseif ($movie->hasBookedTickets()) {
-                $reason = 'Không thể chỉnh sửa phim đã có vé được đặt!';
-            }
-            
-            return redirect()->route('admin.movies.index')->with('error', $reason);
+        try {
+            $movie = Movie::findOrFail($id);
+            $movie->load(['genres', 'actors', 'directors', 'country', 'ageLimit']); // Sửa 'director' thành 'directors'
+            $genres = Genre::all();
+            $actors = Actor::all();
+            $directors = Director::all();
+            $countries = Country::all();
+            $ageLimits = AgeLimit::all();
+            return view('admin.movies.edit', compact(
+                'movie', 
+                'genres', 
+                'actors', 
+                'directors', 
+                'countries', 
+                'ageLimits'
+            ));
+        } catch (\Exception $e) {
+            return redirect()->route('admin.movies.index')
+                ->with('error', 'Không tìm thấy phim với ID: ' . $id);
         }
-        
-        $countries = Country::all();
-        $ageLimits = AgeLimit::all();
-        $genres = Genre::all();
-        $directors = \App\Models\Director::where('is_active', true)->orderBy('name')->get();
-        $actors = \App\Models\Actor::where('is_active', true)->orderBy('name')->get();
-        return view('admin.movies.edit', compact('movie', 'countries', 'ageLimits', 'genres', 'directors', 'actors'));
     }
 
         // Cập nhật phim
-    public function update(Request $request, Movie $movie)
+    public function update(Request $request, $id)
     {
-        // Kiểm tra xem phim có thể chỉnh sửa không
+        Log::info('AdminMovieController update method called:', [
+        'movie_id' => $movie->id ?? 'null',
+        'movie_name' => $movie->name ?? 'null'
+        ]);
+
+        $movie = Movie::findOrFail($id);
+        
         if (!$movie->canBeEdited()) {
             $reason = '';
             $movieStatus = is_object($movie->status) ? $movie->status->value : $movie->status;
@@ -280,10 +307,18 @@ class AdminMovieController extends Controller
             
             return redirect()->route('admin.movies.index')->with('error', $reason);
         }
+
+        if ($movie->exists) {
+        $genreIds = $request->input('genre_ids');
+        if (is_array($genreIds) && count($genreIds) > 0) {
+            $movie->genres()->sync($genreIds);
+        }
+    } else {
+        Log::error('Movie chưa được lưu, không thể sync genres', ['movie' => $movie]);
+    }
         
         $request->validate([
             'name' => 'required|string|max:255',
-            'director_id' => 'required|integer|exists:directors,id',
             'actor_ids' => 'required|array|min:1|max:10',
             'actor_ids.*' => 'exists:actors,id',
             'duration_minutes' => 'required|integer|min:1|max:600',
@@ -298,10 +333,15 @@ class AdminMovieController extends Controller
             'status' => 'required|in:showing,upcoming,ended',
             'genre_ids' => 'required|array|min:1|max:5',
             'genre_ids.*' => 'exists:genres,id',
-            'average_rating' => 'nullable|numeric|min:0|max:10',
+            'director_ids' => 'required|array|min:1|max:5',
+            'director_ids.*' => 'exists:directors,id',
         ]);
+        $data = $request->except(['poster', 'director_ids', 'genre_ids', 'actor_ids']);
 
-        $data = $request->except('poster');
+        // Chuyển status sang Enum nếu dùng Enum cast
+        if (isset($data['status'])) {
+            $data['status'] = \App\Enums\MovieStatus::from($data['status']);
+        }
 
         // Đảm bảo thư mục tồn tại
         $posterDir = storage_path('app/public/posters');
@@ -320,13 +360,20 @@ class AdminMovieController extends Controller
             $data['image_path'] = $posterPath;
         }
 
+
+
         $movie->update($data);
+
         
+
+        // Liên kết với đạo diễn
+        if ($request->has('director_ids')) {
+            $movie->directors()->sync($request->input('director_ids'));
+        }
         // Liên kết với thể loại
         if ($request->has('genre_ids')) {
             $movie->genres()->sync($request->input('genre_ids'));
         }
-        
         // Liên kết với diễn viên
         if ($request->has('actor_ids')) {
             $movie->actors()->sync($request->input('actor_ids'));
@@ -372,9 +419,10 @@ class AdminMovieController extends Controller
 
         return redirect()->route('admin.movies.index')->with('success', 'Xóa phim thành công!');
     }
-    public function show(Request $request, Movie $movie)
+    public function show(Request $request, $id)
     {
-        $movie = $movie->load(['genres', 'ageLimit', 'country', 'director', 'actors']);
+        $movie = Movie::findOrFail($id);
+        $movie = $movie->load(['genres', 'ageLimit', 'country', 'directors', 'actors']); // Sửa 'director' thành 'directors'
 
         // Lấy thông tin tìm kiếm/lọc suất chiếu
         $showtimeQuery = $request->input('showtime_query');
@@ -403,7 +451,7 @@ class AdminMovieController extends Controller
             ->orderBy('start_time', 'desc')
             ->paginate(5, ['*'], 'showtime_page');
 
-        $rooms = \App\Models\Room::all();
+        $rooms = Room::all();
 
         return view('admin.movies.show', compact('movie', 'showtimes', 'rooms'));
     }

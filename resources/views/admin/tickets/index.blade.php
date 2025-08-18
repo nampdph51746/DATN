@@ -1,336 +1,494 @@
 @extends('layouts.admin.admin')
 
-@php
-    use App\Enums\TicketStatus;
-@endphp
 @section('content')
-    <div class="container">
-        <div class="container-xxl">
-            <div class="row">
-                <div class="col-md-6 col-xl-4">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div>
-                                    <h4 class="card-title mb-2">Vé chưa sử dụng</h4>
-                                    <p class="text-muted fw-medium fs-22 mb-0">{{ $tickets->where('status', 'valid')->count() }}</p>
-                                </div>
-                                <div>
-                                    <div class="avatar-md bg-success bg-opacity-10 rounded">
-                                        <iconify-icon icon="solar:ticket-broken" class="fs-32 text-success avatar-title"></iconify-icon>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+<div class="container-fluid px-4">
+    <style>
+        :root {
+            --primary-orange: #FF6F00;
+            --primary-teal: #00ACC1;
+            --accent-yellow: #FFCA28;
+            --neutral-bg: #F8FAFC;
+            --card-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+            --border-radius: 16px;
+            --transition: all 0.3s ease;
+        }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--neutral-bg);
+        }
+        .card {
+            border: none;
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            transition: var(--transition);
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(0, 172, 193, 0.15);
+        }
+        .card-header {
+            background: linear-gradient(135deg, var(--primary-orange), var(--primary-teal));
+            color: white;
+            border-radius: var(--border-radius) var(--border-radius) 0 0;
+            padding: 1.5rem;
+        }
+        .avatar-lg {
+            width: 4rem;
+            height: 4rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--primary-orange), var(--primary-teal));
+            border-radius: 50%;
+            color: white;
+            font-size: 1.8rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        .avatar-sm {
+            width: 2.5rem;
+            height: 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+        .badge {
+            font-size: 0.95rem;
+            border-radius: 50px;
+            padding: 0.5em 1em;
+        }
+        .badge-valid {
+            background: var(--primary-teal);
+            color: #fff;
+        }
+        .badge-used {
+            background: var(--primary-orange);
+            color: #fff;
+        }
+        .badge-cancelled {
+            background: #dc3545;
+            color: #fff;
+        }
+        .badge-other {
+            background: #6c757d;
+            color: #fff;
+        }
+        .btn {
+            font-weight: 600;
+            transition: var(--transition);
+            border-radius: 50px;
+        }
+        .btn-primary {
+            background: var(--primary-orange);
+            border: none;
+        }
+        .btn-primary:hover {
+            background: var(--primary-teal);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 172, 193, 0.3);
+        }
+        .btn-outline-secondary {
+            border-color: var(--primary-teal);
+            color: var(--primary-teal);
+        }
+        .btn-outline-secondary:hover {
+            background: var(--primary-teal);
+            color: white;
+            transform: translateY(-2px);
+        }
+        .view-detail-btn, .print-btn {
+            border-radius: 8px;
+            min-width: 36px;
+            height: 32px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+        .view-detail-btn {
+            background: var(--primary-teal);
+            border: 1px solid var(--primary-teal);
+            color: white;
+        }
+        .view-detail-btn:hover {
+            background: var(--accent-yellow);
+            border-color: var(--accent-yellow);
+            color: #1a202c;
+            transform: scale(1.1);
+        }
+        .print-btn {
+            background: var(--primary-orange);
+            border: 1px solid var(--primary-orange);
+            color: white;
+        }
+        .print-btn:hover {
+            background: var(--primary-teal);
+            border-color: var(--primary-teal);
+            color: white;
+            transform: scale(1.1);
+        }
+        .table > :not(caption) > * > * {
+            padding: 1.2rem 1rem;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .table tbody tr {
+            transition: var(--transition);
+        }
+        .table tbody tr:hover {
+            background: rgba(0, 172, 193, 0.05);
+            transform: translateX(2px);
+        }
+        .form-control, .form-select {
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            transition: var(--transition);
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-orange);
+            box-shadow: 0 0 0 4px rgba(255, 111, 0, 0.2);
+        }
+        .input-group-text {
+            background: var(--neutral-bg);
+            border-color: #e0e0e0;
+            border-radius: 8px;
+        }
+        .pagination {
+            --bs-pagination-border-radius: 8px;
+        }
+        .page-link {
+            border: none;
+            border-radius: 8px;
+            margin: 0 3px;
+            color: var(--primary-teal);
+            transition: var(--transition);
+        }
+        .page-link:hover {
+            background: var(--primary-orange);
+            color: white;
+            transform: translateY(-2px);
+        }
+        .page-item.active .page-link {
+            background: var(--primary-teal);
+            border: none;
+            color: white;
+        }
+        .form-check-input:checked {
+            background-color: var(--primary-orange);
+            border-color: var(--primary-orange);
+        }
+        .progress {
+            background-color: rgba(0, 0, 0, 0.05);
+            border-radius: 0 0 var(--border-radius) var(--border-radius);
+        }
+        @media (max-width: 768px) {
+            .table-responsive {
+                font-size: 0.9rem;
+            }
+            .avatar-lg {
+                width: 3rem;
+                height: 3rem;
+                font-size: 1.4rem;
+            }
+            .btn-lg {
+                padding: 0.5rem 1rem;
+                font-size: 0.9rem;
+            }
+            .input-group {
+                min-width: 100% !important;
+            }
+        }
+    </style>
+
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                <div>
+                    <h4 class="fw-bold mb-1" style="color: var(--primary-orange);">
+                        <i class="fas fa-ticket-alt me-2"></i>
+                        Quản lý vé
+                    </h4>
+                    <p class="text-muted mb-0">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Quản lý danh sách vé trong hệ thống
+                    </p>
                 </div>
-                <div class="col-md-6 col-xl-4">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div>
-                                    <h4 class="card-title mb-2">Vé đã sử dụng</h4>
-                                    <p class="text-muted fw-medium fs-22 mb-0">{{ $tickets->where('status', 'used')->count() }}</p>
-                                </div>
-                                <div>
-                                    <div class="avatar-md bg-primary bg-opacity-10 rounded">
-                                        <iconify-icon icon="solar:clipboard-check-broken" class="fs-32 text-primary avatar-title"></iconify-icon>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6 col-xl-4">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div>
-                                    <h4 class="card-title mb-2">Vé đã hủy</h4>
-                                    <p class="text-muted fw-medium fs-22 mb-0">{{ $tickets->where('status', 'cancelled')->count() }}</p>
-                                </div>
-                                <div>
-                                    <div class="avatar-md bg-danger bg-opacity-10 rounded">
-                                        <iconify-icon icon="solar:cart-cross-broken" class="fs-32 text-danger avatar-title"></iconify-icon>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                <div class="d-flex gap-2 flex-wrap">
+                    <a href="{{ route('admin.tickets.create') }}" class="btn btn-primary btn-lg rounded-pill">
+                        <i class="fas fa-plus-circle me-2"></i> Thêm vé mới
+                    </a>
                 </div>
             </div>
         </div>
     </div>
-<div class="container-xxl">
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-lg-6 col-md-6">
+            <div class="card border-0 h-100 rounded-4 overflow-hidden">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="avatar-lg">
+                                <i class="fas fa-ticket-alt fs-4"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-0 text-muted fw-semibold">Tổng vé</h6>
+                            <h3 class="mb-0 fw-bold" style="color: var(--primary-teal);">{{ $tickets->total() }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="progress rounded-0" style="height: 4px;">
+                    <div class="progress-bar" style="background: var(--primary-teal); width: 100%"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-lg-6 col-md-6">
+            <div class="card border-0 h-100 rounded-4 overflow-hidden">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="avatar-lg">
+                                <i class="fas fa-check-circle fs-4"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-0 text-muted fw-semibold">Vé chưa sử dụng</h6>
+                            <h3 class="mb-0 fw-bold" style="color: var(--primary-orange);">{{ $tickets->where('status', 'valid')->count() }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="progress rounded-0" style="height: 4px;">
+                    <div class="progress-bar" style="background: var(--primary-orange); width: {{ $tickets->total() > 0 ? ($tickets->where('status', 'valid')->count() / $tickets->total()) * 100 : 0 }}%"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-lg-6 col-md-6">
+            <div class="card border-0 h-100 rounded-4 overflow-hidden">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="avatar-lg">
+                                <i class="fas fa-calendar-check fs-4"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-0 text-muted fw-semibold">Vé đã sử dụng</h6>
+                            <h3 class="mb-0 fw-bold" style="color: var(--accent-yellow);">{{ $tickets->where('status', 'used')->count() }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="progress rounded-0" style="height: 4px;">
+                    <div class="progress-bar" style="background: var(--accent-yellow); width: {{ $tickets->total() > 0 ? ($tickets->where('status', 'used')->count() / $tickets->total()) * 100 : 0 }}%"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-lg-6 col-md-6">
+            <div class="card border-0 h-100 rounded-4 overflow-hidden">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="avatar-lg">
+                                <i class="fas fa-times-circle fs-4"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-0 text-muted fw-semibold">Vé đã hủy</h6>
+                            <h3 class="mb-0 fw-bold" style="color: #dc3545;">{{ $tickets->where('status', 'cancelled')->count() }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="progress rounded-0" style="height: 4px;">
+                    <div class="progress-bar" style="background: #dc3545; width: {{ $tickets->total() > 0 ? ($tickets->where('status', 'cancelled')->count() / $tickets->total()) * 100 : 0 }}%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Table Card -->
     <div class="row">
-        <div class="col-xl-12">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center gap-1">
-                    <h4 class="card-title flex-grow-1">Danh sách vé</h4>
-                    <div class="d-flex gap-2 align-items-center">
-                        <!-- Search Form -->
-                        <form method="GET" action="{{ route('tickets.index') }}" class="d-flex align-items-center gap-2">
-                            <input type="text" name="search" placeholder="Tìm kiếm ID vé hoặc ID suất chiếu" value="{{ request('search') }}" class="form-control form-control-sm" style="width: 200px;">
-                            <button type="submit" class="btn btn-sm btn-primary">Tìm</button>
-                        </form>
-                        {{-- <!-- Add New Button -->
-                        <a href="{{ route('tickets.create') }}" class="btn btn-sm btn-primary">Thêm mới</a> --}}
-                        <!-- Filter Dropdown -->
-                        <div class="dropdown">
-                            <a href="#" class="dropdown-toggle btn btn-sm btn-outline-light" data-bs-toggle="dropdown" aria-expanded="false">
-                                Lọc
-                            </a>
-                            <div class="dropdown-menu dropdown-menu-end">
-                                <form method="GET" action="{{ route('tickets.index') }}" class="p-2">
-                                    <div class="mb-2">
-                                        <label for="id" class="form-label">ID Vé</label>
-                                        <input type="text" name="id" id="id" placeholder="ID Vé" value="{{ request('id') }}" class="form-control form-control-sm">
+        <div class="col-12">
+            <div class="card border-0">
+                <div class="card-header">
+                    <div class="row align-items-center">
+                        <div class="col-lg-6 col-md-8">
+                            <h5 class="card-title mb-0 fw-bold">
+                                <i class="fas fa-table me-2"></i>
+                                Danh sách vé
+                            </h5>
+                        </div>
+                        <div class="col-lg-6 col-md-4">
+                            <!-- Search Section -->
+                            <div class="d-flex gap-2 justify-content-end flex-wrap">
+                                <form class="d-flex align-items-center gap-2" method="GET" action="{{ route('admin.tickets.index') }}">
+                                    <div class="input-group input-group-lg">
+                                        <span class="input-group-text rounded-start-pill">
+                                            <i class="fas fa-search text-muted"></i>
+                                        </span>
+                                        <input type="search" name="search" 
+                                               class="form-control ps-0" 
+                                               placeholder="Tìm kiếm vé..." 
+                                               value="{{ request('search') }}">
                                     </div>
-                                    <div class="mb-2">
-                                        <label for="showtime_id" class="form-label">ID Suất chiếu</label>
-                                        <input type="text" name="showtime_id" id="showtime_id" placeholder="ID Suất chiếu" value="{{ request('showtime_id') }}" class="form-control form-control-sm">
-                                    </div>
-                                    <div class="mb-2">
-                                        <label for="booking_id" class="form-label">ID Đơn hàng</label>
-                                        <input type="text" name="booking_id" id="booking_id" placeholder="ID Đơn hàng" value="{{ request('booking_id') }}" class="form-control form-control-sm">
-                                    </div>
-                                    {{-- <div class="mb-2">
-                                        <label for="status" class="form-label">Trạng thái</label>
-                                        <select name="status" id="status" class="form-control form-control-sm">
-                                            <option value="">Tất cả trạng thái</option>
-                                            @foreach($statuses as $value => $label)
-                                                <option value="{{ $value }}" {{ request('status') == $value ? 'selected' : '' }}>{{ $label }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div> --}}
-                                    <button type="submit" class="btn btn-primary btn-sm w-100">Lọc</button>
+                                    <button type="submit" class="btn btn-primary btn-lg rounded-pill">
+                                        <i class="fas fa-search"></i>
+                                    </button>
                                 </form>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div>
+
+                <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table align-middle mb-0 table-hover table-centered">
-                            <thead class="bg-light-subtle">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
                                 <tr>
-                                    <th style="width: 20px;">
+                                    <th class="border-0 ps-4" style="width: 50px;">
                                         <div class="form-check">
-                                            <input type="checkbox" class="form-check-input" id="customCheck1">
-                                            <label class="form-check-label" for="customCheck1"></label>
+                                            <input type="checkbox" class="form-check-input" id="checkAllTickets">
                                         </div>
                                     </th>
-                                    <th>ID</th>
-                                    <th>ID Suất chiếu</th>
-                                    <th>Đơn hàng</th>
-                                    <th>Ghế</th>
-                                    <th>Trạng thái</th>
-                                    <th>Ngày đặt</th>
-                                    <th>Thao tác</th>
+                                    <th class="border-0 fw-bold text-dark">
+                                        <i class="fas fa-hashtag me-1" style="color: var(--primary-orange);"></i> ID
+                                    </th>
+                                    <th class="border-0 fw-bold text-dark">
+                                        <i class="fas fa-film me-1" style="color: var(--primary-teal);"></i> Suất chiếu
+                                    </th>
+                                    <th class="border-0 fw-bold text-dark">
+                                        <i class="fas fa-shopping-cart me-1" style="color: var(--accent-yellow);"></i> Đơn hàng
+                                    </th>
+                                    <th class="border-0 fw-bold text-dark">
+                                        <i class="fas fa-chair me-1" style="color: var(--primary-orange);"></i> Ghế
+                                    </th>
+                                    <th class="border-0 fw-bold text-dark">
+                                        <i class="fas fa-traffic-light me-1" style="color: var(--primary-teal);"></i> Trạng thái
+                                    </th>
+                                    <th class="border-0 fw-bold text-dark">
+                                        <i class="fas fa-calendar-plus me-1" style="color: var(--accent-yellow);"></i> Ngày đặt
+                                    </th>
+                                    <th class="border-0 fw-bold text-dark text-center pe-4">
+                                        <i class="fas fa-cogs me-1" style="color: var(--primary-orange);"></i> Thao tác
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @forelse($tickets as $ticket)
-                                <tr>
-                                    <td>
-                                        <div class="form-check">
-                                            <input type="checkbox" class="form-check-input" id="ticketCheck{{ $ticket->id }}">
-                                            <label class="form-check-label" for="ticketCheck{{ $ticket->id }}"></label>
-                                        </div>
-                                    </td>
-                                    <td>{{ $ticket->id }}</td>
-                                    <td>{{ $ticket->showtime_id }}</td>
-                                    <td>{{ $ticket->booking_id }}</td>
-                                    <td>{{ $ticket->seat_id ?? '-' }}</td>
-                                    <td>
-                                        @php
-                                            $status = $ticket->status instanceof TicketStatus ? $ticket->status->value : $ticket->status;
-                                        @endphp
-                                        @switch($status)
-                                            @case('valid')
-                                                <span class="badge bg-success">Chưa sử dụng</span>
-                                                @break
-                                            @case('used')
-                                                <span class="badge bg-primary">Đã sử dụng</span>
-                                                @break
-                                            @case('cancelled')
-                                                <span class="badge bg-danger">Đã hủy</span>
-                                                @break
-                                            @default
-                                                <span class="badge bg-secondary">Không xác định</span>
-                                        @endswitch
-                                    </td>
-                                    <td>{{ $ticket->created_at ? $ticket->created_at->format('d/m/Y H:i') : '-' }}</td>
-                                    <td>
-                                        <div class="d-flex gap-2">
-                                            <!-- View Button -->
-                                            <a href="{{ route('tickets.show', $ticket->id) }}" class="btn btn-light btn-sm" title="Xem chi tiết">
-                                                <iconify-icon icon="solar:eye-broken" class="align-middle fs-18"></iconify-icon>
-                                            </a>
-                                            <!-- Print Ticket Button -->
-                                            {{-- <a href="{{ route('admin.tickets.print', $ticket->ticket_code) }}" 
-                                               class="btn btn-success btn-sm print-ticket-btn" 
-                                               title="In vé" 
-                                               target="_blank"
-                                               data-showtime-start="{{ $ticket->showtime ? $ticket->showtime->start_time->toISOString() : '' }}"
-                                               data-ticket-code="{{ $ticket->ticket_code }}">
-                                                <iconify-icon icon="solar:printer-minimalistic-broken" class="align-middle fs-18"></iconify-icon>
-                                            </a> --}}
-                                            <!-- Edit Button -->
-                                            {{-- <a href="{{ route('tickets.edit', $ticket->id) }}" class="btn btn-soft-primary btn-sm" title="Sửa">
-                                                <iconify-icon icon="solar:pen-2-broken" class="align-middle fs-18"></iconify-icon>
-                                            </a> --}}
-                                            </form>
-                                        </div>
-                                    </td>
-                                </tr>
+                                    @php
+                                        $status = $ticket->status instanceof \App\Enums\TicketStatus ? $ticket->status->value : $ticket->status;
+                                        $statusClass = $status === 'valid' ? 'badge-valid' : ($status === 'used' ? 'badge-used' : ($status === 'cancelled' ? 'badge-cancelled' : 'badge-other'));
+                                    @endphp
+                                    <tr class="border-bottom border-light">
+                                        <td class="ps-4">
+                                            <div class="form-check">
+                                                <input type="checkbox" class="form-check-input ticket-checkbox" value="{{ $ticket->id }}">
+                                            </div>
+                                        </td>
+                                        <td class="fw-medium">#{{ $ticket->id }}</td>
+                                        <td>
+                                            <i class="fas fa-film text-info me-1"></i>
+                                            {{ $ticket->showtime_id }}
+                                        </td>
+                                        <td>
+                                            <i class="fas fa-shopping-cart text-warning me-1"></i>
+                                            {{ $ticket->booking_id }}
+                                        </td>
+                                        <td>
+                                            <i class="fas fa-chair text-primary me-1"></i>
+                                            {{ $ticket->seat_id ?? '-' }}
+                                        </td>
+                                        <td>
+                                            <span class="badge {{ $statusClass }}">
+                                                <i class="fas fa-traffic-light me-1"></i>
+                                                @switch($status)
+                                                    @case('valid')
+                                                        Chưa sử dụng
+                                                        @break
+                                                    @case('used')
+                                                        Đã sử dụng
+                                                        @break
+                                                    @case('cancelled')
+                                                        Đã hủy
+                                                        @break
+                                                    @default
+                                                        Không xác định
+                                                @endswitch
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <i class="fas fa-calendar-plus text-success me-1"></i>
+                                            {{ $ticket->created_at ? $ticket->created_at->format('d/m/Y H:i') : '-' }}
+                                        </td>
+                                        <td class="text-center pe-4">
+                                            <div class="d-flex gap-1 justify-content-center">
+                                                <a href="{{ route('admin.tickets.show', $ticket->id) }}"
+                                                   class="btn btn-sm view-detail-btn" 
+                                                   title="Xem chi tiết"
+                                                   data-bs-toggle="tooltip">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <a href="{{ route('admin.tickets.print', $ticket->ticket_code) }}"
+                                                   class="btn btn-sm print-btn" 
+                                                   title="In vé"
+                                                   target="_blank"
+                                                   data-bs-toggle="tooltip">
+                                                    <i class="fas fa-print"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
                                 @empty
-                                <tr>
-                                    <td colspan="8" class="text-center">Không có vé nào.</td>
-                                </tr>
+                                    <tr>
+                                        <td colspan="8" class="text-center py-5">
+                                            <div class="d-flex flex-column align-items-center">
+                                                <i class="fas fa-ticket-alt text-muted fs-1 mb-3"></i>
+                                                <h6 class="text-muted">Không có vé nào</h6>
+                                                <p class="text-muted small mb-0">Hãy thêm vé mới để bắt đầu</p>
+                                            </div>
+                                        </td>
+                                    </tr>
                                 @endforelse
                             </tbody>
                         </table>
                     </div>
                 </div>
-                <div class="card-footer border-top">
-                    <nav aria-label="Page navigation example">
-                        {{ $tickets->links('pagination::bootstrap-4') }}
-                    </nav>
-                </div>
+
+                <!-- Pagination -->
+                @if($tickets->hasPages())
+                    <div class="card-footer bg-white border-top py-4 rounded-bottom-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="text-muted small">
+                                Hiển thị {{ $tickets->firstItem() }}-{{ $tickets->lastItem() }} trong tổng {{ $tickets->total() }} vé
+                            </div>
+                            <div>
+                                {{ $tickets->appends(request()->query())->links('pagination::bootstrap-5') }}
+                            </div>
+                        </div>
+                    </div>
+                @endif
             </div>
         </div>
     </div>
 </div>
 @endsection
 
-@push('scripts')
+@section('scripts')
+<!-- Font Awesome CDN -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const printButtons = document.querySelectorAll('.print-ticket-btn');
-    
-    // Function để xử lý click event cho nút bị vô hiệu hóa
-    function handleDisabledButtonClick(e, message) {
-        e.preventDefault();
-        e.stopPropagation();
-        Swal.fire({
-            icon: 'warning',
-            title: 'Không thể in vé',
-            text: message,
-            confirmButtonText: 'Đã hiểu',
-            confirmButtonColor: '#3085d6'
+document.addEventListener('DOMContentLoaded', function () {
+    // Initialize tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.forEach(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+
+    // Check all tickets
+    document.getElementById('checkAllTickets')?.addEventListener('change', function() {
+        document.querySelectorAll('.ticket-checkbox').forEach(cb => {
+            cb.checked = this.checked;
         });
-        return false;
-    }
-    
-    printButtons.forEach(button => {
-        const showtimeStartStr = button.getAttribute('data-showtime-start');
-        const ticketCode = button.getAttribute('data-ticket-code');
-        
-        if (!showtimeStartStr) {
-            // Nếu không có thời gian suất chiếu, vô hiệu hóa nút
-            button.disabled = true;
-            button.classList.remove('btn-success');
-            button.classList.add('btn-secondary');
-            button.title = 'Không tìm thấy thông tin suất chiếu';
-            button.removeAttribute('href');
-            button.onclick = function(e) {
-                return handleDisabledButtonClick(e, 'Không tìm thấy thông tin suất chiếu cho vé này.');
-            };
-            return;
-        }
-        
-        const showtimeStart = new Date(showtimeStartStr);
-        const currentTime = new Date();
-        
-        // Kiểm tra nếu suất chiếu đã bắt đầu
-        if (currentTime >= showtimeStart) {
-            button.disabled = true;
-            button.classList.remove('btn-success');
-            button.classList.add('btn-secondary');
-            button.title = 'Không thể in vé sau khi suất chiếu đã bắt đầu. Suất chiếu: ' + showtimeStart.toLocaleString('vi-VN');
-            button.removeAttribute('href');
-            button.onclick = function(e) {
-                return handleDisabledButtonClick(e, 'Không thể in vé sau khi suất chiếu đã bắt đầu.\nSuất chiếu: ' + showtimeStart.toLocaleString('vi-VN'));
-            };
-            return;
-        }
-        
-        // Kiểm tra nếu còn ít hơn 1 tiếng trước suất chiếu
-        const oneHourBeforeShowtime = new Date(showtimeStart.getTime() - (60 * 60 * 1000));
-        if (currentTime <= oneHourBeforeShowtime) {
-            button.disabled = true;
-            button.classList.remove('btn-success');
-            button.classList.add('btn-warning');
-            button.title = 'Vé chỉ có thể in trước suất chiếu ít nhất 1 tiếng. Suất chiếu: ' + showtimeStart.toLocaleString('vi-VN');
-            button.removeAttribute('href');
-            button.onclick = function(e) {
-                return handleDisabledButtonClick(e, 'Vé chỉ có thể in trước suất chiếu ít nhất 1 tiếng.\nSuất chiếu: ' + showtimeStart.toLocaleString('vi-VN'));
-            };
-            return;
-        }
-        
-        // Nếu trong khoảng thời gian cho phép in vé (từ 1 tiếng trước suất chiếu đến khi suất chiếu bắt đầu)
-        button.title = 'In vé (Suất chiếu: ' + showtimeStart.toLocaleString('vi-VN') + ')';
     });
-    
-    // Cập nhật trạng thái nút mỗi phút
-    setInterval(() => {
-        printButtons.forEach(button => {
-            const showtimeStartStr = button.getAttribute('data-showtime-start');
-            const originalHref = button.getAttribute('href') || button.dataset.originalHref;
-            
-            if (!showtimeStartStr) return;
-            
-            const showtimeStart = new Date(showtimeStartStr);
-            const currentTime = new Date();
-            
-            // Lưu href gốc nếu chưa có
-            if (!button.dataset.originalHref && button.getAttribute('href')) {
-                button.dataset.originalHref = button.getAttribute('href');
-            }
-            
-            // Kiểm tra nếu suất chiếu đã bắt đầu
-            if (currentTime >= showtimeStart) {
-                button.disabled = true;
-                button.classList.remove('btn-success', 'btn-warning');
-                button.classList.add('btn-secondary');
-                button.title = 'Không thể in vé sau khi suất chiếu đã bắt đầu. Suất chiếu: ' + showtimeStart.toLocaleString('vi-VN');
-                button.removeAttribute('href');
-                button.onclick = function(e) {
-                    return handleDisabledButtonClick(e, 'Không thể in vé sau khi suất chiếu đã bắt đầu.\nSuất chiếu: ' + showtimeStart.toLocaleString('vi-VN'));
-                };
-                return;
-            }
-            
-            // Kiểm tra nếu còn ít hơn 1 tiếng trước suất chiếu
-            const oneHourBeforeShowtime = new Date(showtimeStart.getTime() - (60 * 60 * 1000));
-            if (currentTime <= oneHourBeforeShowtime) {
-                button.disabled = true;
-                button.classList.remove('btn-success', 'btn-secondary');
-                button.classList.add('btn-warning');
-                button.title = 'Vé chỉ có thể in trước suất chiếu ít nhất 1 tiếng. Suất chiếu: ' + showtimeStart.toLocaleString('vi-VN');
-                button.removeAttribute('href');
-                button.onclick = function(e) {
-                    return handleDisabledButtonClick(e, 'Vé chỉ có thể in trước suất chiếu ít nhất 1 tiếng.\nSuất chiếu: ' + showtimeStart.toLocaleString('vi-VN'));
-                };
-                return;
-            }
-            
-            // Nếu trong khoảng thời gian cho phép in vé
-            if (button.disabled) {
-                button.disabled = false;
-                button.classList.remove('btn-secondary', 'btn-warning');
-                button.classList.add('btn-success');
-                button.title = 'In vé (Suất chiếu: ' + showtimeStart.toLocaleString('vi-VN') + ')';
-                // Khôi phục href gốc
-                if (button.dataset.originalHref) {
-                    button.setAttribute('href', button.dataset.originalHref);
-                }
-                button.onclick = null; // Xóa event handler cũ
-            }
-        });
-    }, 60000); // Cập nhật mỗi phút
 });
 </script>
-@endpush
+@endsection

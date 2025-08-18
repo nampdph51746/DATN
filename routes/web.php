@@ -42,6 +42,10 @@ use App\Http\Controllers\Admin\AdminProductCategoriesController;
 
 
 Route::get('/', [HomeController::class, 'index'])->name('client.home');
+Route::get('/movies', [HomeController::class, 'filter'])->name('movies.filter');
+Route::get('/movies/filter/{genreName?}', [HomeController::class, 'filter'])
+    ->where('genreName', '.*') // Cho phép dấu cách, ký tự đặc biệt
+    ->name('movies.filter');Route::get('/movies/{id}', [HomeController::class, 'show'])->name('movies.show');
 Route::get('/movies', [HomeController::class, 'movies'])->name('client.movies');
 Route::get('/movies/{id}', [HomeController::class, 'show'])->name('movies.show');
 Route::get('/movies/{id}/ticket-booking', [HomeController::class, 'ticketBooking'])->name('client.movies.ticketBooking');
@@ -56,6 +60,7 @@ Route::get('/movies/{movie}/reviews', [App\Http\Controllers\Client\ReviewControl
 Route::get('/showtimes/{showtimeId}/seat-map', [SeatController::class, 'showSeatMap'])->name('client.seats.map');
 Route::post('/showtimes/{showtimeId}/reserve', [SeatController::class, 'reserveSeat'])->name('client.seats.reserve');
 Route::get('/api/seats/status/{showtimeId}', [SeatController::class, 'getSeatStatus']);
+Route::post('admin/showtimes/store-auto', [\App\Http\Controllers\Admin\ShowtimeController::class, 'storeAuto'])->name('admin.showtimes.storeAuto');
 Route::post('/apply-promotion-auto', [App\Http\Controllers\Client\HomeController::class, 'applyDiscountCodeAutomatically'])->name('client.applyPromotionAuto');
 
 Route::post('/checkout/vnpay', [VnpayController::class, 'redirectToVnpay'])->name('checkout.vnpay');
@@ -73,19 +78,6 @@ Route::get('/payment-failed', function () {
     return 'Thanh toán thất bại!';
 })->name('client.failed');
 
-// Route::middleware('guest')->group(function () {
-//     Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])
-//         ->name('password.request');
-
-//     Route::post('forgot-password', [PasswordResetLinkController::class, 'store'])
-//         ->name('password.email');
-
-//     Route::get('reset-password/{token}', [NewPasswordController::class, 'create'])
-//         ->name('password.reset');
-
-//     Route::put('reset-password', [NewPasswordController::class, 'store'])
-//         ->name('password.reset.submit');
-// });
 
 Route::post('/apply-promotion', [App\Http\Controllers\Client\HomeController::class, 'applyDiscountCode'])->name('client.applyPromotion');
 
@@ -97,18 +89,40 @@ Route::get('/user-points', [App\Http\Controllers\Client\HomeController::class, '
 Route::get('/user-point-history', [App\Http\Controllers\Client\HomeController::class, 'getUserPointHistory'])->name('client.getUserPointHistory');
 
 
-// Route::get('/dashboard', function () {
-//     return view('dashboard');
-// })->middleware(['auth', 'verified'])->name('dashboard');
+
 Route::middleware('auth')->group(function () {
     Route::get('my-bookings', [BookingController::class, 'myBookings'])->name('client.bookings.index');
     Route::get('my-bookings/show/{id}', [BookingController::class, 'myBookingsShow'])->name('client.bookings.show');
 });
 
 Route::middleware(['auth'])->group(function (){
-Route::get('/profile', [App\Http\Controllers\Auth\AuthenticatedSessionController::class, 'profile'])->name('profile.edit');
-Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+// Thông tin chung
+    Route::get('/profile', [App\Http\Controllers\Auth\AuthenticatedSessionController::class, 'profile'])
+        ->name('profile.edit');
+
+    // Chi tiết tài khoản
+    Route::get('/profile/general', [ProfileController::class, 'general'])
+        ->name('profile.general');
+
+    // Thẻ thành viên
+    Route::get('/profile/membership', [ProfileController::class, 'membership'])
+        ->name('profile.membership');
+
+    // Voucher
+    Route::get('/profile/voucher', [ProfileController::class, 'voucher'])
+        ->name('profile.voucher');
+
+    // Lịch sử giao dịch
+    Route::get('/profile/history', [ProfileController::class, 'history'])
+        ->name('profile.history');
+
+    Route::get('/booking/{id}/detail', [ProfileController::class, 'detail'])->name('client.booking.detail');
+
+    // Update và Delete (có sẵn)
+    Route::patch('/profile', [ProfileController::class, 'update'])
+        ->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])
+        ->name('profile.destroy');
 });
 
 Route::middleware(['auth', 'role:admin,staff'])->group(function () {
@@ -155,15 +169,6 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
     Route::delete('showtimes/{id}/deactivate', [ShowtimeController::class, 'deactivate'])->name('showtimes.deactivate');
     Route::resource('showtimes', ShowtimeController::class)->except(['destroy']);
 
-    // Movies routes from HEAD
-    Route::get('/movies', [MovieController::class, 'index'])->name('movies.index');
-    Route::get('/movies/create', [MovieController::class, 'create'])->name('movies.create');
-    Route::post('/movies', [MovieController::class, 'store'])->name('movies.store');
-    Route::get('/movies/{id}', [MovieController::class, 'show'])->name('movies.show');
-    Route::get('/movies/{id}/edit', [MovieController::class, 'edit'])->name('movies.edit');
-    Route::put('/movies/{id}', [MovieController::class, 'update'])->name('movies.update');
-    Route::delete('/movies/{id}', [MovieController::class, 'destroy'])->name('movies.destroy');
-
     // Tạo suất chiếu tự động (HEAD)
     Route::post('/showtimes', [ShowtimeController::class, 'storeAuto'])->name('showtimes.storeAuto');
     
@@ -209,8 +214,8 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
             Route::post('/check-status', [QrCodeController::class, 'checkTicketStatus'])->name('qr.check');
             Route::post('/scan-ticket', [QrCodeController::class, 'scanTicketByCode'])->name('qr.scanTicket');
         });
-        // Route in vé riêng theo ticket_code
-        // Route::get('/tickets/{ticket_code}/print', [TicketPrintController::class, 'printTicket'])->name('tickets.print');
+        // Route in vé riêng theo ticket_code (sửa lại cho đúng)
+        Route::get('admin/tickets/{ticket_code}/print', [TicketPrintController::class, 'printTicket'])->name('admin.tickets.print');
         // Route in chung đồ ăn, đồ uống theo booking_code
         Route::get('admin/bookings/{booking_code}/print', [BookingController::class, 'print'])->name('bookings.print');
         // Trang quét QR code cho nhân viên
@@ -242,7 +247,7 @@ Route::post('admin/seats/import', [App\Http\Controllers\Admin\AdminSeatControlle
 Route::delete('admin/genres/bulk-delete', [\App\Http\Controllers\Admin\GenreController::class, 'bulkDelete'])->name('admin.genres.bulkDelete');
 
 Route::prefix('admin')->name('admin.')->group(function () {
-    Route::resource('movies', \App\Http\Controllers\Admin\AdminMovieController::class);
+    Route::resource('movies', AdminMovieController::class);
     Route::resource('directors', \App\Http\Controllers\Admin\AdminDirectorController::class);
     Route::resource('actors', \App\Http\Controllers\Admin\AdminActorController::class);
 });
@@ -295,7 +300,7 @@ Route::get('admin/bookings', [BookingController::class, 'index'])->name('admin.b
 Route::get('admin/bookingShow/{id}', [BookingController::class, 'show'])->name('admin.bookings.show');
 Route::get('admin/bookings/{booking}/edit-status', [BookingController::class, 'editStatus'])->name('admin.bookings.editStatus');
 Route::put('admin/bookings/{booking}/update-status', [BookingController::class, 'updateStatus'])->name('admin.bookings.updateStatus');
-
+Route::get('admin/bookings/{booking}/edit', [BookingController::class, 'edit'])->name('admin.bookings.edit');
 
 
 Route::get('admin/payments', [PaymentController::class, 'index'])->name('admin.payments.index');
@@ -305,11 +310,12 @@ Route::put('admin/payments/{payment}/update-status', [PaymentController::class, 
 
 Route::get('admin/tickets', [TicketController::class, 'index'])->name('tickets.index');
 Route::get('admin/tickets/{id}', [TicketController::class, 'show'])->name('tickets.show');
+Route::resource('admin/tickets', TicketController::class)->names('admin.tickets');
 
-Route::get('admin/promotions/trashed', [PromotionController::class, 'trashed'])->name('promotions.trashed');
+Route::get('admin/promotions/trashed', [PromotionController::class, 'trashed'])->name('admin.promotions.trashed');
 Route::post('admin/promotions/restore/{id}', [PromotionController::class, 'restore'])->name('promotions.restore');
 Route::delete('admin/promotions/force-delete/{id}', [PromotionController::class, 'forceDelete'])->name('promotions.forceDelete');
-Route::resource('admin/promotions', PromotionController::class)->names('promotions');
+Route::resource('admin/promotions', PromotionController::class)->names('admin.promotions');
 
 Route::get('admin/customer_rank_promotions', [CustomerRankPromotionController::class, 'index'])->name('customer_rank_promotions.index');
 Route::get('admin/customer_rank_promotions/create', [CustomerRankPromotionController::class, 'create'])->name('customer_rank_promotions.create');
@@ -333,17 +339,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
 });
 
 });
-
-// // Test route for barcode
-// Route::get('/test-barcode-api', function () {
-//     $barcodeService = new \App\Services\BarcodeService();
-//     $barcode = $barcodeService->generateBarcode('BK1754063915');
-    
-//     return response()->json([
-//         'barcode' => $barcode,
-//         'booking_code' => 'BK1754063915'
-//     ]);
-// });
 
 // Admin Reviews Routes
 Route::prefix('admin/reviews')->name('admin.reviews.')->group(function () {

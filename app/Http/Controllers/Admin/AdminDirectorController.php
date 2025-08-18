@@ -15,16 +15,47 @@ class AdminDirectorController extends Controller
     public function index(Request $request)
     {
         $query = $request->input('query');
+        $status = $request->input('status');
+        $nationality = $request->input('nationality');
         
         $directors = Director::query()
             ->when($query, function ($queryBuilder, $query) {
                 return $queryBuilder->where('name', 'like', '%' . $query . '%')
                     ->orWhere('nationality', 'like', '%' . $query . '%');
             })
+            ->when($status, function ($queryBuilder, $status) {
+                if ($status === 'active') {
+                    return $queryBuilder->where('is_active', true);
+                } elseif ($status === 'inactive') {
+                    return $queryBuilder->where('is_active', false);
+                }
+            })
+            ->when($nationality, function ($queryBuilder, $nationality) {
+                return $queryBuilder->where('nationality', $nationality);
+            })
+            ->with('movies')
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
-        return view('admin.directors.index', compact('directors'));
+        // ✅ Thêm biến cần thiết cho stats
+        $totalDirectors = Director::count();
+        $activeDirectors = Director::where('is_active', true)->count();
+        $inactiveDirectors = Director::where('is_active', false)->count();
+        
+        // ✅ Lấy danh sách quốc gia để filter
+        $nationalities = Director::select('nationality')
+            ->whereNotNull('nationality')
+            ->distinct()
+            ->orderBy('nationality')
+            ->pluck('nationality');
+
+        return view('admin.directors.index', compact(
+            'directors', 
+            'totalDirectors', 
+            'activeDirectors', 
+            'inactiveDirectors',
+            'nationalities'
+        ));
     }
 
     /**
@@ -60,7 +91,8 @@ class AdminDirectorController extends Controller
         Director::create($data);
 
         return redirect()->route('admin.directors.index')
-            ->with('success', 'Thêm đạo diễn thành công!');
+            ->with('success', 'Thêm đạo diễn thành công!')
+            ->with('director_created', true);
     }
 
     /**
@@ -138,5 +170,54 @@ class AdminDirectorController extends Controller
 
         return redirect()->route('admin.directors.index')
             ->with('success', 'Xóa đạo diễn thành công!');
+    }
+
+    /**
+     * Bulk delete selected directors.
+     */
+    public function bulkDelete(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|string'
+        ]);
+
+        $ids = explode(',', $request->ids);
+        $deletedCount = 0;
+        $errorMessages = [];
+
+        foreach ($ids as $id) {
+            try {
+                $director = Director::findOrFail($id);
+                
+                // Kiểm tra nếu đạo diễn có phim
+                if ($director->movies()->count() > 0) {
+                    $errorMessages[] = "Không thể xóa đạo diễn '{$director->name}' vì đang có phim liên kết.";
+                    continue;
+                }
+
+                // Xóa ảnh
+                if ($director->image_path) {
+                    Storage::disk('public')->delete($director->image_path);
+                }
+
+                $director->delete();
+                $deletedCount++;
+            } catch (\Exception $e) {
+                $errorMessages[] = "Có lỗi khi xóa đạo diễn ID: {$id}";
+            }
+        }
+
+        $message = "Đã xóa thành công {$deletedCount} đạo diễn.";
+        if (!empty($errorMessages)) {
+            $message .= " " . implode(" ", $errorMessages);
+        }
+
+        if ($deletedCount > 0) {
+            return redirect()->route('admin.directors.index')
+                ->with('success', $message);
+        } else {
+            return redirect()->route('admin.directors.index')
+                ->with('error', 'Không thể xóa đạo diễn nào. ' . implode(" ", $errorMessages));
+        }
     }
 }

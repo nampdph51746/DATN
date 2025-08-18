@@ -137,16 +137,32 @@ class UserController extends Controller
      */
     public function update(UpdateUserRequest $request, $id)
     {
-        $user = User::findOrFail($id); // tự lấy model
+        $user = User::findOrFail($id);
 
-        $user->update([
-            'customer_rank_id' => $request->customer_rank_id,
-            'status' => $request->status,
-        ]);
+        $user->name = $request->name;
+        $user->email = $request->email;
+        $user->phone_number = $request->phone_number;
+        $user->address = $request->address;
+        $user->date_of_birth = $request->date_of_birth;
+        $user->customer_rank_id = $request->customer_rank_id;
+        $user->status = $request->status;
 
-        $user->syncRoles($request->role);
+        // Avatar upload
+        if ($request->hasFile('avatar')) {
+            $avatarPath = $request->file('avatar')->store('avatars', 'public');
+            $user->avatar_url = $avatarPath;
+        } elseif ($request->remove_avatar) {
+            $user->avatar_url = null;
+        }
 
-        return redirect()->route('users.index')->with('success', 'Cập nhật người dùng thành công.');
+        // Role update
+        if ($request->role) {
+            $user->syncRoles([$request->role]);
+        }
+
+        $user->save();
+
+        return redirect()->route('users.index')->with('success', 'Cập nhật khách hàng thành công!');
     }
 
 }
