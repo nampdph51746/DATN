@@ -144,9 +144,9 @@ class HomeController extends Controller
         }
 
         if (!empty($data['search'])) {
-            $query->where('name', 'like', '%' . $data['search'] . '%');
-            $title = 'Kết quả tìm kiếm';
-        }
+    $query->where('name', 'like', '%' . $data['search'] . '%');
+    $title = 'Kết quả tìm kiếm cho: ' . e($data['search']);
+}
 
         if ($isShowing && !empty($data['date'])) {
             $date = $data['date'];
