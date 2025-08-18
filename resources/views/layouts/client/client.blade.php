@@ -266,18 +266,20 @@
 						</li>
 					</ul>
 
-					<form action="{{ route('movies.filter') }}" method="get" class="mr-3 position-relative" style="width: 250px;">
+					<form class="mr-3 position-relative" style="width: 250px;">
     <input type="search" 
+           id="movie-search"
            placeholder="Nhập tên phim..." 
-           name="search" 
-           value="{{ request('search') }}" 
            class="form-control"
            style="border-radius: 25px; padding-left: 36px;">
-
-    <!-- Icon tìm kiếm nằm trong ô -->
     <span class="fas fa-search"
           style="position: absolute; top: 50%; left: 12px; transform: translateY(-50%); color: #888;">
     </span>
+
+    <!-- Gợi ý hiển thị ở đây -->
+    <ul id="search-results" 
+        style="position: absolute; top: 105%; left: 0; width: 100%; background: white; border: 1px solid #ccc; border-radius: 6px; display: none; z-index: 1000; list-style: none; padding: 0; margin: 0;">
+    </ul>
 </form>
 
 					<!--/search-right-->
@@ -366,6 +368,44 @@
 </body>
 
 </html>
+
+<script>
+document.getElementById('movie-search').addEventListener('input', function () {
+    let query = this.value.trim();
+    let resultsBox = document.getElementById('search-results');
+
+    if (query.length < 2) { // chỉ search khi nhập >= 2 ký tự
+        resultsBox.style.display = 'none';
+        resultsBox.innerHTML = '';
+        return;
+    }
+
+    fetch(`{{ route('movies.searchAjax') }}?q=${encodeURIComponent(query)}`)
+        .then(response => response.json())
+        .then(data => {
+            resultsBox.innerHTML = '';
+            if (data.length > 0) {
+                data.forEach(movie => {
+                    let li = document.createElement('li');
+                    li.innerHTML = `<a href="/movies/${movie.id}" style="display:block; padding:8px 12px; text-decoration:none; color:#333;">${movie.name}</a>`;
+                    li.addEventListener('mouseover', () => li.style.background = '#f1f1f1');
+                    li.addEventListener('mouseout', () => li.style.background = 'white');
+                    resultsBox.appendChild(li);
+                });
+                resultsBox.style.display = 'block';
+            } else {
+                resultsBox.style.display = 'none';
+            }
+        });
+});
+
+// Ẩn khi click ra ngoài
+document.addEventListener('click', function(e) {
+    if (!document.querySelector('form').contains(e.target)) {
+        document.getElementById('search-results').style.display = 'none';
+    }
+});
+</script>
 
 <script>
 	function toggleUserDropdown() {

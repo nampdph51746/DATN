@@ -43,12 +43,13 @@ use App\Http\Controllers\Client\BookingHistoryController;
 use Symfony\Component\HttpKernel\Profiler\Profile;
 
 Route::get('/', [HomeController::class, 'index'])->name('client.home');
+Route::get('/movies/search', [HomeController::class, 'searchAjax'])
+    ->name('movies.searchAjax');
 Route::get('/movies', [HomeController::class, 'filter'])->name('movies.filter');
 Route::get('/movies/filter/{genreName?}', [HomeController::class, 'filter'])
     ->where('genreName', '.*') // Cho phép dấu cách, ký tự đặc biệt
     ->name('movies.filter');Route::get('/movies/{id}', [HomeController::class, 'show'])->name('movies.show');
-Route::get('/movies/search', [HomeController::class, 'searchAjax'])
-    ->name('movies.searchAjax');
+
 Route::get('/movies/{id}/ticket-booking', [HomeController::class, 'ticketBooking'])->name('client.movies.ticketBooking');
 
 // Review routes
