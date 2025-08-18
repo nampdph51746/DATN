@@ -135,16 +135,6 @@
                             </div>
                         </div>
 
-                        <div class="col-md-6">
-                            <div class="info-card p-3 rounded-3 bg-light-subtle border border-light">
-                                <div class="d-flex align-items-center gap-2 mb-2">
-                                    <i class="bx bx-star text-warning fs-20"></i>
-                                    <span class="fw-semibold text-dark">Điểm đánh giá</span>
-                                </div>
-                                <p class="text-muted mb-0 ps-4">{{ $movie->average_rating ?? 'N/A' }}</p>
-                            </div>
-                        </div>
-
                         <!-- Extended Info -->
                         <div class="col-12">
                             <div class="info-card p-3 rounded-3 bg-light-subtle border border-light">
@@ -658,7 +648,9 @@
     transform: scale(1.02);
 }
 
-/* Info cards styling */
+                                {{-- Đã loại bỏ average_rating --}}
+                                {{-- Đã loại bỏ average_rating --}}
+                                {{-- Đã loại bỏ average_rating --}}
 .info-card {
     transition: all 0.3s ease;
     border: 1px solid #e9ecef !important;

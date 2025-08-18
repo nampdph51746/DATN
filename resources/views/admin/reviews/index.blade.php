@@ -88,6 +88,43 @@
         .btn-danger:hover { background: var(--primary-orange); color: white; }
         .btn-info { background: var(--primary-teal); border: none; }
         .btn-info:hover { background: var(--accent-yellow); color: #1a202c; }
+        
+        /* Form controls styling */
+        .form-control {
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
+            padding: 0.75rem 1rem;
+            transition: var(--transition);
+            font-size: 0.95rem;
+        }
+        .form-control:focus {
+            border-color: var(--primary-teal);
+            box-shadow: 0 0 0 0.2rem rgba(0, 172, 193, 0.25);
+        }
+        
+        /* Outline button styling */
+        .btn-outline-secondary {
+            border: 2px solid #e2e8f0;
+            color: #6b7280;
+            border-radius: 12px;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-outline-secondary:hover {
+            background: #f8fafc;
+            border-color: #d1d5db;
+            color: #374151;
+            transform: translateY(-1px);
+        }
+        
+        /* Filter form styling */
+        .filter-form {
+            background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+        }
         .view-detail-btn, .edit-btn {
             border-radius: 8px;
             min-width: 36px;
@@ -189,11 +226,11 @@
                 <div>
                     <h4 class="fw-bold mb-1" style="color: var(--primary-orange);">
                         <i class="fas fa-comments me-2"></i>
-                        Quản lý đánh giá
+                        Quản lý bình luận
                     </h4>
                     <p class="text-muted mb-0">
                         <i class="fas fa-info-circle me-1"></i>
-                        Quản lý toàn bộ đánh giá phim của người dùng
+                        Quản lý toàn bộ bình luận phim của người dùng
                     </p>
                 </div>
                 <div class="d-flex gap-2 flex-wrap">
@@ -220,7 +257,7 @@
                             </div>
                         </div>
                         <div class="flex-grow-1 ms-3">
-                            <h6 class="mb-0 text-muted fw-semibold">Tổng đánh giá</h6>
+                            <h6 class="mb-0 text-muted fw-semibold">Tổng bình luận</h6>
                             <h3 class="mb-0 fw-bold" style="color: var(--primary-teal);">{{ $stats['total'] }}</h3>
                         </div>
                     </div>
@@ -299,11 +336,11 @@
                 <i class="fas fa-filter"></i> Bộ lọc
             </h6>
         </div>
-        <div class="card-body">
+        <div class="card-body filter-form">
             <form method="GET" action="{{ route('admin.reviews.index') }}">
-                <div class="row g-3">
-                    <div class="col-md-3">
-                        <label for="status" class="fw-semibold"><i class="fas fa-flag me-1"></i>Trạng thái</label>
+                <div class="row g-4">
+                    <div class="col-md-2">
+                        <label for="status" class="fw-semibold mb-2"><i class="fas fa-flag me-1"></i>Trạng thái</label>
                         <select name="status" id="status" class="form-control">
                             <option value="">Tất cả</option>
                             <option value="approved" {{ request('status') == 'approved' ? 'selected' : '' }}>Đã duyệt</option>
@@ -312,7 +349,7 @@
                         </select>
                     </div>
                     <div class="col-md-3">
-                        <label for="movie_id" class="fw-semibold"><i class="fas fa-film me-1"></i>Phim</label>
+                        <label for="movie_id" class="fw-semibold mb-2"><i class="fas fa-film me-1"></i>Phim</label>
                         <select name="movie_id" id="movie_id" class="form-control">
                             <option value="">Tất cả phim</option>
                             @foreach($movies as $movie)
@@ -323,33 +360,25 @@
                         </select>
                     </div>
                     <div class="col-md-2">
-                        <label for="rating" class="fw-semibold"><i class="fas fa-star me-1"></i>Đánh giá</label>
-                        <select name="rating" id="rating" class="form-control">
-                            <option value="">Tất cả</option>
-                            @for($i = 5; $i >= 1; $i--)
-                                <option value="{{ $i }}" {{ request('rating') == $i ? 'selected' : '' }}>
-                                    {{ $i }} sao
-                                </option>
-                            @endfor
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <label for="auto_type" class="fw-semibold"><i class="fas fa-robot me-1"></i>Loại xử lý</label>
+                        <label for="auto_type" class="fw-semibold mb-2"><i class="fas fa-robot me-1"></i>Loại xử lý</label>
                         <select name="auto_type" id="auto_type" class="form-control">
                             <option value="">Tất cả</option>
                             <option value="auto" {{ request('auto_type') == 'auto' ? 'selected' : '' }}>Tự động</option>
                             <option value="manual" {{ request('auto_type') == 'manual' ? 'selected' : '' }}>Thủ công</option>
                         </select>
                     </div>
-                    <div class="col-md-2">
-                        <label for="search" class="fw-semibold"><i class="fas fa-search me-1"></i>Tìm kiếm</label>
+                    <div class="col-md-3">
+                        <label for="search" class="fw-semibold mb-2"><i class="fas fa-search me-1"></i>Tìm kiếm</label>
                         <input type="text" name="search" id="search" class="form-control" 
                                placeholder="Tên người dùng hoặc bình luận..." value="{{ request('search') }}">
                     </div>
-                    <div class="col-md-1 d-flex align-items-end">
-                        <button type="submit" class="btn btn-primary w-100">
-                            <i class="fas fa-search"></i> Lọc
+                    <div class="col-md-2 d-flex align-items-end gap-2">
+                        <button type="submit" class="btn btn-primary flex-fill" style="height: 60px;">
+                            <i class="fas fa-search me-1"></i> Lọc
                         </button>
+                        <a href="{{ route('admin.reviews.index') }}" class="btn btn-outline-secondary" style="height: 46px; width: 46px;" title="Xóa bộ lọc">
+                            <i class="fas fa-times"></i>
+                        </a>
                     </div>
                 </div>
             </form>
@@ -360,7 +389,7 @@
     <div class="card border-0 shadow mb-4 rounded-4">
         <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
             <h6 class="m-0 fw-bold d-flex align-items-center gap-2" style="color: #fff;">
-                <i class="fas fa-table"></i> Danh sách đánh giá
+                <i class="fas fa-table"></i> Danh sách bình luận
             </h6>
             <div class="btn-group" role="group">
                 <button type="button" class="btn btn-success btn-sm" onclick="bulkUpdateStatus('approved')">
@@ -371,9 +400,6 @@
                 </button>
                 <button type="button" class="btn btn-danger btn-sm" onclick="bulkUpdateStatus('rejected')">
                     <i class="fas fa-times"></i> Từ chối
-                </button>
-                <button type="button" class="btn btn-dark btn-sm" onclick="bulkDelete()">
-                    <i class="fas fa-trash"></i> Xóa
                 </button>
             </div>
         </div>
@@ -386,7 +412,6 @@
                                 <th width="30"><input type="checkbox" id="selectAll"></th>
                                 <th><i class="fas fa-user me-1 text-primary"></i> Người dùng</th>
                                 <th><i class="fas fa-film me-1 text-info"></i> Phim</th>
-                                <th><i class="fas fa-star me-1 text-warning"></i> Đánh giá</th>
                                 <th><i class="fas fa-comment-dots me-1 text-secondary"></i> Bình luận</th>
                                 <th><i class="fas fa-flag me-1 text-warning"></i> Trạng thái</th>
                                 <th><i class="fas fa-calendar-plus me-1 text-success"></i> Ngày tạo</th>
@@ -415,21 +440,6 @@
                                             <span>{{ Str::limit($review->movie->name, 30) }}</span>
                                         </a>
                                     </td>
-                                    <td class="review-rating-cell">
-                                        <div class="text-center">
-                                            <span class="badge bg-warning text-dark mb-1">
-                                                <i class="fas fa-star"></i> {{ $review->rating_star }}/5
-                                            </span>
-                                            <div class="stars-display">
-                                                @for($i = 1; $i <= 5; $i++)
-                                                    @if($i <= $review->rating_star)
-                                                        <i class="fas fa-star text-warning"></i>
-                                                    @else
-                                                        <i class="far fa-star text-muted"></i>
-                                                    @endif
-                                                @endfor
-                                            </div>
-                                        </div>
                                     </td>
                                     <td>
                                         <div class="d-flex align-items-center gap-2">
@@ -472,12 +482,6 @@
                                                data-bs-toggle="tooltip">
                                                 <i class="fas fa-eye"></i>
                                             </a>
-                                            <button type="button" class="btn btn-sm edit-btn" 
-                                                    onclick="deleteReview({{ $review->id }})"
-                                                    title="Xóa"
-                                                    data-bs-toggle="tooltip">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
                                         </div>
                                     </td>
                                 </tr>
@@ -492,7 +496,7 @@
             @else
                 <div class="text-center py-5">
                     <i class="fas fa-comments fa-3x text-muted mb-3"></i>
-                    <p class="text-muted">Không có đánh giá nào.</p>
+                    <p class="text-muted">Không có bình luận nào.</p>
                 </div>
             @endif
         </div>
@@ -536,12 +540,12 @@ $(document).ready(function() {
 function bulkUpdateStatus(status) {
     const checkedBoxes = $('.review-checkbox:checked');
     if (checkedBoxes.length === 0) {
-        alert('Vui lòng chọn ít nhất một đánh giá!');
+        alert('Vui lòng chọn ít nhất một bình luận!');
         return;
     }
     const ids = checkedBoxes.map(function() { return $(this).val(); }).get();
     const statusText = { 'approved': 'duyệt', 'pending': 'chờ duyệt', 'rejected': 'từ chối' };
-    if (confirm(`Bạn có chắc muốn ${statusText[status]} ${ids.length} đánh giá đã chọn?`)) {
+    if (confirm(`Bạn có chắc muốn ${statusText[status]} ${ids.length} bình luận đã chọn?`)) {
         $('#bulkStatusForm').attr('action', '{{ route("admin.reviews.bulk-status") }}');
         $('#bulkStatusIds').val(ids.join(','));
         $('#bulkStatus').val(status);
@@ -551,17 +555,17 @@ function bulkUpdateStatus(status) {
 function bulkDelete() {
     const checkedBoxes = $('.review-checkbox:checked');
     if (checkedBoxes.length === 0) {
-        alert('Vui lòng chọn ít nhất một đánh giá!');
+        alert('Vui lòng chọn ít nhất một bình luận!');
         return;
     }
     const ids = checkedBoxes.map(function() { return $(this).val(); }).get();
-    if (confirm(`Bạn có chắc muốn xóa ${ids.length} đánh giá đã chọn? Hành động này không thể hoàn tác!`)) {
+    if (confirm(`Bạn có chắc muốn xóa ${ids.length} bình luận đã chọn? Hành động này không thể hoàn tác!`)) {
         $('#bulkDeleteIds').val(ids.join(','));
         $('#bulkDeleteForm').submit();
     }
 }
 function deleteReview(id) {
-    if (confirm('Bạn có chắc muốn xóa đánh giá này? Hành động này không thể hoàn tác!')) {
+    if (confirm('Bạn có chắc muốn xóa bình luận này? Hành động này không thể hoàn tác!')) {
         $('#deleteForm').attr('action', `/admin/reviews/${id}`);
         $('#deleteForm').submit();
     }

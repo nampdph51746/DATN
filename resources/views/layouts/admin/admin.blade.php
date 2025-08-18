@@ -937,14 +937,14 @@
                         <a class="nav-link menu-arrow" href="#sidebarReviews" role="button" aria-expanded="false"
                             aria-controls="sidebarReviews">
                             <span class="nav-icon">
-                                <iconify-icon icon="solar:star-bold-duotone"></iconify-icon>
+                                <iconify-icon icon="mdi:comment-text-multiple-outline" width="24" height="24"></iconify-icon>
                             </span>
-                            <span class="nav-text">Đánh giá</span>
+                            <span class="nav-text">Bình luận</span>
                         </a>
                         <div class="collapse" id="sidebarReviews" data-bs-parent="#navbar-nav">
                             <ul class="nav sub-navbar-nav">
                                 <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="{{ route('admin.reviews.index') }}">Danh sách</a>
+                                    <a class="sub-nav-link" href="{{ route('admin.reviews.index') }}">Danh sách bình luận</a>
                                 </li>
                             </ul>
                         </div>

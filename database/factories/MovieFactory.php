@@ -26,7 +26,6 @@ class MovieFactory extends Factory
             'country_id' => \App\Models\Country::factory(),
             'age_limit_id' => \App\Models\AgeLimit::factory(),
             'status' => $this->faker->randomElement(MovieStatus::cases()),
-            'average_rating' => $this->faker->randomFloat(1, 0, 5),
         ];
     }
 }

@@ -116,7 +116,7 @@
                         $rejectedReviews = \App\Models\Review::where('status', 'rejected')->count();
                     @endphp
                     <div class="mb-2 d-flex justify-content-between align-items-center">
-                        <span class="fw-medium">Tổng đánh giá:</span>
+                        <span class="fw-medium">Tổng bình luận:</span>
                         <span class="fw-bold text-primary">{{ number_format($totalReviews) }}</span>
                     </div>
                     <div class="mb-2 d-flex justify-content-between align-items-center">
@@ -154,10 +154,8 @@
                         <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Chứa từ khóa nhạy cảm</li>
                         <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Chứa email hoặc số điện thoại</li>
                         <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Chứa đường link</li>
-                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Quá ngắn (< 10 ký tự)</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Quá ngắn (< 5 ký tự)</li>
                         <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Quá dài (> 500 ký tự)</li>
-                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Tài khoản mới (< 7 ngày)</li>
-                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Ít review đã duyệt (< 3)</li>
                         <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Có dấu hiệu spam</li>
                     </ul>
                 </div>

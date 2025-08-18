@@ -23,55 +23,134 @@ class AdminReviewController extends Controller
     {
         $query = Review::with(['user', 'movie']);
 
-        // Lọc theo trạng thái
-        if ($request->has('status') && $request->status !== '') {
+        // Lọc theo trạng thái - cẩn thận với giá trị đầu vào
+        if ($request->filled('status') && in_array($request->status, ['approved', 'pending', 'rejected'])) {
             $query->where('status', $request->status);
         }
 
-        // Lọc theo phim
-        if ($request->has('movie_id') && $request->movie_id !== '') {
-            $query->where('movie_id', $request->movie_id);
+        // Lọc theo phim - kiểm tra movie có tồn tại
+        if ($request->filled('movie_id') && is_numeric($request->movie_id)) {
+            $movieExists = Movie::where('id', $request->movie_id)->exists();
+            if ($movieExists) {
+                $query->where('movie_id', $request->movie_id);
+            }
         }
 
-        // Lọc theo đánh giá sao
-        if ($request->has('rating') && $request->rating !== '') {
-            $query->where('rating_star', $request->rating);
-        }
-
-        // Lọc theo loại xử lý (tự động/thủ công)
-        if ($request->has('auto_type') && $request->auto_type !== '') {
+        // Lọc theo loại xử lý (tự động/thủ công) - cẩn thận với logic
+        if ($request->filled('auto_type') && in_array($request->auto_type, ['auto', 'manual'])) {
             if ($request->auto_type === 'auto') {
-                $query->where('admin_note', 'like', 'Tự động chờ duyệt%');
+                // Bình luận được xử lý tự động - có admin_note chứa "Tự động"
+                $query->where(function($q) {
+                    $q->where('admin_note', 'like', 'Tự động%')
+                      ->orWhere('admin_note', 'like', '%tự động%')
+                      ->orWhere('admin_note', 'like', '%auto%');
+                });
             } elseif ($request->auto_type === 'manual') {
+                // Bình luận được xử lý thủ công - không có admin_note tự động hoặc có admin_note thủ công
                 $query->where(function($q) {
                     $q->whereNull('admin_note')
-                      ->orWhere('admin_note', 'not like', 'Tự động chờ duyệt%');
+                      ->orWhere(function($subQ) {
+                          $subQ->whereNotNull('admin_note')
+                               ->where('admin_note', 'not like', 'Tự động%')
+                               ->where('admin_note', 'not like', '%tự động%')
+                               ->where('admin_note', 'not like', '%auto%');
+                      });
                 });
             }
         }
 
-        // Tìm kiếm theo tên user hoặc comment
-        if ($request->has('search') && $request->search !== '') {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
+        // Tìm kiếm nâng cao - tìm kiếm linh hoạt hơn
+        if ($request->filled('search')) {
+            $search = trim($request->search);
+            $searchTerms = explode(' ', $search); // Tách từ khóa
+            
+            $query->where(function($q) use ($search, $searchTerms) {
+                // Tìm kiếm chính xác theo chuỗi đầy đủ
                 $q->whereHas('user', function($userQuery) use ($search) {
-                    $userQuery->where('name', 'like', "%{$search}%");
+                    $userQuery->where('name', 'like', "%{$search}%")
+                             ->orWhere('email', 'like', "%{$search}%");
                 })
-                ->orWhere('comment', 'like', "%{$search}%");
+                ->orWhere('comment', 'like', "%{$search}%")
+                ->orWhere('admin_note', 'like', "%{$search}%")
+                ->orWhereHas('movie', function($movieQuery) use ($search) {
+                    $movieQuery->where('name', 'like', "%{$search}%");
+                });
+                
+                // Nếu có nhiều từ, tìm kiếm từng từ riêng lẻ
+                if (count($searchTerms) > 1) {
+                    foreach ($searchTerms as $term) {
+                        $term = trim($term);
+                        if (strlen($term) >= 2) { // Chỉ tìm từ có ít nhất 2 ký tự
+                            $q->orWhereHas('user', function($userQuery) use ($term) {
+                                $userQuery->where('name', 'like', "%{$term}%");
+                            })
+                            ->orWhere('comment', 'like', "%{$term}%")
+                            ->orWhereHas('movie', function($movieQuery) use ($term) {
+                                $movieQuery->where('name', 'like', "%{$term}%");
+                            });
+                        }
+                    }
+                }
             });
         }
 
-        $reviews = $query->orderBy('created_at', 'desc')->paginate(15);
+        // Lọc theo khoảng thời gian (thêm mới)
+        if ($request->filled('date_from')) {
+            try {
+                $dateFrom = \Carbon\Carbon::createFromFormat('Y-m-d', $request->date_from)->startOfDay();
+                $query->where('created_at', '>=', $dateFrom);
+            } catch (\Exception $e) {
+                // Ignore invalid date format
+            }
+        }
 
-        // Lấy danh sách phim để filter
-        $movies = Movie::select('id', 'name')->orderBy('name')->get();
+        if ($request->filled('date_to')) {
+            try {
+                $dateTo = \Carbon\Carbon::createFromFormat('Y-m-d', $request->date_to)->endOfDay();
+                $query->where('created_at', '<=', $dateTo);
+            } catch (\Exception $e) {
+                // Ignore invalid date format
+            }
+        }
 
-        // Thống kê (refresh mỗi lần load)
+        // Sắp xếp - mặc định theo thời gian mới nhất
+        $sortBy = $request->get('sort_by', 'created_at');
+        $sortOrder = $request->get('sort_order', 'desc');
+        
+        $allowedSortFields = ['created_at', 'status', 'user_id', 'movie_id'];
+        $allowedSortOrders = ['asc', 'desc'];
+        
+        if (in_array($sortBy, $allowedSortFields) && in_array($sortOrder, $allowedSortOrders)) {
+            $query->orderBy($sortBy, $sortOrder);
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
+
+        // Phân trang với số lượng có thể tùy chỉnh
+        $perPage = $request->get('per_page', 15);
+        $allowedPerPage = [10, 15, 25, 50];
+        $perPage = in_array((int)$perPage, $allowedPerPage) ? (int)$perPage : 15;
+        
+        $reviews = $query->paginate($perPage);
+
+        // Lấy danh sách phim để filter - chỉ lấy phim có reviews
+        $movies = Movie::select('id', 'name')
+                      ->whereHas('reviews')
+                      ->orderBy('name')
+                      ->get();
+
+        // Thống kê chi tiết hơn
         $stats = [
             'total' => Review::count(),
             'approved' => Review::where('status', 'approved')->count(),
             'pending' => Review::where('status', 'pending')->count(),
             'rejected' => Review::where('status', 'rejected')->count(),
+            'auto_processed' => Review::where('admin_note', 'like', '%tự động%')->count(),
+            'manual_processed' => Review::whereNotNull('admin_note')
+                                        ->where('admin_note', 'not like', '%tự động%')
+                                        ->count(),
+            'today' => Review::whereDate('created_at', today())->count(),
+            'this_week' => Review::whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->count(),
         ];
 
         // Force refresh nếu có request refresh
@@ -80,9 +159,6 @@ class AdminReviewController extends Controller
             if (function_exists('opcache_reset')) {
                 opcache_reset();
             }
-            
-            // Recalculate all movie ratings
-            $this->recalculateAllRatingsInternal();
         }
 
         return view('admin.reviews.index', compact('reviews', 'movies', 'stats'));
@@ -93,6 +169,12 @@ class AdminReviewController extends Controller
         $review = Review::with(['user', 'movie'])->findOrFail($id);
         
         return view('admin.reviews.show', compact('review'));
+    }
+
+        public function contentFilterSettings()
+    {
+        $sensitiveWords = $this->contentFilterService->listSensitiveWords();
+        return view('admin.reviews.content-filter', compact('sensitiveWords'));
     }
 
     public function updateStatus(Request $request, $id)
@@ -125,13 +207,10 @@ class AdminReviewController extends Controller
             'reviewed_at' => now()
         ]);
 
-        // Cập nhật lại average rating của phim nếu status thay đổi
-        if ($oldStatus !== $request->status) {
-            $this->updateMovieAverageRating($review->movie_id);
-        }
+        // Đã loại bỏ chức năng cập nhật average rating
 
         return redirect()->route('admin.reviews.show', $id)
-            ->with('success', 'Cập nhật trạng thái đánh giá thành công!');
+            ->with('success', 'Cập nhật trạng thái bình luận thành công!');
     }
 
     public function bulkUpdateStatus(Request $request)
@@ -175,34 +254,15 @@ class AdminReviewController extends Controller
             }
         }
 
-        Review::whereIn('id', $request->review_ids)->update([
-            'status' => $request->status,
-            'reviewed_by' => Auth::id(),
-            'reviewed_at' => now()
-        ]);
-
-        // Cập nhật lại average rating cho các phim
-        foreach ($movieIds as $movieId) {
-            $this->updateMovieAverageRating($movieId);
-        }
+            Review::whereIn('id', $request->review_ids)->update([
+                'reviewed_at' => now(),
+                'status' => $request->status,
+            ]);
 
         return redirect()->route('admin.reviews.index')
-            ->with('success', 'Cập nhật trạng thái cho ' . count($request->review_ids) . ' đánh giá thành công!');
+            ->with('success', 'Cập nhật trạng thái cho ' . count($request->review_ids) . ' bình luận thành công!');
     }
 
-    public function destroy($id)
-    {
-        $review = Review::findOrFail($id);
-        $movieId = $review->movie_id;
-        
-        $review->delete();
-
-        // Cập nhật lại average rating của phim
-        $this->updateMovieAverageRating($movieId);
-
-        return redirect()->route('admin.reviews.index')
-            ->with('success', 'Xóa đánh giá thành công!');
-    }
 
     public function bulkDelete(Request $request)
     {
@@ -216,73 +276,18 @@ class AdminReviewController extends Controller
 
         Review::whereIn('id', $request->review_ids)->delete();
 
-        // Cập nhật lại average rating cho các phim
-        foreach ($movieIds as $movieId) {
-            $this->updateMovieAverageRating($movieId);
-        }
 
         return redirect()->route('admin.reviews.index')
-            ->with('success', 'Xóa ' . count($request->review_ids) . ' đánh giá thành công!');
+            ->with('success', 'Xóa ' . count($request->review_ids) . ' bình luận thành công!');
     }
 
-    private function updateMovieAverageRating($movieId)
-    {
-        $averageRating = Review::where('movie_id', $movieId)
-            ->where('status', 'approved')
-            ->avg('rating_star');
+    // public function contentFilterSettings()
+    // {
+    //     // Sửa lỗi: gọi phương thức public thay vì private
+    //     $sensitiveWords = $this->contentFilterService->listSensitiveWords();
 
-        Movie::where('id', $movieId)->update([
-            'average_rating' => $averageRating ? round($averageRating, 1) : 0
-        ]);
-    }
-
-    public function recalculateAllRatings()
-    {
-        // Lấy tất cả phim có reviews
-        $movies = Movie::whereHas('reviews')->get();
-        $updated = 0;
-
-        foreach ($movies as $movie) {
-            $averageRating = Review::where('movie_id', $movie->id)
-                ->where('status', 'approved')
-                ->avg('rating_star');
-
-            $newRating = $averageRating ? round($averageRating, 1) : 0;
-            
-            if ($movie->average_rating != $newRating) {
-                $movie->update(['average_rating' => $newRating]);
-                $updated++;
-            }
-        }
-
-        return redirect()->route('admin.reviews.index')
-            ->with('success', "Đã tính lại điểm trung bình cho {$updated} phim!");
-    }
-
-    private function recalculateAllRatingsInternal()
-    {
-        $movies = Movie::whereHas('reviews')->get();
-        
-        foreach ($movies as $movie) {
-            $averageRating = Review::where('movie_id', $movie->id)
-                ->where('status', 'approved')
-                ->avg('rating_star');
-
-            $newRating = $averageRating ? round($averageRating, 1) : 0;
-            
-            if ($movie->average_rating != $newRating) {
-                $movie->update(['average_rating' => $newRating]);
-            }
-        }
-    }
-
-    public function contentFilterSettings()
-    {
-        // Sửa lỗi: gọi phương thức public thay vì private
-        $sensitiveWords = $this->contentFilterService->listSensitiveWords();
-
-        return view('admin.reviews.content-filter', compact('sensitiveWords'));
-    }
+    //     return view('admin.reviews.content-filter', compact('sensitiveWords'));
+    // }
 
     public function addSensitiveWord(Request $request)
     {
@@ -361,40 +366,19 @@ class AdminReviewController extends Controller
             'reviewed_at' => now()
         ]);
 
-        // Cập nhật lại average rating của phim nếu status thay đổi
-        if ($oldStatus !== 'approved') {
-            $this->updateMovieAverageRating($review->movie_id);
-        }
+       
 
         return redirect()->route('admin.reviews.show', $id)
             ->with('warning', 'Đã ép duyệt bình luận. Lý do: ' . $request->force_reason);
     }
 
-    public function resetAllStats()
+    public function destroy($id)
     {
-        try {
-            // Reset all movie ratings
-            $movies = Movie::all();
-            foreach ($movies as $movie) {
-                $averageRating = Review::where('movie_id', $movie->id)
-                    ->where('status', 'approved')
-                    ->avg('rating_star');
+        $review = Review::findOrFail($id);
+        $review->delete();
 
-                $movie->update([
-                    'average_rating' => $averageRating ? round($averageRating, 1) : 0
-                ]);
-            }
-
-            // Clear any potential cache
-            if (function_exists('opcache_reset')) {
-                opcache_reset();
-            }
-
-            return redirect()->route('admin.reviews.index')
-                ->with('success', 'Đã reset tất cả thống kê thành công!');
-        } catch (\Exception $e) {
-            return redirect()->route('admin.reviews.index')
-                ->with('error', 'Có lỗi xảy ra khi reset thống kê: ' . $e->getMessage());
-        }
+        return redirect()->route('admin.reviews.index')
+            ->with('success', 'Đã xóa bình luận thành công!');
     }
+
 }

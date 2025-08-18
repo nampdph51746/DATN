@@ -291,11 +291,11 @@
                             </div>
                         </div>
 
-                        <!-- Media và đánh giá -->
+                        <!-- Media -->
                         <div class="mb-5">
                             <h6 class="fw-bold text-danger mb-4">
                                 <i class="bi bi-image-fill me-2"></i>
-                                Media và đánh giá
+                                Media
                             </h6>
                             <div class="row g-4">
                                 <div class="col-lg-6">
@@ -337,18 +337,6 @@
                                         <p class="text-muted mb-2">Ảnh xem trước:</p>
                                         <img id="imagePreviewSmall" class="img-thumbnail rounded-3" style="max-width: 200px;">
                                     </div>
-                                </div>
-                                <div class="col-lg-6">
-                                    <label for="average_rating" class="form-label fw-semibold">
-                                        <i class="bi bi-star-fill text-danger me-2"></i>
-                                        Điểm đánh giá (0-10)
-                                    </label>
-                                    <input type="number" name="average_rating" id="average_rating" 
-                                           class="form-control form-control-lg rounded-3 @error('average_rating') is-invalid @enderror" 
-                                           value="{{ old('average_rating') }}" step="0.1" min="0" max="10">
-                                    @error('average_rating')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
                                 </div>
                             </div>
                         </div>
@@ -597,10 +585,9 @@ $(document).ready(function() {
             return $('<span><i class="bi bi-person-circle me-2 text-success"></i>' + data.text + '</span>');
         },
         templateSelection: function(data) {
-            return data.text;
-        }
-    });
-
+                                            {{-- Đã loại bỏ average_rating --}}
+                                            {{-- Đã loại bỏ average_rating --}}
+                                            {{-- Đã loại bỏ average_rating --}}
     // Initialize Select2 for directors
     $('#director_ids').select2({
         placeholder: 'Chọn đạo diễn (có thể chọn nhiều)',

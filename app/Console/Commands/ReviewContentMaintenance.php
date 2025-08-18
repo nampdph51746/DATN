@@ -60,41 +60,41 @@ class ReviewContentMaintenance extends Command
         $this->info('--stats    : Hiển thị thống kê');
     }
 
-    protected function showStats()
-    {
-        $this->info('=== THỐNG KÊ REVIEW ===');
+    // protected function showStats()
+    // {
+    //     $this->info('=== THỐNG KÊ REVIEW ===');
         
-        $totalReviews = Review::count();
-        $approvedReviews = Review::where('status', 'approved')->count();
-        $pendingReviews = Review::where('status', 'pending')->count();
-        $rejectedReviews = Review::where('status', 'rejected')->count();
-        $autoFlaggedReviews = Review::where('admin_note', 'like', 'Tự động chờ duyệt:%')->count();
+    //     $totalReviews = Review::count();
+    //     $approvedReviews = Review::where('status', 'approved')->count();
+    //     $pendingReviews = Review::where('status', 'pending')->count();
+    //     $rejectedReviews = Review::where('status', 'rejected')->count();
+    //     $autoFlaggedReviews = Review::where('admin_note', 'like', 'Tự động chờ duyệt:%')->count();
 
-        $this->table([
-            'Trạng thái', 'Số lượng', 'Tỷ lệ %'
-        ], [
-            ['Tổng', $totalReviews, '100%'],
-            ['Đã duyệt', $approvedReviews, $totalReviews > 0 ? round(($approvedReviews / $totalReviews) * 100, 1) . '%' : '0%'],
-            ['Chờ duyệt', $pendingReviews, $totalReviews > 0 ? round(($pendingReviews / $totalReviews) * 100, 1) . '%' : '0%'],
-            ['Từ chối', $rejectedReviews, $totalReviews > 0 ? round(($rejectedReviews / $totalReviews) * 100, 1) . '%' : '0%'],
-            ['Tự động chặn', $autoFlaggedReviews, $totalReviews > 0 ? round(($autoFlaggedReviews / $totalReviews) * 100, 1) . '%' : '0%'],
-        ]);
+    //     $this->table([
+    //         'Trạng thái', 'Số lượng', 'Tỷ lệ %'
+    //     ], [
+    //         ['Tổng', $totalReviews, '100%'],
+    //         ['Đã duyệt', $approvedReviews, $totalReviews > 0 ? round(($approvedReviews / $totalReviews) * 100, 1) . '%' : '0%'],
+    //         ['Chờ duyệt', $pendingReviews, $totalReviews > 0 ? round(($pendingReviews / $totalReviews) * 100, 1) . '%' : '0%'],
+    //         ['Từ chối', $rejectedReviews, $totalReviews > 0 ? round(($rejectedReviews / $totalReviews) * 100, 1) . '%' : '0%'],
+    //         ['Tự động chặn', $autoFlaggedReviews, $totalReviews > 0 ? round(($autoFlaggedReviews / $totalReviews) * 100, 1) . '%' : '0%'],
+    //     ]);
 
-        // Top từ khóa nhạy cảm được phát hiện
-        $this->info("\n=== TOP TỪ KHÓA NHẠY CẢM ===");
-        $sensitiveWords = $this->contentFilterService->getSensitiveWords();
-        $this->info('Tổng số từ khóa: ' . count($sensitiveWords));
+    //     // Top từ khóa nhạy cảm được phát hiện
+    //     $this->info("\n=== TOP TỪ KHÓA NHẠY CẢM ===");
+    //     $sensitiveWords = $this->contentFilterService->getSensitiveWords();
+    //     $this->info('Tổng số từ khóa: ' . count($sensitiveWords));
         
-        // Hiển thị 10 từ khóa đầu tiên
-        $displayWords = array_slice($sensitiveWords, 0, 10);
-        foreach ($displayWords as $word) {
-            $this->line("- {$word}");
-        }
+    //     // Hiển thị 10 từ khóa đầu tiên
+    //     $displayWords = array_slice($sensitiveWords, 0, 10);
+    //     foreach ($displayWords as $word) {
+    //         $this->line("- {$word}");
+    //     }
         
-        if (count($sensitiveWords) > 10) {
-            $this->info("... và " . (count($sensitiveWords) - 10) . " từ khóa khác");
-        }
-    }
+    //     if (count($sensitiveWords) > 10) {
+    //         $this->info("... và " . (count($sensitiveWords) - 10) . " từ khóa khác");
+    //     }
+    // }
 
     protected function recheckAllReviews()
     {
@@ -175,23 +175,10 @@ class ReviewContentMaintenance extends Command
             // Xóa review spam
             Review::whereIn('id', $spamReviews->pluck('id'))->delete();
             
-            // Cập nhật lại rating cho các phim
-            foreach ($movieIds as $movieId) {
-                $this->updateMovieAverageRating($movieId);
-            }
-            
-            $this->info("Đã xóa {$spamReviews->count()} review spam và cập nhật lại rating cho " . $movieIds->count() . " phim.");
+            // Đã loại bỏ cập nhật average_rating cho các phim
+            $this->info("Đã xóa {$spamReviews->count()} review spam.");
         }
     }
 
-    private function updateMovieAverageRating($movieId)
-    {
-        $averageRating = Review::where('movie_id', $movieId)
-            ->where('status', 'approved')
-            ->avg('rating_star');
-
-        DB::table('movies')->where('id', $movieId)->update([
-            'average_rating' => $averageRating ? round($averageRating, 1) : 0
-        ]);
-    }
+    // Đã loại bỏ cập nhật average_rating cho movie
 }

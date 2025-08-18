@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 class ContentFilterService
 {
@@ -61,35 +62,44 @@ class ContentFilterService
         $reasons = [];
         $shouldPending = false;
 
-        // 1. Kiểm tra từ khóa nhạy cảm
+        // 1. Kiểm tra từ khóa nhạy cảm (QUAN TRỌNG NHẤT)
         $sensitiveWordFound = $this->checkSensitiveWords($content);
         if ($sensitiveWordFound) {
             $reasons[] = 'Chứa từ khóa nhạy cảm: ' . $sensitiveWordFound;
             $shouldPending = true;
         }
 
-        // 2. Kiểm tra pattern regex
+        // 2. Kiểm tra pattern regex (email, phone, links)
         $regexViolation = $this->checkRegexPatterns($content);
         if ($regexViolation) {
             $reasons[] = 'Chứa nội dung không phù hợp: ' . $regexViolation;
             $shouldPending = true;
         }
 
-        // 3. Kiểm tra độ dài
-        $lengthIssue = $this->checkContentLength($content);
-        if ($lengthIssue) {
-            $reasons[] = $lengthIssue;
-            $shouldPending = true;
-        }
-
-        // 5. Kiểm tra spam (ký tự lặp lại)
+        // 3. Kiểm tra spam (ký tự lặp lại)
         $spamCheck = $this->checkSpam($content);
         if ($spamCheck) {
             $reasons[] = $spamCheck;
             $shouldPending = true;
         }
 
-        $status = $shouldPending ? 'pending' : 'approved';
+        // 4. Kiểm tra độ dài (KHÔNG QUÁ NGHIÊM NGẶT)
+        $lengthIssue = $this->checkContentLength($content);
+        if ($lengthIssue) {
+            // Chỉ chặn nếu quá ngắn (dưới 5 ký tự) hoặc quá dài (trên 1000 ký tự)
+            $length = mb_strlen($content, 'UTF-8');
+            if ($length < 5 || $length > 1000) {
+                $reasons[] = $lengthIssue;
+                $shouldPending = true;
+            }
+        }
+
+        // 5. TỰ ĐỘNG DUYỆT nếu nội dung sạch
+        if (!$shouldPending && $this->autoApproveConfig['auto_approve_clean_content'] ?? true) {
+            $status = 'approved';
+        } else {
+            $status = 'pending';
+        }
 
         return [
             'status' => $status,
@@ -151,8 +161,8 @@ class ContentFilterService
     private function checkContentLength(string $content): ?string
     {
         $length = mb_strlen($content, 'UTF-8');
-        $minLength = $this->autoApproveConfig['min_length'] ?? 10;
-        $maxLength = $this->autoApproveConfig['max_length'] ?? 500;
+        $minLength = $this->autoApproveConfig['min_length'] ?? 5;
+        $maxLength = $this->autoApproveConfig['max_length'] ?? 1000;
 
         if ($length < $minLength) {
             return "Nội dung quá ngắn (< {$minLength} ký tự)";
@@ -263,8 +273,8 @@ class ContentFilterService
     public function listSensitiveWords()
     {
         // Sửa lỗi: kiểm tra bảng tồn tại trước khi truy vấn
-        if (\Illuminate\Support\Facades\Schema::hasTable('sensitive_words')) {
-            return \DB::table('sensitive_words')->pluck('word')->toArray();
+        if (Schema::hasTable('sensitive_words')) {
+            return DB::table('sensitive_words')->pluck('word')->toArray();
         }
         // Nếu bảng chưa tồn tại, trả về mảng rỗng
         return [];

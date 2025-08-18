@@ -86,8 +86,8 @@ class AdminMovieController extends Controller
         $countries = Country::all();
         $ageLimits = AgeLimit::all();
         $genres = Genre::all();
-        $directors = \App\Models\Director::where('is_active', true)->orderBy('name')->get();
-        $actors = \App\Models\Actor::where('is_active', true)->orderBy('name')->get();
+        $directors = Director::where('is_active', true)->orderBy('name')->get();
+        $actors = Actor::where('is_active', true)->orderBy('name')->get();
         return view('admin.movies.create', compact('countries', 'ageLimits', 'genres', 'directors', 'actors'));
     }
 
@@ -159,7 +159,7 @@ class AdminMovieController extends Controller
             'genre_ids.*' => 'exists:genres,id',
             'director_ids' => 'required|array|min:1|max:5',
             'director_ids.*' => 'exists:directors,id',
-            'average_rating' => 'nullable|numeric|min:0|max:10',
+        
         ], [
             // Thông báo lỗi tiếng Việt chuyên nghiệp
             'name.required' => 'Tên phim là trường bắt buộc.',
@@ -203,9 +203,7 @@ class AdminMovieController extends Controller
             'director_ids.min' => 'Phim phải có ít nhất một đạo diễn.',
             'director_ids.max' => 'Phim không được có quá 5 đạo diễn.',
             'director_ids.*.exists' => 'Một số đạo diễn được chọn không tồn tại.',
-            'average_rating.numeric' => 'Điểm đánh giá phải là số.',
-            'average_rating.min' => 'Điểm đánh giá phải từ 0 trở lên.',
-            'average_rating.max' => 'Điểm đánh giá không được vượt quá 10.',
+            
         ]);
 
         $data = $request->except(['image', 'genre_ids', 'actor_ids', 'director_ids']);
@@ -225,11 +223,11 @@ class AdminMovieController extends Controller
         $movie = Movie::create($data);
 
         if (!$movie || !$movie->id) {
-        \Log::error('Movie creation failed', ['data' => $data, 'movie' => $movie]);
+        Log::error('Movie creation failed', ['data' => $data, 'movie' => $movie]);
         return back()->with('error', 'Không thể tạo phim.');
     }
 
-    \Log::info('Movie created successfully', ['movie_id' => $movie->id]);
+    Log::info('Movie created successfully', ['movie_id' => $movie->id]);
 
         // Kiểm tra $movie->id
         if (!$movie || !$movie->id) {
@@ -287,7 +285,7 @@ class AdminMovieController extends Controller
     public function update(Request $request, $id)
     {
         Log::info('AdminMovieController update method called:', [
-        'movie_id' => $movie->id ?? 'null',
+            // Đã loại bỏ cập nhật average_rating
         'movie_name' => $movie->name ?? 'null'
         ]);
 

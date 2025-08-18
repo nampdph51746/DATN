@@ -24,7 +24,6 @@ return new class extends Migration
             $table->foreignId('country_id')->nullable()->constrained('countries')->comment('ID quốc gia sản xuất');
             $table->foreignId('age_limit_id')->nullable()->constrained('age_limits')->comment('ID giới hạn độ tuổi');
             $table->enum('status', array_column(MovieStatus::cases(), 'value'))->nullable()->comment('Trạng thái phim');
-            $table->decimal('average_rating', 3, 1)->nullable()->comment('Điểm đánh giá trung bình (0-10)');
             $table->timestamp('created_at')->nullable()->comment('Thời gian tạo');
             $table->timestamp('updated_at')->nullable()->comment('Thời gian cập nhật');
         });

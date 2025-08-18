@@ -66,9 +66,10 @@ return [
     */
     
     'auto_approve' => [
-        'min_length' => 10, // Bình luận tối thiểu 10 ký tự mới tự động duyệt
-        'max_length' => 500, // Bình luận quá 500 ký tự cần duyệt
+        'min_length' => 5, // Giảm từ 10 xuống 5 ký tự để dễ dàng hơn
+        'max_length' => 1000, // Tăng từ 500 lên 1000 ký tự
         'check_user_history' => false, // Tắt kiểm tra lịch sử người dùng - chỉ focus vào nội dung
+        'auto_approve_clean_content' => true, // Tự động duyệt nội dung sạch
     ],
     
     /*

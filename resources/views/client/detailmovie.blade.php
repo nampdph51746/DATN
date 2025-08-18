@@ -19,7 +19,9 @@
         /* Màu tối cho genre-badge */
     }
 
-    [data-theme="dark"] {
+                                    {{-- Đã loại bỏ average_rating --}}
+                                    {{-- Đã loại bỏ average_rating --}}
+                                    {{-- Đã loại bỏ average_rating --}}
         background-color: var(--bg-dark);
         color: var(--text-dark);
     }
@@ -360,19 +362,6 @@
         color: var(--text-dark);
     }
 
-    /* Rating Section */
-    .rating-input {
-        display: flex;
-        align-items: center;
-        margin-bottom: 1.5rem;
-        gap: 8px;
-    }
-
-    .rating-input .star {
-        font-size: 26px;
-        color: #e0e0e0;
-        cursor: pointer;
-        transition: all 0.3s ease;
         padding: 6px;
         border-radius: 50%;
         display: inline-flex;
@@ -665,45 +654,34 @@
         </div>
         @endif
 
-        {{-- Đánh giá và bình luận --}}
+        {{--  Bình luận --}}
         <div class="mt-5">
             <div class="row">
                 <div class="col-12">
-                    <h5 class="fw-bold mb-4" style="font-size: 20px;">⭐ Đánh giá & Bình luận</h5>
+                    <h5 class="fw-bold mb-4" style="font-size: 20px;"><i class="far fa-comment-dots me-2"></i> Bình luận</h5>
 
-                    {{-- Thống kê đánh giá --}}
+                    {{-- Thống kê bình luận --}}
                     <div class="row mb-4">
                         <div class="col-md-4">
                             <div class="text-center p-4 rounded shadow-sm" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
-                                <h3 class="mb-1">{{ number_format($movie->average_rating ?? 0, 1) }}/5</h3>
-                                <p class="mb-0">{{ $movie->reviews()->where('status', 'approved')->count() }} đánh giá</p>
+                                <p class="mb-0">{{ $movie->reviews()->where('status', 'approved')->count() }} bình luận</p>
                             </div>
                         </div>
                         <div class="col-md-8">
-                            {{-- Form đánh giá --}}
+                            {{-- Form bình luận --}}
                             @auth
                             @if($canReview)
                             <div class="card shadow-sm">
                                 <div class="card-body">
-                                    <h6 class="card-title">Đánh giá phim này</h6>
+                                    <h6 class="card-title">Bình luận phim này</h6>
                                     <form id="reviewForm">
                                         @csrf
-                                        <div class="mb-3">
-                                            <label class="form-label">Số sao đánh giá</label>
-                                            <div class="rating-input">
-                                                @for($i = 1; $i <= 5; $i++)
-                                                    <span class="star" data-rating="{{ $i }}" aria-label="Rate {{ $i }} star{{ $i > 1 ? 's' : '' }}">
-                                                    <i class="far fa-star"></i>
-                                                    </span>
-                                                    @endfor
-                                            </div>
-                                            <input type="hidden" id="rating_star" name="rating_star" value="">
-                                        </div>
+                                       
                                         <div class="mb-3">
                                             <label for="comment" class="form-label">Bình luận (tùy chọn)</label>
                                             <textarea class="form-control" id="comment" name="comment" rows="3" placeholder="Chia sẻ cảm nghĩ của bạn về bộ phim..."></textarea>
                                         </div>
-                                        <button type="submit" class="btn btn-primary">Gửi đánh giá</button>
+                                        <button type="submit" class="btn btn-primary">Gửi bình luận</button>
                                     </form>
                                 </div>
                             </div>
@@ -715,13 +693,13 @@
                             @else
                             <div class="alert alert-warning">
                                 <i class="fas fa-sign-in-alt me-2"></i>
-                                <a href="{{ route('login') }}" class="text-decoration-none">Đăng nhập</a> để đánh giá phim này.
+                                <a href="{{ route('login') }}" class="text-decoration-none">Đăng nhập</a> để bình luận phim này.
                             </div>
                             @endauth
                         </div>
                     </div>
 
-                    {{-- Danh sách đánh giá --}}
+                    {{-- Danh sách bình luận --}}
                     <div class="reviews-section">
                         <h6 class="mb-3">Bình luận từ khán giả</h6>
                         <div id="reviewsList">
@@ -735,15 +713,7 @@
                                             </div>
                                             <div>
                                                 <h6 class="mb-0">{{ $review->user->name }}</h6>
-                                                <div class="stars">
-                                                    @for($i = 1; $i <= 5; $i++)
-                                                        @if($i <=$review->rating_star)
-                                                        <i class="fas fa-star text-warning"></i>
-                                                        @else
-                                                        <i class="far fa-star text-muted"></i>
-                                                        @endif
-                                                        @endfor
-                                                </div>
+                                                
                                             </div>
                                         </div>
                                         <small class="text-muted">{{ $review->created_at->format('d/m/Y H:i') }}</small>
@@ -756,14 +726,14 @@
                             @empty
                             <div class="text-center py-4">
                                 <i class="far fa-comment-dots fa-3x text-muted mb-3"></i>
-                                <p class="text-muted">Chưa có đánh giá nào cho phim này.</p>
+                                <p class="text-muted">Chưa có bình luận nào cho phim này.</p>
                             </div>
                             @endforelse
                         </div>
 
                         @if($movie->reviews()->where('status', 'approved')->count() > 5)
                         <div class="text-center mt-3">
-                            <button class="btn btn-outline-primary" id="loadMoreReviews">Xem thêm đánh giá</button>
+                            <button class="btn btn-outline-primary" id="loadMoreReviews">Xem thêm bình luận</button>
                         </div>
                         @endif
                     </div>
@@ -776,71 +746,19 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Xử lý rating stars
-        const stars = document.querySelectorAll('.rating-input .star');
-        const ratingInput = document.getElementById('rating_star');
-
-        if (stars.length > 0) {
-            stars.forEach((star, index) => {
-                star.addEventListener('click', function() {
-                    const rating = this.getAttribute('data-rating');
-                    ratingInput.value = rating;
-
-                    // Update visual state
-                    stars.forEach((s, i) => {
-                        if (i < rating) {
-                            s.classList.add('active');
-                            s.querySelector('i').className = 'fas fa-star';
-                        } else {
-                            s.classList.remove('active');
-                            s.querySelector('i').className = 'far fa-star';
-                        }
-                    });
-                });
-
-                // Hover effect
-                star.addEventListener('mouseenter', function() {
-                    const rating = this.getAttribute('data-rating');
-                    stars.forEach((s, i) => {
-                        if (i < rating) {
-                            s.style.color = '#ffd700';
-                        } else {
-                            s.style.color = '#e0e0e0';
-                        }
-                    });
-                });
-            });
-
-            // Reset hover effect
-            const ratingContainer = document.querySelector('.rating-input');
-            if (ratingContainer) {
-                ratingContainer.addEventListener('mouseleave', function() {
-                    const currentRating = ratingInput.value;
-                    stars.forEach((s, i) => {
-                        if (i < currentRating) {
-                            s.style.color = '#ffd700';
-                        } else {
-                            s.style.color = '#e0e0e0';
-                        }
-                    });
-                });
-            }
-        }
-
-        // Xử lý form submit
+        // Chỉ xử lý form bình luận
         const reviewForm = document.getElementById('reviewForm');
         if (reviewForm) {
             reviewForm.addEventListener('submit', function(e) {
                 e.preventDefault();
-
-                const rating = ratingInput.value;
                 const comment = document.getElementById('comment').value;
-
-                if (!rating) {
-                    alert('Vui lòng chọn số sao đánh giá!');
+                
+                // Validate comment
+                if (!comment.trim()) {
+                    alert('Vui lòng nhập bình luận!');
                     return;
                 }
-
+                
                 // Disable submit button
                 const submitBtn = this.querySelector('button[type="submit"]');
                 const originalText = submitBtn.textContent;
@@ -849,98 +767,86 @@
 
                 // Send AJAX request
                 fetch(`/movies/{{ $movie->id }}/reviews`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                        },
-                        body: JSON.stringify({
-                            rating_star: rating,
-                            comment: comment
-                        })
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({
+                        comment: comment
                     })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            // Hide form and show success message
-                            const alertClass = data.status === 'approved' ? 'alert-success' : 'alert-warning';
-                            const icon = data.status === 'approved' ? 'fa-check-circle' : 'fa-clock';
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Hide form and show success message
+                        const alertClass = data.status === 'approved' ? 'alert-success' : 'alert-warning';
+                        const icon = data.status === 'approved' ? 'fa-check-circle' : 'fa-clock';
 
-                            reviewForm.parentElement.innerHTML = `
-                                <div class="alert ${alertClass}">
-                                    <i class="fas ${icon} me-2"></i>${data.message}
-                                </div>
-                            `;
+                        reviewForm.parentElement.innerHTML = `
+                            <div class="alert ${alertClass}">
+                                <i class="fas ${icon} me-2"></i>${data.message}
+                            </div>
+                        `;
 
-                            // Only add new review to the list if it's approved
-                            if (data.status === 'approved') {
-                                const reviewsList = document.getElementById('reviewsList');
-                                const newReview = createReviewElement(data.review);
+                        // Only add new review to the list if it's approved
+                        if (data.status === 'approved') {
+                            const reviewsList = document.getElementById('reviewsList');
+                            const newReview = createReviewElement(data.review);
 
-                                if (reviewsList.querySelector('.text-center')) {
-                                    // Replace "no reviews" message
-                                    reviewsList.innerHTML = newReview;
-                                } else {
-                                    // Prepend to existing reviews
-                                    reviewsList.insertAdjacentHTML('afterbegin', newReview);
-                                }
-
-                                // Reload page to update average rating
-                                setTimeout(() => {
-                                    location.reload();
-                                }, 2000);
+                            if (reviewsList.querySelector('.text-center')) {
+                                // Replace "no reviews" message
+                                reviewsList.innerHTML = newReview;
                             } else {
-                                // For pending reviews, just show message without reloading
-                                setTimeout(() => {
-                                    // Optionally reload to reset form
-                                    location.reload();
-                                }, 3000);
+                                // Prepend to existing reviews
+                                reviewsList.insertAdjacentHTML('afterbegin', newReview);
                             }
+
+                            // Reload page to update average rating
+                            setTimeout(() => {
+                                location.reload();
+                            }, 2000);
                         } else {
-                            alert(data.message || 'Có lỗi xảy ra, vui lòng thử lại!');
+                            // For pending reviews, just show message without reloading
+                            setTimeout(() => {
+                                // Optionally reload to reset form
+                                location.reload();
+                            }, 3000);
                         }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert('Có lỗi xảy ra, vui lòng thử lại!');
-                    })
-                    .finally(() => {
-                        submitBtn.disabled = false;
-                        submitBtn.textContent = originalText;
-                    });
+                    } else {
+                        alert(data.message || 'Có lỗi xảy ra, vui lòng thử lại!');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Có lỗi xảy ra, vui lòng thử lại!');
+                })
+                .finally(() => {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalText;
+                });
             });
         }
 
         function createReviewElement(review) {
-            const stars = Array.from({
-                length: 5
-            }, (_, i) => {
-                return i < review.rating_star ?
-                    '<i class="fas fa-star text-warning"></i>' :
-                    '<i class="far fa-star text-muted"></i>';
-            }).join('');
-
             return `
-                    <div class="review-item card mb-3 shadow-sm">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <div class="d-flex align-items-center">
-                                    <div class="avatar-circle me-3">
-                                        ${review.user_name.charAt(0).toUpperCase()}
-                                    </div>
-                                    <div>
-                                        <h6 class="mb-0">${review.user_name}</h6>
-                                        <div class="stars">
-                                            ${stars}
-                                        </div>
-                                    </div>
+                <div class="review-item card mb-3 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-circle me-3">
+                                    ${review.user_name.charAt(0).toUpperCase()}
                                 </div>
-                                <small class="text-muted">${review.created_at}</small>
+                                <div>
+                                    <h6 class="mb-0">${review.user_name}</h6>
+                                </div>
                             </div>
-                            ${review.comment ? `<p class="mb-0">${review.comment}</p>` : ''}
+                            <small class="text-muted">${review.created_at}</small>
                         </div>
+                        ${review.comment ? `<p class="mb-0">${review.comment}</p>` : ''}
                     </div>
-                `;
+                </div>
+            `;
         }
     });
 </script>

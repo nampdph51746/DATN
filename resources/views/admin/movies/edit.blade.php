@@ -487,21 +487,6 @@
                                         @endif
                                     </div>
                                 </div>
-
-                                <div class="col-lg-6">
-                                    <div class="form-floating">
-                                        <input type="number" name="average_rating" id="average_rating" 
-                                               class="form-control form-control-lg @error('average_rating') is-invalid @enderror" 
-                                               value="{{ old('average_rating', $movie->average_rating) }}" 
-                                               step="0.1" min="0" max="10" placeholder="Điểm đánh giá">
-                                        <label for="average_rating">
-                                            <i class="bi bi-star me-2 text-warning"></i>Điểm đánh giá (0-10)
-                                        </label>
-                                        @error('average_rating')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
                             </div>
                         </div>
 
@@ -854,11 +839,9 @@ $(document).ready(function() {
             return $('<span><i class="bx bx-user me-2 text-primary"></i>' + data.text + '</span>');
         },
         templateSelection: function(data) {
-            return data.text;
-        }
-    });
-
-    // Khởi tạo Select2 cho đạo diễn
+                                                {{-- Đã loại bỏ average_rating --}}
+                                                {{-- Đã loại bỏ average_rating --}}
+                                                {{-- Đã loại bỏ average_rating --}}
     $('#director_id').select2({
         placeholder: 'Chọn đạo diễn (gõ để tìm)', 
         theme: 'bootstrap4',

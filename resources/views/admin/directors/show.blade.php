@@ -321,7 +321,9 @@
     background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
 }
 
-.card {
+                                                    {{-- Đã loại bỏ average_rating --}}
+                                                    {{-- Đã loại bỏ average_rating --}}
+                                                    {{-- Đã loại bỏ average_rating --}}
     transition: all 0.3s ease;
     border: none !important;
 }

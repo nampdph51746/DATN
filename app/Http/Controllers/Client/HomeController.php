@@ -213,20 +213,20 @@ class HomeController extends Controller
             })
             ->exists();
 
-        // Kiểm tra đã đánh giá chưa
+        // Kiểm tra đã bình luận chưa
         $hasReviewed = Review::where('user_id', $user->id)
             ->where('movie_id', $id)
             ->exists();
 
         if (!$hasWatchedMovie) {
-            $reviewMessage = 'Bạn cần xem phim này trước khi có thể đánh giá.';
+            $reviewMessage = 'Bạn cần xem phim này trước khi có thể bình luận.';
         } elseif ($hasReviewed) {
-            $reviewMessage = 'Bạn đã đánh giá phim này rồi.';
+            $reviewMessage = 'Bạn đã bình luận phim này rồi.';
         } else {
             $canReview = true;
         }
     } else {
-        $reviewMessage = 'Vui lòng đăng nhập để đánh giá.';
+        $reviewMessage = 'Vui lòng đăng nhập để bình luận.';
     }
 
     // Lấy danh sách phòng

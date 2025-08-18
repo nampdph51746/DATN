@@ -11,14 +11,6 @@
             --border-radius: 12px;
             --transition: all 0.3s ease;
         }
-
-        .card {
-            border: none;
-            border-radius: var(--border-radius);
-            box-shadow: var(--card-shadow);
-            transition: var(--transition);
-        }
-
         .card:hover {
             transform: translateY(-5px);
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
@@ -287,8 +279,6 @@
                                     <td>{{ number_format($averageDuration, 1) }} phút</td>
                                 </tr>
                                 <tr>
-                                    <td><strong>Đánh giá trung bình</strong></td>
-                                    <td>{{ number_format($averageRating, 1) }}/5</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -306,140 +296,6 @@
             </div>
         </div>
 
-        {{-- Thống kê Đánh giá --}}
-        <div class="row g-4 mt-2">
-            <div class="col-xl-3">
-                <div class="card card-height-100">
-                    <div class="card-header d-flex align-items-center justify-content-between gap-2">
-                        <h4 style="color: white" class="card-title flex-grow-1">⭐ Thống kê Đánh giá</h4>
-                        <span class="text-white small">Tổng quan</span>
-                    </div>
-6397                    <div class="card-body">
-                        <table class="table table-hover table-nowrap table-centered m-0">
-                            <tbody>
-                                <tr>
-                                    <td>Tổng số đánh giá</td>
-                                    <td><strong>{{ number_format($totalReviews) }}</strong></td>
-                                </tr>
-                                <tr>
-                                    <td><span class="badge badge-soft-success">Đã duyệt</span></td>
-                                    <td>{{ $approvedReviews }}</td>
-                                </tr>
-                                <tr>
-                                    <td><span class="badge badge-soft-warning">Chờ duyệt</span></td>
-                                    <td>{{ $pendingReviews }}</td>
-                                </tr>
-                                <tr>
-                                    <td><span class="badge badge-soft-danger">Từ chối</span></td>
-                                    <td>{{ $rejectedReviews }}</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Phân bố Rating --}}
-            <div class="col-xl-3">
-                <div class="card card-height-100">
-                    <div class="card-header d-flex align-items-center justify-content-between gap-2">
-                        <h4 style="color: white" class="card-title flex-grow-1">🌟 Phân bố Rating</h4>
-                        <span class="text-white small">Theo số sao</span>
-                    </div>
-                    <div class="card-body">
-                        @foreach($ratingDistribution as $rating)
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <div class="d-flex align-items-center">
-                                    @for($i = 1; $i <= 5; $i++)
-                                        @if($i <= $rating->rating_star)
-                                            <i class="fas fa-star text-warning"></i>
-                                        @else
-                                            <i class="far fa-star text-muted"></i>
-                                        @endif
-                                    @endfor
-                                </div>
-                                <span class="badge bg-primary">{{ $rating->count }}</span>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-            </div>
-
-            {{-- Top Movies by Reviews --}}
-            <div class="col-xl-3">
-                <div class="card card-height-100">
-                    <div class="card-header d-flex align-items-center justify-content-between gap-2">
-                        <h4  style="color: white" class="card-title flex-grow-1">🏆 Top Đánh giá</h4>
-                        <span class="text-white small">Nhiều review</span>
-                    </div>
-                    <div class="card-body">
-                        @foreach($topReviewedMovies as $index => $movie)
-                            <div class="d-flex align-items-center mb-3">
-                                <span class="badge bg-info me-2">#{{ $index + 1 }}</span>
-                                <div class="flex-grow-1">
-                                    <div class="fw-semibold">{{ Str::limit($movie->name, 20) }}</div>
-                                    <small class="text-muted">{{ $movie->reviews_count }} đánh giá</small>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-            </div>
-
-            {{-- Top Rated Movies --}}
-            <div class="col-xl-3">
-                <div class="card card-height-100">
-                    <div class="card-header d-flex align-items-center justify-content-between gap-2">
-                        <h4 style="color: white" class="card-title flex-grow-1">🎯 Top Rating</h4>
-                        <span class="text-white small">Chất lượng cao</span>
-                    </div>
-                    <div class="card-body">
-                        @foreach($topRatedMovies as $index => $movie)
-                            <div class="d-flex align-items-center mb-3">
-                                <span class="badge bg-warning me-2">#{{ $index + 1 }}</span>
-                                <div class="flex-grow-1">
-                                    <div class="fw-semibold">{{ Str::limit($movie->name, 20) }}</div>
-                                    <div class="d-flex align-items-center">
-                                        @for($i = 1; $i <= 5; $i++)
-                                            @if($i <= $movie->average_rating)
-                                                <i class="fas fa-star text-warning"></i>
-                                            @else
-                                                <i class="far fa-star text-muted"></i>
-                                            @endif
-                                        @endfor
-                                        <small class="text-muted ms-1">{{ $movie->average_rating }}/5</small>
-                                    </div>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {{-- Biểu đồ Reviews --}}
-        <div class="row g-4 mt-2">
-            <div class="col-lg-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 style="color: white" class="card-title mb-0">Thống kê đánh giá theo tháng</h5>
-                    </div>
-                    <div class="card-body">
-                        <div id="review-monthly-chart" style="min-height: 350px;"></div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 style="color: white" class="card-title mb-0">Phân bố đánh giá theo sao</h5>
-                    </div>
-                    <div class="card-body">
-                        <div id="rating-distribution-chart" style="min-height: 350px;"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
 
         {{-- Khu vực biểu đồ --}}
         <div class="row mt-4">
@@ -473,7 +329,6 @@
                                         <th>Thời lượng</th>
                                         <th>Ngày phát hành</th>
                                         <th>Ngôn ngữ</th>
-                                        <th>Đánh giá</th>
                                         <th>Vé đã bán</th>
                                         <th>Trạng thái</th>
                                     </tr>
@@ -492,13 +347,8 @@
                                             <td>{{ $movie->language }}</td>
                                             <td>
                                                 <span class="badge bg-warning text-dark">
-                                                    {{ $movie->average_rating ?? 'N/A' }}/10
+                                                    {{-- Đã loại bỏ average_rating --}}
                                                 </span>
-                                            </td>
-                                            <td>
-                                                <span class="fw-semibold text-success">{{ $movie->total_tickets_sold }}</span>
-                                            </td>
-                                            <td>
                                                 <i class="bx bxs-circle text-success me-1"></i>Đang chiếu
                                             </td>
                                         </tr>
@@ -627,73 +477,72 @@
                 var revenueChart = new ApexCharts(document.querySelector("#revenue-chart"), revenueOptions);
                 revenueChart.render();
 
-                // Biểu đồ đánh giá theo tháng
-                var reviewMonthlyData = @json($reviewMonthlyStats);
-                var reviewMonthlyOptions = {
-                    chart: {
-                        type: 'line',
-                        height: 350,
-                        toolbar: { show: false }
-                    },
-                    series: [{
-                        name: 'Số lượng đánh giá',
-                        data: reviewMonthlyData.map(item => item.total)
-                    }, {
-                        name: 'Rating trung bình',
-                        data: reviewMonthlyData.map(item => parseFloat(item.avg_rating).toFixed(1))
-                    }],
-                    xaxis: {
-                        categories: reviewMonthlyData.map(item => `${item.month}/${item.year}`),
-                        labels: { style: { colors: '#6c757d' } }
-                    },
-                    stroke: { curve: 'smooth', width: 3 },
-                    colors: ['#00ACC1', '#FFCA28'],
-                    yaxis: [{
-                        title: { text: 'Số lượng đánh giá', style: { color: '#00ACC1' } }
-                    }, {
-                        opposite: true,
-                        title: { text: 'Rating trung bình', style: { color: '#FFCA28' } },
-                        min: 0,
-                        max: 5
-                    }],
-                    grid: { borderColor: '#e9ecef' }
-                };
-                var reviewMonthlyChart = new ApexCharts(document.querySelector("#review-monthly-chart"), reviewMonthlyOptions);
-                reviewMonthlyChart.render();
+                // // Biểu đồ đánh giá theo tháng
+                // var reviewMonthlyData = @json($reviewMonthlyStats);
+                // var reviewMonthlyOptions = {
+                //     chart: {
+                //         type: 'line',
+                //         height: 350,
+                //         toolbar: { show: false }
+                //     },
+                //     series: [{
+                //         name: 'Số lượng đánh giá',
+                //         data: reviewMonthlyData.map(item => item.total)
+                //     }, {
+                //         name: 'Rating trung bình',
+                //         data: reviewMonthlyData.map(item => parseFloat(item.avg_rating).toFixed(1))
+                //     }],
+                //     xaxis: {
+                //         categories: reviewMonthlyData.map(item => `${item.month}/${item.year}`),
+                //         labels: { style: { colors: '#6c757d' } }
+                //     },
+                //     stroke: { curve: 'smooth', width: 3 },
+                //     colors: ['#00ACC1', '#FFCA28'],
+                //     yaxis: [{
+                //         title: { text: 'Số lượng đánh giá', style: { color: '#00ACC1' } }
+                //     }, {
+                //         opposite: true,
+                //         title: { text: 'Rating trung bình', style: { color: '#FFCA28' } },
+                //         min: 0,
+                //         max: 5
+                //     }],
+                //     grid: { borderColor: '#e9ecef' }
+                // };
+                // var reviewMonthlyChart = new ApexCharts(document.querySelector("#review-monthly-chart"), reviewMonthlyOptions);
+                // reviewMonthlyChart.render();
 
-                // Biểu đồ phân bố rating
-                var ratingData = @json($ratingDistribution);
-                var ratingOptions = {
-                    chart: {
-                        type: 'donut',
-                        height: 350
-                    },
-                    series: ratingData.map(item => item.count),
-                    labels: ratingData.map(item => `${item.rating_star} sao`),
-                    colors: ['#FF6F00', '#FFCA28', '#00ACC1', '#4bc0c0', '#36a2eb'],
-                    plotOptions: {
-                        pie: {
-                            donut: {
-                                labels: {
-                                    show: true,
-                                    total: {
-                                        show: true,
-                                        label: 'Tổng',
-                                        formatter: function (w) {
-                                            return w.globals.seriesTotals.reduce((a, b) => a + b, 0)
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    legend: {
-                        position: 'bottom',
-                        labels: { colors: '#6c757d' }
-                    }
-                };
-                var ratingChart = new ApexCharts(document.querySelector("#rating-distribution-chart"), ratingOptions);
-                ratingChart.render();
+                // // Biểu đồ phân bố rating
+                // var ratingData = @json($ratingDistribution);
+                // var ratingOptions = {
+                //     chart: {
+                //         type: 'donut',
+                //         height: 350
+                //     },
+                //     series: ratingData.map(item => item.count),
+                //     colors: ['#FF6F00', '#FFCA28', '#00ACC1', '#4bc0c0', '#36a2eb'],
+                //     plotOptions: {
+                //         pie: {
+                //             donut: {
+                //                 labels: {
+                //                     show: true,
+                //                     total: {
+                //                         show: true,
+                //                         label: 'Tổng',
+                //                         formatter: function (w) {
+                //                             return w.globals.seriesTotals.reduce((a, b) => a + b, 0)
+                //                         }
+                //                     }
+                //                 }
+                //             }
+                //         }
+                //     },
+                //     legend: {
+                //         position: 'bottom',
+                //         labels: { colors: '#6c757d' }
+                //     }
+                // };
+                // var ratingChart = new ApexCharts(document.querySelector("#rating-distribution-chart"), ratingOptions);
+                // ratingChart.render();
             });
         </script>
     @endpush

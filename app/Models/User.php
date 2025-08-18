@@ -75,10 +75,7 @@ class User extends Authenticatable
         return $this->belongsTo(CustomerRank::class);
     }
 
-    public function reviews()
-    {
-        return $this->hasMany(Review::class);
-    }
+    // Đã xóa quan hệ reviews
 
     public function bookings()
     {
