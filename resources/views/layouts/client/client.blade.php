@@ -168,35 +168,39 @@
 	}
 
 	.search-box {
-    display: flex;
-    align-items: center; /* Căn giữa nút và input */
-    border: 2px solid #dc3545; /* Viền đỏ */
-    border-radius: 6px;
-    overflow: hidden; /* Bo góc đều */
-    max-width: 400px; /* Giới hạn chiều rộng */
-}
+		display: flex;
+		align-items: center;
+		/* Căn giữa nút và input */
+		border: 2px solid #dc3545;
+		/* Viền đỏ */
+		border-radius: 6px;
+		overflow: hidden;
+		/* Bo góc đều */
+		max-width: 400px;
+		/* Giới hạn chiều rộng */
+	}
 
-.search-box input[type="search"] {
-    flex: 1; /* Chiếm toàn bộ chiều rộng còn lại */
-    padding: 10px 12px;
-    border: none;
-    outline: none;
-    font-size: 16px;
-}
+	.search-box input[type="search"] {
+		flex: 1;
+		/* Chiếm toàn bộ chiều rộng còn lại */
+		padding: 10px 12px;
+		border: none;
+		outline: none;
+		font-size: 16px;
+	}
 
-.search-box button {
-    color: white;
-    padding: 10px 16px;
-    border: none;
-    cursor: pointer;
-    font-size: 16px;
-    transition: background-color 0.3s ease;
-}
+	.search-box button {
+		color: white;
+		padding: 10px 16px;
+		border: none;
+		cursor: pointer;
+		font-size: 16px;
+		transition: background-color 0.3s ease;
+	}
 
-.search-right .popup form button {
-	top: 1px;
-}
-
+	.search-right .popup form button {
+		top: 1px;
+	}
 </style> <!-- JavaScript cho kiểm tra đăng nhập và hiển thị popup -->
 <script>
 	function showLoginPrompt(event, redirectUrl) {
@@ -261,6 +265,20 @@
 							<a class="nav-link" href="">Liên hệ</a>
 						</li>
 					</ul>
+
+					<form action="{{ route('movies.filter') }}" method="get" class="mr-3 position-relative" style="width: 250px;">
+						<input type="search"
+							placeholder="Nhập tên phim..."
+							name="search"
+							value="{{ request('search') }}"
+							class="form-control pl-4"
+							style="border-radius: 25px; padding-left: 40px;">
+
+						<!-- Icon tìm kiếm nằm trong ô -->
+						<span class="fas fa-search"
+							style="position: absolute; top: 50%; left: 12px; transform: translateY(-50%); color: #888;">
+						</span>
+					</form>
 
 					<!--/search-right-->
 					<div class="search-right">

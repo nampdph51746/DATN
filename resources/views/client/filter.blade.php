@@ -194,14 +194,16 @@
     }
 
     .top-badge-img {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    width: 55px; /* chỉnh kích thước theo nhu cầu */
-    height: auto;
-    z-index: 30;
-    pointer-events: none; /* không che click */
-}
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        width: 55px;
+        /* chỉnh kích thước theo nhu cầu */
+        height: auto;
+        z-index: 30;
+        pointer-events: none;
+        /* không che click */
+    }
 </style>
 <section class="w3l-grids">
     <div class="container py-4">
@@ -245,53 +247,53 @@
                 <a href="{{ route('movies.show', ['id' => $movie->id]) }}" class="text-decoration-none text-dark">
                     <div class="movie-card shadow-sm h-100">
                         <div class="position-relative">
-    <img src="{{ $movie->image_path ? Storage::url($movie->image_path) : ($movie->poster_url ?? asset('client_assets/assets/images/default-movie.jpg')) }}"
-        class="img-fluid rounded-top movie-poster"
-        alt="{{ $movie->name }}">
+                            <img src="{{ $movie->image_path ? Storage::url($movie->image_path) : ($movie->poster_url ?? asset('client_assets/assets/images/default-movie.jpg')) }}"
+                                class="img-fluid rounded-top movie-poster"
+                                alt="{{ $movie->name }}">
 
-    @if($isShowing && $loop->iteration <= 3)
-        <img src="{{ Storage::url('tops/top' . $loop->iteration . '.png') }}"
-            alt="Top {{ $loop->iteration }}"
-            class="top-badge-img">
-    @endif
-</div>
+                            @if($isShowing && $loop->iteration <= 3)
+                                <img src="{{ Storage::url('tops/top' . $loop->iteration . '.png') }}"
+                                alt="Top {{ $loop->iteration }}"
+                                class="top-badge-img">
+                                @endif
+                        </div>
 
-                    <div class="p-3">
-                        <h6 class="movie-title">{{ $movie->name }}</h6>
-                        <p class="mb-1 movie-genre">
-                            <strong>Thể loại:</strong>
-                            {{ $movie->genres->take(3)->pluck('name')->join(', ') ?: 'N/A' }}
-                        </p>
-                        <p class="mb-2"><strong>Thời lượng:</strong> {{ $movie->duration_minutes }} phút</p>
+                        <div class="p-3">
+                            <h6 class="movie-title">{{ $movie->name }}</h6>
+                            <p class="mb-1 movie-genre">
+                                <strong>Thể loại:</strong>
+                                {{ $movie->genres->take(3)->pluck('name')->join(', ') ?: 'N/A' }}
+                            </p>
+                            <p class="mb-2"><strong>Thời lượng:</strong> {{ $movie->duration_minutes }} phút</p>
 
-                        @auth
-                        @if ($movie->status->value === 'showing')
-                        <a href="{{ route('client.movies.ticketBooking', ['id' => $movie->id]) }}" class="btn btn-primary w-100">
-                            🎟 ĐẶT VÉ
-                        </a>
-                        @endif
-                        @else
-                        @if ($movie->status->value === 'showing')
-                        <a href="#" class="btn btn-primary w-100" onclick="showLoginPrompt(event, '{{ route('client.movies.ticketBooking', ['id' => $movie->id]) }}')">
-                            🎟 ĐẶT VÉ
-                        </a>
-                        @endif
-                        @endauth
+                            @auth
+                            @if ($movie->status->value === 'showing')
+                            <a href="{{ route('client.movies.ticketBooking', ['id' => $movie->id]) }}" class="btn btn-primary w-100">
+                                🎟 ĐẶT VÉ
+                            </a>
+                            @endif
+                            @else
+                            @if ($movie->status->value === 'showing')
+                            <a href="#" class="btn btn-primary w-100" onclick="showLoginPrompt(event, '{{ route('client.movies.ticketBooking', ['id' => $movie->id]) }}')">
+                                🎟 ĐẶT VÉ
+                            </a>
+                            @endif
+                            @endauth
+                        </div>
                     </div>
+                </a>
             </div>
-            </a>
+
+            @empty
+            <div class="no-movies-message">
+                Không tìm thấy phim phù hợp.
+            </div>
+            @endforelse
         </div>
 
-        @empty
-        <div class="no-movies-message">
-            Không tìm thấy phim phù hợp.
+        <div class="d-flex justify-content-center">
+            {{ $movies->appends(request()->query())->links() }}
         </div>
-        @endforelse
-    </div>
-
-    <div class="d-flex justify-content-center">
-        {{ $movies->appends(request()->query())->links() }}
-    </div>
     </div>
 </section>
 <script>
