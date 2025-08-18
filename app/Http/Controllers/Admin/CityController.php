@@ -69,7 +69,24 @@ class CityController extends Controller
         $city = City::findOrFail($id);
         $city->delete();
 
-        return redirect()->route('admin.cities.trash')->with('success', 'Đã xóa thành phố (tạm thời).');
+        return redirect()->route('admin.cities.index')->with('success', 'Đã xóa thành phố.');
+    }
+
+    // Xóa hàng loạt
+    public function bulkDelete(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|string'
+        ]);
+
+        $ids = explode(',', $request->ids);
+        $cities = City::whereIn('id', $ids);
+        
+        $count = $cities->count();
+        $cities->delete();
+
+        return redirect()->route('admin.cities.index')
+                        ->with('success', "Đã xóa {$count} thành phố thành công.");
     }
 
     // ✅ XEM DANH SÁCH ĐÃ XÓA

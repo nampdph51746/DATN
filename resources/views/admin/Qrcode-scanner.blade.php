@@ -5,7 +5,42 @@
         <div class="row justify-content-center">
             <div class="col-xl-10">
                 <div class="card shadow-lg border-0 rounded-4">
-                    <div class="card-header bg-gradient-primary text-white d-flex justify-content-between align-items-center py-3 px-4">
+                    <div class="card-header bg-gradient-primary text-whit        /* Responsive enhancements */
+        @media (max-width: 768px) {
+            .col-lg-2, .col-md-4 {
+                margin-bottom: 10px;
+            }
+            .card-body {
+                padding: 1.5rem !important;
+            }
+            .btn {
+                font-size: 0.9rem;
+                padding: 0.6rem 1rem;
+            }
+            #qr-reader {
+                width: 100% !important;
+                height: 300px !important;
+            }
+            #result {
+                margin-top: 1.5rem;
+            }
+        }
+        
+        /* Fix positioning and spacing */
+        .card-body {
+            position: relative;
+        }
+        
+        #error {
+            position: relative;
+            z-index: 1;
+            margin-top: 2rem;
+        }
+        
+        /* Prevent content overflow */
+        .container-xxl {
+            overflow-x: hidden;
+        }content-between align-items-center py-3 px-4">
                         <h4 class="card-title mb-0 fw-bold">Quét QR Code Vé Xem Phim</h4>
                     </div>
                     <div class="card-body p-4">
@@ -76,10 +111,11 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
     <style>
         .bg-gradient-primary {
-            background: linear-gradient(90deg, #007bff, #0056b3);
+            background: linear-gradient(135deg, #007bff, #0056b3);
         }
         .btn-purple {
             background-color: #6f42c1;
@@ -97,13 +133,158 @@
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
         .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+            transform: translateY(-2px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1) !important;
         }
+        
+        /* Enhanced ticket card styling */
+        .ticket-card {
+            background: linear-gradient(135deg, #f8fff9, #e8f7ef) !important;
+            border: 2px solid #28a745 !important;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .ticket-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(40, 167, 69, 0.2) !important;
+        }
+        
+        /* Ensure main card doesn't overlap */
+        .container-xxl > .row > .col-xl-10 > .card {
+            position: relative;
+            z-index: 10;
+            margin-bottom: 2rem;
+        }
+        
+        /* Success banner positioning */
+        .text-center .d-inline-flex {
+            animation: slideInFromTop 0.6s ease-out;
+            position: relative;
+            z-index: 5;
+        }
+        
+        .ticket-holes {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            transform: translateY(-50%);
+            height: 2px;
+            background: repeating-linear-gradient(
+                to right,
+                transparent 0,
+                transparent 10px,
+                #28a745 10px,
+                #28a745 12px
+            );
+        }
+        
+        .ticket-holes .hole {
+            position: absolute;
+            top: -6px;
+            width: 12px;
+            height: 12px;
+            background: #fff;
+            border: 2px solid #28a745;
+            border-radius: 50%;
+        }
+        
+        .ticket-holes .hole-left {
+            left: -7px;
+        }
+        
+        .ticket-holes .hole-right {
+            right: -7px;
+        }
+        
+        /* Success banner animation */
+        @keyframes slideInFromTop {
+            0% {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .text-center .d-inline-flex {
+            animation: slideInFromTop 0.6s ease-out;
+        }
+        
+        /* Card entrance animation */
+        @keyframes fadeInUp {
+            0% {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .card {
+            animation: fadeInUp 0.6s ease-out;
+        }
+        
+        .ticket-card {
+            animation: fadeInUp 0.6s ease-out;
+        }
+        
+        /* FontAwesome icons styling */
+        .fas {
+            transition: all 0.3s ease;
+        }
+        
+        .card-header .fas {
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+        }
+        
+        /* Enhanced gradient backgrounds */
+        .bg-gradient-primary {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+        }
+        
+        .bg-success {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+        }
+        
+        /* Info boxes styling */
+        .bg-light {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
+            border: 1px solid rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .bg-light:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+        
+        .bg-success-subtle {
+            background: linear-gradient(135deg, rgba(40, 167, 69, 0.1) 0%, rgba(32, 201, 151, 0.1) 100%) !important;
+            border: 1px solid rgba(40, 167, 69, 0.2);
+        }
+        
+        /* Badge enhancements */
+        .badge {
+            font-weight: 600;
+            padding: 8px 16px;
+            letter-spacing: 0.5px;
+        }
+        
+        /* Responsive enhancements */
         /* Result section container */
         #result {
             width: 100%;
-            margin-top: 1rem;
+            margin-top: 2rem;
+            position: relative;
+            z-index: 1;
         }
         
         /* Result card styling */
@@ -295,49 +476,138 @@
             console.log('Showing success result:', response);
             
             let html = `
-                <div class="alert alert-success rounded-3 shadow-sm mb-4">
-                    <h4 class="fw-bold mb-2">✅ ${response.message}</h4>
-                </div>
-                <div class="card border-0 shadow-sm mb-4 rounded-3">
-                    <div class="card-header bg-info text-white">
-                        <h5 class="mb-0 fw-bold">📋 Thông Tin Đơn Hàng</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row g-3">
-                            <div class="col-md-6"><strong>Mã booking:</strong> <span class="text-primary">${booking.booking_code}</span></div>
-                            <div class="col-md-6"><strong>Khách hàng:</strong> ${booking.customer_name || 'N/A'}</div>
-                            <div class="col-md-6"><strong>Số điện thoại:</strong> ${booking.customer_phone || 'N/A'}</div>
-                            <div class="col-md-6"><strong>Tổng tiền:</strong> <span class="text-success fw-bold">${formatCurrency(booking.total_amount || 0)}</span></div>
+                <!-- Success Banner -->
+                <div class="text-center mb-4">
+                    <div class="d-inline-flex align-items-center bg-success text-white px-4 py-3 rounded-pill shadow-lg">
+                        <i class="fas fa-check-circle fs-4 me-3"></i>
+                        <div>
+                            <h5 class="mb-0 fw-bold">${response.message}</h5>
+                            <small class="opacity-75">Quét thành công ${tickets.length} vé</small>
                         </div>
                     </div>
                 </div>
-                <div class="card border-0 shadow-sm rounded-3">
-                    <div class="card-header bg-success text-white">
-                        <h5 class="mb-0 fw-bold">🎫 Vé Đã Quét (${tickets.length})</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row g-3">
-            `;
-            
-            tickets.forEach(ticket => {
-                const seatName = ticket.seat ? (ticket.seat.row_char + ticket.seat.seat_number) : 'N/A';
-                html += `
-                        <div class="col-md-6 col-lg-4">
-                            <div class="card border-success shadow-sm rounded-3 h-100">
-                                <div class="card-body">
-                                    <div class="d-flex justify-content-between align-items-start mb-2">
-                                        <h6 class="card-title text-success">Ghế ${seatName}</h6>
-                                        <span class="badge bg-success">Đã sử dụng</span>
+
+                <!-- Booking Information -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+                            <div class="card-header bg-gradient-primary text-white py-3">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-receipt fs-4 me-3"></i>
+                                    <div>
+                                        <h5 class="mb-1 fw-bold">Thông Tin Đơn Hàng</h5>
+                                        <small class="opacity-75">Chi tiết đơn đặt vé</small>
                                     </div>
-                                    <p class="card-text mb-1"><small class="text-muted">ID: ${ticket.id}</small></p>
-                                    <p class="card-text mb-0"><small class="text-muted">Quét lúc: ${new Date(ticket.used_at).toLocaleString('vi-VN')}</small></p>
+                                </div>
+                            </div>
+                            <div class="card-body p-4">
+                                <div class="row g-4">
+                                    <div class="col-md-3">
+                                        <div class="d-flex flex-column text-center p-3 bg-light rounded-3">
+                                            <i class="fas fa-barcode text-primary fs-3 mb-2"></i>
+                                            <small class="text-muted mb-1">Mã Booking</small>
+                                            <strong class="text-primary fs-5">${booking.booking_code}</strong>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="d-flex flex-column text-center p-3 bg-light rounded-3">
+                                            <i class="fas fa-user text-info fs-3 mb-2"></i>
+                                            <small class="text-muted mb-1">Khách Hàng</small>
+                                            <strong class="text-dark">${booking.customer_name || 'N/A'}</strong>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="d-flex flex-column text-center p-3 bg-light rounded-3">
+                                            <i class="fas fa-phone text-warning fs-3 mb-2"></i>
+                                            <small class="text-muted mb-1">Số Điện Thoại</small>
+                                            <strong class="text-dark">${booking.customer_phone || 'N/A'}</strong>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="d-flex flex-column text-center p-3 bg-success-subtle rounded-3">
+                                            <i class="fas fa-money-bill text-success fs-3 mb-2"></i>
+                                            <small class="text-muted mb-1">Tổng Tiền</small>
+                                            <strong class="text-success fs-5">${formatCurrency(booking.total_amount || 0)}</strong>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Tickets Grid -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+                            <div class="card-header bg-success text-white py-3">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-ticket-alt fs-4 me-3"></i>
+                                        <div>
+                                            <h5 class="mb-1 fw-bold">Danh Sách Vé Đã Quét</h5>
+                                            <small class="opacity-75">Tất cả vé đã được kích hoạt thành công</small>
+                                        </div>
+                                    </div>
+                                    <span class="badge bg-light text-success fs-6 px-3 py-2 rounded-pill">
+                                        ${tickets.length} vé
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="card-body p-4">
+                                <div class="row g-3">
+            `;
+            
+            tickets.forEach((ticket, index) => {
+                const seatName = ticket.seat ? (ticket.seat.row_char + ticket.seat.seat_number) : 'N/A';
+                const timeFormatted = new Date(ticket.used_at).toLocaleString('vi-VN');
+                
+                html += `
+                                    <div class="col-md-6 col-xl-4">
+                                        <div class="ticket-card border border-success rounded-4 p-4 h-100 bg-success-subtle position-relative overflow-hidden">
+                                            <!-- Decorative Elements -->
+                                            <div class="position-absolute top-0 end-0 opacity-10">
+                                                <i class="fas fa-ticket-alt" style="font-size: 4rem; transform: rotate(15deg);"></i>
+                                            </div>
+                                            
+                                            <!-- Ticket Content -->
+                                            <div class="position-relative">
+                                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                            <strong style="font-size: 14px;">${seatName}</strong>
+                                                        </div>
+                                                        <div class="ms-3">
+                                                            <h6 class="mb-1 fw-bold text-success">Ghế ${seatName}</h6>
+                                                            <small class="text-muted">Vé số #${ticket.id}</small>
+                                                        </div>
+                                                    </div>
+                                                    <span class="badge bg-success rounded-pill">
+                                                        <i class="fas fa-check me-1"></i>Đã Sử Dụng
+                                                    </span>
+                                                </div>
+                                                
+                                                <div class="border-top border-success-subtle pt-3 mt-3">
+                                                    <div class="d-flex align-items-center text-muted">
+                                                        <i class="fas fa-clock me-2"></i>
+                                                        <small><strong>Quét lúc:</strong> ${timeFormatted}</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Ticket Holes -->
+                                            <div class="ticket-holes">
+                                                <div class="hole hole-left"></div>
+                                                <div class="hole hole-right"></div>
+                                            </div>
+                                        </div>
+                                    </div>
                 `;
             });
             
             html += `
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -399,56 +669,115 @@
         function showTicketResultByTicketCode(response) {
             const data = response.data;
             let html = `
-                <div class="alert alert-success rounded-3 shadow-sm mb-4 text-center">
-                    <h3 class="h5 fw-bold mb-0">✅ ${response.message}</h3>
+                <!-- Success Banner -->
+                <div class="text-center mb-4">
+                    <div class="d-inline-flex align-items-center bg-success text-white px-4 py-3 rounded-pill shadow-lg">
+                        <i class="fas fa-check-circle fs-4 me-3"></i>
+                        <div>
+                            <h5 class="mb-0 fw-bold">${response.message}</h5>
+                            <small class="opacity-75">Vé đã được kích hoạt thành công</small>
+                        </div>
+                    </div>
                 </div>
-                <div class="row g-3">
+
+                <div class="row g-4">
+                    <!-- Ticket Information -->
                     <div class="col-md-6">
-                        <div class="card border-0 shadow-sm rounded-3">
-                            <div class="card-header bg-primary text-white text-center fw-medium">
-                                <h5 class="mb-0">Thông Tin Vé</h5>
+                        <div class="card border-0 shadow-lg rounded-4 overflow-hidden h-100">
+                            <div class="card-header bg-gradient-primary text-white py-3">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-ticket-alt fs-4 me-3"></i>
+                                    <div>
+                                        <h5 class="mb-1 fw-bold">Thông Tin Vé</h5>
+                                        <small class="opacity-75">Chi tiết vé đã quét</small>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="card-body">
-                                <div class="row mb-2">
-                                    <div class="col-6"><strong>Mã vé:</strong></div>
-                                    <div class="col-6">${data?.ticket_code || ''}</div>
-                                </div>
-                                <div class="row mb-2">
-                                    <div class="col-6"><strong>Ghế:</strong></div>
-                                    <div class="col-6">${data?.seat_name || ''}</div>
-                                </div>
-                                <div class="row mb-2">
-                                    <div class="col-6"><strong>Trạng thái:</strong></div>
-                                    <div class="col-6"><span class="badge bg-success">Đã sử dụng</span></div>
-                                </div>
-                                <div class="row mb-2">
-                                    <div class="col-6"><strong>Thời gian quét:</strong></div>
-                                    <div class="col-6">${data?.used_at ? new Date(data.used_at).toLocaleString('vi-VN') : ''}</div>
+                            <div class="card-body p-4">
+                                <div class="ticket-info-grid">
+                                    <div class="info-item d-flex justify-content-between align-items-center p-3 mb-3 bg-light rounded-3">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-barcode text-primary fs-5 me-3"></i>
+                                            <span class="text-muted">Mã vé:</span>
+                                        </div>
+                                        <strong class="text-primary">${data?.ticket_code || ''}</strong>
+                                    </div>
+                                    
+                                    <div class="info-item d-flex justify-content-between align-items-center p-3 mb-3 bg-light rounded-3">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-couch text-warning fs-5 me-3"></i>
+                                            <span class="text-muted">Ghế:</span>
+                                        </div>
+                                        <strong class="text-dark fs-5">${data?.seat_name || ''}</strong>
+                                    </div>
+                                    
+                                    <div class="info-item d-flex justify-content-between align-items-center p-3 mb-3 bg-success-subtle rounded-3">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-check-circle text-success fs-5 me-3"></i>
+                                            <span class="text-muted">Trạng thái:</span>
+                                        </div>
+                                        <span class="badge bg-success fs-6">
+                                            <i class="fas fa-check me-1"></i>Đã sử dụng
+                                        </span>
+                                    </div>
+                                    
+                                    <div class="info-item d-flex justify-content-between align-items-center p-3 bg-light rounded-3">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-clock text-info fs-5 me-3"></i>
+                                            <span class="text-muted">Thời gian quét:</span>
+                                        </div>
+                                        <strong class="text-info">${data?.used_at ? new Date(data.used_at).toLocaleString('vi-VN') : ''}</strong>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+                    
+                    <!-- Booking Information -->
                     <div class="col-md-6">
-                        <div class="card border-0 shadow-sm rounded-3">
-                            <div class="card-header bg-info text-white text-center fw-medium">
-                                <h5 class="mb-0">Thông Tin Đơn Hàng</h5>
+                        <div class="card border-0 shadow-lg rounded-4 overflow-hidden h-100">
+                            <div class="card-header bg-success text-white py-3">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-receipt fs-4 me-3"></i>
+                                    <div>
+                                        <h5 class="mb-1 fw-bold">Thông Tin Đơn Hàng</h5>
+                                        <small class="opacity-75">Chi tiết booking</small>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="card-body">
-                                <div class="row mb-2">
-                                    <div class="col-6"><strong>Mã booking:</strong></div>
-                                    <div class="col-6">${data?.booking_code || ''}</div>
-                                </div>
-                                <div class="row mb-2">
-                                    <div class="col-6"><strong>Khách hàng:</strong></div>
-                                    <div class="col-6">${data?.customer_name || ''}</div>
-                                </div>
-                                <div class="row mb-2">
-                                    <div class="col-6"><strong>Số điện thoại:</strong></div>
-                                    <div class="col-6">${data?.customer_phone || ''}</div>
-                                </div>
-                                <div class="row mb-2">
-                                    <div class="col-6"><strong>Tổng tiền:</strong></div>
-                                    <div class="col-6">${formatCurrency(data?.total_amount || 0)}</div>
+                            <div class="card-body p-4">
+                                <div class="booking-info-grid">
+                                    <div class="info-item d-flex justify-content-between align-items-center p-3 mb-3 bg-light rounded-3">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-hashtag text-primary fs-5 me-3"></i>
+                                            <span class="text-muted">Mã booking:</span>
+                                        </div>
+                                        <strong class="text-primary">${data?.booking_code || ''}</strong>
+                                    </div>
+                                    
+                                    <div class="info-item d-flex justify-content-between align-items-center p-3 mb-3 bg-light rounded-3">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-user text-info fs-5 me-3"></i>
+                                            <span class="text-muted">Khách hàng:</span>
+                                        </div>
+                                        <strong class="text-dark">${data?.customer_name || ''}</strong>
+                                    </div>
+                                    
+                                    <div class="info-item d-flex justify-content-between align-items-center p-3 mb-3 bg-light rounded-3">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-phone text-warning fs-5 me-3"></i>
+                                            <span class="text-muted">Số điện thoại:</span>
+                                        </div>
+                                        <strong class="text-dark">${data?.customer_phone || ''}</strong>
+                                    </div>
+                                    
+                                    <div class="info-item d-flex justify-content-between align-items-center p-3 bg-success-subtle rounded-3">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-money-bill text-success fs-5 me-3"></i>
+                                            <span class="text-muted">Tổng tiền:</span>
+                                        </div>
+                                        <strong class="text-success fs-5">${formatCurrency(data?.total_amount || 0)}</strong>
+                                    </div>
                                 </div>
                             </div>
                         </div>

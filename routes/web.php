@@ -7,7 +7,6 @@ use App\Http\Controllers\Admin\CityController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\ComboController;
-use App\Http\Controllers\Admin\MovieController;
 use App\Http\Controllers\Admin\PointController;
 use App\Http\Controllers\Client\HomeController;
 use App\Http\Controllers\Client\SeatController;
@@ -155,15 +154,6 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
     Route::delete('showtimes/{id}/deactivate', [ShowtimeController::class, 'deactivate'])->name('showtimes.deactivate');
     Route::resource('showtimes', ShowtimeController::class)->except(['destroy']);
 
-    // Movies routes from HEAD
-    Route::get('/movies', [MovieController::class, 'index'])->name('movies.index');
-    Route::get('/movies/create', [MovieController::class, 'create'])->name('movies.create');
-    Route::post('/movies', [MovieController::class, 'store'])->name('movies.store');
-    Route::get('/movies/{id}', [MovieController::class, 'show'])->name('movies.show');
-    Route::get('/movies/{id}/edit', [MovieController::class, 'edit'])->name('movies.edit');
-    Route::put('/movies/{id}', [MovieController::class, 'update'])->name('movies.update');
-    Route::delete('/movies/{id}', [MovieController::class, 'destroy'])->name('movies.destroy');
-
     // Tạo suất chiếu tự động (HEAD)
     Route::post('/showtimes', [ShowtimeController::class, 'storeAuto'])->name('showtimes.storeAuto');
     
@@ -185,13 +175,15 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
     Route::get('countries/trash', [CountryController::class, 'trash'])->name('countries.trash');
     Route::post('countries/{id}/restore', [CountryController::class, 'restore'])->name('countries.restore');
     Route::delete('countries/{id}/force-delete', [CountryController::class, 'forceDelete'])->name('countries.forceDelete');
+    Route::delete('countries/bulk-delete', [CountryController::class, 'bulkDelete'])->name('countries.bulkDelete');
     Route::resource('countries', CountryController::class);
-    Route::get('cities', [CityController::class, 'index'])->name('index');
-    Route::get('cities-add', [CityController::class, 'create'])->name('create');
-    Route::get('cities-edit', [CityController::class, 'edit'])->name('edit');
+    Route::get('cities', [CityController::class, 'index'])->name('cities.index');
+    Route::get('cities-add', [CityController::class, 'create'])->name('cities.create');
+    Route::get('cities-edit', [CityController::class, 'edit'])->name('cities.edit');
     Route::get('cities/trash', [CityController::class, 'trash'])->name('cities.trash');
     Route::patch('cities/{id}/restore', [CityController::class, 'restore'])->name('cities.restore');
     Route::delete('cities/{id}/force-delete', [CityController::class, 'forceDelete'])->name('cities.forceDelete');
+    Route::delete('cities/bulk-delete', [CityController::class, 'bulkDelete'])->name('cities.bulkDelete');
     Route::resource('cities', CityController::class);
     Route::get('cinemas', [CinemaController::class, 'index'])->name('index');
     Route::get('cinemas-add', [CinemaController::class, 'create'])->name('create');
@@ -240,9 +232,11 @@ Route::delete('admin/movies/bulk-delete', [AdminMovieController::class, 'bulkDel
 // Route import ghế từ Excel
 Route::post('admin/seats/import', [App\Http\Controllers\Admin\AdminSeatController::class, 'importExcel'])->name('admin.seats.import');
 Route::delete('admin/genres/bulk-delete', [\App\Http\Controllers\Admin\GenreController::class, 'bulkDelete'])->name('admin.genres.bulkDelete');
+Route::delete('admin/directors/bulk-delete', [\App\Http\Controllers\Admin\AdminDirectorController::class, 'bulkDelete'])->name('admin.directors.bulkDelete');
+Route::delete('admin/actors/bulk-delete', [\App\Http\Controllers\Admin\AdminActorController::class, 'bulkDelete'])->name('admin.actors.bulkDelete');
 
 Route::prefix('admin')->name('admin.')->group(function () {
-    Route::resource('movies', \App\Http\Controllers\Admin\AdminMovieController::class);
+    Route::resource('movies', \App\Http\Controllers\Admin\AdminMovieController::class)->parameter('movies', 'id');
     Route::resource('directors', \App\Http\Controllers\Admin\AdminDirectorController::class);
     Route::resource('actors', \App\Http\Controllers\Admin\AdminActorController::class);
 });

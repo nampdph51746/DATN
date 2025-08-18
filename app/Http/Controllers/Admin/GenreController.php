@@ -17,9 +17,18 @@ class GenreController extends Controller
         $this->middleware('can:edit genre')->only(['edit', 'update']);
         $this->middleware('can:delete genre')->only('destroy');
     }
-    public function index()
+    public function index(Request $request)
     {
-        $genres = Genre::paginate(10);
+        $query = Genre::withCount('movies');
+        
+        // Tìm kiếm theo tên
+        if ($request->has('search') && $request->search) {
+            $query->where('name', 'like', '%' . $request->search . '%')
+                  ->orWhere('description', 'like', '%' . $request->search . '%');
+        }
+        
+        $genres = $query->orderBy('created_at', 'desc')->paginate(10);
+        
         return view('admin.movieGenres.index', compact('genres'));
     }
 

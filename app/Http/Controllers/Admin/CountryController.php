@@ -87,8 +87,24 @@ class CountryController extends Controller
         $country = Country::findOrFail($id);
         $country->delete();
 
-        alert('Quốc gia đã được xóa thành công.');
         return redirect()->route('admin.countries.index')->with('success', 'Đã xóa quốc gia.');
+    }
+
+    // Xóa hàng loạt
+    public function bulkDelete(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|string'
+        ]);
+
+        $ids = explode(',', $request->ids);
+        $countries = Country::whereIn('id', $ids);
+        
+        $count = $countries->count();
+        $countries->delete();
+
+        return redirect()->route('admin.countries.index')
+                        ->with('success', "Đã xóa {$count} quốc gia thành công.");
     }
 
     // Khôi phục quốc gia đã xóa mềm

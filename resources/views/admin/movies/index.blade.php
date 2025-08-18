@@ -27,80 +27,118 @@
     <div class="row">
         <div class="col-xl-12">
             <div class="card">
-                <div class="card-header d-flex flex-wrap align-items-center gap-2">
-                    <h4 class="card-title flex-grow-1 mb-0">Danh Sách Phim</h4>
-                    <form id="delete-selected-form" action="{{ route('admin.movies.bulkDelete') }}" method="POST" style="display: none;">
+                <div class="card-header">
+                    <div class="row align-items-center g-3">
+                        <div class="col-md-4">
+                            <h4 class="card-title mb-0">Danh Sách Phim</h4>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="d-flex flex-wrap gap-2 justify-content-md-end">
+                                <!-- Form tìm kiếm -->
+                                <form class="d-flex align-items-center gap-2" method="GET" action="{{ route('admin.movies.index') }}">
+                                    <div class="position-relative">
+                                        <input type="search" name="query" class="form-control form-control-sm ps-4 pe-3" 
+                                               style="min-width: 250px;" placeholder="Tìm kiếm tên phim, đạo diễn..." 
+                                               autocomplete="off" value="{{ request('query') }}">
+                                        <iconify-icon icon="solar:magnifer-linear"
+                                            class="position-absolute top-50 start-0 translate-middle-y ms-2 text-muted"
+                                            style="font-size: 14px;"></iconify-icon>
+                                    </div>
+                                    
+                                    <select name="status" class="form-select form-select-sm" style="width:140px;">
+                                        <option value="">Tất cả trạng thái</option>
+                                        <option value="showing" {{ request('status') == 'showing' ? 'selected' : '' }}>Đang chiếu</option>
+                                        <option value="upcoming" {{ request('status') == 'upcoming' ? 'selected' : '' }}>Sắp chiếu</option>
+                                        <option value="ended" {{ request('status') == 'ended' ? 'selected' : '' }}>Đã kết thúc</option>
+                                    </select>
+                                    
+                                    <!-- Dropdown lọc nâng cao -->
+                                    <div class="dropdown">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" 
+                                                data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="bi bi-funnel me-1"></i>Lọc thêm
+                                        </button>
+                                        <div class="dropdown-menu dropdown-menu-end p-3" style="min-width: 280px;">
+                                            <div class="row g-2">
+                                                <div class="col-12">
+                                                    <label class="form-label text-muted small mb-1">Quốc gia</label>
+                                                    <select name="country_id" class="form-select form-select-sm">
+                                                        <option value="">Tất cả quốc gia</option>
+                                                        @foreach ($countries as $country)
+                                                            <option value="{{ $country->id }}" {{ request('country_id') == $country->id ? 'selected' : '' }}>
+                                                                {{ $country->name }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                                <div class="col-12">
+                                                    <label class="form-label text-muted small mb-1">Thể loại</label>
+                                                    <select name="genre_id" class="form-select form-select-sm">
+                                                        <option value="">Tất cả thể loại</option>
+                                                        @foreach ($genres as $genre)
+                                                            <option value="{{ $genre->id }}" {{ request('genre_id') == $genre->id ? 'selected' : '' }}>
+                                                                {{ $genre->name }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                                <div class="col-12">
+                                                    <label class="form-label text-muted small mb-1">Độ tuổi</label>
+                                                    <select name="age_limit_id" class="form-select form-select-sm">
+                                                        <option value="">Tất cả độ tuổi</option>
+                                                        @foreach ($ageLimits as $ageLimit)
+                                                            <option value="{{ $ageLimit->id }}" {{ request('age_limit_id') == $ageLimit->id ? 'selected' : '' }}>
+                                                                {{ $ageLimit->name ?? $ageLimit->label }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                                <div class="col-12 mt-2">
+                                                    <div class="d-flex gap-2">
+                                                        <button type="submit" class="btn btn-primary btn-sm flex-fill">
+                                                            <i class="bi bi-check-lg me-1"></i>Áp dụng
+                                                        </button>
+                                                        <a href="{{ route('admin.movies.index') }}" class="btn btn-outline-secondary btn-sm">
+                                                            <i class="bi bi-arrow-clockwise me-1"></i>Reset
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <button type="submit" class="btn btn-sm btn-primary">
+                                        <i class="bi bi-search"></i>
+                                    </button>
+                                </form>
+
+                                <!-- Nút thêm phim -->
+                                <a href="{{ route('admin.movies.create') }}" class="btn btn-sm btn-success">
+                                    <i class="bi bi-plus-circle me-1"></i> Thêm phim
+                                </a>
+                                
+                                <!-- Comment tạm thời -->
+                                {{-- 
+                                <a href="{{ route('admin.directors.create') }}" class="btn btn-sm btn-success">
+                                    <i class="bi bi-person-plus me-1"></i> Thêm đạo diễn
+                                </a>
+                                <a href="{{ route('admin.actors.create') }}" class="btn btn-sm btn-info">
+                                    <i class="bi bi-people-fill me-1"></i> Thêm diễn viên
+                                </a>
+                                --}}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Form xóa hàng loạt -->
+                    <form id="delete-selected-form" action="{{ route('admin.movies.bulkDelete') }}" method="POST" style="display: none;" class="mt-2">
                         @csrf
                         @method('DELETE')
                         <input type="hidden" name="ids" id="selected-movie-ids">
                         <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Bạn có chắc muốn xóa các phim đã chọn?')">
-                            Xóa đã chọn
+                            <i class="bi bi-trash me-1"></i>Xóa đã chọn
                         </button>
                     </form>
-                    <form class="d-flex align-items-center gap-2 ms-2" method="GET" action="{{ route('admin.movies.index') }}" style="min-width:320px;">
-                        <div class="position-relative flex-grow-1">
-                            <input type="search" name="query" class="form-control form-control-sm ps-5 pe-3 rounded-2"
-                                placeholder="Tìm kiếm tên phim..." autocomplete="off" value="{{ request('query') }}">
-                            <iconify-icon icon="solar:magnifer-linear"
-                                class="position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"
-                                style="font-size: 16px;"></iconify-icon>
-                        </div>
-                        <select name="status" class="form-select form-select-sm" style="width:120px;">
-                            <option value="">Tất cả trạng thái</option>
-                            <option value="showing" {{ request('status') == 'showing' ? 'selected' : '' }}>Đang chiếu</option>
-                            <option value="upcoming" {{ request('status') == 'upcoming' ? 'selected' : '' }}>Sắp chiếu</option>
-                            <option value="ended" {{ request('status') == 'ended' ? 'selected' : '' }}>Đã kết thúc</option>
-                        </select>
-                        <button type="submit" class="btn btn-sm btn-outline-primary">
-                            <i class="bi bi-search"></i>
-                        </button>
-                    </form>
-
-                    <a href="{{ route('admin.movies.create') }}" class="btn btn-sm btn-primary">
-                        <i class="bi bi-plus-circle me-1"></i> Thêm phim
-                    </a>
-                    <a href="{{ route('admin.directors.create') }}" class="btn btn-sm btn-success">
-                        <i class="bi bi-person-plus me-1"></i> Thêm đạo diễn
-                    </a>
-                    <a href="{{ route('admin.actors.create') }}" class="btn btn-sm btn-info">
-                        <i class="bi bi-people-fill me-1"></i> Thêm diễn viên
-                    </a>
-                    <div class="dropdown">
-                        <a href="#" class="dropdown-toggle btn btn-sm btn-outline-light" data-bs-toggle="dropdown" aria-expanded="false">
-                            Lọc
-                        </a>
-                        <div class="dropdown-menu dropdown-menu-end">
-                            <h6 class="dropdown-header">Trạng thái</h6>
-                                            <a href="{{ route('admin.movies.index', array_filter(['query' => request('query'), 'country_id' => request('country_id'), 'age_limit_id' => request('age_limit_id'), 'genre_id' => request('genre_id'), 'release_date' => request('release_date'), 'end_date' => request('end_date')])) }}" class="dropdown-item {{ !request('status') || request('status') == 'all' ? 'active' : '' }}">Tất cả</a>
-                            @foreach (['showing', 'upcoming', 'ended'] as $status)
-                                <a href="{{ route('admin.movies.index', array_filter(['status' => $status, 'query' => request('query'), 'country_id' => request('country_id'), 'age_limit_id' => request('age_limit_id'), 'genre_id' => request('genre_id'), 'release_date' => request('release_date'), 'end_date' => request('end_date')])) }}" class="dropdown-item {{ request('status') == $status ? 'active' : '' }}">
-                                    {{ $status == 'showing' ? 'Đang chiếu' : ($status == 'upcoming' ? 'Sắp chiếu' : 'Kết thúc') }}
-                                </a>
-                            @endforeach
-                            <div class="dropdown-divider"></div>
-                            <h6 class="dropdown-header">Quốc gia</h6>
-                            <a href="{{ route('admin.movies.index', array_filter(['query' => request('query'), 'status' => request('status'), 'age_limit_id' => request('age_limit_id'), 'genre_id' => request('genre_id'), 'release_date' => request('release_date'), 'end_date' => request('end_date')])) }}" class="dropdown-item {{ !request('country_id') ? 'active' : '' }}">Tất cả</a>
-                            @foreach ($countries as $country)
-                                <a href="{{ route('admin.movies.index', array_filter(['country_id' => $country->id, 'query' => request('query'), 'status' => request('status'), 'age_limit_id' => request('age_limit_id'), 'genre_id' => request('genre_id'), 'release_date' => request('release_date'), 'end_date' => request('end_date')])) }}" class="dropdown-item {{ request('country_id') == $country->id ? 'active' : '' }}">{{ $country->name }}</a>
-                            @endforeach
-
-                            <!-- Lọc theo giới hạn độ tuổi -->
-                            <div class="dropdown-divider"></div>
-                            <h6 class="dropdown-header">Giới hạn độ tuổi</h6>
-                            <a href="{{ route('admin.movies.index', array_filter(['query' => request('query'), 'status' => request('status'), 'country_id' => request('country_id'), 'genre_id' => request('genre_id'), 'release_date' => request('release_date'), 'end_date' => request('end_date')])) }}" class="dropdown-item {{ !request('age_limit_id') ? 'active' : '' }}">Tất cả</a>
-                            @foreach ($ageLimits as $ageLimit)
-                                <a href="{{ route('admin.movies.index', array_filter(['age_limit_id' => $ageLimit->id, 'query' => request('query'), 'status' => request('status'), 'country_id' => request('country_id'), 'genre_id' => request('genre_id'), 'release_date' => request('release_date'), 'end_date' => request('end_date')])) }}" class="dropdown-item {{ request('age_limit_id') == $ageLimit->id ? 'active' : '' }}">{{ $ageLimit->name ?? $ageLimit->label }}</a>
-                            @endforeach
-
-                            <!-- Lọc theo thể loại -->
-                            <div class="dropdown-divider"></div>
-                            <h6 class="dropdown-header">Thể loại</h6>
-                            <a href="{{ route('admin.movies.index', array_filter(['query' => request('query'), 'status' => request('status'), 'country_id' => request('country_id'), 'age_limit_id' => request('age_limit_id'), 'release_date' => request('release_date'), 'end_date' => request('end_date')])) }}" class="dropdown-item {{ !request('genre_id') ? 'active' : '' }}">Tất cả</a>
-                            @foreach ($genres as $genre)
-                                <a href="{{ route('admin.movies.index', array_filter(['genre_id' => $genre->id, 'query' => request('query'), 'status' => request('status'), 'country_id' => request('country_id'), 'age_limit_id' => request('age_limit_id'), 'release_date' => request('release_date'), 'end_date' => request('end_date')])) }}" class="dropdown-item {{ request('genre_id') == $genre->id ? 'active' : '' }}">{{ $genre->name }}</a>
-                            @endforeach
-                        </div>
-                    </div>
                 </div>
                 <div>
                     <div class="table-responsive">
@@ -112,18 +150,14 @@
                                             <input type="checkbox" class="form-check-input" id="checkAllMovies">
                                         </div>
                                     </th>
-                                    <th>Tên phim</th>
-                                    <th>Đạo diễn</th>
-                                    <th>Diễn viên</th>
-                                    <th>Thể loại</th>
-                                    <th>Thời lượng (phút)</th>
-                                    <th>Ngày phát hành</th>
-                                    <th>Ngày kết thúc</th>
-                                    <th>Ngôn ngữ</th>
-                                    <th>Quốc gia</th>
-                                    <th>Giới hạn tuổi</th>
-                                    <th>Trạng thái</th>
-                                    <th>Thời gian tạo</th>
+                                    <th style="width: 70px;">Poster</th>
+                                    <th style="width: 250px;">Tên phim</th>
+                                    <th style="width: 120px;">Đạo diễn</th>
+                                    <th style="width: 140px;">Thể loại</th>
+                                    <th style="width: 80px;">Thời lượng</th>
+                                    <th style="width: 120px;">Ngày chiếu</th>
+                                    <th style="width: 100px;">Trạng thái</th>
+                                    <th style="width: 80px;">Đánh giá</th>
                                     <th class="text-center" style="width: 120px;">Hành động</th>
                                 </tr>
                             </thead>
@@ -133,9 +167,8 @@
                                         <td>
                                             <div class="form-check ms-1">
                                                 @php
-                                                    $canBeDeleted = $movie->canBeEdited(); // Dùng chung logic với edit
+                                                    $canBeDeleted = $movie->canBeEdited();
                                                     $currentStatus = is_object($movie->status) ? $movie->status->value : $movie->status;
-                                                    // Kiểm tra trạng thái thực tế dựa trên ngày kết thúc
                                                     if ($movie->end_date && $movie->end_date < now()) {
                                                         $currentStatus = 'ended';
                                                     }
@@ -158,39 +191,53 @@
                                                 @endif
                                             </div>
                                         </td>
+                                        <td style="width: 70px; padding: 8px; vertical-align: middle;">
+                                            @php
+                                                $posterUrl = null;
+                                                if ($movie->image_path) {
+                                                    $posterUrl = Storage::url($movie->image_path);
+                                                } elseif ($movie->poster_url) {
+                                                    $posterUrl = $movie->poster_url;
+                                                } else {
+                                                    $posterUrl = asset('client_assets/assets/images/movie-placeholder.png');
+                                                }
+                                            @endphp
+                                            <div class="poster-container" style="position: relative; display: inline-block; width: 55px; height: 80px;">
+                                                <img src="{{ $posterUrl }}" 
+                                                     alt="{{ $movie->name }}" 
+                                                     class="movie-poster-small"
+                                                     style="width: 55px !important; height: 80px !important; max-width: 55px !important; max-height: 80px !important; object-fit: cover; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); transition: all 0.3s ease; border: 1px solid #e5e7eb; cursor: pointer; display: block;"
+                                                     onmouseover="this.style.transform='scale(1.03)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.25)';"
+                                                     onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.15)';"
+                                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                                                     loading="lazy">
+                                                <div class="poster-fallback" 
+                                                     style="display: none; width: 55px; height: 80px; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); border-radius: 6px; border: 1px solid #e2e8f0; align-items: center; justify-content: center; color: #94a3b8; font-size: 1.2rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                                                    <i class="bi bi-film"></i>
+                                                </div>
+                                            </div>
+                                        </td>
                                         <td>
-                                            {{ $movie->name }}
-                                            @if(!$movie->canBeEdited())
-                                                @if($movie->hasBookedTickets())
-                                                    <span class="badge bg-warning-subtle text-warning ms-2" style="font-size: 0.7rem;">
-                                                        <i class="bi bi-ticket-fill me-1"></i>Có vé đặt
-                                                    </span>
-                                                @elseif($currentStatus === 'showing')
-                                                    <span class="badge bg-success-subtle text-success ms-2" style="font-size: 0.7rem;">
-                                                        <i class="bi bi-play-circle-fill me-1"></i>Đang chiếu
-                                                    </span>
-                                                @elseif($currentStatus === 'ended')
-                                                    <span class="badge bg-secondary-subtle text-secondary ms-2" style="font-size: 0.7rem;">
-                                                        <i class="bi bi-stop-circle-fill me-1"></i>Đã kết thúc
-                                                    </span>
+                                            <div>
+                                                <h6 class="mb-1 fw-semibold">{{ $movie->name }}</h6>
+                                                <small class="text-muted">
+                                                    {{ $movie->language ?? 'N/A' }} • {{ $movie->country?->name ?? 'N/A' }}
+                                                    @if($movie->ageLimit)
+                                                        • <span class="badge bg-warning-subtle text-warning">{{ $movie->ageLimit->name ?? $movie->ageLimit->label }}</span>
+                                                    @endif
+                                                </small>
+                                                @if(!$movie->canBeEdited())
+                                                    <div class="mt-1">
+                                                        @if($movie->hasBookedTickets())
+                                                            <span class="badge bg-warning-subtle text-warning" style="font-size: 0.7rem;">
+                                                                <i class="bi bi-ticket-fill me-1"></i>Có vé đặt
+                                                            </span>
+                                                        @endif
+                                                    </div>
                                                 @endif
-                                            @endif
+                                            </div>
                                         </td>
                                         <td>{{ $movie->director?->name ?? 'N/A' }}</td>
-                                        <td>
-                                            @if($movie->actors->isNotEmpty())
-                                                <div class="d-flex flex-wrap gap-1">
-                                                    @foreach($movie->actors->take(3) as $actor)
-                                                        <span class="badge bg-primary-subtle text-primary" style="font-size: 0.75rem;">{{ $actor->name }}</span>
-                                                    @endforeach
-                                                    @if($movie->actors->count() > 3)
-                                                        <span class="badge bg-secondary-subtle text-secondary" style="font-size: 0.75rem;" title="{{ $movie->actors->pluck('name')->join(', ') }}">+{{ $movie->actors->count() - 3 }} khác</span>
-                                                    @endif
-                                                </div>
-                                            @else
-                                                <span class="text-muted">N/A</span>
-                                            @endif
-                                        </td>
                                         <td>
                                             @if($movie->genres->isNotEmpty())
                                                 <div class="d-flex flex-wrap gap-1">
@@ -205,18 +252,24 @@
                                                 <span class="text-muted">N/A</span>
                                             @endif
                                         </td>
-                                        <td>{{ $movie->duration_minutes }}</td>
-                                        <td>{{ $movie->release_date->format('d/m/Y') }}</td>
-                                        <td>{{ $movie->end_date?->format('d/m/Y') ?? 'N/A' }}</td>
-                                        <td>{{ $movie->language ?? 'N/A' }}</td>
-                                        <td>{{ $movie->country?->name ?? 'N/A' }}</td>
-                                        <td>{{ $movie->ageLimit?->name ?? $movie->ageLimit?->label ?? 'N/A' }}</td>
+                                        <td>
+                                            <span class="fw-medium">{{ $movie->duration_minutes }}</span>
+                                            <small class="text-muted d-block">phút</small>
+                                            @if($movie->duration_minutes >= 180)
+                                                <small class="badge bg-info-subtle text-info mt-1" style="font-size: 0.6rem;">Phim dài</small>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            <div>
+                                                <div class="fw-medium">{{ $movie->release_date->format('d/m/Y') }}</div>
+                                                @if($movie->end_date)
+                                                    <small class="text-muted">đến {{ $movie->end_date->format('d/m/Y') }}</small>
+                                                @endif
+                                            </div>
+                                        </td>
                                         <td>
                                             @php
-                                                // Kiểm tra trạng thái thực tế dựa trên ngày kết thúc
                                                 $statusValue = is_object($movie->status) ? $movie->status->value : $movie->status;
-                                                
-                                                // Nếu có ngày kết thúc và đã qua ngày hiện tại, tự động coi là 'ended'
                                                 if ($movie->end_date && $movie->end_date < now()) {
                                                     $statusValue = 'ended';
                                                 }
@@ -228,7 +281,6 @@
                                                 ];
                                                 $statusLabel = $statusValue == 'showing' ? 'Đang chiếu' : ($statusValue == 'upcoming' ? 'Sắp chiếu' : 'Kết thúc');
                                                 
-                                                // Hiển thị thông báo nếu trạng thái tự động thay đổi
                                                 $autoEnded = ($movie->end_date && $movie->end_date < now() && $statusValue === 'ended' && (is_object($movie->status) ? $movie->status->value : $movie->status) !== 'ended');
                                             @endphp
                                             <span class="badge {{ $statusColors[$statusValue] ?? 'bg-secondary' }}">
@@ -238,20 +290,33 @@
                                                 @endif
                                             </span>
                                         </td>
-                                        <td>{{ $movie->created_at->format('d/m/Y H:i') }}</td>
+                                        <td>
+                                            @if($movie->average_rating)
+                                                <div class="d-flex align-items-center">
+                                                    <span class="fw-medium text-warning">{{ number_format($movie->average_rating, 1) }}</span>
+                                                    <i class="bi bi-star-fill text-warning ms-1" style="font-size: 0.8rem;"></i>
+                                                    @if($movie->reviews_count > 0)
+                                                        <small class="text-muted ms-1">({{ $movie->reviews_count }})</small>
+                                                    @endif
+                                                </div>
+                                                @if($movie->average_rating >= 4.5)
+                                                    <small class="badge bg-warning-subtle text-warning mt-1" style="font-size: 0.6rem;">Xuất sắc</small>
+                                                @elseif($movie->average_rating >= 4.0)
+                                                    <small class="badge bg-success-subtle text-success mt-1" style="font-size: 0.6rem;">Rất tốt</small>
+                                                @elseif($movie->average_rating >= 3.0)
+                                                    <small class="badge bg-info-subtle text-info mt-1" style="font-size: 0.6rem;">Tốt</small>
+                                                @endif
+                                            @else
+                                                <span class="text-muted">Chưa có</span>
+                                            @endif
+                                        </td>
                                         <td>
                                             <div class="d-flex gap-2">
-                                                <a href="{{ route('admin.movies.show', $movie->id) }}" class="btn btn-light btn-sm">
+                                                <a href="{{ route('admin.movies.show', $movie->id) }}" class="btn btn-light btn-sm" title="Xem chi tiết">
                                                     <iconify-icon icon="solar:eye-broken" class="align-middle fs-18"></iconify-icon>
                                                 </a>
                                                 @php
                                                     $canBeEdited = $movie->canBeEdited();
-                                                    $currentStatus = is_object($movie->status) ? $movie->status->value : $movie->status;
-                                                    // Kiểm tra trạng thái thực tế dựa trên ngày kết thúc
-                                                    if ($movie->end_date && $movie->end_date < now()) {
-                                                        $currentStatus = 'ended';
-                                                    }
-                                                    
                                                     $disableReason = '';
                                                     if (!$canBeEdited) {
                                                         if ($currentStatus === 'ended') {
@@ -278,7 +343,10 @@
                                 @endforeach
                                 @if($movies->isEmpty())
                                     <tr>
-                                        <td colspan="14" class="text-center text-muted">Không có phim nào.</td>
+                                        <td colspan="10" class="text-center text-muted py-4">
+                                            <i class="bi bi-film display-4 text-muted mb-3"></i>
+                                            <div>Không tìm thấy phim nào.</div>
+                                        </td>
                                     </tr>
                                 @endif
                             </tbody>
@@ -296,102 +364,302 @@
 </div>
 @endsection
 
+@section('styles')
+<style>
+/* CSS cho ảnh poster - Force override */
+.poster-container {
+    position: relative;
+    display: inline-block;
+}
+
+img.movie-poster-small {
+    width: 55px !important;
+    height: 80px !important;
+    object-fit: cover !important;
+    border-radius: 8px !important;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.2) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    border: 2px solid #fff !important;
+    position: relative !important;
+    overflow: hidden !important;
+    display: block !important;
+}
+
+img.movie-poster-small:hover {
+    transform: translateY(-3px) scale(1.05) !important;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.3) !important;
+    border-color: #4f46e5 !important;
+    z-index: 10 !important;
+}
+
+.poster-fallback {
+    width: 55px !important;
+    height: 80px !important;
+    background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%) !important;
+    border-radius: 8px !important;
+    border: 2px solid #e5e7eb !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: #9ca3af !important;
+    font-size: 1.5rem !important;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1) !important;
+    transition: all 0.3s ease !important;
+}
+
+.poster-fallback:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.15) !important;
+    border-color: #d1d5db !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    img.movie-poster-small,
+    .poster-fallback {
+        width: 45px !important;
+        height: 65px !important;
+    }
+}
+
+@media (max-width: 576px) {
+    img.movie-poster-small,
+    .poster-fallback {
+        width: 40px !important;
+        height: 58px !important;
+    }
+}
+</style>
+@endsection
+
 @section('scripts')
 <style>
-/* CSS cho ảnh poster nhỏ gọn */
-.movie-poster-small {
-    width: 45px;
-    height: 65px;
-    object-fit: cover;
-    border-radius: 4px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    transition: transform 0.2s ease;
-}
 
-.movie-poster-small:hover {
-    transform: scale(1.1);
-    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-}
-
-/* Responsive cho mobile */
-@media (max-width: 768px) {
-    .movie-poster-small {
-        width: 35px;
-        height: 50px;
-    }
-    
-    .table td, .table th {
-        padding: 0.3rem 0.2rem;
-        font-size: 0.8rem;
-    }
-}
-
-/* Style cho table */
-.table-responsive {
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+/* Enhanced table styling */
+.table {
+    border-collapse: separate;
+    border-spacing: 0;
 }
 
 .table th {
-    background-color: #f8f9fa;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
     font-weight: 600;
     color: #495057;
     border-top: none;
+    border-bottom: 2px solid #dee2e6;
+    padding: 1rem 0.75rem;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .table td {
     vertical-align: middle;
-    border-top: 1px solid #dee2e6;
+    border-top: 1px solid #f1f3f4;
+    padding: 0.875rem 0.75rem;
 }
 
-/* Alert styles */
-.alert {
-    border-radius: 10px;
+.table tbody tr {
+    transition: all 0.2s ease;
+}
+
+.table tbody tr:hover {
+    background-color: #f8f9ff;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+/* Card enhancements */
+.card {
     border: none;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.card-header {
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    border-bottom: 1px solid #e9ecef;
+    padding: 1.5rem;
+}
+
+/* Form controls */
+.form-control-sm, .form-select-sm {
+    border-radius: 8px;
+    border: 1px solid #d1d9e0;
+    transition: all 0.2s ease;
+}
+
+.form-control-sm:focus, .form-select-sm:focus {
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+/* Dropdown menu */
+.dropdown-menu {
+    border: none;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    border-radius: 12px;
+    padding: 1rem;
+}
+
+/* Button enhancements */
+.btn-sm {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.825rem;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    border: none;
+}
+
+.btn-success:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+    border: none;
+}
+
+.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+}
+
+/* Badge styling */
+.badge {
+    font-size: 0.75rem;
+    padding: 0.35rem 0.65rem;
+    border-radius: 6px;
+    font-weight: 500;
+}
+
+/* Status badges */
+.bg-success {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+}
+
+.bg-warning {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+}
+
+.bg-danger {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+}
+
+/* Alert styling */
+.alert {
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+    margin-bottom: 1.5rem;
 }
 
 .alert-success {
-    background: linear-gradient(135deg, #d1edff 0%, #a8e6cf 100%);
-    color: #155724;
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    color: #065f46;
 }
 
 .alert-danger {
-    background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
-    color: #721c24;
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    color: #991b1b;
 }
 
-/* Style cho nút disabled và checkbox disabled */
-.btn-soft-secondary:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    background-color: #f8f9fa;
-    border-color: #dee2e6;
-    color: #6c757d;
+.alert-info {
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    color: #1e40af;
 }
 
-.form-check-input:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-/* Style cho badges trong table */
-.table .badge {
-    font-size: 0.75rem;
-    padding: 0.25rem 0.5rem;
-    border-radius: 0.25rem;
-}
-
-/* Responsive cho badges */
+/* Responsive improvements */
 @media (max-width: 768px) {
-    .table .badge {
-        font-size: 0.65rem;
-        padding: 0.2rem 0.4rem;
+    .movie-poster-small,
+    .poster-fallback {
+        width: 45px;
+        height: 65px;
+        border-radius: 6px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
     }
     
-    .d-flex.flex-wrap.gap-1 {
-        gap: 0.25rem !important;
+    .movie-poster-small:hover {
+        transform: translateY(-2px) scale(1.03);
+        box-shadow: 0 6px 15px rgba(0,0,0,0.2);
     }
+    
+    .poster-fallback {
+        font-size: 1.2rem;
+    }
+    
+    .table td, .table th {
+        padding: 0.5rem 0.25rem;
+        font-size: 0.8rem;
+    }
+    
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+    }
+    
+    .card-header {
+        padding: 1rem;
+    }
+    
+    .badge {
+        font-size: 0.65rem;
+        padding: 0.25rem 0.5rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .movie-poster-small,
+    .poster-fallback {
+        width: 40px;
+        height: 58px;
+        border-radius: 4px;
+    }
+    
+    .movie-poster-small:hover {
+        transform: translateY(-1px) scale(1.02);
+    }
+    
+    .poster-fallback {
+        font-size: 1rem;
+    }
+}
+
+/* Loading state */
+.table tbody tr.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* Enhanced movie name styling */
+.table td h6 {
+    margin-bottom: 0.25rem;
+    font-size: 0.95rem;
+    color: #1f2937;
+    line-height: 1.3;
+}
+
+.table td small {
+    font-size: 0.75rem;
+    color: #6b7280;
+    line-height: 1.4;
+}
+
+/* Enhanced rating display */
+.text-warning {
+    color: #f59e0b !important;
+}
+
+/* Empty state styling */
+.table tbody tr td i.bi-film {
+    opacity: 0.3;
 }
 </style>
 

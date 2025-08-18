@@ -212,31 +212,31 @@ document.addEventListener('DOMContentLoaded', function() {
         const currentTime = new Date();
         
         // Kiểm tra nếu suất chiếu đã bắt đầu
-        if (currentTime >= showtimeStart) {
-            button.disabled = true;
-            button.classList.remove('btn-primary');
-            button.classList.add('btn-secondary');
-            button.title = 'Không thể in vé sau khi suất chiếu đã bắt đầu. Suất chiếu: ' + showtimeStart.toLocaleString('vi-VN');
-            button.removeAttribute('href');
-            button.onclick = function(e) {
-                return handleDisabledButtonClick(e, 'Không thể in vé sau khi suất chiếu đã bắt đầu.\nSuất chiếu: ' + showtimeStart.toLocaleString('vi-VN'));
-            };
-            return;
-        }
+        // if (currentTime >= showtimeStart) {
+        //     button.disabled = true;
+        //     button.classList.remove('btn-primary');
+        //     button.classList.add('btn-secondary');
+        //     button.title = 'Không thể in vé sau khi suất chiếu đã bắt đầu. Suất chiếu: ' + showtimeStart.toLocaleString('vi-VN');
+        //     button.removeAttribute('href');
+        //     button.onclick = function(e) {
+        //         return handleDisabledButtonClick(e, 'Không thể in vé sau khi suất chiếu đã bắt đầu.\nSuất chiếu: ' + showtimeStart.toLocaleString('vi-VN'));
+        //     };
+        //     return;
+        // }
         
-        // Kiểm tra nếu còn ít hơn 1 tiếng trước suất chiếu
-        const oneHourBeforeShowtime = new Date(showtimeStart.getTime() - (60 * 60 * 1000));
-        if (currentTime <= oneHourBeforeShowtime) {
-            button.disabled = true;
-            button.classList.remove('btn-primary');
-            button.classList.add('btn-warning');
-            button.title = 'Vé chỉ có thể in trước suất chiếu ít nhất 1 tiếng. Suất chiếu: ' + showtimeStart.toLocaleString('vi-VN');
-            button.removeAttribute('href');
-            button.onclick = function(e) {
-                return handleDisabledButtonClick(e, 'Vé chỉ có thể in trước suất chiếu ít nhất 1 tiếng.\nSuất chiếu: ' + showtimeStart.toLocaleString('vi-VN'));
-            };
-            return;
-        }
+        // Kiểm tra nếu còn NHIỀU HƠN 1 tiếng trước suất chiếu (không cho phép in)
+        // const oneHourBeforeShowtime = new Date(showtimeStart.getTime() - (60 * 60 * 1000));
+        // if (currentTime < oneHourBeforeShowtime) {
+        //     button.disabled = true;
+        //     button.classList.remove('btn-primary');
+        //     button.classList.add('btn-warning');
+        //     button.title = 'Vé chỉ có thể in trong vòng 1 tiếng trước suất chiếu. Suất chiếu: ' + showtimeStart.toLocaleString('vi-VN');
+        //     button.removeAttribute('href');
+        //     button.onclick = function(e) {
+        //         return handleDisabledButtonClick(e, 'Vé chỉ có thể in trong vòng 1 tiếng trước suất chiếu.\nSuất chiếu: ' + showtimeStart.toLocaleString('vi-VN'));
+        //     };
+        //     return;
+        // }
         
         // Nếu trong khoảng thời gian cho phép in vé (từ 1 tiếng trước suất chiếu đến khi suất chiếu bắt đầu)
         button.title = 'In vé (Suất chiếu: ' + showtimeStart.toLocaleString('vi-VN') + ')';
@@ -259,44 +259,44 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             // Kiểm tra nếu suất chiếu đã bắt đầu
-            if (currentTime >= showtimeStart) {
-                button.disabled = true;
-                button.classList.remove('btn-primary', 'btn-warning');
-                button.classList.add('btn-secondary');
-                button.title = 'Không thể in vé sau khi suất chiếu đã bắt đầu. Suất chiếu: ' + showtimeStart.toLocaleString('vi-VN');
-                button.removeAttribute('href');
-                button.onclick = function(e) {
-                    return handleDisabledButtonClick(e, 'Không thể in vé sau khi suất chiếu đã bắt đầu.\nSuất chiếu: ' + showtimeStart.toLocaleString('vi-VN'));
-                };
-                return;
-            }
+            // if (currentTime >= showtimeStart) {
+            //     button.disabled = true;
+            //     button.classList.remove('btn-primary', 'btn-warning');
+            //     button.classList.add('btn-secondary');
+            //     button.title = 'Không thể in vé sau khi suất chiếu đã bắt đầu. Suất chiếu: ' + showtimeStart.toLocaleString('vi-VN');
+            //     button.removeAttribute('href');
+            //     button.onclick = function(e) {
+            //         return handleDisabledButtonClick(e, 'Không thể in vé sau khi suất chiếu đã bắt đầu.\nSuất chiếu: ' + showtimeStart.toLocaleString('vi-VN'));
+            //     };
+            //     return;
+            // }
             
-            // Kiểm tra nếu còn ít hơn 1 tiếng trước suất chiếu
-            const oneHourBeforeShowtime = new Date(showtimeStart.getTime() - (60 * 60 * 1000));
-            if (currentTime <= oneHourBeforeShowtime) {
-                button.disabled = true;
-                button.classList.remove('btn-primary', 'btn-secondary');
-                button.classList.add('btn-warning');
-                button.title = 'Vé chỉ có thể in trước suất chiếu ít nhất 1 tiếng. Suất chiếu: ' + showtimeStart.toLocaleString('vi-VN');
-                button.removeAttribute('href');
-                button.onclick = function(e) {
-                    return handleDisabledButtonClick(e, 'Vé chỉ có thể in trước suất chiếu ít nhất 1 tiếng.\nSuất chiếu: ' + showtimeStart.toLocaleString('vi-VN'));
-                };
-                return;
-            }
+            // Kiểm tra nếu còn NHIỀU HƠN 1 tiếng trước suất chiếu (không cho phép in)
+            // const oneHourBeforeShowtime = new Date(showtimeStart.getTime() - (60 * 60 * 1000));
+            // if (currentTime < oneHourBeforeShowtime) {
+            //     button.disabled = true;
+            //     button.classList.remove('btn-primary', 'btn-secondary');
+            //     button.classList.add('btn-warning');
+            //     button.title = 'Vé chỉ có thể in trong vòng 1 tiếng trước suất chiếu. Suất chiếu: ' + showtimeStart.toLocaleString('vi-VN');
+            //     button.removeAttribute('href');
+            //     button.onclick = function(e) {
+            //         return handleDisabledButtonClick(e, 'Vé chỉ có thể in trong vòng 1 tiếng trước suất chiếu.\nSuất chiếu: ' + showtimeStart.toLocaleString('vi-VN'));
+            //     };
+            //     return;
+            // }
             
-            // Nếu trong khoảng thời gian cho phép in vé
-            if (button.disabled) {
-                button.disabled = false;
-                button.classList.remove('btn-secondary', 'btn-warning');
-                button.classList.add('btn-primary');
-                button.title = 'In vé (Suất chiếu: ' + showtimeStart.toLocaleString('vi-VN') + ')';
-                // Khôi phục href gốc
-                if (button.dataset.originalHref) {
-                    button.setAttribute('href', button.dataset.originalHref);
-                }
-                button.onclick = null; // Xóa event handler cũ
-            }
+            // Nếu trong khoảng thời gian cho phép in vé (từ 1 tiếng trước suất chiếu đến khi suất chiếu bắt đầu)
+            // if (button.disabled) {
+            //     button.disabled = false;
+            //     button.classList.remove('btn-secondary', 'btn-warning');
+            //     button.classList.add('btn-primary');
+            //     button.title = 'In vé (Suất chiếu: ' + showtimeStart.toLocaleString('vi-VN') + ')';
+            //     // Khôi phục href gốc
+            //     if (button.dataset.originalHref) {
+            //         button.setAttribute('href', button.dataset.originalHref);
+            //     }
+            //     button.onclick = null; // Xóa event handler cũ
+            // }
         });
     }, 60000); // Cập nhật mỗi phút
 });

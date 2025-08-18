@@ -174,7 +174,7 @@ class BookingController extends Controller
         ])->where('booking_code', $booking_code)->firstOrFail();
 
         // Validate thời gian in vé cho tất cả các vé trong booking
-        $this->validatePrintTimeForBooking($booking);
+        // $this->validatePrintTimeForBooking($booking);
 
         $tickets = $booking->tickets;
         $foodDrinks = $booking->bookingItems;
