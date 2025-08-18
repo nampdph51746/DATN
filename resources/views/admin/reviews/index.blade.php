@@ -175,9 +175,9 @@
                 <button type="button" class="btn btn-danger btn-sm" onclick="bulkUpdateStatus('rejected')">
                     <i class="fas fa-times"></i> Từ chối
                 </button>
-                <button type="button" class="btn btn-dark btn-sm" onclick="bulkDelete()">
+                {{-- <button type="button" class="btn btn-dark btn-sm" onclick="bulkDelete()">
                     <i class="fas fa-trash"></i> Xóa
-                </button>
+                </button> --}}
             </div>
         </div>
         <div class="card-body">
@@ -255,10 +255,10 @@
                                                class="btn btn-info btn-sm">
                                                 <i class="fas fa-eye"></i> Chi tiết
                                             </a>
-                                            <button type="button" class="btn btn-danger btn-sm" 
+                                            {{-- <button type="button" class="btn btn-danger btn-sm" 
                                                     onclick="deleteReview({{ $review->id }})">
                                                 <i class="fas fa-trash"></i> Xóa
-                                            </button>
+                                            </button> --}}
                                         </div>
                                     </td>
                                 </tr>

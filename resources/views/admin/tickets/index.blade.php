@@ -168,14 +168,14 @@
                                                 <iconify-icon icon="solar:eye-broken" class="align-middle fs-18"></iconify-icon>
                                             </a>
                                             <!-- Print Ticket Button -->
-                                            <a href="{{ route('admin.tickets.print', $ticket->ticket_code) }}" 
+                                            {{-- <a href="{{ route('admin.tickets.print', $ticket->ticket_code) }}" 
                                                class="btn btn-success btn-sm print-ticket-btn" 
                                                title="In vé" 
                                                target="_blank"
                                                data-showtime-start="{{ $ticket->showtime ? $ticket->showtime->start_time->toISOString() : '' }}"
                                                data-ticket-code="{{ $ticket->ticket_code }}">
                                                 <iconify-icon icon="solar:printer-minimalistic-broken" class="align-middle fs-18"></iconify-icon>
-                                            </a>
+                                            </a> --}}
                                             <!-- Edit Button -->
                                             {{-- <a href="{{ route('tickets.edit', $ticket->id) }}" class="btn btn-soft-primary btn-sm" title="Sửa">
                                                 <iconify-icon icon="solar:pen-2-broken" class="align-middle fs-18"></iconify-icon>

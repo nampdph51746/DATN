@@ -433,21 +433,27 @@
                         <div>
                             <div class="movie-info-item">
                                 <div>
-                                    <strong>🎬 Đạo diễn:</strong>
-                                    <span>{{ $movie->director ?? 'Đang cập nhật' }}</span>
-                                </div>
+                <strong>🎬 Đạo diễn:</strong>
+                <span>{{ $movie->director->name ?? 'N/A' }}</span>
+            </div>
                             </div>
                             <div class="movie-info-item">
                                 <div>
-                                    <strong>🎭 Diễn viên:</strong>
-                                    <span>{{ $movie->actors ?? 'Đang cập nhật' }}</span>
-                                </div>
+                <strong>🎭 Diễn viên:</strong>
+                <span>
+                    @if ($movie->actors->isNotEmpty())
+                        {{ $movie->actors->pluck('name')->implode(', ') }}
+                    @else
+                        N/A
+                    @endif
+                </span>
+            </div>
                             </div>
                             <div class="movie-info-item">
                                 <div>
-                                    <strong>⏳ Thời lượng:</strong>
-                                    <span>{{ $movie->duration_minutes }} phút</span>
-                                </div>
+                <strong>⏳ Thời lượng:</strong>
+                <span>{{ $movie->duration ?? 'N/A' }} phút</span>
+            </div>
                             </div>
                         </div>
 

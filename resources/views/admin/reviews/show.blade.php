@@ -172,9 +172,9 @@
                         </button>
                     @endif
 
-                    <button type="button" class="btn btn-danger btn-block" onclick="deleteReview()">
+                    {{-- <button type="button" class="btn btn-danger btn-block" onclick="deleteReview()">
                         <i class="fas fa-trash"></i> Xóa đánh giá
-                    </button>
+                    </button> --}}
                 </div>
             </div>
 

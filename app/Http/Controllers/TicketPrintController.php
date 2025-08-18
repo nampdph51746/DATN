@@ -32,7 +32,7 @@ class TicketPrintController extends Controller
             }
         }
 
-        $pdf = Pdf::loadView('admin.tickets.print', [
+        $pdf = Pdf::loadView('', [
             'ticket' => $ticket,
             'booking' => $ticket->booking,
             'qrCodeBase64' => $qrCodeBase64

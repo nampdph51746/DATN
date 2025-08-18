@@ -334,16 +334,16 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
 });
 
-// Test route for barcode
-Route::get('/test-barcode-api', function () {
-    $barcodeService = new \App\Services\BarcodeService();
-    $barcode = $barcodeService->generateBarcode('BK1754063915');
+// // Test route for barcode
+// Route::get('/test-barcode-api', function () {
+//     $barcodeService = new \App\Services\BarcodeService();
+//     $barcode = $barcodeService->generateBarcode('BK1754063915');
     
-    return response()->json([
-        'barcode' => $barcode,
-        'booking_code' => 'BK1754063915'
-    ]);
-});
+//     return response()->json([
+//         'barcode' => $barcode,
+//         'booking_code' => 'BK1754063915'
+//     ]);
+// });
 
 // Admin Reviews Routes
 Route::prefix('admin/reviews')->name('admin.reviews.')->group(function () {
