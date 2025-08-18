@@ -186,11 +186,22 @@ class HomeController extends Controller
 
     public function searchAjax(Request $request)
 {
-    $keyword = $request->get('q');
+    $query = $request->get('q', '');
 
-    $movies = \App\Models\Movie::where('name', 'like', "%{$keyword}%")
-        ->limit(5) // giới hạn 5 phim để gợi ý
-        ->get(['id', 'name']);
+    $movies = \App\Models\Movie::where('name', 'like', '%' . $query . '%')
+        ->select('id', 'name', 'image_path', 'poster_url', 'status')
+        ->limit(10)
+        ->get()
+        ->map(function ($movie) {
+            return [
+                'id'     => $movie->id,
+                'name'   => $movie->name,
+                'status' => $movie->status->value ?? $movie->status, // nếu bạn dùng Enum
+                'poster' => $movie->image_path
+                    ? \Illuminate\Support\Facades\Storage::url($movie->image_path)
+                    : ($movie->poster_url ?? asset('client_assets/assets/images/default-movie.jpg')),
+            ];
+        });
 
     return response()->json($movies);
 }
