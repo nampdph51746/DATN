@@ -107,7 +107,7 @@
                         </a>
                         @endcan
                         @can('delete role')
-                        <form action="{{ route('roles.destroy', $role->id) }}" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xóa vai trò này?')">
+                        <form action="{{ route('roles.softDelete', $role->id) }}" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xóa vai trò này?')">
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="btn btn-danger btn-lg rounded-pill w-100">

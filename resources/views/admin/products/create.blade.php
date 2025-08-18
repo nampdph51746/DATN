@@ -288,6 +288,11 @@
                         </div>
                     </div>
                 </div>
+
+                <button type="submit" class="btn btn-success btn-lg rounded-pill shadow-sm" onclick="submitForm()">
+                            <i class="fas fa-save me-2"></i>
+                            Tạo sản phẩm
+                </button>
             </form>
         </div>
     </div>

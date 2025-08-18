@@ -138,10 +138,10 @@
         Thông tin của bạn được hiển thị bên dưới.
     </p>
         <div class="avatar">
-            @if($user->avatar_url)
-                <img src="{{ $user->avatar_url }}" alt="Avatar" style="width:100%; height:100%; object-fit:cover;">
+           @if(Auth::user()->avatar_url)
+            <img src="{{ asset('storage/' . Auth::user()->avatar_url) }}" alt="Avatar" style="width:100%; height:100%; object-fit:cover;">
             @else
-                {{ strtoupper(substr($user->name, 0, 1)) }}
+                {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
             @endif
         </div>
         <div class="welcome-text">

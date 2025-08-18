@@ -64,9 +64,10 @@
     <h3 class="menu-title">Tài khoản CineVN</h3>
     <ul class="menu-list">
         <li><a href="/profile/general" class="menu-item">Thông tin chung</a></li>
-        <li><a href="/profile" class="menu-item">Chi tiết tài khoản</a></li>
+        <li><a href="/profile/detail" class="menu-item">Chi tiết tài khoản</a></li>
         <li><a href="/profile/membership" class="menu-item">Thẻ thành viên</a></li>
         <li><a href="/profile/voucher" class="menu-item">Voucher</a></li>
         <li><a href="/profile/history" class="menu-item">Lịch sử giao dịch</a></li>
+        <li><a href="/profile/change-password" class="menu-item">Thay đổi mật khẩu</a></li>
     </ul>
 </div>
