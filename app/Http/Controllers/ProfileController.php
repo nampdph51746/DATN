@@ -30,7 +30,7 @@ use App\Http\Controllers\Controller; // ⚠️ cần import Controller gốc
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use Illuminate\Http\Request;
-
+use Illuminate\Support\Facades\Storage;
 
 class ProfileController extends Controller
 {
@@ -47,14 +47,39 @@ class ProfileController extends Controller
     /**
      * Update the user's profile information.
      */
-    public function update(ProfileUpdateRequest $request): RedirectResponse
+    public function update(Request $request)
     {
+        $user = Auth::user();
 
-        $request->user()->fill($request->only(['name', 'phone_number', 'date_of_birth', 'address']));
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'phone_number' => 'nullable|string|max:20',
+            'date_of_birth' => 'nullable|date',
+            'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+
+        $user->name = $request->input('name');
+        $user->phone_number = $request->input('phone_number');
+        $user->date_of_birth = $request->input('date_of_birth');
+
+        if ($request->hasFile('avatar')) {
+            $file = $request->file('avatar');
+
+            if ($user->avatar_url && Storage::disk('public')->exists($user->avatar_url)) {
+                Storage::disk('public')->delete($user->avatar_url);
+            }
+
+            $path = $file->store('avatars', 'public');
+            $user->avatar_url = $path;
+        }
 
         $request->user()->save();
 
-        return Redirect::route('profile.edit')->with('success', 'Cập nhật thông tin thành công');
+        return redirect()->back()->with('success', 'Cập nhật hồ sơ thành công.');
+    }
+
+    public function showChangePassword(){
+         return view('client.profile.change_password');
     }
 
     public function changePassword(Request $request)
@@ -66,17 +91,16 @@ class ProfileController extends Controller
             ]);
 
             if (!Hash::check($request->old_password, auth()->user()->password)) {
-                return back()->withErrors(['old_password' => 'Mật khẩu cũ không đúng.']);
+                 return view('client.profile.change_password')->with('error', 'Mật khẩu cũ không chùng .');
             }
 
             $user = auth()->user();
             $user->password = bcrypt($request->new_password);
             $user->save();
-            Auth::logout();
 
-            return back()->with('success', 'Đổi mật khẩu thành công!');
+            return view('client.profile.change_password')->with('success', 'Đổi mật khẩu thành công!');
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Đã xảy ra lỗi khi đổi mật khẩu: ' . $e->getMessage()]);
+             return view('client.profile.change_password')->with('error', 'Mật khẩu phải chùng nhau!');
         }
     }
     /**
@@ -114,7 +138,7 @@ class ProfileController extends Controller
         $totalPoints = Point::where('user_id', $user->id)
     ->value('total_points') ?? 0;
 
-        return view('client.profilegeneral', [
+        return view('client.profile.profile_general', [
             'user' => $user,
             'rank' => $rank,
             'totalSpent' => $totalSpent,
@@ -167,6 +191,7 @@ class ProfileController extends Controller
         }
     }
 
+
    public function history(Request $request)
 {
     $user = Auth::user();
@@ -183,7 +208,7 @@ class ProfileController extends Controller
             ->paginate(10); // Hiển thị 10 bản ghi mỗi trang
 
         // Trả về view với dữ liệu
-        return view('client.historybooking', compact('bookings'));
+        return view('client.profile.history_booking', compact('bookings'));
 }
 
 public function detail($id)
@@ -203,7 +228,7 @@ public function detail($id)
         ->where('user_id', $user->id)
         ->findOrFail($id);
 
-    return view('client.booking-detail', compact('booking'));
+    return view('client.profile.booking_detail', compact('booking'));
 }
 
 public function membership()
@@ -236,7 +261,7 @@ public function membership()
         $progress = 100; // Đã đạt hạng cao nhất
 }
 
-    return view('client.membercard', compact(
+    return view('client.profile.membercard', compact(
         'user',
         'ranks',
         'currentPoints',
@@ -266,7 +291,9 @@ public function voucher()
         ->orderBy('start_date', 'desc')
         ->paginate(10);
 
-    return view('client.voucher', compact('vouchers', 'user'));
+    return view('client.profile.voucher', compact('vouchers', 'user'));
 }
+
+
 
 }
