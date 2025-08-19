@@ -45,6 +45,8 @@ use Symfony\Component\HttpKernel\Profiler\Profile;
 Route::get('/', [HomeController::class, 'index'])->name('client.home');
 Route::get('/movies/search', [HomeController::class, 'searchAjax'])
     ->name('movies.searchAjax');
+// routes/web.php
+Route::get('/actors/search-ajax', [HomeController::class, 'searchActorAjax'])->name('movies.searchActorAjax');
 Route::get('/movies', [HomeController::class, 'filter'])->name('movies.filter');
 Route::get('/movies/filter/{genreName?}', [HomeController::class, 'filter'])
     ->where('genreName', '.*') // Cho phép dấu cách, ký tự đặc biệt

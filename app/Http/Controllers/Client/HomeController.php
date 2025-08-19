@@ -72,7 +72,7 @@ class HomeController extends Controller
     }
 
     // MovieController.php
-    public function filter(Request $request)
+public function filter(Request $request)
 {
     $data = $request->all();
 
@@ -123,7 +123,7 @@ class HomeController extends Controller
     $title = 'Danh sách phim';
     $isShowing = false;
 
-    // Lọc status
+    // Lọc status (mặc định bỏ phim ended)
     if (!empty($data['status'])) {
         $query->where('status', $data['status']);
         if ($data['status'] === 'showing') {
@@ -132,6 +132,9 @@ class HomeController extends Controller
         } elseif ($data['status'] === 'upcoming') {
             $title = 'Phim sắp chiếu';
         }
+    } else {
+        // Nếu không chọn status, mặc định loại bỏ ended
+        $query->whereIn('status', ['showing', 'upcoming']);
     }
 
     // Lọc tên phim
@@ -185,7 +188,6 @@ class HomeController extends Controller
 
     return view('client.filter', compact('movies', 'title', 'isShowing'));
 }
-
 
     public function searchAjax(Request $request)
 {
