@@ -25,12 +25,7 @@
 		}
 
 		/* Đảm bảo Font Awesome icons hiển thị đúng */
-		.fa,
-		.fas,
-		.far,
-		.fal,
-		.fad,
-		.fab {
+		.fa, .fas, .far, .fal, .fad, .fab {
 			-moz-osx-font-smoothing: grayscale;
 			-webkit-font-smoothing: antialiased;
 			display: inline-block;
@@ -40,12 +35,7 @@
 			line-height: 1;
 		}
 
-		.fa:before,
-		.fas:before,
-		.far:before,
-		.fal:before,
-		.fad:before,
-		.fab:before {
+		.fa:before, .fas:before, .far:before, .fal:before, .fad:before, .fab:before {
 			font-family: "Font Awesome 5 Free", "Font Awesome 5 Pro", "Font Awesome 5 Brands" !important;
 			font-weight: inherit;
 		}
@@ -136,11 +126,7 @@
 	}
 
 	/* Đảm bảo các icon Font Awesome hiển thị đúng */
-	.fas,
-	.far,
-	.fab,
-	.fal,
-	.fad {
+	.fas, .far, .fab, .fal, .fad {
 		font-family: "Font Awesome 5 Free", "Font Awesome 5 Pro", "Font Awesome 5 Brands" !important;
 		-moz-osx-font-smoothing: grayscale;
 		-webkit-font-smoothing: antialiased;
@@ -210,41 +196,58 @@
 	}
 
 	/* Overlay toàn màn hình */
-.pop-overlay {
-    position: fixed;
-    inset: 0; /* top:0; left:0; right:0; bottom:0 */
-    background: rgba(0,0,0,0.7);
-    display: flex;
-    justify-content: center; /* căn giữa ngang */
-    align-items: center;     /* căn giữa dọc nếu popup < viewport */
-    padding: 20px;           /* tránh sát mép */
-    overflow-y: auto;        /* scroll nếu viewport nhỏ */
-    z-index: 9999;
-}
+	.pop-overlay {
+		position: fixed;
+		inset: 0;
+		/* top:0; left:0; right:0; bottom:0 */
+		background: rgba(0, 0, 0, 0.7);
+		display: flex;
+		justify-content: center;
+		/* căn giữa ngang */
+		align-items: center;
+		/* căn giữa dọc nếu popup < viewport */
+		padding: 20px;
+		/* tránh sát mép */
+		overflow-y: auto;
+		/* scroll nếu viewport nhỏ */
+		z-index: 9999;
+	}
 
-.popup {
-    background: #111;
-    padding: 30px;
-    border-radius: 12px;
-    width: 90%;
-    max-width: 1000px;
-    max-height: 90vh;        /* giới hạn chiều cao */
-    overflow-y: auto;        /* scroll khi nội dung cao */
-    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-    position: relative;
-}
+	.popup {
+		background: #111;
+		padding: 30px;
+		border-radius: 12px;
+		width: 90%;
+		max-width: 1000px;
+		max-height: 90vh;
+		/* giới hạn chiều cao */
+		overflow-y: auto;
+		/* scroll khi nội dung cao */
+		box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+		position: relative;
+	}
 
-
-
-.search-right .popup {
-    top: auto !important;
-    transform: none !important;
-}
-
+	.search-right .popup {
+		top: auto !important;
+		transform: none !important;
+	}
 
 	.btn-submit {
 		position: static !important;
 		color: white;
+	}
+
+	.btn-check:checked+.genre-label {
+		background-color: #0d6efd;
+		/* màu xanh Bootstrap primary */
+		color: white;
+		border-color: #0d6efd;
+	}
+
+	/* Hiệu ứng hover */
+	.genre-label:hover {
+		color: #0d6efd;
+		border-color: #0d6efd;
 	}
 </style> <!-- JavaScript cho kiểm tra đăng nhập và hiển thị popup -->
 <script>
@@ -336,7 +339,7 @@
 
 					<!--/search-right-->
 					<div class="search-right">
-						<a href="#search" class="btn search-hny mr-lg-3" title="search">Tìm kiếm nâng cao<span class="fas fa-search ml-3" aria-hidden="true"></span></a>
+						<a href="#search" class="btn search-hny mr-lg-3" title="search">Tìm kiếm nâng cao</a>
 						<!-- search popup -->
 						<div id="search" class="pop-overlay">
 							<div class="popup">
@@ -393,29 +396,8 @@
 											<span class="fas fa-search"></span> Lọc
 										</button>
 									</div>
-
 								</form>
-
-								<!-- CSS đổi màu khi chọn thể loại -->
-								<style>
-									.btn-check:checked+.genre-label {
-										background-color: #0d6efd;
-										/* màu xanh Bootstrap primary */
-										color: white;
-										border-color: #0d6efd;
-									}
-
-									/* Hiệu ứng hover */
-									.genre-label:hover {
-										color: #0d6efd;
-										border-color: #0d6efd;
-									}
-								</style>
-
-
 							</div>
-
-
 							<a class="close" href="#close">×</a>
 						</div>
 						<!-- /search popup -->
