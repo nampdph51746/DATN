@@ -693,11 +693,11 @@
                                 <li class="sub-nav-item">
                                     <a class="sub-nav-link" href="{{ route('admin.payment_methods.index') }}">Phương thức thanh toán</a>
                                 </li>
+                                <li class="sub-nav-item">
+                                    <a class="sub-nav-link" href="{{ route('admin.payments.index') }}">Lịch sử giao dịch</a>
+                                </li>
                                 <!-- <li class="sub-nav-item">
                                     <a class="sub-nav-link" href="{{ route('tickets.index') }}">Vé</a>
-                                </li>
-                                <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="{{ route('admin.payments.index') }}">Thanh toán</a>
                                 </li> -->
                             </ul>
                         </div>
