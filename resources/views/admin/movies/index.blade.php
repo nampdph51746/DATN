@@ -27,10 +27,13 @@
     <div class="row">
         <div class="col-xl-12">
             <div class="card">
-                <div class="card-header">
+                <div class="card-header" style="background: #ff6633; border-bottom: 1px solid #e55a2b;">
                     <div class="row align-items-center g-3">
                         <div class="col-md-4">
-                            <h4 class="card-title mb-0">Danh Sách Phim</h4>
+                            <h4 class="card-title mb-0" style="color: #333333; font-weight: 600;">
+                                <i class="bi bi-camera-reels-fill me-2" style="font-size: 1.2em;"></i>
+                                🎬 Danh Sách Phim
+                            </h4>
                         </div>
                         <div class="col-md-8">
                             <div class="d-flex flex-wrap gap-2 justify-content-md-end">
@@ -54,9 +57,9 @@
                                     
                                     <!-- Dropdown lọc nâng cao -->
                                     <div class="dropdown">
-                                        <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" 
+                                        <button type="button" class="btn btn-sm btn-success dropdown-toggle" 
                                                 data-bs-toggle="dropdown" aria-expanded="false">
-                                            <i class="bi bi-funnel me-1"></i>Lọc thêm
+                                            <i class="bi bi-funnel me-1"></i>Bộ lọc
                                         </button>
                                         <div class="dropdown-menu dropdown-menu-end p-3" style="min-width: 280px;">
                                             <div class="row g-2">
@@ -107,9 +110,9 @@
                                         </div>
                                     </div>
                                     
-                                    <button type="submit" class="btn btn-sm btn-primary">
+                                    <!-- <button type="submit" class="btn btn-sm btn-primary">
                                         <i class="bi bi-search"></i>
-                                    </button>
+                                    </button> -->
                                 </form>
 
                                 <!-- Nút thêm phim -->

@@ -6,26 +6,26 @@
     @include('admin.partials.notifications')
 
     <!-- Header Section -->
-    <div class="card border-0 shadow-sm mb-4" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+    <div class="card border-0 shadow-sm mb-4" style="background: #ff6633;">
         <div class="card-body p-4">
             <div class="d-flex justify-content-between align-items-center">
-                <div class="text-white">
+                <div style="color: #333333;">
                     <div class="d-flex align-items-center gap-3 mb-2">
                         <div class="bg-white bg-opacity-20 rounded-circle p-2">
-                            <i class="bx bx-movie-play fs-24 text-white"></i>
+                            <i class="bi bi-camera-reels-fill fs-24" style="color: #333333; font-size: 1.5rem;"></i>
                         </div>
                         <div>
-                            <h4 class="fw-bold mb-1">Chi tiết phim</h4>
-                            <h6 class="fw-semibold text-white-50 mb-0">{{ $movie->name }}</h6>
+                            <h4 class="fw-bold mb-1" style="color: #333333;">Chi tiết phim</h4>
+                            <h6 class="fw-semibold mb-0" style="color: #555555;">{{ $movie->name }}</h6>
                         </div>
                     </div>
                 </div>
                 <div class="d-flex gap-2">
-                    <a href="{{ route('admin.movies.edit', $movie) }}" class="btn btn-light btn-lg rounded-pill shadow-sm">
-                        <i class="bx bx-edit me-2"></i>Chỉnh sửa
+                    <a href="{{ route('admin.movies.edit', $movie) }}" class="btn btn-light btn-lg rounded-pill shadow-sm" style="color: #333333;">
+                        <i class="bi bi-pencil-square me-2"></i>Chỉnh sửa
                     </a>
-                    <a href="{{ route('admin.movies.index') }}" class="btn btn-outline-light btn-lg rounded-pill">
-                        <i class="bx bx-arrow-back me-2"></i>Quay lại
+                    <a href="{{ route('admin.movies.index') }}" class="btn btn-outline-dark btn-lg rounded-pill" style="border-color: #333333; color: #333333;">
+                        <i class="bi bi-arrow-left me-2"></i>Quay lại
                     </a>
                 </div>
             </div>
@@ -35,7 +35,7 @@
     <div class="row g-4">
         <!-- Left Column - Movie Info -->
         <div class="col-xl-4 col-lg-5">
-            <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(145deg, #f8f9fa 0%, #ffffff 100%);">
+            <div class="card border-0 shadow-sm h-100">
                 <div class="card-body p-4">
                     <!-- Movie Poster -->
                     <div class="text-center mb-4">
@@ -72,7 +72,7 @@
                                         $config = $statusConfig[$statusValue] ?? ['class' => 'bg-secondary', 'icon' => 'bx-help-circle', 'label' => 'Không xác định'];
                                     @endphp
                                     <span class="badge {{ $config['class'] }} px-3 py-2 rounded-pill shadow">
-                                        <i class="bx {{ $config['icon'] }} me-1"></i>{{ $config['label'] }}
+                                        <i class="bi bi-play-circle me-1"></i>{{ $config['label'] }}
                                     </span>
                                 </div>
 
@@ -82,7 +82,7 @@
                                         <a href="{{ $movie->trailer_url }}" target="_blank" 
                                            class="btn btn-danger btn-lg rounded-circle shadow-lg play-btn" 
                                            style="width: 60px; height: 60px; opacity: 0.9;">
-                                            <i class="bx bx-play fs-24"></i>
+                                            <i class="bi bi-play-fill fs-24"></i>
                                         </a>
                                     </div>
                                 @endif
@@ -95,14 +95,14 @@
                         <h4 class="fw-bold text-dark mb-3">{{ $movie->name }}</h4>
                         <div class="d-flex justify-content-center gap-2 flex-wrap">
                             <span class="badge bg-info-subtle text-info rounded-pill px-3 py-2">
-                                <i class="bx bx-globe me-1"></i>{{ $movie->language ?? 'N/A' }}
+                                <i class="bi bi-globe me-1"></i>{{ $movie->language ?? 'N/A' }}
                             </span>
                             <span class="badge bg-success-subtle text-success rounded-pill px-3 py-2">
-                                <i class="bx bx-flag me-1"></i>{{ $movie->country?->name ?? 'N/A' }}
+                                <i class="bi bi-flag me-1"></i>{{ $movie->country?->name ?? 'N/A' }}
                             </span>
                             @if($movie->ageLimit)
                                 <span class="badge bg-warning-subtle text-warning rounded-pill px-3 py-2">
-                                    <i class="bx bx-user me-1"></i>{{ $movie->ageLimit->name ?? $movie->ageLimit->label }}
+                                    <i class="bi bi-person me-1"></i>{{ $movie->ageLimit->name ?? $movie->ageLimit->label }}
                                 </span>
                             @endif
                         </div>
@@ -111,23 +111,23 @@
                     <!-- Quick Stats -->
                     <div class="row g-3 mb-4">
                         <div class="col-4">
-                            <div class="text-center p-3 bg-primary bg-opacity-10 rounded-4 border border-primary border-opacity-20">
-                                <i class="bx bx-time text-primary fs-28 mb-2"></i>
-                                <div class="fw-bold text-primary fs-18">{{ $movie->duration_minutes }}</div>
+                            <div class="text-center p-3 bg-light rounded-4 border">
+                                <i class="bi bi-clock text-muted fs-28 mb-2"></i>
+                                <div class="fw-bold text-dark fs-18">{{ $movie->duration_minutes }}</div>
                                 <small class="text-muted fw-semibold">phút</small>
                             </div>
                         </div>
                         <div class="col-4">
-                            <div class="text-center p-3 bg-warning bg-opacity-10 rounded-4 border border-warning border-opacity-20">
-                                <i class="bx bx-star text-warning fs-28 mb-2"></i>
-                                <div class="fw-bold text-warning fs-18">{{ $movie->average_rating ? number_format($movie->average_rating, 1) : 'N/A' }}</div>
+                            <div class="text-center p-3 bg-light rounded-4 border">
+                                <i class="bi bi-star text-muted fs-28 mb-2"></i>
+                                <div class="fw-bold text-dark fs-18">{{ $movie->average_rating ? number_format($movie->average_rating, 1) : 'N/A' }}</div>
                                 <small class="text-muted fw-semibold">đánh giá</small>
                             </div>
                         </div>
                         <div class="col-4">
-                            <div class="text-center p-3 bg-success bg-opacity-10 rounded-4 border border-success border-opacity-20">
-                                <i class="bx bx-movie text-success fs-28 mb-2"></i>
-                                <div class="fw-bold text-success fs-18">{{ $movie->showtimes->count() }}</div>
+                            <div class="text-center p-3 bg-light rounded-4 border">
+                                <i class="bi bi-camera-reels text-muted fs-28 mb-2"></i>
+                                <div class="fw-bold text-dark fs-18">{{ $movie->showtimes->count() }}</div>
                                 <small class="text-muted fw-semibold">suất chiếu</small>
                             </div>
                         </div>
@@ -137,13 +137,13 @@
                     @if($movie->genres->isNotEmpty())
                         <div class="mb-4">
                             <div class="d-flex align-items-center gap-2 mb-3">
-                                <i class="bx bx-category text-primary fs-20"></i>
-                                <h6 class="fw-semibold mb-0 text-primary">Thể loại</h6>
+                                <i class="bi bi-tags text-muted fs-20"></i>
+                                <h6 class="fw-semibold mb-0 text-dark">Thể loại</h6>
                             </div>
                             <div class="d-flex flex-wrap gap-2">
                                 @foreach($movie->genres as $genre)
-                                    <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-2 border border-primary border-opacity-20">
-                                        <i class="bx bx-tag me-1"></i>{{ $genre->name }}
+                                    <span class="badge bg-light text-dark rounded-pill px-3 py-2 border">
+                                        <i class="bi bi-tag me-1"></i>{{ $genre->name }}
                                     </span>
                                 @endforeach
                             </div>
@@ -155,7 +155,7 @@
                         @if ($movie->trailer_url)
                             <a href="{{ $movie->trailer_url }}" target="_blank" 
                                class="btn btn-danger btn-lg rounded-pill shadow-sm">
-                                <i class="bx bx-play-circle me-2"></i>Xem Trailer
+                                <i class="bi bi-play-circle me-2"></i>Xem Trailer
                             </a>
                         @endif
                         

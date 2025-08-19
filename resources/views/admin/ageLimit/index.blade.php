@@ -23,12 +23,12 @@
     <div class="row">
         <div class="col-xl-12">
             <div class="card">
-                <div class="card-header">
+                <div class="card-header" style="background: #ff6633; border-bottom: 1px solid #e55a2b;">
                     <div class="row align-items-center g-3">
                         <div class="col-md-4">
-                            <h4 class="card-title mb-0">
+                            <h4 class="card-title mb-0" style="color: #333333; font-weight: 600;">
                                 <i class="bi bi-person-check-fill me-2 text-warning"></i>
-                                Danh Sách Giới Hạn Độ Tuổi
+                                🔞 Danh Sách Giới Hạn Độ Tuổi
                             </h4>
                         </div>
                         <div class="col-md-8">
@@ -43,9 +43,9 @@
                                                style="width: 220px;">
                                     </div>
                                     
-                                    <button type="submit" class="btn btn-sm btn-primary">
+                                    <!-- <button type="submit" class="btn btn-sm btn-primary">
                                         <i class="bi bi-search"></i>
-                                    </button>
+                                    </button> -->
                                 </form>
 
                                 <!-- Nút thêm -->

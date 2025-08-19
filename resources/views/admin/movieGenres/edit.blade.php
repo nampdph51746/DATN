@@ -6,8 +6,8 @@
     <div class="row justify-content-center">
         <div class="col-lg-6 col-md-8">
             <div class="card mt-4">
-                <div class="card-header">
-                    <h4 class="card-title mb-0">Sửa Thể Loại Phim</h4>
+                <div class="card-header" style="background: #ff6633; border-bottom: 1px solid #e55a2b;">
+                    <h4 class="card-title mb-0" style="color: #333333; font-weight: 600;">Sửa Thể Loại Phim</h4>
                 </div>
                 <div class="card-body">
                     <form action="{{ route('admin.genres.update', $genre->id) }}" method="POST">
