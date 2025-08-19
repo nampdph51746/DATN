@@ -186,23 +186,24 @@ class HomeController extends Controller
 
     public function searchAjax(Request $request)
 {
-    $query = $request->get('q');
+    $query = $request->get('q', '');
 
-    if (!$query || strlen($query) < 2) {
-        return response()->json([]); // không gợi ý khi < 2 ký tự
-    }
-
-    $movies = \App\Models\Movie::query()
-        ->where('name', 'like', '%' . $query . '%')
-        ->whereIn('status', ['showing', 'upcoming']) // bỏ ended
-        ->orderByRaw("FIELD(status, 'showing', 'upcoming') ASC") // showing trước
-        ->orderBy('release_date', 'desc')
+    $movies = Movie::where('name', 'like', "%$query%")
+        ->whereIn('status', ['showing', 'upcoming'])
+        ->select('id', 'name', 'poster_url', 'image_path', 'status')
+        ->orderByRaw("FIELD(status, 'showing', 'upcoming') ASC")
+        ->orderByDesc('release_date')
         ->limit(6)
-        ->get(['id', 'name', 'poster', 'status']);
+        ->get()
+        ->map(function ($movie) {
+            $movie->poster = $movie->poster_url 
+                ?? $movie->image_path 
+                ?? asset('images/no-poster.png'); // fallback ảnh mặc định
+            return $movie;
+        });
 
     return response()->json($movies);
 }
-
 
     public function show(Request $request, $id)
 {
