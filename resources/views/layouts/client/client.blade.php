@@ -266,33 +266,32 @@
 						</li>
 					</ul>
 
-					<form class="mr-3 position-relative" 
-      style="width: 250px;" 
-      action="{{ route('movies.filter') }}" 
-      method="get">
+					<form class="mr-3 position-relative"
+						style="width: 250px;"
+						action="{{ route('movies.filter') }}"
+						method="get">
 
-    <input type="search"
-        id="movie-search"
-        name="search"
-        placeholder="Nhập tên phim..."
-        class="form-control"
-        style="border-radius: 25px; padding-left: 36px;"
-        value="{{ request('search') }}">
+						<input type="search"
+							id="movie-search"
+							name="search"
+							placeholder="Nhập tên phim..."
+							class="form-control"
+							style="border-radius: 25px; padding-left: 36px;"
+							value="{{ request('search') }}">
 
-    <span class="fas fa-search"
-        style="position: absolute; top: 50%; left: 12px; transform: translateY(-50%); color: #888;">
-    </span>
+						<span class="fas fa-search"
+							style="position: absolute; top: 50%; left: 12px; transform: translateY(-50%); color: #888;">
+						</span>
 
-    <!-- Gợi ý hiển thị ở đây -->
-    <ul id="search-results"
-        style="position: absolute; top: 105%; left: 0; width: 100%; background: white; border: 1px solid #ccc; border-radius: 6px; display: none; z-index: 1000; list-style: none; padding: 0; margin: 0;">
-    </ul>
-</form>
-
+						<!-- Gợi ý hiển thị ở đây -->
+						<ul id="search-results"
+							style="position: absolute; top: 105%; left: 0; width: 100%; background: white; border: 1px solid #ccc; border-radius: 6px; display: none; z-index: 1000; list-style: none; padding: 0; margin: 0;">
+						</ul>
+					</form>
 
 					<!--/search-right-->
 					<div class="search-right">
-						<a href="#search" class="btn search-hny mr-lg-3" title="search">Tìm kiếm <span class="fas fa-search ml-3" aria-hidden="true"></span></a>
+						<a href="#search" class="btn search-hny mr-lg-3" title="search">Tìm kiếm nâng cao</a>
 						<!-- search popup -->
 						<div id="search" class="pop-overlay">
 							<div class="popup">
