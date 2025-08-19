@@ -690,6 +690,9 @@
                                 <li class="sub-nav-item">
                                     <a class="sub-nav-link" href="{{ route('admin.bookings.index') }}">Đặt vé</a>
                                 </li>
+                                <li class="sub-nav-item">
+                                    <a class="sub-nav-link" href="{{ route('admin.payment_methods.index') }}">Phương thức thanh toán</a>
+                                </li>
                                 <!-- <li class="sub-nav-item">
                                     <a class="sub-nav-link" href="{{ route('tickets.index') }}">Vé</a>
                                 </li>

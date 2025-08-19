@@ -4,7 +4,7 @@
 <div class="container">
     <h1>Chỉnh sửa trạng thái phương thức thanh toán: {{ $paymentMethod->name }}</h1>
 
-    <form action="{{ route('payment_methods.updateStatus', $paymentMethod->id) }}" method="POST">
+    <form action="{{ route('payment_methods.updateStatus', $paymentMethod) }}" method="POST">
         @csrf
         @method('PUT')
 
@@ -20,7 +20,7 @@
         </div>
 
         <button type="submit" class="btn btn-primary">Cập nhật trạng thái</button>
-        <a href="{{ route('payment_methods.index') }}" class="btn btn-secondary">Hủy</a>
+        <a href="{{ route('admin.payment_methods.index') }}" class="btn btn-secondary">Hủy</a>
     </form>
 </div>
 @endsection

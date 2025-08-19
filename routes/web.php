@@ -210,6 +210,17 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
         Route::get('/qr-scanner', function () {
             return view('admin.Qrcode-scanner'); // Nếu bạn đổi tên view thành qr-scanner thì sửa lại ở đây
         })->name('qr.scanner');
+        
+        // Payment Methods routes
+        Route::prefix('payment_methods')->name('payment_methods.')->group(function () {
+            Route::get('/', [PaymentMethodController::class, 'index'])->name('index');    
+            Route::get('/{id}', [PaymentMethodController::class, 'show'])->name('show');   
+            Route::get('/{id}/edit', [PaymentMethodController::class, 'edit'])->name('edit');
+            Route::post('/{id}/update', [PaymentMethodController::class, 'update'])->name('update');
+            // Backward compatibility routes
+            Route::get('/{id}/edit-status', [PaymentMethodController::class, 'editStatus'])->name('editStatus');
+            Route::put('/{id}/update-status', [PaymentMethodController::class, 'updateStatus'])->name('updateStatus');
+        });
     });
 
 
@@ -278,13 +289,6 @@ Route::prefix('admin/roles')->name('roles.')->group(function () {
     Route::delete('{role}/soft-delete', [RoleController::class, 'softDelete'])->name('softDelete');
 });
 Route::resource('admin/roles', RoleController::class);
-
-Route::prefix('admin/payment_methods')->group(function () {
-    Route::get('/', [PaymentMethodController::class, 'index'])->name('payment_methods.index');    
-    Route::get('/{id}', [PaymentMethodController::class, 'show'])->name('payment_methods.show');   
-    Route::get('/{paymentMethod}/edit-status', [PaymentMethodController::class, 'editStatus'])->name('payment_methods.editStatus');
-    Route::put('/{paymentMethod}/update-status', [PaymentMethodController::class, 'updateStatus'])->name('payment_methods.updateStatus');
-});
 
 Route::get('admin/bookings', [BookingController::class, 'index'])->name('admin.bookings.index');
 Route::get('admin/bookingShow/{id}', [BookingController::class, 'show'])->name('admin.bookings.show');
