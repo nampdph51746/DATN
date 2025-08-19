@@ -35,7 +35,8 @@ class CinemaController extends Controller
             'city' => function ($query) {
                 $query->withTrashed(); // Load cả thành phố đã bị xóa mềm
             },
-            'rooms.seats' // Load rooms và seats của từng room
+            'rooms.seats', // Load rooms và seats của từng room
+            'rooms.roomType' // Load room type để hiển thị tên loại phòng
         ])
         ->findOrFail($id);
 

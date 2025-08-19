@@ -89,47 +89,74 @@
         @endif
 
         <div class="mt-4">
-          <h4 class="mb-3">Danh sách phòng ({{ $cinema->rooms->count() }}):</h4>
-          @if($cinema->rooms->count() > 0)
-            <div class="table-responsive">
-              <table class="table table-hover">
-                <thead>
-                  <tr>
-                    <th>Tên phòng</th>
-                    <th>Loại phòng</th>
-                    <th>Số ghế</th>
-                    <th>Trạng thái</th>
-                    <th>Thao tác</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @foreach($cinema->rooms as $room)
-                    <tr>
-                      <td>{{ $room->name }}</td>
-                      <td>{{ $room->type }}</td>
-                      <td>{{ $room->seats->count() }} ghế</td>
-                      <td>
-                        @if($room->status === 'active')
-                          <span class="badge bg-success">Hoạt động</span>
-                        @elseif($room->status === 'maintenance')
-                          <span class="badge bg-warning text-dark">Bảo trì</span>
-                        @else
-                          <span class="badge bg-danger">Không hoạt động</span>
-                        @endif
-                      </td>
-                      <td>
-                        <a href="{{ route('admin.rooms.show', $room->id) }}" class="btn btn-sm btn-outline-primary">
-                          Xem chi tiết
-                        </a>
-                      </td>
-                    </tr>
-                  @endforeach
-                </tbody>
-              </table>
+          <div class="accordion" id="roomsAccordion">
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="roomsHeading">
+                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#roomsCollapse" aria-expanded="true" aria-controls="roomsCollapse">
+                  <i class="bx bx-door-open me-2"></i>
+                  <strong>Danh sách phòng chiếu ({{ $cinema->rooms->count() }})</strong>
+                </button>
+              </h2>
+              <div id="roomsCollapse" class="accordion-collapse collapse show" aria-labelledby="roomsHeading" data-bs-parent="#roomsAccordion">
+                <div class="accordion-body">
+                  @if($cinema->rooms->count() > 0)
+                    <div class="row g-3">
+                      @foreach($cinema->rooms as $index => $room)
+                        <div class="col-md-6">
+                          <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body">
+                              <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h5 class="card-title mb-0 text-primary">{{ $room->name }}</h5>
+                                @if($room->status === 'active')
+                                  <span class="badge bg-success">Hoạt động</span>
+                                @elseif($room->status === 'maintenance')
+                                  <span class="badge bg-warning text-dark">Bảo trì</span>
+                                @else
+                                  <span class="badge bg-danger">Không hoạt động</span>
+                                @endif
+                              </div>
+                              
+                              <div class="row text-muted mb-3">
+                                <div class="col-6">
+                                  <i class="bx bx-category me-1"></i>
+                                  <small>{{ $room->roomType->name ?? 'Chưa xác định' }}</small>
+                                </div>
+                                <div class="col-6">
+                                  <i class="bx bx-chair me-1"></i>
+                                  <small>{{ $room->capacity }} ghế ({{ $room->seats->count() }} đã tạo)</small>
+                                </div>
+                              </div>
+                              
+                              <div class="d-flex gap-2">
+                                <a href="{{ route('admin.rooms.show', $room->id) }}" class="btn btn-sm btn-outline-primary flex-fill">
+                                  <i class="bx bx-show me-1"></i>
+                                  Xem chi tiết
+                                </a>
+                                <a href="{{ route('admin.rooms.edit', $room->id) }}" class="btn btn-sm btn-outline-secondary">
+                                  <i class="bx bx-edit me-1"></i>
+                                  Sửa
+                                </a>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      @endforeach
+                    </div>
+                  @else
+                    <div class="text-center py-4">
+                      <i class="bx bx-door-open display-4 text-muted mb-3"></i>
+                      <h5 class="text-muted">Chưa có phòng chiếu nào</h5>
+                      <p class="text-muted mb-3">Rạp này chưa có phòng chiếu nào được tạo.</p>
+                      <a href="{{ route('admin.rooms.create') }}?cinema_id={{ $cinema->id }}" class="btn btn-primary">
+                        <i class="bx bx-plus me-1"></i>
+                        Thêm phòng mới
+                      </a>
+                    </div>
+                  @endif
+                </div>
+              </div>
             </div>
-          @else
-            <p class="text-muted">Chưa có phòng nào.</p>
-          @endif
+          </div>
         </div>
       </div>
     </div>
