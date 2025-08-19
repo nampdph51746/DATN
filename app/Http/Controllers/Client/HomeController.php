@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Client;
 
 use App\Models\Room;
+use App\Models\Actor;
 use App\Models\Banner;
 use App\Models\Movie;
 use App\Models\Product;
@@ -86,6 +87,7 @@ public function filter(Request $request)
     $validator = Validator::make($data, [
         'status'    => 'nullable|in:showing,upcoming',
         'search'    => 'nullable|string|max:255',
+        'actor'     => 'nullable|string|max:255', // ✅ thêm actor
         'date'      => 'nullable|date',
         'from_time' => ['nullable', 'date_format:H:i'],
         'to_time'   => ['nullable', 'date_format:H:i', 'after_or_equal:from_time'],
@@ -95,6 +97,8 @@ public function filter(Request $request)
         'status.in' => 'Trạng thái không hợp lệ.',
         'search.string' => 'Tìm kiếm phải là chuỗi.',
         'search.max' => 'Từ khóa tìm kiếm quá dài.',
+        'actor.string' => 'Tên diễn viên phải là chuỗi.',
+        'actor.max' => 'Tên diễn viên quá dài.',
         'date.date' => 'Ngày không hợp lệ.',
         'from_time.date_format' => 'Giờ bắt đầu không đúng định dạng.',
         'to_time.date_format' => 'Giờ kết thúc không đúng định dạng.',
@@ -119,7 +123,7 @@ public function filter(Request $request)
     }
 
     // Query
-    $query = Movie::query()->with('genres', 'showtimes');
+    $query = Movie::query()->with('genres', 'showtimes', 'actors'); // ✅ nhớ load quan hệ actors
     $title = 'Danh sách phim';
     $isShowing = false;
 
@@ -133,14 +137,21 @@ public function filter(Request $request)
             $title = 'Phim sắp chiếu';
         }
     } else {
-        // Nếu không chọn status, mặc định loại bỏ ended
         $query->whereIn('status', ['showing', 'upcoming']);
     }
 
     // Lọc tên phim
     if (!empty($data['search'])) {
         $query->where('name', 'like', '%' . $data['search'] . '%');
-        $title = 'Kết quả tìm kiếm cho: ' . e($data['search']);
+        $title = 'Kết quả tìm kiếm phim cho: ' . e($data['search']);
+    }
+
+    // ✅ Lọc theo diễn viên
+    if (!empty($data['actor'])) {
+        $query->whereHas('actors', function ($q) use ($data) {
+            $q->where('name', 'like', '%' . $data['actor'] . '%');
+        });
+        $title = 'Kết quả tìm kiếm diễn viên cho: ' . e($data['actor']);
     }
 
     // Lọc genres theo AND logic
@@ -209,6 +220,19 @@ public function filter(Request $request)
 
     return response()->json($movies);
 }
+
+public function searchActorAjax(Request $request)
+    {
+        $query = $request->get('q', '');
+
+        $actors = Actor::where('name', 'like', "%$query%")
+            ->select('name')         // chỉ lấy tên
+            ->distinct()
+            ->limit(10)
+            ->get();
+
+        return response()->json($actors);
+    }
 
     public function show(Request $request, $id)
 {
