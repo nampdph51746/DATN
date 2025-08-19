@@ -68,10 +68,11 @@
           @endif
           <li class="mb-3">
             <strong>Trạng thái:</strong>
-            @if($cinema->status == 'active')
+            {{-- Debug: {{ dd($cinema->status, get_class($cinema->status), $cinema->status->value ?? 'no value') }} --}}
+            @if($cinema->status === \App\Enums\CinemaStatus::Active || $cinema->status === 'active')
             <span class="badge bg-success">Hoạt động</span>
             @else
-            <span class="badge bg-secondary">Không hoạt động</span>
+            <span class="badge bg-secondary">Không hoạt động ({{ $cinema->status }})</span>
             @endif
           </li>
         </ul>
