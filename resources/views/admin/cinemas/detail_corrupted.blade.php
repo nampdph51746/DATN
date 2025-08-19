@@ -90,16 +90,16 @@
 
         <div class="mt-4">
           <div class="card">
-            <div class="card-header" style="cursor: pointer;" id="accordionHeader">
-              <h5 class="card-title mb-0 d-flex align-items-center justify-content-between">
+            <div class="card-header">
+              <h5 class="card-title mb-0 d-flex align-items-center justify-content-between" style="cursor: pointer;" onclick="toggleRoomsSection()">
                 <span>
                   <i class="bx bx-door-open me-2"></i>
                   Danh sách phòng chiếu ({{ $cinema->rooms->count() }})
                 </span>
-                <i class="bx bx-chevron-right" id="customChevron"></i>
+                <i class="bx bx-chevron-down" id="roomsChevron"></i>
               </h5>
             </div>
-            <div id="customAccordionContent" style="display: none;">
+            <div id="roomsContent" style="display: block;">
               <div class="card-body">
                   @if($cinema->rooms->count() > 0)
                     <div class="row g-3">
@@ -164,77 +164,84 @@
   </div>
 </div>
 
+@section('script')
 <script>
-console.log('🚀 Inline script starting...');
+function toggleRoomsSection() {
+    const content = document.getElementById('roomsContent');
+    const chevron = document.getElementById('roomsChevron');
+    
+    console.log('🖱️ Toggle clicked, current display:', content.style.display);
+    
+    if (content.style.display === 'none') {
+        content.style.display = 'block';
+        chevron.classList.remove('bx-chevron-up');
+        chevron.classList.add('bx-chevron-down');
+        console.log('📂 Opening rooms section');
+    } else {
+        content.style.display = 'none';
+        chevron.classList.remove('bx-chevron-down');
+        chevron.classList.add('bx-chevron-up');
+        console.log('📁 Closing rooms section');
+    }
+}
 
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🎬 DOM loaded - Setting up custom accordion');
-    
-    // Debug: Check if we're in the right page
-    console.log('Current URL:', window.location.href);
-    console.log('Document title:', document.title);
-    
-    const header = document.getElementById('accordionHeader');
-    const content = document.getElementById('customAccordionContent');
-    const chevron = document.getElementById('customChevron');
-    
-    console.log('🔍 Looking for elements:', {
-        header: header,
-        content: content, 
-        chevron: chevron
-    });
-    
-    if (!header) {
-        console.error('❌ accordionHeader not found!');
-        return;
-    }
-    if (!content) {
-        console.error('❌ customAccordionContent not found!');
-        return;
-    }
-    if (!chevron) {
-        console.error('❌ customChevron not found!');
-        return;
-    }
-    
-    console.log('✅ All accordion elements found successfully');
-    
-    // Add click event listener
-    header.addEventListener('click', function(event) {
-        console.log('🖱️ CLICK DETECTED on accordion header!');
-        
-        // Prevent event bubbling
-        event.stopPropagation();
-        event.preventDefault();
-        
-        console.log('Before toggle - display:', content.style.display);
-        
-        if (content.style.display === 'none' || content.style.display === '') {
-            console.log('🔄 Opening accordion...');
-            content.style.display = 'block';
-            chevron.classList.remove('bx-chevron-right');
-            chevron.classList.add('bx-chevron-down');
-            console.log('📂 Accordion OPENED! Display is now:', content.style.display);
-        } else {
-            console.log('🔄 Closing accordion...');
-            content.style.display = 'none';
-            chevron.classList.remove('bx-chevron-down');
-            chevron.classList.add('bx-chevron-right');
-            console.log('📁 Accordion CLOSED! Display is now:', content.style.display);
-        }
-    });
-    
-    console.log('✅ Event listener attached successfully');
-    
-    // Test: Try to click programmatically after 2 seconds
-    setTimeout(function() {
-        console.log('🧪 Test: Simulating click after 2 seconds...');
-        if (header) {
-            header.click();
-        }
-    }, 2000);
-});
-
-console.log('🏁 Inline script completed');
+console.log('🎬 Toggle function loaded');
 </script>
+@endsection
+    console.log('🎬 Cinema detail page loaded');
+    
+    const roomsCollapse = document.getElementById('roomsCollapse');
+    const collapseButton = document.querySelector('[data-bs-target="#roomsCollapse"]');
+    
+    console.log('🔍 Elements found:', {
+        roomsCollapse: !!roomsCollapse,
+        collapseButton: !!collapseButton,
+        bootstrapVersion: typeof bootstrap !== 'undefined' ? 'loaded' : 'missing'
+    });
+    
+    if (roomsCollapse && collapseButton) {
+        console.log('✅ Initial state:', {
+            hasShowClass: roomsCollapse.classList.contains('show'),
+            ariaExpanded: collapseButton.getAttribute('aria-expanded')
+        });
+        
+        // Test Bootstrap collapse events
+        roomsCollapse.addEventListener('show.bs.collapse', function () {
+            console.log('� Collapse is opening...');
+        });
+        
+        roomsCollapse.addEventListener('shown.bs.collapse', function () {
+            console.log('✅ Collapse opened');
+        });
+        
+        roomsCollapse.addEventListener('hide.bs.collapse', function () {
+            console.log('📁 Collapse is closing...');
+        });
+        
+        roomsCollapse.addEventListener('hidden.bs.collapse', function () {
+            console.log('❌ Collapse closed');
+        });
+        
+function toggleRoomsSection() {
+    const content = document.getElementById('roomsContent');
+    const chevron = document.getElementById('roomsChevron');
+    
+    console.log('🖱️ Toggle clicked, current display:', content.style.display);
+    
+    if (content.style.display === 'none') {
+        content.style.display = 'block';
+        chevron.classList.remove('bx-chevron-up');
+        chevron.classList.add('bx-chevron-down');
+        console.log('📂 Opening rooms section');
+    } else {
+        content.style.display = 'none';
+        chevron.classList.remove('bx-chevron-down');
+        chevron.classList.add('bx-chevron-up');
+        console.log('📁 Closing rooms section');
+    }
+}
+
+console.log('🎬 Script loaded successfully');
+</script>
+@endsection
 @endsection
