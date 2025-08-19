@@ -2,281 +2,152 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Xác nhận đặt vé</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <style>
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: #f8f9fa;
-        }
-        .container {
-            max-width: 680px;
-            margin: 20px auto;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-        }
-        .header {
-            background: linear-gradient(135deg, #5a67d8 0%, #9f7aea 100%);
-            color: white;
-            padding: 2.5rem;
-            text-align: center;
-        }
-        .header h1 {
-            font-size: 2rem;
-            font-weight: 600;
+            font-family: 'Arial', 'Helvetica Neue', sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            padding: 20px;
             margin: 0;
         }
-        .booking-code {
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin-top: 1rem;
-            padding: 0.75rem 1.5rem;
-            background: rgba(255,255,255,0.15);
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: #ffffff;
             border-radius: 8px;
-            display: inline-block;
-            transition: transform 0.2s ease;
+            padding: 20px;
+            border: 1px solid #ddd;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
         }
-        .booking-code:hover {
-            transform: scale(1.05);
+        h2, h3, h4 {
+            margin: 10px 0;
+            color: #d62828; /* red highlight */
+            font-weight: bold;
         }
-        .content {
-            padding: 2.5rem;
-            background: white;
-        }
-        .greeting {
-            font-size: 1.25rem;
-            font-weight: 500;
-            color: #4a5568;
-            margin-bottom: 1.5rem;
-        }
-        .ticket-info {
-            background: #f9fafb;
-            border-radius: 8px;
-            padding: 1.5rem;
-            border-left: 5px solid #5a67d8;
-            margin: 1.5rem 0;
-        }
+        .mb-3 { margin-bottom: 12px; }
+        .mb-4 { margin-bottom: 16px; }
         .ticket-card {
-            background: white;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 1rem;
-            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 12px;
+            margin-top: 10px;
+            background: #fafafa;
         }
         .info-row {
             display: flex;
             justify-content: space-between;
-            padding: 0.5rem 0;
-            border-bottom: 1px solid #edf2f7;
-        }
-        .info-row:last-child {
-            border-bottom: none;
-            font-weight: 600;
-            font-size: 1.125rem;
-            color: #5a67d8;
+            margin-bottom: 6px;
         }
         .label {
-            font-weight: 600;
-            color: #718096;
+            font-weight: bold;
+            color: #555;
         }
         .value {
-            color: #2d3748;
+            color: #222;
         }
-        .barcode-section {
+        .qr {
+            margin: 15px 0;
             text-align: center;
-            margin: 2rem 0;
-            padding: 1.5rem;
-            background: #f9fafb;
-            border-radius: 8px;
+            border-top: 1px dashed #ccc;
+            padding-top: 10px;
         }
-        .barcode-title {
-            font-size: 1rem;
-            font-weight: 500;
-            color: #4a5568;
-            margin-bottom: 1rem;
+        .qr img {
+            max-width: 160px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
         }
-        .barcode-image {
-            max-width: 300px;
-            height: auto;
-            border: 2px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 0.5rem;
-            background: white;
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #d62828;
+            color: #ffffff !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+            margin-top: 20px;
+            transition: background 0.3s;
         }
-        .instructions {
-            background: #ebf8ff;
-            border-radius: 8px;
-            padding: 1.5rem;
-            margin: 1.5rem 0;
-            border-left: 5px solid #3182ce;
+        .btn:hover {
+            background: #a71d1d;
         }
-        .instructions h3 {
-            font-size: 1.125rem;
-            font-weight: 600;
-            color: #2b6cb0;
-            margin-top: 0;
-        }
-        .instructions ul {
-            padding-left: 1.5rem;
-            color: #4a5568;
-        }
-        .footer {
-            background: #f9fafb;
-            padding: 1.5rem;
+        p.footer {
+            margin-top: 20px;
+            font-size: 12px;
+            color: #666;
             text-align: center;
-            color: #718096;
-            font-size: 0.875rem;
-            border-top: 1px solid #edf2f7;
-        }
-        .footer strong {
-            color: #2d3748;
-        }
-        .btn-outline-primary:hover {
-            background: #5a67d8 !important;
-            color: white !important;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(90, 103, 216, 0.3);
-        }
-        @media (max-width: 576px) {
-            .container {
-                margin: 10px;
-                border-radius: 8px;
-            }
-            .header, .content, .footer {
-                padding: 1.5rem;
-            }
-            .header h1 {
-                font-size: 1.5rem;
-            }
-            .booking-code {
-                font-size: 1.25rem;
-            }
-            .info-row {
-                flex-direction: column;
-                gap: 0.5rem;
-            }
-            .barcode-image {
-                max-width: 100%;
-            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Header -->
-        <div class="header">
-            <h1>🎬 Xác nhận đặt vé thành công</h1>
-            <div class="booking-code">{{ $booking->booking_code }}</div>
+        <h2>🎬 Xác nhận đặt vé thành công</h2>
+
+        <p class="mb-4">
+            Chào {{ $booking->user->name }}, cảm ơn bạn đã đặt vé tại 
+            <strong>{{ config('app.name', 'Cinema Booking System') }}</strong>! 
+            Đơn hàng của bạn đã được xác nhận và thanh toán thành công.
+        </p>
+
+        <!-- Thông tin vé -->
+        <div class="ticket-info">
+            <h3 class="mb-3">📋 Thông tin đặt vé</h3>
+
+            <div class="ticket-card">
+                <h4 class="mb-3">🎟️ Thông tin đơn hàng</h4>
+
+                <div class="info-row">
+                    <span class="label">🎬 Phim:</span>
+                    <span class="value">{{ $booking->tickets->first()->showtime->movie->name }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="label">📅 Ngày chiếu:</span>
+                    <span class="value">{{ $booking->tickets->first()->showtime->start_time->format('d/m/Y') }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="label">⏰ Giờ chiếu:</span>
+                    <span class="value">
+                        {{ $booking->tickets->first()->showtime->start_time->format('H:i') }}
+                        - {{ $booking->tickets->first()->showtime->end_time->format('H:i') }}
+                    </span>
+                </div>
+                <div class="info-row">
+                    <span class="label">🏢 Rạp:</span>
+                    <span class="value">{{ $booking->tickets->first()->showtime->room->cinema->name }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="label">🪑 Phòng:</span>
+                    <span class="value">{{ $booking->tickets->first()->showtime->room->name }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="label">💺 Số ghế:</span>
+                    <span class="value">{{ $booking->tickets->count() }} ghế</span>
+                </div>
+                @if($booking->bookingItems->count() > 0)
+                <div class="info-row">
+                    <span class="label">🍿 Combo:</span>
+                    <span class="value">{{ $booking->bookingItems->count() }} món</span>
+                </div>
+                @endif
+            </div>
+            <!-- Tổng tiền -->
+            <div class="info-row" style="margin-top:12px; border-top:1px solid #ddd; padding-top:8px;">
+                <span class="label">💳 Tổng thanh toán:</span>
+                <span class="value"><strong>{{ number_format($booking->final_amount, 0, ',', '.') }} VNĐ</strong></span>
+            </div>
         </div>
 
-        <!-- Content -->
-        <div class="content">
-            <div class="greeting">
-                Xin chào <strong>{{ $booking->user->name }}</strong>,
-            </div>
-            
-            <p class="mb-4">Cảm ơn bạn đã đặt vé tại <strong>{{ config('app.name', 'Cinema Booking System') }}</strong>! 
-            Đơn hàng của bạn đã được xác nhận và thanh toán thành công.</p>
-
-            <!-- Thông tin vé -->
-            <div class="ticket-info">
-                <h3 class="mb-3 text-primary">📋 Thông tin đặt vé</h3>
-                
-
-                <!-- Thông tin tóm tắt -->
-                <div class="ticket-card">
-                    <h4 class="mb-3 text-dark">📋 Thông tin đơn hàng</h4>
-                    <div class="info-row">
-                        <span class="label">🎬 Phim:</span>
-                        <span class="value">{{ $booking->tickets->first()->showtime->movie->name }}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="label">📅 Ngày chiếu:</span>
-                        <span class="value">{{ $booking->tickets->first()->showtime->start_time->format('d/m/Y') }}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="label">⏰ Giờ chiếu:</span>
-                        <span class="value">{{ $booking->tickets->first()->showtime->start_time->format('H:i') }} - {{ $booking->tickets->first()->showtime->end_time->format('H:i') }}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="label">🏢 Rạp:</span>
-                        <span class="value">{{ $booking->tickets->first()->showtime->room->cinema->name }}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="label">🪑 Phòng:</span>
-                        <span class="value">{{ $booking->tickets->first()->showtime->room->name }}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="label">� Số ghế:</span>
-                        <span class="value">{{ $booking->tickets->count() }} ghế</span>
-                    </div>
-                    @if($booking->bookingItems->count() > 0)
-                    <div class="info-row">
-                        <span class="label">🍿 Combo:</span>
-                        <span class="value">{{ $booking->bookingItems->count() }} món</span>
-                    </div>
-                    @endif
-                </div>
-
-                <!-- Tổng tiền -->
-                <div class="info-row mt-4 pt-3 border-top border-primary">
-                    <span class="label">💳 Tổng thanh toán:</span>
-                    <span class="value">{{ number_format($booking->final_amount, 0, ',', '.') }} VNĐ</span>
-                </div>
-            </div>
-
-            <!-- QR Code -->
-            @if($qrcode)
-            <div class="barcode-section">
-                <div class="barcode-title">
-                    <strong>📱 Mã QR vé điện tử</strong><br>
-                    <small>Vui lòng xuất trình mã QR này tại quầy để nhận vé</small>
-                </div>
-                <img src="data:image/png;base64,{{ $qrcode }}" alt="QR Code" class="barcode-image">
-                <div class="mt-2 font-monospace text-secondary">{{ $booking->booking_code }}</div>
-            </div>
-            @endif
-
-            <!-- Nút xem chi tiết -->
-            <div class="text-center mb-4">
-                {{-- <a href="{{ url('/booking/detail/' . $booking->booking_code) }}" --}}
-                <a href="#" 
-                   class="btn btn-outline-primary btn-lg"
-                   style="padding: 12px 30px; font-weight: 600; text-decoration: none; border-radius: 8px; border: 2px solid #5a67d8; color: #5a67d8; background: white; transition: all 0.3s ease;">
-                    📄 Xem chi tiết đơn hàng
-                </a>
-                <div class="mt-2 text-muted small">
-                    Nhấn để xem thông tin chi tiết về vé và combo
-                </div>
-            </div>
-
-            <!-- Hướng dẫn -->
-            <div class="instructions">
-                <h3>📝 Hướng dẫn sử dụng vé</h3>
-                <ul class="mb-0">
-                    <li>Vui lòng có mặt tại rạp <strong>15 phút trước</strong> giờ chiếu</li>
-                    <li>Xuất trình email này hoặc quét mã QR tại quầy để nhận vé giấy</li>
-                    <li>Mang theo giấy tờ tùy thân để đối chiếu</li>
-                    <li>Vé đã mua không thể hoàn trả hoặc đổi lịch chiếu</li>
-                    <li>Liên hệ hotline nếu cần hỗ trợ: <strong>1900-xxxx</strong></li>
-                </ul>
-            </div>
-
-            <p class="text-secondary mt-4">
-                Chúc bạn có những phút giây giải trí thú vị! 🎉
-            </p>
-            <a href="https://x.ai" class="btn btn-primary mt-3">Xem thêm về chúng tôi</a>
+        <!-- QR cho booking -->
+        <div class="qr">
+            <p>📌 Mã đặt vé: <strong>{{ $booking->booking_code }}</strong></p>
+            <img src="{{ $message->embed($qrPaths['booking']) }}" alt="Booking QR">
         </div>
+        <a href="#" class="btn">📄 Xem chi tiết</a>
 
-        <!-- Footer -->
-        <div class="footer">
-            <strong>{{ config('app.name', 'Cinema Booking System') }}</strong><br>
-            Email này được gửi tự động, vui lòng không trả lời.<br>
-            © {{ date('Y') }} All rights reserved.
-        </div>
+        <p class="footer">
+            👉 Vui lòng đưa mã QR này tại quầy để nhận vé và combo của bạn.  
+            © {{ date('Y') }} {{ config('app.name', 'Cinema Booking System') }}. All rights reserved.
+        </p>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 </body>
 </html>
