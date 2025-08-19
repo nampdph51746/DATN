@@ -1,175 +1,540 @@
 @extends('layouts.admin.admin')
 
 @section('content')
-    <div class="container">
+<div class="container-fluid">
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
 
-        <div class="container-xxl">
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
 
-            <div class="row">
-                <div class="col-md-6 col-xl-4">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div>
-                                    <h4 class="card-title mb-2">Chờ xác nhận</h4>
-                                    <p class="text-muted fw-medium fs-22 mb-0">{{ $bookings->where('status', 'pending')->count() }}</p>
-                                </div>
-                                <div>
-                                    <div class="avatar-md bg-warning bg-opacity-10 rounded">
-                                        <iconify-icon icon="solar:clock-circle-broken" class="fs-32 text-warning avatar-title"></iconify-icon>
-                                    </div>
-                                </div>
-                            </div>
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6">
+            <div class="card stats-card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <h5 class="card-title text-muted mb-2 fs-14 text-uppercase fw-semibold">Chờ xác nhận</h5>
+                            <h3 class="mb-0 fw-bold text-dark">{{ $bookings->where('status', 'pending')->count() }}</h3>
+                            <small class="text-muted">đơn đặt vé</small>
                         </div>
-                    </div>
-                </div>
-                <div class="col-md-6 col-xl-4">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div>
-                                    <h4 class="card-title mb-2">Đã xác nhận</h4>
-                                    <p class="text-muted fw-medium fs-22 mb-0">{{ $bookings->where('status', 'confirmed')->count() }}</p>
-                                </div>
-                                <div>
-                                    <div class="avatar-md bg-success bg-opacity-10 rounded">
-                                        <iconify-icon icon="solar:clipboard-check-broken" class="fs-32 text-success avatar-title"></iconify-icon>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6 col-xl-4">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div>
-                                    <h4 class="card-title mb-2">Đã hủy</h4>
-                                    <p class="text-muted fw-medium fs-22 mb-0">{{ $bookings->where('status', 'cancelled')->count() }}</p>
-                                </div>
-                                <div>
-                                    <div class="avatar-md bg-danger bg-opacity-10 rounded">
-                                        <iconify-icon icon="solar:cart-cross-broken" class="fs-32 text-danger avatar-title"></iconify-icon>
-                                    </div>
-                                </div>
+                        <div class="flex-shrink-0">
+                            <div class="avatar-lg bg-warning bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center">
+                                <iconify-icon icon="solar:clock-circle-bold" class="fs-28 text-warning"></iconify-icon>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <!-- Tổng tiền nằm ngang dưới 3 phần trạng thái -->
-            <div class="row mb-4">
-                <div class="col-12">
-                    <div class="card">
-                        <div class="card-body py-3">
-                            <div class="d-flex justify-content-center align-items-center gap-4">
-                                <span class="fw-bold fs-18">Tổng tiền:</span>
-                                <span class="fs-20 text-primary fw-bold">
-                                    {{ number_format($bookings->where('status', 'confirmed')->sum('final_amount'), 0, ',', '.') }} đ
-                                </span>
+        </div>
+        
+        <div class="col-lg-3 col-md-6">
+            <div class="card stats-card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <h5 class="card-title text-muted mb-2 fs-14 text-uppercase fw-semibold">Đã xác nhận</h5>
+                            <h3 class="mb-0 fw-bold text-dark">{{ $bookings->where('status', 'confirmed')->count() }}</h3>
+                            <small class="text-muted">đơn đặt vé</small>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <div class="avatar-lg bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center">
+                                <iconify-icon icon="solar:clipboard-check-bold" class="fs-28 text-success"></iconify-icon>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <div class="row">
-                <div class="col-xl-12">
-                    <div class="card">
-                        <div class="d-flex card-header justify-content-between align-items-center">
-                            <div>
-                                <h4 class="card-title">Danh sách đơn đặt vé</h4>
-                            </div>
-                            {{-- Tìm kiếm và lọc --}}
-                            <form method="GET" class="mb-4 d-flex gap-2">
-                                <input type="text" name="search" class="form-control w-auto"
-                                    placeholder="ID, Mã đặt vé hoặc ID người dùng" value="{{ request('search') }}">
-
-                                <select name="status" class="form-select w-auto">
-                                    <option value="">-- Trạng thái --</option>
-                                    <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Chờ xác nhận</option>
-                                    <option value="confirmed" {{ request('status') == 'confirmed' ? 'selected' : '' }}>Đã xác nhận</option>
-                                    <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>Đã hủy</option>
-                                </select>
-
-                                <button type="submit" class="btn btn-primary">Lọc</button>
-                            </form>
+        </div>
+        
+        <div class="col-lg-3 col-md-6">
+            <div class="card stats-card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <h5 class="card-title text-muted mb-2 fs-14 text-uppercase fw-semibold">Đã hủy</h5>
+                            <h3 class="mb-0 fw-bold text-dark">{{ $bookings->where('status', 'cancelled')->count() }}</h3>
+                            <small class="text-muted">đơn đặt vé</small>
                         </div>
-                        <div class="card-body p-0">
-                            <div class="table-responsive">
-                                <table class="table align-middle mb-0 table-hover table-centered">
-                                    <thead class="bg-light-subtle">
-                                        <tr>
-                                            <th>ID</th>
-                                            <th>Mã đặt vé</th>
-                                            <th>Người dùng</th>
-                                            <th>Tổng tiền</th>
-                                            <th>Trạng thái</th>
-                                            <th>Hành động</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach ($bookings as $booking)
-                                            <tr>
-                                                <td>{{ $booking->id }}</td>
-                                                <td>{{ $booking->booking_code }}</td>
-                                                <td>
-                                                    <a href="#!" class="link-primary fw-medium">
-                                                        {{ $booking->user->name ?? 'Người dùng #' . $booking->user_id }}
-                                                    </a>
-                                                </td>
-                                                <td>{{ number_format($booking->final_amount, 0, ',', '.') }} đ</td>
-                                                <td>
-                                                    @switch($booking->status?->value)
-                                                        @case('pending')
-                                                            <span class="badge bg-warning-subtle text-warning px-2 py-1 fs-13">Chờ xác nhận</span>
-                                                        @break
-                                                        @case('confirmed')
-                                                            <span class="badge bg-success-subtle text-success px-2 py-1 fs-13">Đã xác nhận</span>
-                                                        @break
-                                                        @case('cancelled')
-                                                            <span class="badge bg-danger-subtle text-danger px-2 py-1 fs-13">Đã hủy</span>
-                                                        @break
-                                                        @default
-                                                            <span class="badge bg-light text-dark px-2 py-1 fs-13">Không xác định</span>
-                                                    @endswitch
-                                                </td>
-                                                <td>
-                                                    <div class="d-flex gap-2">
-                                                        <a href="{{ route('admin.bookings.show', $booking->id) }}"
-                                                            class="btn btn-light btn-sm">
-                                                            <iconify-icon icon="solar:eye-broken"
-                                                                class="align-middle fs-18"></iconify-icon>
-                                                        </a>
-                                                        @php
-                                                            $firstTicket = $booking->tickets->first();
-                                                            $showtimeStart = $firstTicket ? $firstTicket->showtime->start_time : null;
-                                                        @endphp
-                                                        <a href="{{ route('admin.bookings.print', $booking->booking_code) }}" target="_blank"
-                                                            class="btn btn-primary btn-sm print-ticket-btn"
-                                                            data-showtime-start="{{ $showtimeStart ? $showtimeStart->toISOString() : '' }}"
-                                                            data-booking-code="{{ $booking->booking_code }}">
-                                                            <iconify-icon icon="solar:printer-minimalistic-broken"
-                                                                class="align-middle fs-18"></iconify-icon> In vé
-                                                        </a>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
+                        <div class="flex-shrink-0">
+                            <div class="avatar-lg bg-danger bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center">
+                                <iconify-icon icon="solar:cart-cross-bold" class="fs-28 text-danger"></iconify-icon>
                             </div>
                         </div>
-                        <div class="d-flex justify-content-center mt-4">
-                            {{ $bookings->withQueryString()->links('pagination::bootstrap-4') }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6">
+            <div class="card stats-card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <h5 class="card-title text-muted mb-2 fs-14 text-uppercase fw-semibold">Tổng doanh thu</h5>
+                            <h3 class="mb-0 fw-bold text-primary">
+                                {{ number_format($bookings->where('status', 'confirmed')->sum('final_amount') / 1000000, 1) }}M
+                            </h3>
+                            <small class="text-muted">VNĐ</small>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <div class="avatar-lg bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center">
+                                <iconify-icon icon="solar:dollar-minimalistic-bold" class="fs-28 text-primary"></iconify-icon>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Main Data Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <div class="row align-items-center g-3">
+                        <div class="col-md-4">
+                            <h4 class="card-title mb-0 fw-semibold">Danh sách đơn đặt vé</h4>
+                            <small class="text-muted">Quản lý tất cả đơn đặt vé trong hệ thống</small>
+                        </div>
+                        <div class="col-md-8">
+                            <form method="GET" class="d-flex flex-wrap gap-2 justify-content-md-end">
+                                <div class="position-relative">
+                                    <input type="search" name="search" class="form-control form-control-sm ps-4 pe-3" 
+                                           style="min-width: 280px;" placeholder="Tìm mã đặt vé, tên khách hàng..." 
+                                           autocomplete="off" value="{{ request('search') }}">
+                                    <iconify-icon icon="solar:magnifer-linear"
+                                        class="position-absolute top-50 start-0 translate-middle-y ms-2 text-muted"
+                                        style="font-size: 14px;"></iconify-icon>
+                                </div>
+                                
+                                <select name="status" class="form-select form-select-sm" style="width:140px;">
+                                    <option value="">Tất cả trạng thái</option>
+                                    <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Chờ xác nhận</option>
+                                    <option value="confirmed" {{ request('status') == 'confirmed' ? 'selected' : '' }}>Đã xác nhận</option>
+                                    <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>Đã hủy</option>
+                                </select>
+                                
+                                <button type="submit" class="btn btn-sm btn-primary">
+                                    <i class="bi bi-search"></i>
+                                </button>
+                                
+                                <a href="{{ route('admin.bookings.index') }}" class="btn btn-sm btn-outline-secondary">
+                                    <i class="bi bi-arrow-clockwise"></i>
+                                </a>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0 table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="px-4 py-3" style="width: 80px;">
+                                        <span class="text-muted fw-semibold fs-12 text-uppercase">ID</span>
+                                    </th>
+                                    <th class="px-4 py-3" style="width: 180px;">
+                                        <span class="text-muted fw-semibold fs-12 text-uppercase">Mã đặt vé</span>
+                                    </th>
+                                    <th class="px-4 py-3" style="width: 200px;">
+                                        <span class="text-muted fw-semibold fs-12 text-uppercase">Khách hàng</span>
+                                    </th>
+                                    <th class="px-4 py-3" style="width: 200px;">
+                                        <span class="text-muted fw-semibold fs-12 text-uppercase">Phim & Suất chiếu</span>
+                                    </th>
+                                    <th class="px-4 py-3" style="width: 120px;">
+                                        <span class="text-muted fw-semibold fs-12 text-uppercase">Số vé</span>
+                                    </th>
+                                    <th class="px-4 py-3" style="width: 140px;">
+                                        <span class="text-muted fw-semibold fs-12 text-uppercase">Tổng tiền</span>
+                                    </th>
+                                    <th class="px-4 py-3" style="width: 120px;">
+                                        <span class="text-muted fw-semibold fs-12 text-uppercase">Trạng thái</span>
+                                    </th>
+                                    <th class="px-4 py-3 text-center" style="width: 140px;">
+                                        <span class="text-muted fw-semibold fs-12 text-uppercase">Hành động</span>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($bookings as $booking)
+                                    @php
+                                        $firstTicket = $booking->tickets->first();
+                                        $showtime = $firstTicket ? $firstTicket->showtime : null;
+                                        $movie = $showtime ? $showtime->movie : null;
+                                    @endphp
+                                    <tr class="border-bottom">
+                                        <td class="px-4 py-3">
+                                            <span class="text-muted fw-medium">#{{ $booking->id }}</span>
+                                        </td>
+                                        <td class="px-4 py-3">
+                                            <div class="d-flex align-items-center">
+                                                <div class="flex-shrink-0 me-3">
+                                                    <div class="avatar-sm bg-light rounded d-flex align-items-center justify-content-center">
+                                                        <iconify-icon icon="solar:ticket-bold" class="fs-20 text-primary"></iconify-icon>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <h6 class="mb-0 fw-semibold">{{ $booking->booking_code }}</h6>
+                                                    <small class="text-muted">{{ $booking->created_at->format('d/m/Y H:i') }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-4 py-3">
+                                            <div>
+                                                <h6 class="mb-1 fw-medium">{{ $booking->user->name ?? 'N/A' }}</h6>
+                                                <small class="text-muted">{{ $booking->user->email ?? 'N/A' }}</small>
+                                            </div>
+                                        </td>
+                                        <td class="px-4 py-3">
+                                            @if($movie && $showtime)
+                                                <div>
+                                                    <h6 class="mb-1 fw-medium text-truncate" style="max-width: 180px;" title="{{ $movie->name }}">
+                                                        {{ $movie->name }}
+                                                    </h6>
+                                                    <small class="text-muted">
+                                                        {{ $showtime->start_time->format('d/m H:i') }} - {{ $showtime->room->cinema->name }}
+                                                    </small>
+                                                </div>
+                                            @else
+                                                <span class="text-muted">N/A</span>
+                                            @endif
+                                        </td>
+                                        <td class="px-4 py-3">
+                                            <div class="text-center">
+                                                <span class="badge bg-info-subtle text-info fs-13 px-3 py-2">
+                                                    {{ $booking->tickets->count() }} vé
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td class="px-4 py-3">
+                                            <div>
+                                                <h6 class="mb-0 fw-bold text-success">
+                                                    {{ number_format($booking->final_amount, 0, ',', '.') }}đ
+                                                </h6>
+                                                @if($booking->discount_amount > 0)
+                                                    <small class="text-muted">
+                                                        Giảm: {{ number_format($booking->discount_amount, 0, ',', '.') }}đ
+                                                    </small>
+                                                @endif
+                                            </div>
+                                        </td>
+                                        <td class="px-4 py-3">
+                                            @switch($booking->status?->value)
+                                                @case('pending')
+                                                    <span class="badge bg-warning-subtle text-warning px-3 py-2 fs-12 fw-medium">
+                                                        <i class="bi bi-clock me-1"></i>Chờ xác nhận
+                                                    </span>
+                                                @break
+                                                @case('confirmed')
+                                                    <span class="badge bg-success-subtle text-success px-3 py-2 fs-12 fw-medium">
+                                                        <i class="bi bi-check-circle me-1"></i>Đã xác nhận
+                                                    </span>
+                                                @break
+                                                @case('cancelled')
+                                                    <span class="badge bg-danger-subtle text-danger px-3 py-2 fs-12 fw-medium">
+                                                        <i class="bi bi-x-circle me-1"></i>Đã hủy
+                                                    </span>
+                                                @break
+                                                @default
+                                                    <span class="badge bg-secondary-subtle text-secondary px-3 py-2 fs-12 fw-medium">
+                                                        Không xác định
+                                                    </span>
+                                            @endswitch
+                                        </td>
+                                        <td class="px-4 py-3">
+                                            <div class="d-flex gap-1 justify-content-center">
+                                                <a href="{{ route('admin.bookings.show', $booking->id) }}"
+                                                    class="btn btn-light btn-sm" title="Xem chi tiết">
+                                                    <iconify-icon icon="solar:eye-bold" class="fs-16"></iconify-icon>
+                                                </a>
+                                                @php
+                                                    $showtimeStart = $firstTicket ? $firstTicket->showtime->start_time : null;
+                                                @endphp
+                                                <a href="{{ route('admin.bookings.print', $booking->booking_code) }}" target="_blank"
+                                                    class="btn btn-primary btn-sm print-ticket-btn"
+                                                    data-showtime-start="{{ $showtimeStart ? $showtimeStart->toISOString() : '' }}"
+                                                    data-booking-code="{{ $booking->booking_code }}"
+                                                    title="In vé">
+                                                    <iconify-icon icon="solar:printer-bold" class="fs-16"></iconify-icon>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                                @if($bookings->isEmpty())
+                                    <tr>
+                                        <td colspan="8" class="text-center py-5">
+                                            <div class="d-flex flex-column align-items-center">
+                                                <iconify-icon icon="solar:ticket-broken" class="fs-48 text-muted mb-3"></iconify-icon>
+                                                <h6 class="text-muted">Không tìm thấy đơn đặt vé nào</h6>
+                                                <small class="text-muted">Thử thay đổi bộ lọc hoặc tìm kiếm khác</small>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endif
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer bg-white border-top-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="text-muted">
+                            Hiển thị {{ $bookings->firstItem() ?? 0 }} - {{ $bookings->lastItem() ?? 0 }} trong {{ $bookings->total() }} kết quả
+                        </div>
+                        <div>
+                            {{ $bookings->withQueryString()->links('pagination::bootstrap-5') }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
+
+@section('styles')
+<style>
+/* Statistics Cards */
+.stats-card {
+    transition: all 0.3s ease;
+    border-radius: 12px;
+}
+
+.stats-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1) !important;
+}
+
+.avatar-lg {
+    width: 4rem;
+    height: 4rem;
+}
+
+/* Enhanced table styling */
+.table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.table th {
+    background: #f8f9fa;
+    font-weight: 600;
+    color: #6c757d;
+    border-top: none;
+    border-bottom: 1px solid #dee2e6;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.table td {
+    vertical-align: middle;
+    border-top: 1px solid #f1f3f4;
+    border-bottom: none;
+}
+
+.table tbody tr {
+    transition: all 0.2s ease;
+}
+
+.table tbody tr:hover {
+    background-color: #f8f9ff;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+/* Card enhancements */
+.card {
+    border: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.card-header {
+    background: #ffffff;
+    border-bottom: 1px solid #f1f3f4;
+    padding: 1.5rem;
+}
+
+/* Form controls */
+.form-control-sm, .form-select-sm {
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+    transition: all 0.2s ease;
+    font-size: 0.875rem;
+}
+
+.form-control-sm:focus, .form-select-sm:focus {
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+/* Button enhancements */
+.btn-sm {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.825rem;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+    border: none;
+}
+
+.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+}
+
+.btn-light {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    color: #6c757d;
+}
+
+.btn-light:hover {
+    background: #e9ecef;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.btn-outline-secondary {
+    border-color: #e9ecef;
+    color: #6c757d;
+}
+
+.btn-outline-secondary:hover {
+    background: #f8f9fa;
+    border-color: #dee2e6;
+    transform: translateY(-1px);
+}
+
+/* Badge styling */
+.badge {
+    font-size: 0.75rem;
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+}
+
+/* Status badges - keeping original colors */
+.bg-warning-subtle {
+    background: rgba(255, 193, 7, 0.1) !important;
+    color: #ff6b35 !important;
+}
+
+.bg-success-subtle {
+    background: rgba(25, 135, 84, 0.1) !important;
+    color: #198754 !important;
+}
+
+.bg-danger-subtle {
+    background: rgba(220, 53, 69, 0.1) !important;
+    color: #dc3545 !important;
+}
+
+.bg-info-subtle {
+    background: rgba(13, 202, 240, 0.1) !important;
+    color: #0dcaf0 !important;
+}
+
+.bg-secondary-subtle {
+    background: rgba(108, 117, 125, 0.1) !important;
+    color: #6c757d !important;
+}
+
+/* Alert styling */
+.alert {
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    margin-bottom: 1.5rem;
+}
+
+.alert-success {
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    color: #065f46;
+}
+
+.alert-danger {
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    color: #991b1b;
+}
+
+/* Avatar styling */
+.avatar-sm {
+    width: 2.5rem;
+    height: 2.5rem;
+}
+
+/* Empty state */
+.table tbody tr td iconify-icon {
+    opacity: 0.3;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+    .stats-card .card-body {
+        padding: 1.5rem 1rem;
+    }
+    
+    .avatar-lg {
+        width: 3rem;
+        height: 3rem;
+    }
+    
+    .table td, .table th {
+        padding: 0.75rem 0.5rem;
+        font-size: 0.8rem;
+    }
+    
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+    }
+    
+    .card-header {
+        padding: 1rem;
+    }
+    
+    .badge {
+        font-size: 0.65rem;
+        padding: 0.3rem 0.6rem;
+    }
+}
+
+/* Loading state */
+.table tbody tr.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* Truncate text */
+.text-truncate {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+</style>
 @endsection
 
 @push('scripts')
