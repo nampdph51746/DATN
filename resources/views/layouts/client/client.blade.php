@@ -209,18 +209,38 @@
 		width: 30%;
 	}
 
-	.pop-overlay {
-		position: fixed;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 100%;
-		display: flex;
-		justify-content: center;
-		/* căn giữa ngang */
-		align-items: center;
-		/* căn giữa dọc */
-	}
+	/* Overlay toàn màn hình */
+.pop-overlay {
+    position: fixed;
+    inset: 0; /* top:0; left:0; right:0; bottom:0 */
+    background: rgba(0,0,0,0.7);
+    display: flex;
+    justify-content: center; /* căn giữa ngang */
+    align-items: center;     /* căn giữa dọc nếu popup < viewport */
+    padding: 20px;           /* tránh sát mép */
+    overflow-y: auto;        /* scroll nếu viewport nhỏ */
+    z-index: 9999;
+}
+
+.popup {
+    background: #111;
+    padding: 30px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 1000px;
+    max-height: 90vh;        /* giới hạn chiều cao */
+    overflow-y: auto;        /* scroll khi nội dung cao */
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    position: relative;
+}
+
+
+
+.search-right .popup {
+    top: auto !important;
+    transform: none !important;
+}
+
 
 	.btn-submit {
 		position: static !important;
