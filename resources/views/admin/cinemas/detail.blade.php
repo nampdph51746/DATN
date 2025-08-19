@@ -109,10 +109,12 @@
                       <td>{{ $room->type }}</td>
                       <td>{{ $room->seats->count() }} ghế</td>
                       <td>
-                        @if($room->is_active)
+                        @if($room->status === 'active')
                           <span class="badge bg-success">Hoạt động</span>
+                        @elseif($room->status === 'maintenance')
+                          <span class="badge bg-warning text-dark">Bảo trì</span>
                         @else
-                          <span class="badge bg-danger">Ngưng hoạt động</span>
+                          <span class="badge bg-danger">Không hoạt động</span>
                         @endif
                       </td>
                       <td>
