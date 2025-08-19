@@ -9,8 +9,6 @@ use Illuminate\Pagination\Paginator;
 use Illuminate\Support\ServiceProvider;
 use Spatie\Permission\PermissionRegistrar;
 use Illuminate\Support\Facades\Event;
-use App\Events\BookingConfirmed;
-use App\Listeners\SendBookingConfirmationEmail;
 use Illuminate\Database\Eloquent\Relations\Relation;
 
 
@@ -35,8 +33,8 @@ class AppServiceProvider extends ServiceProvider
         // Đăng ký Observer cho Showtime
         Showtime::observe(ShowtimeObserver::class);
         
-        // Đăng ký Event và Listener
-        Event::listen(BookingConfirmed::class, SendBookingConfirmationEmail::class);
+        // // Đăng ký Event và Listener
+        // Event::listen(BookingConfirmed::class, SendBookingConfirmationEmail::class);
 
         // Đăng ký View Composer cho client layout
         view()->composer('layouts.client.client', function ($view) {
