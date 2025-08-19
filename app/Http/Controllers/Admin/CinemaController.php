@@ -145,6 +145,23 @@ class CinemaController extends Controller
         return redirect()->route('admin.cinemas.index')->with('success', 'Đã chuyển rạp vào thùng rác.');
     }
 
+    // Xóa hàng loạt
+    public function bulkDelete(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|string'
+        ]);
+
+        $ids = explode(',', $request->ids);
+        $cinemas = Cinema::whereIn('id', $ids);
+        
+        $count = $cinemas->count();
+        $cinemas->delete();
+
+        return redirect()->route('admin.cinemas.index')
+                        ->with('success', "Đã xóa {$count} rạp chiếu thành công.");
+    }
+
     public function trash(Request $request)
 {
     $keyword = $request->keyword;
