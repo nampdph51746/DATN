@@ -81,10 +81,11 @@
                                         </div>
                                     </th>
                                     <th style="width: 80px;">STT</th>
-                                    <th style="width: 250px;">Thông tin rạp</th>
-                                    <th style="width: 250px;">Địa chỉ</th>
-                                    <th style="width: 150px;">Thành phố</th>
-                                    <th style="width: 120px;">Hotline</th>
+                                    <th style="width: 220px;">Thông tin rạp</th>
+                                    <th style="width: 220px;">Địa chỉ</th>
+                                    <th style="width: 120px;">Thành phố</th>
+                                    <th style="width: 100px;">Số phòng</th>
+                                    <th style="width: 110px;">Hotline</th>
                                     <th class="text-center" style="width: 150px;">Hành động</th>
                                 </tr>
                             </thead>
@@ -142,6 +143,14 @@
                                         </td>
                                         <td>
                                             <div class="text-center">
+                                                <span class="badge bg-success-subtle text-success fs-6 px-3 py-2">
+                                                    <i class="bi bi-door-open me-1"></i>
+                                                    {{ $cinema->rooms_count ?? 0 }}
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="text-center">
                                                 @if($cinema->hotline)
                                                     <span class="badge bg-info-subtle text-info fs-6 px-3 py-2">
                                                         <i class="bi bi-telephone me-1"></i>
@@ -172,7 +181,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="7" class="text-center text-muted py-4">
+                                        <td colspan="8" class="text-center text-muted py-4">
                                             <i class="bi bi-camera-reels display-4 text-muted mb-3"></i>
                                             <div>Không tìm thấy rạp chiếu nào.</div>
                                             <div class="mt-2">

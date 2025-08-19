@@ -11,10 +11,10 @@ use function Laravel\Prompts\alert;
 
 class CinemaController extends Controller
 {
-    // ✅ Hiển thị danh sách quốc gia
+    // ✅ Hiển thị danh sách rạp chiếu
     public function index(Request $request)
     {
-        $query = Cinema::with('city')->orderBy('created_at', 'desc');
+        $query = Cinema::with('city')->withCount('rooms')->orderBy('created_at', 'desc');
 
         if ($request->filled('keyword')) {
             $query->where('name', 'like', '%' . $request->keyword . '%');
