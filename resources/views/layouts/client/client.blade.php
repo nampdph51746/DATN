@@ -387,7 +387,7 @@
 			return;
 		}
 
-		fetch(`{{ route('movies.searchAjax') }}?q=${encodeURIComponent(query)}`)
+fetch(`{{ route('movies.searchAjax') }}?q=${encodeURIComponent(query)}`)
 			.then(response => response.json())
 			.then(data => {
 				resultsBox.innerHTML = '';
