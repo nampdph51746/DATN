@@ -35,8 +35,8 @@
 
         <div class="col-xl-9 col-lg-8">
             <div class="card">
-                <div class="card-header">
-                    <h4 class="card-title">Thông Tin Phòng Chiếu</h4>
+                <div class="card-header" style="background: #ff6633; border-bottom: 1px solid #e55a2b;">
+                    <h4 class="card-title" style="color: #333333; font-weight: 600;">Thông Tin Phòng Chiếu</h4>
                 </div>
                 <div class="card-body">
                     <form id="room-edit-form" action="{{ route('admin.rooms.update', $room->id) }}" method="post">

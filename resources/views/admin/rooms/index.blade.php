@@ -23,10 +23,10 @@
     <div class="row">
         <div class="col-xl-12">
             <div class="card">
-                <div class="card-header">
+                <div class="card-header" style="background: #ff6633; border-bottom: 1px solid #e55a2b;">
                     <div class="row align-items-center g-3">
                         <div class="col-md-4">
-                            <h4 class="card-title mb-0">Danh Sách Phòng Chiếu</h4>
+                            <h4 class="card-title mb-0" style="color: #333333; font-weight: 600;">🎥Danh Sách Phòng Chiếu</h4>
                         </div>
                         <div class="col-md-8">
                             <div class="d-flex flex-wrap gap-2 justify-content-md-end">

@@ -21,12 +21,12 @@
     <div class="row">
         <div class="col-xl-12">
             <div class="card">
-                <div class="card-header">
+                <div class="card-header" style="background: #ff6633; border-bottom: 1px solid #e55a2b;">
                     <div class="row align-items-center g-3">
                         <div class="col-md-4">
-                            <h4 class="card-title mb-0">
+                            <h4 class="card-title mb-0" style="color: #333333; font-weight: 600;">
                                 <i class="bi bi-camera-reels me-2 text-danger"></i>
-                                Danh Sách Rạp Chiếu
+                                🏢 Danh Sách Rạp Chiếu
                             </h4>
                         </div>
                         <div class="col-md-8">
@@ -41,9 +41,9 @@
                                                style="width: 200px;">
                                     </div>
                                     
-                                    <button type="submit" class="btn btn-sm btn-primary">
+                                    <!-- <button type="submit" class="btn btn-sm btn-primary">
                                         <i class="bi bi-search"></i>
-                                    </button>
+                                    </button> -->
                                 </form>
 
                                 <!-- Nút thêm -->

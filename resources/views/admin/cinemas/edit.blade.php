@@ -7,8 +7,8 @@
         <div class="row">
             <div class="col-xl-10 col-lg-9">
                 <div class="card">
-                    <div class="card-header">
-                        <h4 class="card-title">Sửa rạp chiếu phim</h4>
+                    <div class="card-header" style="background: #ff6633; border-bottom: 1px solid #e55a2b;">
+                        <h4 class="card-title" style="color: #333333; font-weight: 600;">Sửa rạp chiếu phim</h4>
                     </div>
                     <div class="card-body">
                         <form method="POST" action="{{ route('admin.cinemas.update', $cinema->id) }}" enctype="multipart/form-data">
