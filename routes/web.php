@@ -41,7 +41,10 @@ use App\Http\Controllers\Admin\AdminProductCategoriesController;
 
 
 Route::get('/', [HomeController::class, 'index'])->name('client.home');
-Route::get('/movies', [HomeController::class, 'movies'])->name('client.movies');
+Route::get('/movies', [HomeController::class, 'filter'])->name('movies.filter');
+Route::get('/movies/filter/{genreName?}', [HomeController::class, 'filter'])
+    ->where('genreName', '.*') // Cho phép dấu cách, ký tự đặc biệt
+    ->name('movies.filter.genre');
 Route::get('/movies/{id}', [HomeController::class, 'show'])->name('movies.show');
 Route::get('/movies/{id}/ticket-booking', [HomeController::class, 'ticketBooking'])->name('client.movies.ticketBooking');
 
@@ -105,9 +108,42 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::middleware(['auth'])->group(function (){
-Route::get('/profile', [App\Http\Controllers\Auth\AuthenticatedSessionController::class, 'profile'])->name('profile.edit');
-Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+// Thông tin chung
+    Route::get('/profile/detail', [App\Http\Controllers\Auth\AuthenticatedSessionController::class, 'profile'])
+        ->name('profile.edit');
+
+    // Chi tiết tài khoản
+    Route::get('/profile/general', [ProfileController::class, 'general'])
+        ->name('profile.general');
+
+    // Thẻ thành viên
+    Route::get('/profile/membership', [ProfileController::class, 'membership'])
+        ->name('profile.membership');
+
+    // Voucher
+    Route::get('/profile/voucher', [ProfileController::class, 'voucher'])
+        ->name('profile.voucher');
+
+    // Lịch sử giao dịch
+    Route::get('/profile/history', [ProfileController::class, 'history'])
+        ->name('profile.history');
+
+    Route::get('/booking/{id}/detail', [ProfileController::class, 'detail'])->name('client.booking.detail');
+
+    // Update và Delete (có sẵn)
+    Route::patch('/profile', [ProfileController::class, 'update'])
+        ->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])
+        ->name('profile.destroy');
+
+    // Show form
+    Route::get('/profile/change-password', [ProfileController::class, 'showChangePassword'])
+        ->name('profile.change-password.edit');
+
+    // Update password
+    Route::patch('/profile/change-password', [ProfileController::class, 'profilew'])
+        ->name('profile.change-password.update');
+
 });
 
 Route::middleware(['auth', 'role:admin,staff'])->group(function () {
