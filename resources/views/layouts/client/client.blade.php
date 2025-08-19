@@ -94,6 +94,13 @@
 		.far.fa-star:before {
 			font-weight: 400 !important;
 		}
+
+		/* Nới rộng popup tìm kiếm */
+		.pop-overlay .popup {
+			max-width: 90%;
+			/* thay đổi theo ý bạn, ví dụ 1000px hoặc 80% */
+			width: 80%;
+		}
 	</style>
 	<script src="https://cdn.tailwindcss.com"></script>
 	<!-- ..............Booking............... -->
@@ -198,8 +205,26 @@
 		transition: background-color 0.3s ease;
 	}
 
-	.search-right .popup form button {
-		top: 1px;
+	input[type=text] {
+		width: 30%;
+	}
+
+	.pop-overlay {
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		display: flex;
+		justify-content: center;
+		/* căn giữa ngang */
+		align-items: center;
+		/* căn giữa dọc */
+	}
+
+	.btn-submit {
+		position: static !important;
+		color: white;
 	}
 </style> <!-- JavaScript cho kiểm tra đăng nhập và hiển thị popup -->
 <script>
@@ -291,30 +316,86 @@
 
 					<!--/search-right-->
 					<div class="search-right">
-						<a href="#search" class="btn search-hny mr-lg-3" title="search">Tìm kiếm nâng cao</a>
+						<a href="#search" class="btn search-hny mr-lg-3" title="search">Tìm kiếm nâng cao<span class="fas fa-search ml-3" aria-hidden="true"></span></a>
 						<!-- search popup -->
 						<div id="search" class="pop-overlay">
 							<div class="popup">
-								<form action="{{ route('movies.filter') }}" method="get" class="search-box">
-									<input type="search" placeholder="Tìm kiếm theo tên" name="search" value="{{ request('search') }}">
-									<button type="submit" class="btn">
-										<span class="fas fa-search" aria-hidden="true"></span>
-									</button>
+								<form action="{{ route('movies.filter') }}" method="get" class="search-box text-center"
+									style="width: 100%; max-width: 1000px; margin: 0 auto;">
+
+									<!-- Tiêu đề chính -->
+									<h2 class="mb-4" style="color: white; font-weight: bold; font-size: 2rem;">
+										Tìm kiếm nâng cao
+									</h2>
+
+									<!-- Hàng input -->
+									<div class="d-flex flex-wrap justify-content-center align-items-center mb-3" style="gap: 10px;">
+										<input type="text" placeholder="Tên phim"
+											name="search"
+											value="{{ request('search') }}"
+											class="form-control flex-fill" style="max-width: 300px;">
+
+										<input type="text" placeholder="Tên đạo diễn"
+											name="director"
+											value="{{ request('director') }}"
+											class="form-control flex-fill" style="max-width: 300px;">
+
+										<input type="text" placeholder="Tên diễn viên"
+											name="actor"
+											value="{{ request('actor') }}"
+											class="form-control flex-fill" style="max-width: 300px;">
+									</div>
+
+									<!-- Tiêu đề thể loại -->
+									<h4 class="mb-2" style="color: white; font-weight: bold; font-size: 1.4rem;">
+										Tìm kiếm theo thể loại
+									</h4>
+
+									<div class="d-flex flex-wrap justify-content-center mb-3" style="gap: 10px;">
+										@foreach($genres as $genre)
+										<input type="checkbox"
+											class="btn-check"
+											id="genre-{{ $genre->id }}"
+											name="genres[]"
+											value="{{ $genre->id }}"
+											autocomplete="off"
+											{{ collect(request('genres'))->contains($genre->id) ? 'checked' : '' }}>
+										<label for="genre-{{ $genre->id }}"
+											class="btn btn-outline-light genre-label"
+											style="font-size: 1.1rem; font-weight: bold;">
+											{{ $genre->name }}
+										</label>
+										@endforeach
+									</div>
+
+									<div class="d-flex justify-content-center mt-3">
+										<button type="submit" class="btn-submit btn btn-primary">
+											<span class="fas fa-search"></span> Lọc
+										</button>
+									</div>
+
 								</form>
 
-								<div class="browse-items">
-									<h3 class="hny-title two mt-md-5 mt-4">Tìm theo thể loại:</h3>
-									<ul class="search-items">
-										@foreach($genres as $genre)
-										<li>
-											<a href="{{ route('movies.filter', ['genreName' => $genre->name]) }}">
-												{{ $genre->name }}
-											</a>
-										</li>
-										@endforeach
-									</ul>
-								</div>
+								<!-- CSS đổi màu khi chọn thể loại -->
+								<style>
+									.btn-check:checked+.genre-label {
+										background-color: #0d6efd;
+										/* màu xanh Bootstrap primary */
+										color: white;
+										border-color: #0d6efd;
+									}
+
+									/* Hiệu ứng hover */
+									.genre-label:hover {
+										color: #0d6efd;
+										border-color: #0d6efd;
+									}
+								</style>
+
+
 							</div>
+
+
 							<a class="close" href="#close">×</a>
 						</div>
 						<!-- /search popup -->
@@ -387,7 +468,7 @@
 			return;
 		}
 
-fetch(`{{ route('movies.searchAjax') }}?q=${encodeURIComponent(query)}`)
+		fetch(`{{ route('movies.searchAjax') }}?q=${encodeURIComponent(query)}`)
 			.then(response => response.json())
 			.then(data => {
 				resultsBox.innerHTML = '';
