@@ -72,116 +72,119 @@ class HomeController extends Controller
     }
 
     // MovieController.php
-    public function filter(Request $request, $genreName = null)
-    {
-        $data = $request->all();
+    public function filter(Request $request)
+{
+    $data = $request->all();
 
-        // Xử lý chuyển chuỗi rỗng thành null cho from_time và to_time
-        $data['from_time'] = $data['from_time'] ?? null;
-        $data['to_time'] = $data['to_time'] ?? null;
-        if ($data['from_time'] === '') $data['from_time'] = null;
-        if ($data['to_time'] === '') $data['to_time'] = null;
+    // Xử lý chuyển chuỗi rỗng thành null cho from_time và to_time
+    $data['from_time'] = $data['from_time'] ?? null;
+    $data['to_time'] = $data['to_time'] ?? null;
+    if ($data['from_time'] === '') $data['from_time'] = null;
+    if ($data['to_time'] === '') $data['to_time'] = null;
 
-        $validator = Validator::make($data, [
-            'status'    => 'nullable|in:showing,upcoming',
-            'search'    => 'nullable|string|max:255',
-            'date'      => 'nullable|date',
-            'from_time' => ['nullable', 'date_format:H:i'],
-            'to_time'   => ['nullable', 'date_format:H:i', 'after_or_equal:from_time'],
-        ], [
-            'status.in' => 'Trạng thái không hợp lệ.',
-            'search.string' => 'Tìm kiếm phải là chuỗi.',
-            'search.max' => 'Từ khóa tìm kiếm quá dài.',
-            'date.date' => 'Ngày không hợp lệ.',
-            'from_time.date_format' => 'Giờ bắt đầu không đúng định dạng.',
-            'to_time.date_format' => 'Giờ kết thúc không đúng định dạng.',
-            'to_time.after_or_equal' => 'Giờ kết thúc phải lớn hơn hoặc bằng giờ bắt đầu.',
-        ]);
+    // Validation
+    $validator = Validator::make($data, [
+        'status'    => 'nullable|in:showing,upcoming',
+        'search'    => 'nullable|string|max:255',
+        'date'      => 'nullable|date',
+        'from_time' => ['nullable', 'date_format:H:i'],
+        'to_time'   => ['nullable', 'date_format:H:i', 'after_or_equal:from_time'],
+        'genres'    => 'nullable|array',
+        'genres.*'  => 'integer|exists:genres,id',
+    ], [
+        'status.in' => 'Trạng thái không hợp lệ.',
+        'search.string' => 'Tìm kiếm phải là chuỗi.',
+        'search.max' => 'Từ khóa tìm kiếm quá dài.',
+        'date.date' => 'Ngày không hợp lệ.',
+        'from_time.date_format' => 'Giờ bắt đầu không đúng định dạng.',
+        'to_time.date_format' => 'Giờ kết thúc không đúng định dạng.',
+        'to_time.after_or_equal' => 'Giờ kết thúc phải lớn hơn hoặc bằng giờ bắt đầu.',
+        'genres.array' => 'Thể loại không hợp lệ.',
+        'genres.*.exists' => 'Thể loại không tồn tại.',
+    ]);
 
-        // Custom rule để nếu nhập giờ thì phải nhập ngày
-        $validator->sometimes('from_time', 'required', function ($input) {
-            return !empty($input->from_time) && empty($input->date);
-        });
-
-        $validator->sometimes('to_time', 'required', function ($input) {
-            return !empty($input->to_time) && empty($input->date);
-        });
-
-        $validator->after(function ($validator) use ($data) {
-            if ((!empty($data['from_time']) || !empty($data['to_time'])) && empty($data['date'])) {
-                $validator->errors()->add('date', 'Vui lòng chọn ngày nếu muốn nhập giờ.');
-            }
-        });
-
-        if ($validator->fails()) {
-            return redirect()->back()
-                ->withErrors($validator)
-                ->withInput();
+    // Custom rule: nếu nhập giờ thì phải nhập ngày
+    $validator->sometimes('from_time', 'required', fn($input) => !empty($input->from_time) && empty($input->date));
+    $validator->sometimes('to_time', 'required', fn($input) => !empty($input->to_time) && empty($input->date));
+    $validator->after(function ($validator) use ($data) {
+        if ((!empty($data['from_time']) || !empty($data['to_time'])) && empty($data['date'])) {
+            $validator->errors()->add('date', 'Vui lòng chọn ngày nếu muốn nhập giờ.');
         }
+    });
 
-        // Tiếp tục xử lý query lọc phim...
-
-        $query = Movie::query()->with('genres', 'showtimes');
-
-        $title = 'Danh sách phim';
-        $isShowing = false;
-
-        if (!empty($data['status'])) {
-            $query->where('status', $data['status']);
-            if ($data['status'] === 'showing') {
-                $title = 'Phim đang chiếu';
-                $isShowing = true;
-            } elseif ($data['status'] === 'upcoming') {
-                $title = 'Phim sắp chiếu';
-            }
-        }
-
-        if ($genreName) {
-            $query->whereHas('genres', function ($q) use ($genreName) {
-                $q->where('name', $genreName);
-            });
-            $title = 'Phim ' . $genreName;
-        }
-
-        if (!empty($data['search'])) {
-    $query->where('name', 'like', '%' . $data['search'] . '%');
-    $title = 'Kết quả tìm kiếm cho: ' . e($data['search']);
-}
-
-        if ($isShowing && !empty($data['date'])) {
-            $date = $data['date'];
-            $fromTime = $data['from_time'] ?? null;
-            $toTime = $data['to_time'] ?? null;
-
-            $query->whereHas('showtimes', function ($q) use ($date, $fromTime, $toTime) {
-                $q->whereDate('start_time', $date);
-
-                if ($fromTime && $toTime) {
-                    $q->whereTime('start_time', '>=', $fromTime)
-                        ->whereTime('start_time', '<=', $toTime);
-                } elseif ($fromTime) {
-                    $q->whereTime('start_time', '>=', $fromTime);
-                } elseif ($toTime) {
-                    $q->whereTime('start_time', '<=', $toTime);
-                }
-            });
-        }
-
-        if ($isShowing) {
-            $query->withCount(['showtimes as tickets_sold' => function ($q) {
-                $q->join('tickets', 'showtimes.id', '=', 'tickets.showtime_id')
-                    ->join('bookings', 'tickets.booking_id', '=', 'bookings.id')
-                    ->where('bookings.status', 'confirmed'); // chỉ tính vé đã xác nhận
-            }])->orderByDesc('tickets_sold')
-                ->orderByDesc('release_date');
-        } else {
-            $query->orderBy('release_date', 'desc');
-        }
-
-        $movies = $query->orderBy('release_date', 'desc')->paginate(12);
-
-        return view('client.filter', compact('movies', 'title', 'isShowing'));
+    if ($validator->fails()) {
+        return redirect()->back()
+            ->withErrors($validator)
+            ->withInput();
     }
+
+    // Query
+    $query = Movie::query()->with('genres', 'showtimes');
+    $title = 'Danh sách phim';
+    $isShowing = false;
+
+    // Lọc status
+    if (!empty($data['status'])) {
+        $query->where('status', $data['status']);
+        if ($data['status'] === 'showing') {
+            $title = 'Phim đang chiếu';
+            $isShowing = true;
+        } elseif ($data['status'] === 'upcoming') {
+            $title = 'Phim sắp chiếu';
+        }
+    }
+
+    // Lọc tên phim
+    if (!empty($data['search'])) {
+        $query->where('name', 'like', '%' . $data['search'] . '%');
+        $title = 'Kết quả tìm kiếm cho: ' . e($data['search']);
+    }
+
+    // Lọc genres theo AND logic
+    if (!empty($data['genres']) && is_array($data['genres'])) {
+        foreach ($data['genres'] as $genreId) {
+            $query->whereHas('genres', function ($q) use ($genreId) {
+                $q->where('id', $genreId);
+            });
+        }
+    }
+
+    // Lọc ngày/giờ khi đang chiếu
+    if ($isShowing && !empty($data['date'])) {
+        $date = $data['date'];
+        $fromTime = $data['from_time'] ?? null;
+        $toTime = $data['to_time'] ?? null;
+
+        $query->whereHas('showtimes', function ($q) use ($date, $fromTime, $toTime) {
+            $q->whereDate('start_time', $date);
+
+            if ($fromTime && $toTime) {
+                $q->whereTime('start_time', '>=', $fromTime)
+                  ->whereTime('start_time', '<=', $toTime);
+            } elseif ($fromTime) {
+                $q->whereTime('start_time', '>=', $fromTime);
+            } elseif ($toTime) {
+                $q->whereTime('start_time', '<=', $toTime);
+            }
+        });
+    }
+
+    // Sắp xếp
+    if ($isShowing) {
+        $query->withCount(['showtimes as tickets_sold' => function ($q) {
+            $q->join('tickets', 'showtimes.id', '=', 'tickets.showtime_id')
+              ->join('bookings', 'tickets.booking_id', '=', 'bookings.id')
+              ->where('bookings.status', 'confirmed');
+        }])->orderByDesc('tickets_sold')
+          ->orderByDesc('release_date');
+    } else {
+        $query->orderBy('release_date', 'desc');
+    }
+
+    $movies = $query->paginate(12);
+
+    return view('client.filter', compact('movies', 'title', 'isShowing'));
+}
 
 
     public function searchAjax(Request $request)
