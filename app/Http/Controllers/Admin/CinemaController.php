@@ -31,9 +31,12 @@ class CinemaController extends Controller
     public function show($id)
 {
     $cinema = Cinema::withTrashed()
-        ->with(['city' => function ($query) {
-            $query->withTrashed(); // Load cả thành phố đã bị xóa mềm
-        }])
+        ->with([
+            'city' => function ($query) {
+                $query->withTrashed(); // Load cả thành phố đã bị xóa mềm
+            },
+            'rooms.seats' // Load rooms và seats của từng room
+        ])
         ->findOrFail($id);
 
     return view('admin.cinemas.detail', compact('cinema'));

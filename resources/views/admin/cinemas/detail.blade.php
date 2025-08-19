@@ -87,6 +87,48 @@
           </div>
         </div>
         @endif
+
+        <div class="mt-4">
+          <h4 class="mb-3">Danh sách phòng ({{ $cinema->rooms->count() }}):</h4>
+          @if($cinema->rooms->count() > 0)
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Tên phòng</th>
+                    <th>Loại phòng</th>
+                    <th>Số ghế</th>
+                    <th>Trạng thái</th>
+                    <th>Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @foreach($cinema->rooms as $room)
+                    <tr>
+                      <td>{{ $room->name }}</td>
+                      <td>{{ $room->type }}</td>
+                      <td>{{ $room->seats->count() }} ghế</td>
+                      <td>
+                        @if($room->is_active)
+                          <span class="badge bg-success">Hoạt động</span>
+                        @else
+                          <span class="badge bg-danger">Ngưng hoạt động</span>
+                        @endif
+                      </td>
+                      <td>
+                        <a href="{{ route('admin.rooms.show', $room->id) }}" class="btn btn-sm btn-outline-primary">
+                          Xem chi tiết
+                        </a>
+                      </td>
+                    </tr>
+                  @endforeach
+                </tbody>
+              </table>
+            </div>
+          @else
+            <p class="text-muted">Chưa có phòng nào.</p>
+          @endif
+        </div>
       </div>
     </div>
   </div>
