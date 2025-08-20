@@ -6,7 +6,7 @@
             <div class="col-xl-10 mx-auto">
                 <div class="card shadow-sm">
                     <div class="card-header d-flex justify-content-between align-items-center">
-                        <h4 class="mb-0">Lịch sử cộng/trừ điểm</h4>
+                        <h4 class="mb-0">🔢➖➕ Lịch sử cộng/trừ điểm</h4>
                         <form method="GET" action="{{ route('admin.point_history.index') }}" class="d-flex gap-2">
                             <input type="text" name="user_id" value="{{ request('user_id') }}"
                                 class="form-control form-control-sm" placeholder="ID khách hàng">

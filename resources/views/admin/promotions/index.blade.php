@@ -9,7 +9,7 @@
                 {{-- Thông báo  --}}
                 @include('admin.partials.notifications')
                 <div class="card-header d-flex justify-content-between align-items-center gap-1">
-                    <h4 class="card-title flex-grow-1">Danh sách khuyến mãi</h4>
+                    <h4 class="card-title flex-grow-1">🎟️ Danh sách khuyến mãi</h4>
                     <div class="d-flex gap-2 align-items-center">
                         <form method="GET" action="{{ route('promotions.index') }}" class="d-flex align-items-center gap-2">
                             <input type="text" name="search" placeholder="Tìm kiếm tên hoặc mã KM" value="{{ request('search') }}" class="form-control form-control-sm" style="width: 200px;">

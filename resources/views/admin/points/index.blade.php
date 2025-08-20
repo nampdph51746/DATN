@@ -24,7 +24,7 @@
                 <div class="card-header">
                     <div class="row align-items-center g-3">
                         <div class="col-md-4">
-                            <h4 class="card-title mb-0">Danh Sách Điểm Thưởng</h4>
+                            <h4 class="card-title mb-0">🔢 Danh Sách Điểm Thưởng</h4>
                         </div>
                         <div class="col-md-8">
                             <div class="d-flex flex-wrap gap-2 justify-content-md-end">

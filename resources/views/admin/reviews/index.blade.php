@@ -126,7 +126,7 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md-2">
+                    <!-- <div class="col-md-2">
                         <label for="rating">Đánh giá</label>
                         <select name="rating" id="rating" class="form-control">
                             <option value="">Tất cả</option>
@@ -136,7 +136,7 @@
                                 </option>
                             @endfor
                         </select>
-                    </div>
+                    </div> -->
                     <div class="col-md-2">
                         <label for="auto_type">Loại xử lý</label>
                         <select name="auto_type" id="auto_type" class="form-control">
@@ -191,7 +191,7 @@
                                 </th>
                                 <th width="120">Người dùng</th>
                                 <th width="150">Phim</th>
-                                <th width="120">Đánh giá</th>
+                                <!-- <th width="120">Đánh giá</th> -->
                                 <th width="200">Bình luận</th>
                                 <th width="100">Trạng thái</th>
                                 <th width="120">Ngày tạo</th>
@@ -210,7 +210,7 @@
                                             {{ Str::limit($review->movie->name, 30) }}
                                         </a>
                                     </td>
-                                    <td class="review-rating-cell">
+                                    <!-- <td class="review-rating-cell">
                                         <div class="text-center">
                                             <div class="mb-1">
                                                 <span class="badge bg-warning text-dark">{{ $review->rating_star }}/5</span>
@@ -225,7 +225,7 @@
                                                 @endfor
                                             </div>
                                         </div>
-                                    </td>
+                                    </td> -->
                                     <td>{{ Str::limit($review->comment, 50) }}</td>
                                     <td>
                                         @switch($review->status)
