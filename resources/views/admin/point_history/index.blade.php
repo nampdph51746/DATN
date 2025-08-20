@@ -14,7 +14,9 @@
                                 class="form-control form-control-sm" placeholder="ID đơn hàng">
                             <input type="text" name="reason_type" value="{{ request('reason_type') }}"
                                 class="form-control form-control-sm" placeholder="Lý do">
-                            <button class="btn btn-sm btn-light bg-primary text-white" type="submit">Lọc</button>
+                            <button type="submit" class="btn btn-sm btn-primary">
+                                <i class="bx bx-search"></i>
+                            </button>
                         </form>
                     </div>
                     <div class="table-responsive">
