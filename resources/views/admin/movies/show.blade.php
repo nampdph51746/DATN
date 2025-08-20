@@ -6,10 +6,10 @@
     @include('admin.partials.notifications')
 
     <!-- Header Section -->
-    <div class="card border-0 shadow-sm mb-4" style="background: #ff6633;">
+    <div class="card border-0 shadow-sm mb-4">
         <div class="card-body p-4">
             <div class="d-flex justify-content-between align-items-center">
-                <div style="color: #333333;">
+                <div>
                     <div class="d-flex align-items-center gap-3 mb-2">
                         <div class="bg-white bg-opacity-20 rounded-circle p-2">
                             <i class="bi bi-camera-reels-fill fs-24" style="color: #333333; font-size: 1.5rem;"></i>
