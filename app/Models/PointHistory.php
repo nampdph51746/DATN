@@ -2,9 +2,8 @@
 
 namespace App\Models;
 
-use App\Enums\BookingStatus;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class PointHistory extends Model
 {
@@ -26,9 +25,9 @@ class PointHistory extends Model
                 return;
             }
 
-            // Nếu là cộng điểm thì đặt lại trạng thái là Đã xác nhận (chưa in vé)
+            // Nếu là cộng điểm thì đặt lại trạng thái là Đã xác nhận
             if ($history->points_change > 0) {
-                $booking->status = BookingStatus::ConfirmedNotPrinted;
+                $booking->status = \App\Enums\BookingStatus::Confirmed;
             }
 
             // Nếu là trừ điểm thì chuyển về trạng thái Chờ xác nhận

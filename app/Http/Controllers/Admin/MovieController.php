@@ -31,7 +31,7 @@ class MovieController extends Controller
         $endDate = $request->input('end_date');
 
         $movies = Movie::query()
-            ->with(['country', 'ageLimit', 'genres', 'director', 'actors'])
+            ->with(['country', 'ageLimit', 'genres'])
             ->when($query, function ($queryBuilder, $query) {
                 return $queryBuilder->where('name', 'like', "%{$query}%")
                     ->orWhere('director', 'like', "%{$query}%")
@@ -176,9 +176,13 @@ class MovieController extends Controller
         $roomId = $request->input('room_id');
         $startDate = $request->input('start_date');
 
-        // Tải danh sách suất chiếu với tìm kiếm/lọc
+        // Tải danh sách suất chiếu với tìm kiếm/lọc và thông tin vé đã đặt
         $showtimes = $movie->showtimes()
-            ->with(['room'])
+            ->with(['room', 'tickets' => function($query) {
+                $query->whereHas('booking', function($subQuery) {
+                    $subQuery->where('status', 'confirmed');
+                });
+            }])
             ->when($showtimeQuery, function ($queryBuilder, $showtimeQuery) {
                 return $queryBuilder->whereHas('room', function ($q) use ($showtimeQuery) {
                     $q->where('name', 'like', "%{$showtimeQuery}%");

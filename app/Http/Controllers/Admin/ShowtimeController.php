@@ -210,23 +210,50 @@ class ShowtimeController extends Controller
                 return redirect()->back()->with('error', 'Thời lượng suất chiếu không được vượt quá 3 giờ.');
             }
 
-            if ($showtime->tickets()->exists() && (
+            // Kiểm tra xem có thể chỉnh sửa không
+            $hasConfirmedTickets = $showtime->tickets()->whereHas('booking', function($query) {
+                $query->where('status', 'confirmed');
+            })->exists();
+
+            // Không cho phép sửa các thông tin quan trọng nếu đã có vé được đặt và xác nhận
+            if ($hasConfirmedTickets && (
                 $showtime->movie_id != $request->movie_id ||
                 $showtime->room_id != $request->room_id ||
-                $showtime->start_time != $request->start_time ||
-                $showtime->end_time != $request->end_time
+                $showtime->start_time->format('Y-m-d H:i:s') != $start->format('Y-m-d H:i:s') ||
+                $showtime->end_time->format('Y-m-d H:i:s') != $end->format('Y-m-d H:i:s')
             )) {
-                return redirect()->back()->with('error', 'Không thể sửa phim, phòng chiếu, hoặc thời gian vì đã có vé được đặt.');
+                $ticketCount = $showtime->tickets()->whereHas('booking', function($query) {
+                    $query->where('status', 'confirmed');
+                })->count();
+                
+                return redirect()->back()->with('error', "Không thể chỉnh sửa phim, phòng chiếu, hoặc thời gian vì đã có {$ticketCount} vé được đặt và xác nhận. Chỉ có thể điều chỉnh giá vé và trạng thái.");
             }
 
-            $showtime->update([
-                'movie_id' => $request->movie_id,
-                'room_id' => $request->room_id,
-                'start_time' => $start->toDateTimeString(),
-                'end_time' => $end->toDateTimeString(),
-                'base_price' => $request->base_price,
-                'status' => $request->status,
-            ]);
+            // Nếu có vé đã đặt, chỉ cho phép điều chỉnh một số trường nhất định
+            $updateData = [];
+            
+            if ($hasConfirmedTickets) {
+                // Chỉ cho phép cập nhật giá và trạng thái khi có vé đã đặt
+                $updateData = [
+                    'base_price' => $request->base_price,
+                    'status' => $request->status,
+                ];
+                
+                // Thông báo cho người dùng biết
+                session()->flash('info', 'Do đã có vé được đặt, chỉ có thể điều chỉnh giá vé và trạng thái.');
+            } else {
+                // Có thể cập nhật tất cả nếu chưa có vé nào được đặt
+                $updateData = [
+                    'movie_id' => $request->movie_id,
+                    'room_id' => $request->room_id,
+                    'start_time' => $start->format('Y-m-d H:i:s'),
+                    'end_time' => $end->format('Y-m-d H:i:s'),
+                    'base_price' => $request->base_price,
+                    'status' => $request->status,
+                ];
+            }
+
+            $showtime->update($updateData);
 
             return redirect()->route('admin.showtimes.index')->with('success', 'Cập nhật suất chiếu thành công!');
         } catch (\Exception $e) {
@@ -604,39 +631,100 @@ class ShowtimeController extends Controller
     public function updateStatus(Request $request, $id)
     {
         try {
-            $showtime = Showtime::findOrFail($id);
+            $showtime = Showtime::with('tickets.booking')->findOrFail($id);
             
             $request->validate([
                 'status' => 'required|in:scheduled,ongoing,completed,cancelled,postponed'
             ]);
 
-            // Kiểm tra logic nghiệp vụ
-            if ($request->status === 'scheduled' && $showtime->start_time->isPast()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Không thể đặt trạng thái "scheduled" cho suất chiếu đã qua.'
-                ]);
-            }
-
-            // Kiểm tra xem có vé đã được đặt không
-            if ($request->status === 'cancelled' && $showtime->tickets()->exists()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Không thể hủy suất chiếu đã có vé được đặt. Vui lòng liên hệ khách hàng để xử lý hoàn tiền.'
-                ]);
-            }
-
             $oldStatus = $showtime->status->value;
-            $showtime->status = $request->status;
+            $newStatus = $request->status;
+
+            // Kiểm tra logic nghiệp vụ dựa trên trạng thái mới
+            switch ($newStatus) {
+                case 'scheduled':
+                    // Chỉ có thể đặt lại thành scheduled nếu suất chiếu chưa bắt đầu
+                    if ($showtime->start_time->isPast()) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Không thể đặt trạng thái "scheduled" cho suất chiếu đã qua thời gian bắt đầu.'
+                        ], 400);
+                    }
+                    break;
+
+                case 'cancelled':
+                    // Kiểm tra xem có vé đã được đặt không
+                    $confirmedTickets = $showtime->tickets()->whereHas('booking', function($query) {
+                        $query->where('status', 'confirmed');
+                    })->count();
+                    
+                    if ($confirmedTickets > 0) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => "Không thể hủy suất chiếu vì đã có {$confirmedTickets} vé được đặt và xác nhận. Vui lòng liên hệ khách hàng để xử lý hoàn tiền trước khi hủy.",
+                            'tickets_count' => $confirmedTickets
+                        ], 400);
+                    }
+                    break;
+
+                case 'postponed':
+                    // Chỉ có thể hoãn nếu suất chiếu chưa bắt đầu
+                    if ($showtime->start_time->isPast()) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Không thể hoãn suất chiếu đã bắt đầu.'
+                        ], 400);
+                    }
+                    
+                    // Thông báo về số vé đã đặt (nếu có)
+                    $confirmedTickets = $showtime->tickets()->whereHas('booking', function($query) {
+                        $query->where('status', 'confirmed');
+                    })->count();
+                    
+                    if ($confirmedTickets > 0) {
+                        // Cần thông báo cho khách hàng về việc hoãn
+                        Log::info("Suất chiếu ID: {$id} bị hoãn, có {$confirmedTickets} vé đã được đặt cần thông báo khách hàng.");
+                    }
+                    break;
+
+                case 'ongoing':
+                    if ($showtime->start_time->isFuture() || $showtime->end_time->isPast()) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Trạng thái "ongoing" chỉ áp dụng khi suất chiếu đang diễn ra.'
+                        ], 400);
+                    }
+                    break;
+
+                case 'completed':
+                    if (!$showtime->end_time->isPast()) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Chỉ có thể đánh dấu hoàn thành khi suất chiếu đã kết thúc.'
+                        ], 400);
+                    }
+                    break;
+            }
+
+            // Cập nhật trạng thái
+            $showtime->status = $newStatus;
             $showtime->save();
 
-            Log::info("Cập nhật trạng thái suất chiếu ID: {$id} từ '{$oldStatus}' thành '{$request->status}'");
+            // Tạo thông báo tùy theo trạng thái
+            $message = $this->getStatusUpdateMessage($oldStatus, $newStatus, $showtime);
+
+            Log::info("Cập nhật trạng thái suất chiếu ID: {$id} từ '{$oldStatus}' thành '{$newStatus}'");
 
             return response()->json([
                 'success' => true,
-                'message' => "Đã cập nhật trạng thái suất chiếu từ '{$oldStatus}' thành '{$request->status}'",
+                'message' => $message,
                 'old_status' => $oldStatus,
-                'new_status' => $request->status
+                'new_status' => $newStatus,
+                'showtime_info' => [
+                    'movie' => $showtime->movie->name ?? 'N/A',
+                    'room' => $showtime->room->name ?? 'N/A',
+                    'start_time' => $showtime->start_time->format('d/m/Y H:i'),
+                ]
             ]);
 
         } catch (\Exception $e) {
@@ -646,6 +734,34 @@ class ShowtimeController extends Controller
                 'message' => 'Có lỗi xảy ra khi cập nhật trạng thái suất chiếu',
                 'error' => $e->getMessage()
             ], 500);
+        }
+    }
+
+    /**
+     * Tạo thông báo phù hợp cho việc cập nhật trạng thái
+     */
+    private function getStatusUpdateMessage($oldStatus, $newStatus, $showtime)
+    {
+        $movieName = $showtime->movie->name ?? 'N/A';
+        $startTime = $showtime->start_time->format('d/m/Y H:i');
+        
+        switch ($newStatus) {
+            case 'cancelled':
+                return "Đã hủy suất chiếu '{$movieName}' lúc {$startTime}. Hệ thống sẽ tự động xử lý hoàn tiền nếu có vé đã đặt.";
+                
+            case 'postponed':
+                $confirmedTickets = $showtime->tickets()->whereHas('booking', function($query) {
+                    $query->where('status', 'confirmed');
+                })->count();
+                
+                $ticketNotice = $confirmedTickets > 0 ? " (Có {$confirmedTickets} vé đã đặt cần thông báo khách hàng)" : '';
+                return "Đã hoãn suất chiếu '{$movieName}' lúc {$startTime}{$ticketNotice}.";
+                
+            case 'scheduled':
+                return "Đã kích hoạt lại suất chiếu '{$movieName}' lúc {$startTime}.";
+                
+            default:
+                return "Đã cập nhật trạng thái suất chiếu '{$movieName}' từ '{$oldStatus}' thành '{$newStatus}'.";
         }
     }
 }

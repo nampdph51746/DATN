@@ -36,11 +36,10 @@ class AdminAttributeValueController extends Controller
         return view('admin.attribute_values.index', compact('attributeValues'));
     }
 
-    public function create(Request $request)
+    public function create()
     {
         $attributes = Attribute::all();
-        $selectedAttributeId = $request->get('attribute_id');
-        return view('admin.attribute_values.create', compact('attributes', 'selectedAttributeId'));
+        return view('admin.attribute_values.create', compact('attributes'));
     }
 
     public function store(Request $request)
@@ -56,18 +55,12 @@ class AdminAttributeValueController extends Controller
             'value.max' => 'Giá trị thuộc tính không được vượt quá 100 ký tự.',
         ]);
 
-        $attributeValue = AttributeValue::create([
+        AttributeValue::create([
             'attribute_id' => $request->attribute_id,
             'value' => $request->value,
             'created_at' => now(),
             'updated_at' => now(),
         ]);
-
-        // Nếu có selectedAttributeId (tức là thêm từ trang chi tiết), chuyển về trang chi tiết thuộc tính
-        if ($request->has('attribute_id')) {
-            return redirect()->route('admin.attributes.show', $request->attribute_id)
-                ->with('success', 'Giá trị thuộc tính đã được tạo thành công.');
-        }
 
         return redirect()->route('admin.attribute-values.index')->with('success', 'Giá trị thuộc tính đã được tạo thành công.');
     }

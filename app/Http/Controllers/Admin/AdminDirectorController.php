@@ -16,13 +16,17 @@ class AdminDirectorController extends Controller
     {
         $query = $request->input('query');
         
-        $directors = Director::query()
+        $directors = Director::withCount('movies')
             ->when($query, function ($queryBuilder, $query) {
                 return $queryBuilder->where('name', 'like', '%' . $query . '%')
-                    ->orWhere('nationality', 'like', '%' . $query . '%');
+                    ->orWhere('nationality', 'like', '%' . $query . '%')
+                    ->orWhere('biography', 'like', '%' . $query . '%');
             })
             ->orderBy('created_at', 'desc')
             ->paginate(10);
+
+        // Append search parameter to pagination links
+        $directors->appends($request->query());
 
         return view('admin.directors.index', compact('directors'));
     }
@@ -138,5 +142,36 @@ class AdminDirectorController extends Controller
 
         return redirect()->route('admin.directors.index')
             ->with('success', 'Xóa đạo diễn thành công!');
+    }
+
+    /**
+     * Bulk delete directors.
+     */
+    public function bulkDelete(Request $request)
+    {
+        $ids = explode(',', $request->ids);
+        $directors = Director::whereIn('id', $ids)->get();
+        
+        // Kiểm tra xem có đạo diễn nào đang có phim không
+        $directorsWithMovies = $directors->filter(function ($director) {
+            return $director->movies()->count() > 0;
+        });
+
+        if ($directorsWithMovies->count() > 0) {
+            return redirect()->route('admin.directors.index')
+                ->with('error', 'Không thể xóa một số đạo diễn vì đang có phim!');
+        }
+
+        // Xóa ảnh của các đạo diễn
+        foreach ($directors as $director) {
+            if ($director->image_path) {
+                Storage::disk('public')->delete($director->image_path);
+            }
+        }
+
+        Director::whereIn('id', $ids)->delete();
+        
+        return redirect()->route('admin.directors.index')
+            ->with('success', 'Đã xóa các đạo diễn đã chọn!');
     }
 }

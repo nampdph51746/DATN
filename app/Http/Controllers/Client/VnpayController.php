@@ -18,15 +18,21 @@ use App\Enums\BookingStatus;
 use App\Models\PointHistory;
 use Illuminate\Http\Request;
 use App\Models\ProductVariant;
-use App\Events\BookingConfirmed;
 use App\Models\ShowtimeSeatState;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Auth;
+use App\Events\BookingConfirmed;
+use App\Services\BookingAttemptService;
 
 class VnpayController extends Controller
 {
+    protected $bookingAttemptService;
+
+    public function __construct(BookingAttemptService $bookingAttemptService)
+    {
+        $this->bookingAttemptService = $bookingAttemptService;
+    }
   public function redirectToVnpay(Request $request)
   {
     // Log request data để debug
@@ -132,7 +138,8 @@ class VnpayController extends Controller
 
                 // Kiểm tra xem có dữ liệu booking không
                 if (empty($bookingData)) {
-                    throw new \Exception('Không tìm thấy dữ liệu đặt vé trong session');
+                    Log::error('Booking data not found in session');
+                    throw new \Exception('Không tìm thấy thông tin đặt vé trong session.');
                 }
 
                 // Log bookingData để debug
@@ -148,24 +155,33 @@ class VnpayController extends Controller
                 }
 
                 Log::info('VnpayController - Final promotion_id to be saved:', [
-                    'promotion_id' => $promotionId,
+                    'original' => $bookingData['promotion_id'] ?? 'not_set',
+                    'processed' => $promotionId,
                     'type' => gettype($promotionId)
                 ]);
 
                 if ($promotionId) {
-                    Log::info("Using promotion with ID: {$promotionId}");
+                    $hasUsedPromotion = Booking::where('user_id', $bookingData['user_id'])
+                        ->where('promotion_id', $promotionId)
+                        ->where('status', 'confirmed')
+                        ->exists();
+
+                    if ($hasUsedPromotion) {
+                        DB::rollBack();
+                        return redirect()->route('client.failed')->with('error', 'Mã giảm giá này đã được sử dụng trong đơn hàng trước đó.');
+                    }
                 }
 
-                // 1. Tạo bản ghi trong bảng bookings với trạng thái "confirmed_not_printed"
+                // 1. Tạo bản ghi trong bảng bookings
                 $booking = Booking::create([
-                    'user_id' => Auth::id(),
+                    'user_id' => (int) $bookingData['user_id'],
                     'booking_code' => $bookingData['booking_code'],
-                    'total_amount_before_discount' => $bookingData['total_amount_before_discount'],
-                    'discount_amount' => $bookingData['discount_amount'],
-                    'final_amount' => $bookingData['final_amount'],
+                    'total_amount_before_discount' => $bookingData['total_amount_before_discount'] ?? 0,
+                    'discount_amount' => (float) $bookingData['discount_amount'] ?? 0,
+                    'final_amount' => (float) $bookingData['final_amount'],
                     'promotion_id' => $promotionId,
-                    'payment_method_id' => $bookingData['payment_method_id'],
-                    'status' => BookingStatus::ConfirmedNotPrinted, // Mặc định là confirmed nhưng chưa in vé
+                    'payment_method_id' => (int) $bookingData['payment_method_id'],
+                    'status' => BookingStatus::Confirmed,
                     'notes' => $bookingData['notes'],
                 ]);
 
@@ -183,10 +199,12 @@ class VnpayController extends Controller
                 // 3. Cộng điểm thưởng cho người dùng
                 $user = $booking->user;
                 if (!$user) {
+                    \Log::error("User not found for booking ID: {$booking->id}, User ID: {$booking->user_id}");
                     throw new \Exception('Không tìm thấy người dùng.');
                 }
 
                 $pointsToAdd = max(1, floor($booking->final_amount / 10000));
+                \Log::info("Points to add: {$pointsToAdd}, Booking ID: {$booking->id}, User ID: {$user->id}");
 
                 if ($pointsToAdd > 0 && !PointHistory::where('booking_id', $booking->id)->exists()) {
                     $point = Point::firstOrCreate(
@@ -205,6 +223,9 @@ class VnpayController extends Controller
                         'created_at' => now(),
                     ]);
 
+                    \Log::info("Points added for user ID: {$user->id}, Booking ID: {$booking->id}, Points: {$pointsToAdd}");
+                } else {
+                    \Log::warning("Points not added. Points: {$pointsToAdd}, Existing history: " . (PointHistory::where('booking_id', $booking->id)->exists() ? 'Yes' : 'No'));
                 }
 
                 // 4. Lấy showtime từ ghế đã đặt và tạo tickets
@@ -290,6 +311,12 @@ class VnpayController extends Controller
                     }
                 }
 
+                // 7. Mark booking attempt as completed
+                $firstSeatState = ShowtimeSeatState::where('booking_id', $booking->id)->first();
+                if ($firstSeatState) {
+                    $this->bookingAttemptService->completeAttempt($booking->user_id, $firstSeatState->showtime_id);
+                }
+
                 DB::commit();
                 
                 // Fire event để gửi email xác nhận booking
@@ -299,11 +326,12 @@ class VnpayController extends Controller
 
                 return redirect()->route('client.success')->with('success', 'Thanh toán thành công!');
             } catch (\Exception $e) {
-                DB::rollback();
-                Log::error('VNPay transaction error: ' . $e->getMessage(), [
-                    'trace' => $e->getTraceAsString()
+                DB::rollBack();
+                Log::error('VNPay payment processing failed: ' . $e->getMessage(), [
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
                 ]);
-                return redirect()->route('client.failed')->with('error', 'Có lỗi xảy ra khi xử lý thanh toán: ' . $e->getMessage());
+                return redirect()->route('client.failed')->with('error', 'Thanh toán không thành công: ' . $e->getMessage());
             }
         } else {
             // Log khi response code không phải 00
