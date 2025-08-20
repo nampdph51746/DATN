@@ -127,8 +127,8 @@
                                     <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>Đã hủy</option>
                                 </select>
                                 
-                                    <button type="submit" class="btn btn-sm bg-primary text-white">
-                                        <i class="bi bi-search">Tìm/lọc</i>
+                                    <button type="submit" class="btn btn-sm btn-primary">
+                                        <i class="bx bx-search"></i>
                                     </button>
                                 
                                 <!-- <a href="{{ route('admin.bookings.index') }}" class="btn btn-sm btn-outline-secondary">

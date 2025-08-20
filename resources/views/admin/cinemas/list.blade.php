@@ -41,8 +41,8 @@
                                                style="width: 200px;">
                                     </div>
                                     
-                                    <button type="submit" class="btn btn-sm bg-primary text-white">
-                                        <i class="bi bi-search">Tìm/lọc</i>
+                                    <button type="submit" class="btn btn-sm btn-primary">
+                                        <i class="bx bx-search"></i>
                                     </button>
                                 </form>
 

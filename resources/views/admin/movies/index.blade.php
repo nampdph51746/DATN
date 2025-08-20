@@ -110,9 +110,9 @@
                                         </div>
                                     </div>
                                     
-                                    <!-- <button type="submit" class="btn btn-sm btn-primary">
-                                        <i class="bi bi-search"></i>
-                                    </button> -->
+                                    <button type="submit" class="btn btn-sm btn-primary">
+                                        <i class="bx bx-search"></i>
+                                    </button>
                                 </form>
 
                                 <!-- Nút thêm phim -->

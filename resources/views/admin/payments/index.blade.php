@@ -85,7 +85,9 @@
                         </select>
                     </div>
                     <div>
-                        <button type="submit" class="btn btn-primary">Lọc</button>
+                        <button type="submit" class="btn btn-sm btn-primary">
+                            <i class="bx bx-search"></i>
+                        </button>
                     </div>
                 </form>
 
