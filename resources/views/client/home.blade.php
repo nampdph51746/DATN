@@ -710,16 +710,20 @@
             <div class="item">
                 <li>
                     <div class="slider-info mid-view bg" 
-                         style="background-image: url('{{ asset('images/banner-online.jpg') }}'); background-size: cover; background-position: center;">
-                        <div class="container">
-                            <div class="mid-info">
-                                <span class="sub-text">Đặt vé online</span>
-                                <h3>Chọn ghế yêu thích của bạn</h3>
-                                <p>Nhanh chóng, tiện lợi, thanh toán an toàn</p>
-                                <a class="watch" href="#"><span class="fa fa-play"></span> Đặt vé ngay</a>
-                            </div>
-                        </div>
-                    </div>
+     style="background-image: url('https://images.pexels.com/photos/7991373/pexels-photo-7991373.jpeg?auto=compress&cs=tinysrgb&w=1600'); 
+            background-size: cover; 
+            background-position: center;">
+    <div class="container">
+        <div class="mid-info">
+            <span class="sub-text">Đặt vé online</span>
+            <h3>Chọn ghế yêu thích của bạn</h3>
+            <p>Nhanh chóng, tiện lợi, thanh toán an toàn</p>
+            <a class="watch" href="#"><span class="fa fa-play"></span> Đặt vé ngay</a>
+        </div>
+    </div>
+</div>
+
+
                 </li>
             </div>
 
