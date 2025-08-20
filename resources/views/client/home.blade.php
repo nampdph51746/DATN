@@ -673,16 +673,19 @@
             <div class="item">
                 <li>
                     <div class="slider-info mid-view bg" 
-                         style="background-image: url('{{ asset('images/banner-member.jpg') }}'); background-size: cover; background-position: center;">
-                        <div class="container">
-                            <div class="mid-info">
-                                <span class="sub-text">Thẻ thành viên</span>
-                                <h3>Nhận ngay 50 điểm khi đăng ký mới</h3>
-                                <p>Đổi điểm để nhận voucher, quà tặng hấp dẫn</p>
-                                <a class="watch" href="#"><span class="fa fa-gift"></span> Tham gia ngay</a>
-                            </div>
-                        </div>
-                    </div>
+     style="background-image: url(''); 
+            background-size: cover; 
+            background-position: center;">
+    <div class="container">
+        <div class="mid-info">
+            <span class="sub-text">Thẻ thành viên</span>
+            <h3>Nhận ngay 50 điểm khi đăng ký mới</h3>
+            <p>Đổi điểm để nhận voucher, quà tặng hấp dẫn</p>
+            <a class="watch" href="#"><span class="fa fa-gift"></span> Tham gia ngay</a>
+        </div>
+    </div>
+</div>
+
                 </li>
             </div>
 
@@ -690,7 +693,7 @@
             <div class="item">
                 <li>
                     <div class="slider-info mid-view bg" 
-                         style="background-image: url('{{ asset('images/banner-opening.jpg') }}'); background-size: cover; background-position: center;">
+                         style="background-image: url('https://images.unsplash.com/photo-1524985069026-dd778a71c7b4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80'); background-size: cover; background-position: center;">
                         <div class="container">
                             <div class="mid-info">
                                 <span class="sub-text">Sự kiện</span>
