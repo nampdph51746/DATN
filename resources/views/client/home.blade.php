@@ -656,7 +656,7 @@
             <div class="item">
                 <li>
                     <div class="slider-info mid-view bg" 
-                         style="background-image: url('{{ asset('images/banner-combo.jpg') }}'); background-size: cover; background-position: center;">
+                         style="background-image: url('https://images.pexels.com/photos/33129/popcorn-movie-party-entertainment.jpg?auto=compress&cs=tinysrgb&w=1600'); background-size: cover; background-position: center;">
                         <div class="container">
                             <div class="mid-info">
                                 <span class="sub-text">Combo bắp nước</span>
