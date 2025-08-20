@@ -51,10 +51,4 @@ class Ticket extends Model
     {
         return $this->showtime?->movie;
     }
-
-    //Lấy attribute của seat type
-    public function getSeatTypeAttribute()
-    {
-        return $this->seat?->seatType;
-    }
 }

@@ -99,4 +99,33 @@ class User extends Authenticatable
     {
         return $this->hasMany(Notification::class);
     }
+
+    public function bookingAttempts()
+    {
+        return $this->hasMany(BookingAttempt::class);
+    }
+
+    public function bookingBans()
+    {
+        return $this->hasMany(UserBookingBan::class);
+    }
+
+    /**
+     * Lấy ban hiện tại đang active
+     */
+    public function currentBookingBan()
+    {
+        return $this->bookingBans()
+            ->where('is_active', true)
+            ->where('banned_until', '>', now())
+            ->first();
+    }
+
+    /**
+     * Kiểm tra user có bị ban đặt vé không
+     */
+    public function isBannedFromBooking(): bool
+    {
+        return $this->currentBookingBan() !== null;
+    }
 }

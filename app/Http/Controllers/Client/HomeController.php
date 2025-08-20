@@ -24,6 +24,7 @@ use App\Models\Point;
 use App\Models\PointHistory;
 use App\Models\CustomerRank;
 use App\Services\ShowtimeAvailabilityService;
+use App\Services\BookingAttemptService;
 use Illuminate\Support\Facades\Validator;
 
 class HomeController extends Controller
@@ -60,7 +61,25 @@ class HomeController extends Controller
             ->take(6)
             ->get();
 
-        return view('client.home', compact('showingMovies', 'upcomingMovies', 'query'));
+        // Kiểm tra trạng thái ban của user hiện tại
+        $isUserBanned = false;
+        $banInfo = null;
+        if (Auth::check()) {
+            $bookingAttemptService = new BookingAttemptService();
+            
+            // Auto-cancel các reserved attempts khi user vào trang chủ (reset/reload)
+            $cancelledCount = $bookingAttemptService->cancelAllActiveAttempts(Auth::id());
+            if ($cancelledCount > 0) {
+                Log::info("Auto-cancelled {$cancelledCount} reserved attempts for user " . Auth::id() . " when accessing home page");
+            }
+            
+            $isUserBanned = $bookingAttemptService->isUserBanned(Auth::id());
+            if ($isUserBanned) {
+                $banInfo = $bookingAttemptService->getUserBanInfo(Auth::id());
+            }
+        }
+
+        return view('client.home', compact('showingMovies', 'upcomingMovies', 'query', 'isUserBanned', 'banInfo'));
     }
 
         public function filter(Request $request, $genreName = null)
@@ -240,6 +259,24 @@ class HomeController extends Controller
         $availabilityService = new ShowtimeAvailabilityService();
         $showtimes = $availabilityService->filterAvailableShowtimes($allShowtimes);
 
+        // Kiểm tra trạng thái ban của user hiện tại
+        $isUserBanned = false;
+        $banInfo = null;
+        if (Auth::check()) {
+            $bookingAttemptService = new BookingAttemptService();
+            
+            // Auto-cancel các reserved attempts khi user vào trang chi tiết phim (reset/reload)
+            $cancelledCount = $bookingAttemptService->cancelAllActiveAttempts(Auth::id());
+            if ($cancelledCount > 0) {
+                Log::info("Auto-cancelled {$cancelledCount} reserved attempts for user " . Auth::id() . " when accessing movie detail page");
+            }
+            
+            $isUserBanned = $bookingAttemptService->isUserBanned(Auth::id());
+            if ($isUserBanned) {
+                $banInfo = $bookingAttemptService->getUserBanInfo(Auth::id());
+            }
+        }
+
         return view('client.detailmovie', compact(
             'movie',
             'showtimes',
@@ -248,7 +285,9 @@ class HomeController extends Controller
             'selectedDate',
             'reviews',
             'canReview',
-            'reviewMessage'
+            'reviewMessage',
+            'isUserBanned',
+            'banInfo'
         ));
     }
 

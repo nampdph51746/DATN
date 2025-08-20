@@ -22,6 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
             // 'admin.staff' => \App\Http\Middleware\EnsureUserIsAdminOrStaff::class,
             'role' => RoleMiddleware::class,
             'update.showtime.status' => \App\Http\Middleware\UpdateShowtimeStatus::class,
+            'check.booking.ban' => \App\Http\Middleware\CheckBookingBan::class,
         ]);
 
         

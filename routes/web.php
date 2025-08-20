@@ -56,11 +56,17 @@ Route::middleware('auth')->group(function () {
 
 Route::get('/movies/{movie}/reviews', [App\Http\Controllers\Client\ReviewController::class, 'getReviews'])->name('reviews.get');
 Route::get('/showtimes/{showtimeId}/seat-map', [SeatController::class, 'showSeatMap'])->name('client.seats.map');
-Route::post('/showtimes/{showtimeId}/reserve', [SeatController::class, 'reserveSeat'])->name('client.seats.reserve');
+
+// Routes liên quan đến booking - áp dụng middleware check ban
+Route::middleware(['auth', 'check.booking.ban'])->group(function () {
+    Route::post('/showtimes/{showtimeId}/reserve', [SeatController::class, 'reserveSeat'])->name('client.seats.reserve');
+    Route::post('/checkout/preview', [CheckoutController::class, 'previewBooking'])->name('checkout.preview');
+    Route::post('/checkout/vnpay', [VnpayController::class, 'redirectToVnpay'])->name('checkout.vnpay');
+});
+
 Route::get('/api/seats/status/{showtimeId}', [SeatController::class, 'getSeatStatus']);
 Route::post('/apply-promotion-auto', [App\Http\Controllers\Client\HomeController::class, 'applyDiscountCodeAutomatically'])->name('client.applyPromotionAuto');
 
-Route::post('/checkout/vnpay', [VnpayController::class, 'redirectToVnpay'])->name('checkout.vnpay');
 Route::get('/checkout/confirmation', [CheckoutController::class, 'showConfirmation'])->name('checkout.confirmation');
 
 
@@ -165,6 +171,15 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
     Route::post('product-categories/{id}/restore', [AdminProductCategoriesController::class, 'restore'])->name('product-categories.restore');
     Route::delete('product-categories/{id}/force-delete', [AdminProductCategoriesController::class, 'forceDelete'])->name('product-categories.forceDelete');
     Route::resource('product-categories', AdminProductCategoriesController::class);
+
+    // Booking ban management routes
+    Route::prefix('booking-bans')->name('booking-bans.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\BookingBanController::class, 'index'])->name('index');
+        Route::get('/{id}', [\App\Http\Controllers\Admin\BookingBanController::class, 'show'])->name('show');
+        Route::patch('/{id}/unban', [\App\Http\Controllers\Admin\BookingBanController::class, 'unban'])->name('unban');
+        Route::post('/create', [\App\Http\Controllers\Admin\BookingBanController::class, 'create'])->name('create');
+        Route::get('/api/search-users', [\App\Http\Controllers\Admin\BookingBanController::class, 'searchUsers'])->name('search-users');
+    });
 
     Route::resource('seats', AdminSeatController::class);
     Route::resource('attributes', AdminAttributeController::class);

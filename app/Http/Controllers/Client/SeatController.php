@@ -14,9 +14,17 @@ use App\Events\SeatStatusUpdated;
 use App\Models\ShowtimeSeatState;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
+use App\Services\BookingAttemptService;
+use Illuminate\Support\Facades\Auth;
 
 class SeatController extends Controller
 {
+    protected $bookingAttemptService;
+
+    public function __construct(BookingAttemptService $bookingAttemptService)
+    {
+        $this->bookingAttemptService = $bookingAttemptService;
+    }
     // API bỏ giữ ghế khi người dùng thoát hoặc reload trang
     public function releaseSeat(Request $request, $showtimeId)
     {
@@ -27,6 +35,14 @@ class SeatController extends Controller
 
         try {
             $seatIds = $request->input('seat_ids');
+            
+            // Nếu user đã login, hủy booking attempt
+            if (Auth::check()) {
+                $userId = Auth::id();
+                $this->bookingAttemptService->cancelActiveAttempts($userId, $showtimeId);
+                Log::info("Cancelled active booking attempts for user {$userId}, showtime {$showtimeId}");
+            }
+            
             foreach ($seatIds as $id) {
                 $seatState = ShowtimeSeatState::where('showtime_id', $showtimeId)
                     ->where('seat_id', $id)
@@ -214,6 +230,23 @@ class SeatController extends Controller
             $seatIds = $request->input('seat_ids');
             Log::info('Seat IDs to reserve: ' . json_encode($seatIds));
 
+            // Kiểm tra user đã login chưa
+            if (!Auth::check()) {
+                return response()->json(['error' => 'Bạn cần đăng nhập để đặt ghế'], 401);
+            }
+
+            $userId = Auth::id();
+
+            // Kiểm tra user có bị ban không
+            if ($this->bookingAttemptService->isUserBanned($userId)) {
+                $banInfo = $this->bookingAttemptService->getUserBanInfo($userId);
+                return response()->json([
+                    'error' => 'Tài khoản của bạn đã bị tạm khóa đặt vé',
+                    'message' => 'Bạn đã đặt ghế nhiều lần liên tiếp mà không thanh toán. Tài khoản sẽ được mở khóa vào ' . $banInfo->banned_until->format('d/m/Y H:i'),
+                    'banned_until' => $banInfo->banned_until->toISOString(),
+                ], 403);
+            }
+
             $states = ShowtimeSeatState::where('showtime_id', $showtimeId)
                 ->whereIn('seat_id', $seatIds)
                 ->get();
@@ -259,6 +292,10 @@ class SeatController extends Controller
                 event(new SeatStatusUpdated($showtimeId, $id, SeatStatus::Reserved, null, $sessionId));
             }
 
+            // Tạo booking attempt để tracking
+            $attempt = $this->bookingAttemptService->createAttempt($userId, $showtimeId, $seatIds);
+            Log::info("Created booking attempt {$attempt->id} for user {$userId}");
+
             $selectedSeatInfos = ShowtimeSeatState::with(['seat.seatType'])
                 ->where('showtime_id', $showtimeId)
                 ->whereIn('seat_id', $seatIds)
@@ -280,7 +317,11 @@ class SeatController extends Controller
             session(['selected_seats_info' => $selectedSeatInfos]);
 
             Log::info('Seats reserved successfully for showtime ID: ' . $showtimeId);
-            return response()->json(['message' => 'Đã giữ ghế tạm thời']);
+            return response()->json([
+                'message' => 'Đã giữ ghế tạm thời',
+                'attempt_id' => $attempt->id,
+                'expired_at' => $attempt->expired_at->toISOString()
+            ]);
         } catch (\Exception $e) {
             Log::error('Error in reserveSeat for showtime ID: ' . $showtimeId . ': ' . $e->getMessage());
             return response()->json(['error' => 'Lỗi khi giữ ghế. Vui lòng thử lại.'], 500);
