@@ -841,6 +841,11 @@
                     </div>
                 </div>
             </div>
+            <div class="text-center mt-4">
+                <button type="button" class="btn btn-success btn-lg" onclick="printTickets('${data?.booking_id || ''}')">
+                    <i class="fas fa-print"></i> In Vé
+                </button>
+            </div>
         `;
         $('#result').removeClass('d-none').find('#resultContent').html(html);
     }
