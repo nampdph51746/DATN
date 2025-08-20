@@ -565,7 +565,7 @@
 <section class="w3l-grids">
     <div class="container py-5">
         {{-- Thông báo tài khoản bị khóa --}}
-        @if(Auth::check() && isset($isUserBanned) && $isUserBanned)
+        {{-- @if(Auth::check() && isset($isUserBanned) && $isUserBanned)
         <div class="alert alert-danger mb-4" role="alert">
             <h5 class="alert-heading">
                 <i class="fa fa-ban me-2"></i>Tài khoản bị tạm khóa đặt vé
@@ -576,11 +576,11 @@
             <hr>
             <p class="mb-0">
                 <strong>Thời gian khóa:</strong> Đến {{ $banInfo->banned_until->format('d/m/Y H:i') }}<br>
-                <strong>Số lần vi phạm:</strong> {{ $banInfo->failed_attempts_count }} lần<br>
+                <strong>Số lần vi phạm:</strong> {{ $banInfo->failed_attempts }} lần<br>
                 <small class="text-muted">Vui lòng liên hệ admin nếu bạn cho rằng đây là nhầm lẫn.</small>
             </p>
         </div>
-        @endif
+        @endif --}}
 
         <div class="row mb-4">
             {{-- Poster --}}
@@ -646,7 +646,7 @@
                     @if(isset($isUserBanned) && $isUserBanned)
                         <a href="#" class="btn btn-primary px-4 py-2 mt-4"
                             style="font-size: 16px; font-weight: 500;"
-                            onclick="showBanAlert(event, '{{ $banInfo->banned_until->format('d/m/Y H:i') }}', {{ $banInfo->failed_attempts_count }})">
+                            onclick="showBanAlert(event, '{{ $banInfo->banned_until->format('d/m/Y H:i') }}', {{ $banInfo->failed_attempts }})">
                             <i class="fa fa-ticket-alt" style="color: #fff;"></i> Đặt vé ngay
                         </a>
                     @else
@@ -967,31 +967,6 @@
                         </div>
                     </div>
                 `;
-        }
-
-        // Function để show ban alert
-        function showBanAlert(event, bannedUntil, failedAttempts) {
-            event.preventDefault();
-            
-            Swal.fire({
-                icon: 'error',
-                title: 'Tài khoản bị tạm khóa',
-                html: `
-                    <div style="text-align: left; padding: 10px;">
-                        <p><strong>Lý do:</strong> Vi phạm quy định đặt ghế (đặt ghế nhiều lần mà không thanh toán)</p>
-                        <p><strong>Số lần vi phạm:</strong> ${failedAttempts} lần</p>
-                        <p><strong>Thời gian khóa:</strong> Đến ${bannedUntil}</p>
-                        <hr>
-                        <p style="color: #666; font-size: 14px;"><i class="fa fa-info-circle"></i> Vui lòng liên hệ admin nếu bạn cho rằng đây là nhầm lẫn.</p>
-                    </div>
-                `,
-                confirmButtonText: 'Đã hiểu',
-                confirmButtonColor: '#dc3545',
-                width: 500,
-                customClass: {
-                    popup: 'ban-alert-popup'
-                }
-            });
         }
 
         // Function để show login prompt (nếu chưa có)

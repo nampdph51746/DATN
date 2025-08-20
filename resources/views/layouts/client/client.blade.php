@@ -216,6 +216,31 @@
 			}
 		});
 	}
+
+	// Function để hiển thị thông báo tài khoản bị khóa
+	function showBanAlert(event, bannedUntil, failedAttempts) {
+		event.preventDefault();
+		
+		Swal.fire({
+			icon: 'error',
+			title: 'Tài khoản bị tạm khóa',
+			html: `
+				<div style="text-align: left; padding: 10px;">
+					<p><strong>Lý do:</strong> Vi phạm quy định đặt ghế (đặt ghế nhiều lần mà không thanh toán)</p>
+					<p><strong>Số lần vi phạm:</strong> ${failedAttempts} lần</p>
+					<p><strong>Thời gian khóa:</strong> Đến ${bannedUntil}</p>
+					<hr>
+					<p style="color: #666; font-size: 14px;"><i class="fa fa-info-circle"></i> Vui lòng liên hệ admin nếu bạn cho rằng đây là nhầm lẫn.</p>
+				</div>
+			`,
+			confirmButtonText: 'Đã hiểu',
+			confirmButtonColor: '#dc3545',
+			width: 500,
+			customClass: {
+				popup: 'ban-alert-popup'
+			}
+		});
+	}
 </script>
 
 <body>

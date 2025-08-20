@@ -5,7 +5,7 @@ if (currentTheme) {
     document.documentElement.setAttribute('data-theme', currentTheme);
     // switchTextColor(currentTheme);
 
-    if (currentTheme === 'dark') {
+    if (currentTheme === 'dark' && toggleSwitch) {
         toggleSwitch.checked = true;
     }
 }
@@ -42,4 +42,6 @@ function switchTheme(e) {
 //         document.getElementById("details-h3-6").style.color = 'white';
 //         }
 //     }
-toggleSwitch.addEventListener('change', switchTheme, false);
+if (toggleSwitch) {
+    toggleSwitch.addEventListener('change', switchTheme, false);
+}
