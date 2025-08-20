@@ -57,7 +57,7 @@
                                     
                                     <!-- Dropdown lọc nâng cao -->
                                     <div class="dropdown">
-                                        <button type="button" class="btn btn-sm btn-success dropdown-toggle" 
+                                        <button type="button" class="btn btn-sm bg-primary text-white dropdown-toggle" 
                                                 data-bs-toggle="dropdown" aria-expanded="false">
                                             <i class="bi bi-funnel me-1"></i>Bộ lọc
                                         </button>

@@ -127,13 +127,13 @@
                                     <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>Đã hủy</option>
                                 </select>
                                 
-                                <button type="submit" class="btn btn-sm btn-primary">
-                                    <i class="bi bi-search"></i>
-                                </button>
+                                    <button type="submit" class="btn btn-sm bg-primary text-white">
+                                        <i class="bi bi-search">Tìm/lọc</i>
+                                    </button>
                                 
-                                <a href="{{ route('admin.bookings.index') }}" class="btn btn-sm btn-outline-secondary">
+                                <!-- <a href="{{ route('admin.bookings.index') }}" class="btn btn-sm btn-outline-secondary">
                                     <i class="bi bi-arrow-clockwise"></i>
-                                </a>
+                                </a> -->
                             </form>
                         </div>
                     </div>
