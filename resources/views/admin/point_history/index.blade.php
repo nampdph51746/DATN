@@ -5,7 +5,7 @@
         <div class="row">
             <div class="col-xl-10 mx-auto">
                 <div class="card shadow-sm">
-                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <div class="card-header d-flex justify-content-between align-items-center">
                         <h4 class="mb-0">Lịch sử cộng/trừ điểm</h4>
                         <form method="GET" action="{{ route('admin.point_history.index') }}" class="d-flex gap-2">
                             <input type="text" name="user_id" value="{{ request('user_id') }}"
@@ -14,7 +14,7 @@
                                 class="form-control form-control-sm" placeholder="ID đơn hàng">
                             <input type="text" name="reason_type" value="{{ request('reason_type') }}"
                                 class="form-control form-control-sm" placeholder="Lý do">
-                            <button class="btn btn-sm btn-light" type="submit">Lọc</button>
+                            <button class="btn btn-sm btn-light bg-primary text-white" type="submit">Lọc</button>
                         </form>
                     </div>
                     <div class="table-responsive">
