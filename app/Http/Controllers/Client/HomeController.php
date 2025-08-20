@@ -79,7 +79,7 @@ $showingMovies = $withViews;
                     });
             })
             ->where('status', MovieStatus::Upcoming)
-            ->orderBy('release_date', 'asc')
+            ->orderBy('release_date', 'desc')
             ->take(6)
             ->get();
 
