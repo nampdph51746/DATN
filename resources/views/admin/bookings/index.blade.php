@@ -103,10 +103,10 @@
     <div class="row">
         <div class="col-12">
             <div class="card border-0 shadow-sm">
-                <div class="card-header" style="background: #ff6633; border-bottom: 1px solid #e55a2b;">
+                <div class="card-header">
                     <div class="row align-items-center g-3">
                         <div class="col-md-4">
-                            <h4 class="card-title mb-0 fw-semibold" style="color: #333333; font-weight: 600;">🎫 Danh sách đơn đặt vé</h4>
+                            <h4 class="card-title mb-0 fw-semibold">🎫 Danh sách đơn đặt vé</h4>
                             <small class="text-muted" style="color: #666666;">Quản lý tất cả đơn đặt vé trong hệ thống</small>
                         </div>
                         <div class="col-md-8">

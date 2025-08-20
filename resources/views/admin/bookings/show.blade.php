@@ -232,8 +232,8 @@
                 @endphp
                 @if ($payment)
                     <div class="card mt-4">
-                        <div class="card-header" style="background: #ff6633; border-bottom: 1px solid #e55a2b;">
-                            <h4 class="card-title" style="color: #333333; font-weight: 600;">Tóm tắt thanh toán</h4>
+                        <div class="card-header">
+                            <h4 class="card-title">Tóm tắt thanh toán</h4>
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
