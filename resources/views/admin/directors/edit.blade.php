@@ -33,8 +33,8 @@
 
         <div class="col-xl-9 col-lg-8">
             <div class="card">
-                <div class="card-header" style="background: #ff6633; border-bottom: 1px solid #e55a2b;">
-                    <h4 class="card-title" style="color: #333333; font-weight: 600;">Chỉnh sửa đạo diễn: {{ $director->name }}</h4>
+                <div class="card-header">
+                    <h4 class="card-title">Chỉnh sửa đạo diễn: {{ $director->name }}</h4>
                 </div>
                 <div class="card-body">
                     <form id="directorEditForm" action="{{ route('admin.directors.update', $director->id) }}" method="POST" enctype="multipart/form-data">
