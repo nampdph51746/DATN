@@ -38,14 +38,12 @@ class HomeController extends Controller
         // Truy vấn phim đang chiếu
         $showingMovies = Movie::query()
     ->with('genres')
-    ->select('movies.*', DB::raw('SUM(booking_items.quantity) as total_views'))
+    ->select('movies.*', DB::raw('COUNT(tickets.id) as total_views'))
     ->join('showtimes', 'showtimes.movie_id', '=', 'movies.id')
-    ->join('products', 'products.showtime_id', '=', 'showtimes.id')
-    ->join('product_variants', 'product_variants.product_id', '=', 'products.id')
-    ->join('booking_items', 'booking_items.product_variant_id', '=', 'product_variants.id')
-    ->join('bookings', 'bookings.id', '=', 'booking_items.booking_id')
+    ->join('tickets', 'tickets.showtime_id', '=', 'showtimes.id')
+    ->join('bookings', 'bookings.id', '=', 'tickets.booking_id')
     ->where('movies.status', MovieStatus::Showing)
-    ->where('bookings.status', 'confirmed') // chỉ lấy đơn đã xác nhận
+    ->where('bookings.status', 'confirmed')
     ->whereMonth('bookings.created_at', Carbon::now()->month)
     ->whereYear('bookings.created_at', Carbon::now()->year)
     ->groupBy('movies.id')
