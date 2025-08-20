@@ -36,20 +36,38 @@ class HomeController extends Controller
         $now = Carbon::now();
 
         // Truy vấn phim đang chiếu
-        $showingMovies = Movie::query()
+        $withViews = Movie::query()
     ->with('genres')
     ->select('movies.*', DB::raw('COUNT(tickets.id) as total_views'))
-    ->join('showtimes', 'showtimes.movie_id', '=', 'movies.id')
-    ->join('tickets', 'tickets.showtime_id', '=', 'showtimes.id')
-    ->join('bookings', 'bookings.id', '=', 'tickets.booking_id')
+    ->leftJoin('showtimes', 'showtimes.movie_id', '=', 'movies.id')
+    ->leftJoin('tickets', 'tickets.showtime_id', '=', 'showtimes.id')
+    ->leftJoin('bookings', 'bookings.id', '=', 'tickets.booking_id')
     ->where('movies.status', MovieStatus::Showing)
-    ->where('bookings.status', 'confirmed')
+    ->where(function ($q) {
+        $q->where('bookings.status', 'confirmed')
+          ->orWhereNull('bookings.id'); // cho phép phim chưa có booking
+    })
     ->whereMonth('bookings.created_at', Carbon::now()->month)
     ->whereYear('bookings.created_at', Carbon::now()->year)
     ->groupBy('movies.id')
     ->orderByDesc('total_views')
     ->take(8)
     ->get();
+
+// 2. Nếu chưa đủ 8 thì bù phim mới
+if ($withViews->count() < 8) {
+    $extra = Movie::query()
+        ->with('genres')
+        ->where('status', MovieStatus::Showing)
+        ->whereNotIn('id', $withViews->pluck('id')) // tránh trùng
+        ->orderBy('release_date', 'desc')
+        ->take(8 - $withViews->count())
+        ->get();
+
+    $withViews = $withViews->concat($extra);
+}
+
+$showingMovies = $withViews;
 
         // Truy vấn phim sắp chiếu
         $upcomingMovies = Movie::query()
