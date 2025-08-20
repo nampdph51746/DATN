@@ -37,17 +37,20 @@ class HomeController extends Controller
 
         // Truy vấn phim đang chiếu
         $showingMovies = Movie::query()
-            ->with('genres')
-            ->when($query, function ($q) use ($query) {
-                $q->where('name', 'like', "%{$query}%")
-                    ->orWhereHas('genres', function ($g) use ($query) {
-                        $g->where('name', 'like', "%{$query}%");
-                    });
-            })
-            ->where('status', MovieStatus::Showing)
-            ->orderBy('release_date', 'desc')
-            ->take(8)
-            ->get();
+    ->with('genres')
+    ->select('movies.*', DB::raw('SUM(booking_items.quantity) as total_views'))
+    ->join('products', 'products.movie_id', '=', 'movies.id')
+    ->join('product_variants', 'product_variants.product_id', '=', 'products.id')
+    ->join('booking_items', 'booking_items.product_variant_id', '=', 'product_variants.id')
+    ->join('bookings', 'bookings.id', '=', 'booking_items.booking_id')
+    ->where('movies.status', MovieStatus::Showing)
+    ->where('bookings.status', 'confirmed') // chỉ lấy đơn đã xác nhận
+    ->whereMonth('bookings.created_at', Carbon::now()->month)
+    ->whereYear('bookings.created_at', Carbon::now()->year)
+    ->groupBy('movies.id')
+    ->orderByDesc('total_views')
+    ->take(8)
+    ->get();
 
         // Truy vấn phim sắp chiếu
         $upcomingMovies = Movie::query()
