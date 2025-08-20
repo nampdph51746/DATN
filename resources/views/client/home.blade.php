@@ -673,7 +673,7 @@
             <div class="item">
                 <li>
                     <div class="slider-info mid-view bg" 
-     style="background-image: url(''); 
+     style="background-image: url('https://images.pexels.com/photos/7991277/pexels-photo-7991277.jpeg?auto=compress&cs=tinysrgb&w=1600'); 
             background-size: cover; 
             background-position: center;">
     <div class="container">
@@ -685,6 +685,7 @@
         </div>
     </div>
 </div>
+
 
                 </li>
             </div>
