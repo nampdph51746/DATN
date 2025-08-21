@@ -1541,7 +1541,7 @@
         let cinemaName = 'N/A';
         const showtimesData = @json($showtimesData);
         const roomsData = @json($roomsData);
-        const movieTitle = @json($movie -> name ?? 'N/A');
+        const movieTitle = @json($movie - > name ?? 'N/A');
         let variantData = {};
         let selectedSnacks = [];
         let countdownInterval = null;
