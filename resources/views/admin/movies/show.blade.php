@@ -2,339 +2,362 @@
 
 @section('content')
 <meta name="csrf-token" content="{{ csrf_token() }}">
-<div class="container-xxl py-4">
+<div class="container-xxl">
     @include('admin.partials.notifications')
 
-    <div class="row g-4">
-        <div class="col-lg-4">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-body p-4">
-                    <div class="text-center">
-                        <div class="position-relative d-inline-block mb-4">
-                            <img src="{{ $movie->image_path ? Storage::url($movie->image_path) : ($movie->poster_url ?? asset('assets/images/movie-placeholder.png')) }}" 
-                                 alt="Movie Poster" 
-                                 class="img-fluid rounded-3 shadow-sm" 
-                                 style="max-height: 400px; object-fit: cover; transition: transform 0.3s ease;">
-                            <div class="position-absolute top-0 end-0 m-2">
-                                @php
-                                    $statusColors = [
-                                        'showing' => '#28a745',
-                                        'upcoming' => '#ffc107', 
-                                        'ended' => '#dc3545',
-                                    ];
-                                @endphp
-                                <span class="badge rounded-pill px-3 py-2 fs-6 fw-semibold" 
-                                      style="background-color: {{ $statusColors[$movie->status->value ?? $movie->status] ?? '#6c757d' }}; color: #fff;">
-                                    {{ ucfirst($movie->status->value ?? $movie->status) }}
-                                </span>
-                            </div>
+    <!-- Header Section -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="d-flex align-items-center gap-3 mb-2">
+                        <div class="bg-white bg-opacity-20 rounded-circle p-2">
+                            <i class="bi bi-camera-reels-fill fs-24" style="color: #333333; font-size: 1.5rem;"></i>
                         </div>
-                        <h4 class="fw-bold text-dark mb-2">{{ $movie->name }}</h4>
-                        <p class="text-muted mb-0 fs-6">Thông tin chi tiết về phim {{ $movie->name }}</p>
+                        <div>
+                            <h4 class="fw-bold mb-1" style="color: #333333;">Chi tiết phim</h4>
+                            <h6 class="fw-semibold mb-0" style="color: #555555;">{{ $movie->name }}</h6>
+                        </div>
                     </div>
                 </div>
-                <div class="card-footer bg-light border-0 p-4">
-                    <div class="row g-3">
-                        <div class="col-6">
-                            <a href="{{ route('admin.movies.edit', $movie->id) }}" 
-                               class="btn btn-primary d-flex align-items-center justify-content-center gap-2 w-100 rounded-3 py-2 fw-medium">
-                                <i class="bx bx-edit fs-18"></i> Chỉnh sửa
-                            </a>
+                <div class="d-flex gap-2">
+                    <a href="{{ route('admin.movies.edit', $movie) }}" class="btn btn-light btn-lg rounded-pill shadow-sm" style="color: #333333;">
+                        <i class="bi bi-pencil-square me-2"></i>Chỉnh sửa
+                    </a>
+                    <a href="{{ route('admin.movies.index') }}" class="btn btn-outline-dark btn-lg rounded-pill" style="border-color: #333333; color: #333333;">
+                        <i class="bi bi-arrow-left me-2"></i>Quay lại
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Left Column - Movie Info -->
+        <div class="col-xl-4 col-lg-5">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+                    <!-- Movie Poster -->
+                    <div class="text-center mb-4">
+                        <div class="position-relative d-inline-block">
+                            @php
+                                $posterUrl = null;
+                                if ($movie->image_path) {
+                                    $posterUrl = Storage::url($movie->image_path);
+                                } elseif ($movie->poster_url) {
+                                    $posterUrl = $movie->poster_url;
+                                } else {
+                                    $posterUrl = asset('client_assets/assets/images/movie-placeholder.png');
+                                }
+                            @endphp
+                            <div class="poster-frame position-relative">
+                                <img src="{{ $posterUrl }}" 
+                                     alt="{{ $movie->name }}" 
+                                     class="img-fluid rounded-4 shadow-lg movie-poster-detail" 
+                                     style="max-height: 400px; width: 100%; object-fit: cover; transition: all 0.3s ease;">
+                                
+                                <!-- Status Badge -->
+                                <div class="position-absolute top-0 end-0 m-3">
+                                    @php
+                                        $statusValue = is_object($movie->status) ? $movie->status->value : $movie->status;
+                                        if ($movie->end_date && $movie->end_date < now()) {
+                                            $statusValue = 'ended';
+                                        }
+                                        
+                                        $statusConfig = [
+                                            'showing' => ['class' => 'bg-success', 'icon' => 'bx-play-circle', 'label' => 'Đang chiếu'],
+                                            'upcoming' => ['class' => 'bg-warning', 'icon' => 'bx-time-five', 'label' => 'Sắp chiếu'],
+                                            'ended' => ['class' => 'bg-danger', 'icon' => 'bx-stop-circle', 'label' => 'Kết thúc'],
+                                        ];
+                                        $config = $statusConfig[$statusValue] ?? ['class' => 'bg-secondary', 'icon' => 'bx-help-circle', 'label' => 'Không xác định'];
+                                    @endphp
+                                    <span class="badge {{ $config['class'] }} px-3 py-2 rounded-pill shadow">
+                                        <i class="bi bi-play-circle me-1"></i>{{ $config['label'] }}
+                                    </span>
+                                </div>
+
+                                <!-- Play Button Overlay -->
+                                @if ($movie->trailer_url)
+                                    <div class="position-absolute top-50 start-50 translate-middle">
+                                        <a href="{{ $movie->trailer_url }}" target="_blank" 
+                                           class="btn btn-danger btn-lg rounded-circle shadow-lg play-btn" 
+                                           style="width: 60px; height: 60px; opacity: 0.9;">
+                                            <i class="bi bi-play-fill fs-24"></i>
+                                        </a>
+                                    </div>
+                                @endif
+                            </div>
                         </div>
-                        <div class="col-6">
-                            <a href="{{ route('admin.movies.index') }}" 
-                               class="btn btn-outline-secondary d-flex align-items-center justify-content-center gap-2 w-100 rounded-3 py-2 fw-medium">
-                                <i class="bx bx-arrow-back fs-18"></i> Quay lại
+                    </div>
+
+                    <!-- Movie Title -->
+                    <div class="text-center mb-4">
+                        <h4 class="fw-bold text-dark mb-3">{{ $movie->name }}</h4>
+                        <div class="d-flex justify-content-center gap-2 flex-wrap">
+                            <span class="badge bg-info-subtle text-info rounded-pill px-3 py-2">
+                                <i class="bi bi-globe me-1"></i>{{ $movie->language ?? 'N/A' }}
+                            </span>
+                            <span class="badge bg-success-subtle text-success rounded-pill px-3 py-2">
+                                <i class="bi bi-flag me-1"></i>{{ $movie->country?->name ?? 'N/A' }}
+                            </span>
+                            @if($movie->ageLimit)
+                                <span class="badge bg-warning-subtle text-warning rounded-pill px-3 py-2">
+                                    <i class="bi bi-person me-1"></i>{{ $movie->ageLimit->name ?? $movie->ageLimit->label }}
+                                </span>
+                            @endif
+                        </div>
+                    </div>
+
+                    <!-- Quick Stats -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-4">
+                            <div class="text-center p-3 bg-light rounded-4 border">
+                                <i class="bi bi-clock text-muted fs-28 mb-2"></i>
+                                <div class="fw-bold text-dark fs-18">{{ $movie->duration_minutes }}</div>
+                                <small class="text-muted fw-semibold">phút</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="text-center p-3 bg-light rounded-4 border">
+                                <i class="bi bi-star text-muted fs-28 mb-2"></i>
+                                <div class="fw-bold text-dark fs-18">{{ $movie->average_rating ? number_format($movie->average_rating, 1) : 'N/A' }}</div>
+                                <small class="text-muted fw-semibold">đánh giá</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="text-center p-3 bg-light rounded-4 border">
+                                <i class="bi bi-camera-reels text-muted fs-28 mb-2"></i>
+                                <div class="fw-bold text-dark fs-18">{{ $movie->showtimes->count() }}</div>
+                                <small class="text-muted fw-semibold">suất chiếu</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Movie Genres -->
+                    @if($movie->genres->isNotEmpty())
+                        <div class="mb-4">
+                            <div class="d-flex align-items-center gap-2 mb-3">
+                                <i class="bi bi-tags text-muted fs-20"></i>
+                                <h6 class="fw-semibold mb-0 text-dark">Thể loại</h6>
+                            </div>
+                            <div class="d-flex flex-wrap gap-2">
+                                @foreach($movie->genres as $genre)
+                                    <span class="badge bg-light text-dark rounded-pill px-3 py-2 border">
+                                        <i class="bi bi-tag me-1"></i>{{ $genre->name }}
+                                    </span>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+
+                    <!-- Quick Actions -->
+                    <div class="d-grid gap-2">
+                        @if ($movie->trailer_url)
+                            <a href="{{ $movie->trailer_url }}" target="_blank" 
+                               class="btn btn-danger btn-lg rounded-pill shadow-sm">
+                                <i class="bi bi-play-circle me-2"></i>Xem Trailer
                             </a>
+                        @endif
+                        
+                        <div class="row g-2">
+                            <div class="col-12">
+                                <a href="{{ route('admin.movies.edit', $movie) }}" 
+                                   class="btn btn-outline-success btn-lg rounded-pill w-100">
+                                    <i class="bx bx-edit me-1"></i>Chỉnh sửa
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-lg-8">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-body p-4">
-                    <!-- Header Section -->
-                    <div class="d-flex align-items-center gap-3 mb-4">
-                        <div class="badge bg-info bg-gradient text-white fs-6 py-2 px-3 rounded-pill fw-semibold">
-                            <i class="bx bx-info-circle me-1"></i> Chi tiết phim
+
+        <!-- Right Column - Details & Showtimes -->
+        <div class="col-xl-8 col-lg-7">
+            <!-- Movie Details Card với Accordion -->
+            <div class="card border-0 shadow-sm mb-4" style="background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);">
+                <div class="card-header bg-transparent border-0 pb-0">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="bg-warning bg-opacity-10 rounded-circle p-2">
+                                <i class="bx bx-info-circle text-warning fs-20"></i>
+                            </div>
+                            <h5 class="fw-bold mb-0 text-warning">Thông tin chi tiết</h5>
                         </div>
-                        <h3 class="text-dark fw-bold mb-0">{{ $movie->name }}</h3>
+                        <button class="btn btn-outline-warning rounded-pill collapsed" type="button" id="accordionToggleBtn">
+                            <i class="bx bx-chevron-down fs-18" id="accordionIcon"></i>
+                        </button>
                     </div>
-
-                    <!-- Movie Details Grid -->
-                    <div class="row g-4">
-                        <!-- Basic Info -->
-                        <div class="col-md-6">
-                            <div class="info-card p-3 rounded-3 bg-light-subtle border border-light">
-                                <div class="d-flex align-items-center gap-2 mb-2">
-                                    <i class="bx bx-user-circle text-primary fs-20"></i>
-                                    <span class="fw-semibold text-dark">Đạo diễn</span>
-                                </div>
-                                <p class="text-muted mb-0 ps-4">{{ $movie->director?->name ?? 'N/A' }}</p>
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <div class="info-card p-3 rounded-3 bg-light-subtle border border-light">
-                                <div class="d-flex align-items-center gap-2 mb-2">
-                                    <i class="bx bx-time text-success fs-20"></i>
-                                    <span class="fw-semibold text-dark">Thời lượng</span>
-                                </div>
-                                <p class="text-muted mb-0 ps-4">{{ $movie->duration_minutes }} phút</p>
-                            </div>
-                        </div>
-
-                        <div class="col-md-6">
-                            <div class="info-card p-3 rounded-3 bg-light-subtle border border-light">
-                                <div class="d-flex align-items-center gap-2 mb-2">
-                                    <i class="bx bx-calendar text-warning fs-20"></i>
-                                    <span class="fw-semibold text-dark">Ngày phát hành</span>
-                                </div>
-                                <p class="text-muted mb-0 ps-4">{{ $movie->release_date->format('d/m/Y') }}</p>
-                            </div>
-                        </div>
-
-                        <div class="col-md-6">
-                            <div class="info-card p-3 rounded-3 bg-light-subtle border border-light">
-                                <div class="d-flex align-items-center gap-2 mb-2">
-                                    <i class="bx bx-calendar-x text-danger fs-20"></i>
-                                    <span class="fw-semibold text-dark">Ngày kết thúc</span>
-                                </div>
-                                <p class="text-muted mb-0 ps-4">{{ $movie->end_date?->format('d/m/Y') ?? 'N/A' }}</p>
-                            </div>
-                        </div>
-
-                        <div class="col-md-6">
-                            <div class="info-card p-3 rounded-3 bg-light-subtle border border-light">
-                                <div class="d-flex align-items-center gap-2 mb-2">
-                                    <i class="bx bx-globe text-info fs-20"></i>
-                                    <span class="fw-semibold text-dark">Quốc gia</span>
-                                </div>
-                                <p class="text-muted mb-0 ps-4">{{ $movie->country?->name ?? 'N/A' }}</p>
-                            </div>
-                        </div>
-
-                        <div class="col-md-6">
-                            <div class="info-card p-3 rounded-3 bg-light-subtle border border-light">
-                                <div class="d-flex align-items-center gap-2 mb-2">
-                                    <i class="bx bx-message-alt-detail text-secondary fs-20"></i>
-                                    <span class="fw-semibold text-dark">Ngôn ngữ</span>
-                                </div>
-                                <p class="text-muted mb-0 ps-4">{{ $movie->language ?? 'N/A' }}</p>
-                            </div>
-                        </div>
-
-                        <div class="col-md-6">
-                            <div class="info-card p-3 rounded-3 bg-light-subtle border border-light">
-                                <div class="d-flex align-items-center gap-2 mb-2">
-                                    <i class="bx bx-shield text-primary fs-20"></i>
-                                    <span class="fw-semibold text-dark">Giới hạn tuổi</span>
-                                </div>
-                                <p class="text-muted mb-0 ps-4">{{ $movie->ageLimit?->name ?? $movie->ageLimit?->label ?? 'N/A' }}</p>
-                            </div>
-                        </div>
-
-                        <div class="col-md-6">
-                            <div class="info-card p-3 rounded-3 bg-light-subtle border border-light">
-                                <div class="d-flex align-items-center gap-2 mb-2">
-                                    <i class="bx bx-star text-warning fs-20"></i>
-                                    <span class="fw-semibold text-dark">Điểm đánh giá</span>
-                                </div>
-                                <p class="text-muted mb-0 ps-4">{{ $movie->average_rating ?? 'N/A' }}</p>
-                            </div>
-                        </div>
-
-                        <!-- Extended Info -->
-                        <div class="col-12">
-                            <div class="info-card p-3 rounded-3 bg-light-subtle border border-light">
-                                <div class="d-flex align-items-center gap-2 mb-2">
-                                    <i class="bx bx-group text-success fs-20"></i>
-                                    <span class="fw-semibold text-dark">Diễn viên</span>
-                                </div>
-                                <p class="text-muted mb-0 ps-4">
-                                    @if($movie->actors->isNotEmpty())
-                                        {{ $movie->actors->pluck('name')->join(', ') }}
-                                    @else
-                                        N/A
-                                    @endif
-                                </p>
-                            </div>
-                        </div>
-
-                        <div class="col-12">
-                            <div class="info-card p-3 rounded-3 bg-light-subtle border border-light">
-                                <div class="d-flex align-items-center gap-2 mb-2">
-                                    <i class="bx bx-category text-info fs-20"></i>
-                                    <span class="fw-semibold text-dark">Thể loại</span>
-                                </div>
-                                <div class="ps-4">
-                                    @if ($movie->genres->isNotEmpty())
-                                        <div class="d-flex flex-wrap gap-2">
-                                            @foreach($movie->genres as $genre)
-                                                <span class="badge bg-info bg-gradient text-white rounded-pill px-3 py-2">{{ $genre->name }}</span>
-                                            @endforeach
-                                        </div>
-                                    @else
-                                        <p class="text-muted mb-0">N/A</p>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Quick Actions -->
-                        <div class="col-md-6">
-                            <div class="info-card p-3 rounded-3 bg-light-subtle border border-light">
-                                <div class="d-flex align-items-center gap-2 mb-2">
-                                    <i class="bx bx-play-circle text-danger fs-20"></i>
-                                    <span class="fw-semibold text-dark">Trailer</span>
-                                </div>
-                                <div class="ps-4">
-                                    @if ($movie->trailer_url)
-                                        <a href="{{ $movie->trailer_url }}" target="_blank" class="btn btn-outline-danger btn-sm rounded-pill">
-                                            <i class="bx bx-play me-1"></i> Xem trailer
-                                        </a>
-                                    @else
-                                        <span class="text-muted">N/A</span>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-md-6">
-                            <div class="info-card p-3 rounded-3 bg-light-subtle border border-light">
-                                <div class="d-flex align-items-center gap-2 mb-2">
-                                    <i class="bx bx-image text-primary fs-20"></i>
-                                    <span class="fw-semibold text-dark">Poster</span>
-                                </div>
-                                <div class="ps-4">
-                                    @if ($movie->image_path)
-                                        <a href="{{ Storage::url($movie->image_path) }}" target="_blank" class="btn btn-outline-primary btn-sm rounded-pill">
-                                            <i class="bx bx-image me-1"></i> Xem ảnh gốc
-                                        </a>
-                                    @else
-                                        <span class="text-muted">N/A</span>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Description Section -->
-                    <div class="mt-5">
-                        <div class="d-flex align-items-center gap-3 mb-3">
-                            <div class="badge bg-success bg-gradient text-white fs-6 py-2 px-3 rounded-pill fw-semibold">
-                                <i class="bx bx-detail me-1"></i> Mô tả
-                            </div>
-                        </div>
-                        <div class="p-4 bg-light-subtle rounded-3 border border-light">
-                            <p class="text-muted mb-0 lh-lg">{{ $movie->description ?? 'Không có mô tả.' }}</p>
-                        </div>
-                    </div>
-
-                    <!-- Timeline Info -->
-                    <div class="mt-4">
-                        <div class="row g-3">
+                </div>
+                <div class="collapse" id="movieDetailsAccordion">
+                    <div class="card-body pt-3">
+                        <!-- Thông tin cơ bản -->
+                        <div class="row g-4 mb-4">
                             <div class="col-md-6">
-                                <div class="d-flex align-items-center gap-2 p-3 bg-light-subtle rounded-3 border border-light">
-                                    <i class="bx bx-time-five text-success fs-20"></i>
-                                    <div>
-                                        <small class="text-muted d-block">Thời gian tạo</small>
-                                        <span class="fw-medium">{{ $movie->created_at ? $movie->created_at->tz('Asia/Ho_Chi_Minh')->format('d/m/Y H:i') : 'N/A' }}</span>
+                                <div class="info-card p-3 h-100">
+                                    <div class="d-flex align-items-center gap-2 mb-2">
+                                        <i class="bx bx-user-circle text-primary fs-20"></i>
+                                        <strong class="text-primary">Đạo diễn</strong>
                                     </div>
+                                    <p class="mb-0 fs-6">{{ $movie->director?->name ?? 'Chưa cập nhật' }}</p>
                                 </div>
                             </div>
                             <div class="col-md-6">
-                                <div class="d-flex align-items-center gap-2 p-3 bg-light-subtle rounded-3 border border-light">
-                                    <i class="bx bx-edit-alt text-warning fs-20"></i>
-                                    <div>
-                                        <small class="text-muted d-block">Cập nhật lần cuối</small>
-                                        <span class="fw-medium">{{ $movie->updated_at ? $movie->updated_at->tz('Asia/Ho_Chi_Minh')->format('d/m/Y H:i') : 'N/A' }}</span>
+                                <div class="info-card p-3 h-100">
+                                    <div class="d-flex align-items-center gap-2 mb-2">
+                                        <i class="bx bx-calendar text-success fs-20"></i>
+                                        <strong class="text-success">Ngày phát hành</strong>
                                     </div>
+                                    <p class="mb-0 fs-6">{{ $movie->release_date->format('d/m/Y') }}</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="info-card p-3 h-100">
+                                    <div class="d-flex align-items-center gap-2 mb-2">
+                                        <i class="bx bx-calendar-x text-danger fs-20"></i>
+                                        <strong class="text-danger">Ngày kết thúc</strong>
+                                    </div>
+                                    <p class="mb-0 fs-6">{{ $movie->end_date?->format('d/m/Y') ?? 'Chưa xác định' }}</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="info-card p-3 h-100">
+                                    <div class="d-flex align-items-center gap-2 mb-2">
+                                        <i class="bx bx-time text-warning fs-20"></i>
+                                        <strong class="text-warning">Cập nhật cuối</strong>
+                                    </div>
+                                    <p class="mb-0 fs-6">{{ $movie->updated_at ? $movie->updated_at->tz('Asia/Ho_Chi_Minh')->format('d/m/Y H:i') : 'N/A' }}</p>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Danh sách suất chiếu -->
-                    <div class="mt-5">
-                        <div class="d-flex align-items-center gap-3 mb-4">
-                            <div class="badge bg-warning bg-gradient text-white fs-6 py-2 px-3 rounded-pill fw-semibold">
-                                <i class="bx bx-movie me-1"></i> Danh sách suất chiếu
+                        <!-- Diễn viên -->
+                        @if($movie->actors->isNotEmpty())
+                            <div class="mb-4">
+                                <div class="info-card p-3">
+                                    <div class="d-flex align-items-center gap-2 mb-3">
+                                        <i class="bx bx-group text-info fs-20"></i>
+                                        <strong class="text-info">Diễn viên chính</strong>
+                                    </div>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        @foreach($movie->actors as $actor)
+                                            <span class="badge bg-info-subtle text-info rounded-pill px-3 py-2">
+                                                <i class="bx bx-user me-1"></i>{{ $actor->name }}
+                                            </span>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+
+                        <!-- Mô tả phim -->
+                        @if($movie->description)
+                            <div class="mb-0">
+                                <div class="info-card p-3">
+                                    <div class="d-flex align-items-center gap-2 mb-3">
+                                        <i class="bx bx-detail text-secondary fs-20"></i>
+                                        <strong class="text-secondary">Nội dung phim</strong>
+                                    </div>
+                                    <p class="mb-0 text-muted lh-lg">{{ $movie->description }}</p>
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+            <!-- Showtimes Section -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0 pb-0">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="bg-warning bg-opacity-10 rounded-circle p-2">
+                                <i class="bx bx-movie text-warning fs-20"></i>
+                            </div>
+                            <div>
+                                <h5 class="fw-bold mb-1 text-warning">Quản lý suất chiếu</h5>
+                                <small class="text-muted">Tạo và quản lý lịch chiếu phim</small>
                             </div>
                         </div>
-
-                        <!-- Form lọc suất chiếu -->
-                        <div class="row g-3 mb-4">
-                            <div class="col-md-8">
-                                <form class="position-relative" method="GET" action="{{ route('admin.movies.show', $movie->id) }}">
-                                    <div class="input-group">
-                                        <span class="input-group-text bg-light border-end-0">
-                                            <i class="bx bx-search text-muted"></i>
-                                        </span>
-                                        <input type="search" 
-                                               name="showtime_query" 
-                                               class="form-control border-start-0 ps-0" 
-                                               placeholder="Tìm kiếm suất chiếu (phòng, thời gian)..." 
-                                               value="{{ request('showtime_query') }}">
-                                        <input type="date" 
-                                               name="start_date" 
-                                               class="form-control ms-2" 
-                                               value="{{ request('start_date') }}" 
-                                               title="Chọn ngày bắt đầu">
-                                    </div>
-                                    @error('start_date')
-                                        <small class="text-danger mt-1">{{ $message }}</small>
-                                    @enderror
-                                </form>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="dropdown">
-                                    <button class="btn btn-outline-primary dropdown-toggle w-100 rounded-3" 
-                                            type="button" 
-                                            data-bs-toggle="dropdown" 
-                                            aria-expanded="false">
-                                        <i class="bx bx-filter-alt me-2"></i> Lọc suất chiếu
+                        <div class="badge bg-info-subtle text-info px-3 py-2 rounded-pill">
+                            <i class="bx bx-time me-1"></i>Tổng: {{ $movie->showtimes->count() }} suất
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body pt-3">
+                    <!-- Form lọc suất chiếu -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-8">
+                            <form class="position-relative" method="GET" action="{{ route('admin.movies.show', $movie) }}">
+                                <div class="input-group shadow-sm">
+                                    <span class="input-group-text bg-light border-0 rounded-start-3">
+                                        <i class="bx bx-search text-primary"></i>
+                                    </span>
+                                    <input type="search" 
+                                           name="showtime_query" 
+                                           class="form-control border-0 ps-2" 
+                                           placeholder="Tìm kiếm suất chiếu (phòng, thời gian)..." 
+                                           value="{{ request('showtime_query') }}">
+                                    <input type="date" 
+                                           name="start_date" 
+                                           class="form-control border-0 border-start" 
+                                           value="{{ request('start_date') }}" 
+                                           title="Chọn ngày bắt đầu">
+                                    <button type="submit" class="btn btn-primary rounded-end-3">
+                                        <i class="bx bx-search me-1"></i>Tìm
                                     </button>
-                                    <div class="dropdown-menu dropdown-menu-end w-100 p-3 shadow border-0 rounded-3">
-                                        <!-- Lọc theo trạng thái -->
-                                        <h6 class="dropdown-header fw-semibold text-primary">
-                                            <i class="bx bx-check-circle me-1"></i> Trạng thái
-                                        </h6>
-                                        <a href="{{ route('admin.movies.show', array_merge([$movie->id], array_filter(['showtime_query' => request('showtime_query'), 'room_id' => request('room_id'), 'start_date' => request('start_date')]))) }}" 
-                                           class="dropdown-item rounded-2 {{ !request('showtime_status') || request('showtime_status') == 'all' ? 'active' : '' }}">
-                                            Tất cả
+                                </div>
+                                @error('start_date')
+                                    <small class="text-danger mt-1">{{ $message }}</small>
+                                @enderror
+                            </form>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="dropdown">
+                                <button class="btn btn-outline-primary dropdown-toggle w-100 rounded-3 shadow-sm" 
+                                        type="button" 
+                                        data-bs-toggle="dropdown" 
+                                        aria-expanded="false">
+                                    <i class="bx bx-filter-alt me-2"></i>Bộ lọc nâng cao
+                                </button>
+                                <div class="dropdown-menu dropdown-menu-end w-100 p-3 shadow-lg border-0 rounded-4">
+                                    <!-- Lọc theo trạng thái -->
+                                    <h6 class="dropdown-header fw-semibold text-primary border-bottom pb-2">
+                                        <i class="bx bx-check-circle me-1"></i>Trạng thái suất chiếu
+                                    </h6>
+                                    <a href="{{ route('admin.movies.show', $movie) }}?{{ http_build_query(array_filter(['showtime_query' => request('showtime_query'), 'room_id' => request('room_id'), 'start_date' => request('start_date')])) }}" 
+                                       class="dropdown-item rounded-3 py-2 {{ !request('showtime_status') || request('showtime_status') == 'all' ? 'active bg-primary text-white' : '' }}">
+                                        <i class="bx bx-list-ul me-2"></i>Tất cả
+                                    </a>
+                                    @foreach (['scheduled' => 'Đã lên lịch', 'ongoing' => 'Đang chiếu', 'completed' => 'Hoàn thành', 'cancelled' => 'Đã hủy', 'postponed' => 'Hoãn chiếu'] as $status => $label)
+                                        <a href="{{ route('admin.movies.show', $movie) }}?{{ http_build_query(array_filter(['showtime_status' => $status, 'showtime_query' => request('showtime_query'), 'room_id' => request('room_id'), 'start_date' => request('start_date')])) }}" 
+                                           class="dropdown-item rounded-3 py-2 {{ request('showtime_status') == $status ? 'active bg-primary text-white' : '' }}">
+                                            <i class="bx bx-{{ $status == 'scheduled' ? 'calendar' : ($status == 'ongoing' ? 'play-circle' : ($status == 'completed' ? 'check-circle' : ($status == 'cancelled' ? 'x-circle' : 'time-five'))) }} me-2"></i>{{ $label }}
                                         </a>
-                                        @foreach (['scheduled', 'ongoing', 'completed', 'cancelled', 'postponed'] as $status)
-                                            <a href="{{ route('admin.movies.show', array_merge([$movie->id], array_filter(['showtime_status' => $status, 'showtime_query' => request('showtime_query'), 'room_id' => request('room_id'), 'start_date' => request('start_date')]))) }}" 
-                                               class="dropdown-item rounded-2 {{ request('showtime_status') == $status ? 'active' : '' }}">
-                                                {{ ucfirst($status) }}
-                                            </a>
-                                        @endforeach
+                                    @endforeach
 
-                                        <!-- Lọc theo phòng chiếu -->
-                                        <div class="dropdown-divider my-2"></div>
-                                        <h6 class="dropdown-header fw-semibold text-success">
-                                            <i class="bx bx-movie me-1"></i> Phòng chiếu
-                                        </h6>
-                                        <a href="{{ route('admin.movies.show', array_merge([$movie->id], array_filter(['showtime_query' => request('showtime_query'), 'showtime_status' => request('showtime_status'), 'start_date' => request('start_date')]))) }}" 
-                                           class="dropdown-item rounded-2 {{ !request('room_id') ? 'active' : '' }}">
-                                            Tất cả
+                                    <!-- Lọc theo phòng chiếu -->
+                                    <div class="dropdown-divider my-3"></div>
+                                    <h6 class="dropdown-header fw-semibold text-success border-bottom pb-2">
+                                        <i class="bx bx-movie me-1"></i>Phòng chiếu
+                                    </h6>
+                                    <a href="{{ route('admin.movies.show', $movie) }}?{{ http_build_query(array_filter(['showtime_query' => request('showtime_query'), 'showtime_status' => request('showtime_status'), 'start_date' => request('start_date')])) }}" 
+                                       class="dropdown-item rounded-3 py-2 {{ !request('room_id') ? 'active bg-success text-white' : '' }}">
+                                        <i class="bx bx-list-ul me-2"></i>Tất cả phòng
+                                    </a>
+                                    @foreach ($rooms as $room)
+                                        <a href="{{ route('admin.movies.show', $movie) }}?{{ http_build_query(array_filter(['room_id' => $room->id, 'showtime_query' => request('showtime_query'), 'showtime_status' => request('showtime_status'), 'start_date' => request('start_date')])) }}" 
+                                           class="dropdown-item rounded-3 py-2 {{ request('room_id') == $room->id ? 'active bg-success text-white' : '' }}">
+                                            <i class="bx bx-movie me-2"></i>{{ $room->name }}
                                         </a>
-                                        @foreach ($rooms as $room)
-                                            <a href="{{ route('admin.movies.show', array_merge([$movie->id], array_filter(['room_id' => $room->id, 'showtime_query' => request('showtime_query'), 'showtime_status' => request('showtime_status'), 'start_date' => request('start_date')]))) }}" 
-                                               class="dropdown-item rounded-2 {{ request('room_id') == $room->id ? 'active' : '' }}">
-                                                {{ $room->name }}
-                                            </a>
-                                        @endforeach
-                                    </div>
+                                    @endforeach
                                 </div>
                             </div>
                         </div>
+                    </div>
 
                         <!-- Form tạo suất chiếu tự động -->
                         <div class="card border-0 bg-gradient-light shadow-sm mb-4">
-                            <div class="card-header bg-primary bg-gradient text-white border-0 rounded-top-3">
+                            <div class="card-header text-white border-0 rounded-top-3" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;">
                                 <h6 class="mb-0 fw-semibold">
                                     <i class="bx bx-plus-circle me-2"></i> Tạo suất chiếu tự động
                                 </h6>
@@ -584,11 +607,29 @@
                                                     </td>
                                                     <td class="pe-4">
                                                         <div class="d-flex gap-1">
-                                                            <a href="{{ route('admin.showtimes.edit', $showtime->id) }}" 
-                                                               class="btn btn-sm btn-outline-primary rounded-pill" 
-                                                               title="Chỉnh sửa">
-                                                                <i class="bx bx-edit fs-16"></i>
-                                                            </a>
+                                                            @php
+                                                                $hasConfirmedTickets = $showtime->tickets->count() > 0;
+                                                            @endphp
+                                                            
+                                                            @if(in_array($statusValue, ['ongoing', 'completed', 'cancelled']) || $hasConfirmedTickets)
+                                                                @if($hasConfirmedTickets && !in_array($statusValue, ['ongoing', 'completed', 'cancelled']))
+                                                                    <span class="btn btn-sm btn-outline-secondary rounded-pill disabled" 
+                                                                          title="Không thể chỉnh sửa vì đã có {{ $showtime->tickets->count() }} vé được đặt và xác nhận">
+                                                                        <i class="bx bx-edit fs-16"></i>
+                                                                    </span>
+                                                                @else
+                                                                    <span class="btn btn-sm btn-outline-secondary rounded-pill disabled" 
+                                                                          title="Không thể chỉnh sửa suất chiếu đã bắt đầu/hoàn thành/hủy">
+                                                                        <i class="bx bx-edit fs-16"></i>
+                                                                    </span>
+                                                                @endif
+                                                            @else
+                                                                <a href="{{ route('admin.showtimes.edit', $showtime->id) }}" 
+                                                                   class="btn btn-sm btn-outline-primary rounded-pill" 
+                                                                   title="Chỉnh sửa">
+                                                                    <i class="bx bx-edit fs-16"></i>
+                                                                </a>
+                                                            @endif
                                                             
                                                             @if($statusValue === 'scheduled')
                                                                 <button type="button" 
@@ -650,84 +691,275 @@
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<!-- Thêm SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <!-- CSS tùy chỉnh -->
 <style>
-/* Hiệu ứng hover cho poster */
-.card-body img:hover {
-    transform: scale(1.02);
+/* Accordion styling - FORCE EVERYTHING */
+.collapse {
+    /* Bỏ transition để tránh conflict với Bootstrap */
 }
 
-/* Info cards styling */
-.info-card {
-    transition: all 0.3s ease;
-    border: 1px solid #e9ecef !important;
+.collapse.show {
+    display: block !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    opacity: 1 !important;
 }
 
-.info-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
-    border-color: #0d6efd !important;
+.collapse:not(.show) {
+    display: none !important;
 }
 
-/* Select2 custom styling */
-.select2-container--default .select2-selection--multiple {
-    min-height: 44px;
-    border: 2px solid #e9ecef;
-    border-radius: 0.75rem;
-    background: #f8f9fa;
-    padding: 8px 12px;
-    transition: all 0.3s ease;
+.collapsing {
+    height: auto !important;
+    transition: none !important;
+    display: block !important;
 }
 
-.select2-container--default .select2-selection--multiple:focus-within {
-    border-color: #0d6efd;
-    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
-    background: #fff;
+/* Force show cho accordion content */
+#movieDetailsAccordion.show {
+    display: block !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    opacity: 1 !important;
+    visibility: visible !important;
 }
 
-.select2-container--default .select2-selection--multiple .select2-selection__choice {
-    background: linear-gradient(135deg, #0d6efd, #0056b3);
-    color: #fff;
-    border: none;
-    border-radius: 0.5rem;
-    padding: 4px 12px;
-    margin: 2px 4px;
-    font-weight: 500;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+#movieDetailsAccordion.show .card-body {
+    display: block !important;
+    height: auto !important;
+    opacity: 1 !important;
 }
 
-.select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
-    color: #fff;
-    margin-right: 8px;
-    font-weight: bold;
-    transition: color 0.2s ease;
-}
-
-.select2-container--default .select2-selection--multiple .select2-selection__choice__remove:hover {
-    color: #ffc107;
-}
-
-.select2-dropdown {
-    border: 2px solid #e9ecef;
-    border-radius: 0.75rem;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
-}
-
-.select2-container--default .select2-results__option {
-    padding: 12px 20px;
+.btn[data-bs-toggle="collapse"] {
     transition: all 0.2s ease;
 }
 
-.select2-container--default .select2-results__option--highlighted {
-    background: linear-gradient(135deg, #0d6efd, #0056b3);
-    color: #fff;
+.btn[data-bs-toggle="collapse"] i {
+    transition: transform 0.3s ease;
 }
 
-/* Table styling improvements */
+.btn[data-bs-toggle="collapse"]:not(.collapsed) i {
+    transform: rotate(180deg);
+}
+
+.btn[data-bs-toggle="collapse"].collapsed i {
+    transform: rotate(0deg);
+}
+
+.btn[data-bs-toggle="collapse"]:hover {
+    background-color: #fff3cd;
+    border-color: #ffc107;
+}
+
+/* Poster frame styling */
+.poster-frame {
+    overflow: hidden;
+    border-radius: 1rem;
+}
+
+.poster-frame img {
+    transition: all 0.4s ease;
+}
+
+.poster-frame:hover img {
+    transform: scale(1.05);
+}
+
+.play-btn {
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    background: rgba(220, 53, 69, 0.9) !important;
+}
+
+.play-btn:hover {
+    transform: scale(1.1);
+    background: rgba(220, 53, 69, 1) !important;
+}
+
+/* Info detail cards */
+.info-detail-card {
+    padding: 1.25rem;
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    border-radius: 1rem;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.info-detail-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    background: rgba(255, 255, 255, 0.9);
+}
+
+/* Enhanced button styling */
+.btn {
+    transition: all 0.3s ease;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.btn-lg {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+}
+
+/* Custom warning color for better contrast */
+.text-warning {
+    color: #e97e0f !important;
+    font-weight: 600;
+}
+
+.bg-warning-subtle {
+    background-color: #fef3c7 !important;
+}
+
+.bg-warning-subtle .text-warning {
+    color: #92400e !important;
+}
+
+/* Warning elements styling */
+.bg-warning.bg-opacity-10 {
+    background-color: rgba(249, 115, 22, 0.1) !important;
+}
+
+i.text-warning {
+    color: #f97316 !important;
+}
+
+h5.text-warning, h6.text-warning {
+    color: #ea580c !important;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+/* Gradient button effects */
+.btn-primary {
+    background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+    border: none;
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    border: none;
+}
+
+.btn-warning {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    border: none;
+    color: white;
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    border: none;
+}
+
+.btn-outline-primary:hover {
+    background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+    border-color: transparent;
+}
+
+.btn-outline-warning:hover {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    border-color: transparent;
+    color: white;
+}
+
+.btn-outline-success:hover {
+    background: linear-gradient(135deg, #55a3ff 0%, #003d82 100%);
+    border-color: transparent;
+}
+
+/* Badge improvements */
+.badge {
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+}
+
+.badge:hover {
+    transform: scale(1.05);
+}
+
+.badge.rounded-pill {
+    padding: 0.5rem 1rem;
+}
+
+/* Card enhancements */
+.card {
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+}
+
+/* Input styling */
+.form-control {
+    border: 2px solid #f1f3f4;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.form-control:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    transform: scale(1.02);
+}
+
+.input-group {
+    border-radius: 1rem;
+    overflow: hidden;
+}
+
+.input-group-text {
+    background: #f8f9fa;
+    border: 2px solid #f1f3f4;
+    border-right: none;
+}
+
+/* Dropdown enhancements */
+.dropdown-menu {
+    border: none;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.95);
+}
+
+.dropdown-item {
+    transition: all 0.2s ease;
+    border-radius: 0.75rem;
+    margin: 2px 0;
+    font-weight: 500;
+}
+
+.dropdown-item:hover {
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    transform: translateX(5px);
+    padding-left: 1.5rem;
+}
+
+.dropdown-item.active {
+    background: linear-gradient(135deg, #667eea, #764ba2) !important;
+}
+
+/* Table styling */
 .table > :not(caption) > * > * {
-    padding: 1rem 0.75rem;
+    padding: 1.25rem 1rem;
     border-bottom: 1px solid #f1f3f4;
+    vertical-align: middle;
 }
 
 .table tbody tr {
@@ -735,97 +967,34 @@
 }
 
 .table tbody tr:hover {
-    background-color: #f8f9fa;
-    transform: translateX(2px);
+    background: linear-gradient(135deg, #f8f9fa, #ffffff);
+    transform: translateX(3px);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 }
 
-/* Button improvements */
-.btn {
-    transition: all 0.3s ease;
-    font-weight: 500;
+/* Header gradient background */
+.card-header {
+    background: transparent;
 }
 
-.btn:hover {
+/* Status badges with icons */
+.badge .bx {
+    font-size: 0.9em;
+}
+
+/* Button hover effects for warning */
+.btn-warning:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 12px rgba(249, 115, 22, 0.4);
 }
 
-.btn-primary {
-    background: linear-gradient(135deg, #0d6efd, #0056b3);
-    border: none;
-}
-
-.btn-outline-primary:hover {
-    background: linear-gradient(135deg, #0d6efd, #0056b3);
-    border-color: #0d6efd;
-}
-
-/* Badge improvements */
-.badge {
-    font-weight: 500;
-    letter-spacing: 0.5px;
-}
-
-/* Card improvements */
-.card {
+/* Quick stats styling */
+.col-4 > div {
     transition: all 0.3s ease;
 }
 
-.card:hover {
-    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-}
-
-/* Dropdown improvements */
-.dropdown-menu {
-    border: none;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
-}
-
-.dropdown-item {
-    transition: all 0.2s ease;
-    border-radius: 0.5rem;
-    margin: 2px 0;
-}
-
-.dropdown-item:hover {
-    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-    transform: translateX(4px);
-}
-
-.dropdown-item.active {
-    background: linear-gradient(135deg, #0d6efd, #0056b3);
-}
-
-/* Modal improvements */
-.modal-content {
-    border: none;
-    border-radius: 1rem;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
-}
-
-.modal-header {
-    border-bottom: 2px solid #f1f3f4;
-    border-radius: 1rem 1rem 0 0;
-}
-
-.modal-footer {
-    border-top: 2px solid #f1f3f4;
-}
-
-/* Input group improvements */
-.input-group-text {
-    border: 2px solid #e9ecef;
-    background: #f8f9fa;
-}
-
-.form-control {
-    border: 2px solid #e9ecef;
-    transition: all 0.3s ease;
-}
-
-.form-control:focus {
-    border-color: #0d6efd;
-    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
+.col-4 > div:hover {
+    transform: translateY(-3px) scale(1.02);
 }
 
 /* Responsive improvements */
@@ -841,10 +1010,189 @@
     .row.g-4 {
         gap: 1.5rem !important;
     }
+    
+    .btn-lg {
+        padding: 0.6rem 1.2rem;
+        font-size: 0.9rem;
+    }
+    
+    .poster-frame img {
+        max-height: 300px !important;
+    }
+}
+
+/* Animation for page load */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.card {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+.card:nth-child(2) {
+    animation-delay: 0.1s;
+}
+
+.card:nth-child(3) {
+    animation-delay: 0.2s;
+}
+
+/* Select2 enhancements */
+.select2-container--default .select2-selection--multiple {
+    min-height: 50px;
+    border: 2px solid #f1f3f4;
+    border-radius: 1rem;
+    background: linear-gradient(145deg, #f8f9fa, #ffffff);
+    padding: 10px 15px;
+    transition: all 0.3s ease;
+}
+
+.select2-container--default .select2-selection--multiple:focus-within {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    background: #ffffff;
+}
+
+.select2-container--default .select2-selection--multiple .select2-selection__choice {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff;
+    border: none;
+    border-radius: 0.75rem;
+    padding: 6px 15px;
+    margin: 3px 5px;
+    font-weight: 600;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+    transition: all 0.2s ease;
+}
+
+.select2-container--default .select2-selection--multiple .select2-selection__choice:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.select2-dropdown {
+    border: none;
+    border-radius: 1rem;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(10px);
+}
+
+/* Modal improvements */
+.modal-content {
+    border: none;
+    border-radius: 1.5rem;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(10px);
+}
+
+.modal-header {
+    border-bottom: 2px solid #f1f3f4;
+    border-radius: 1.5rem 1.5rem 0 0;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+}
+
+.modal-footer {
+    border-top: 2px solid #f1f3f4;
+    border-radius: 0 0 1.5rem 1.5rem;
 }
 </style>
 
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded - Setting up accordion');
+    
+    const button = document.getElementById('accordionToggleBtn');
+    const target = document.getElementById('movieDetailsAccordion');
+    const icon = document.getElementById('accordionIcon');
+    
+    console.log('Elements check:', { button: !!button, target: !!target, icon: !!icon });
+    
+    if (button && target && icon) {
+        // Debug initial state
+        console.log('Initial target state:', {
+            classes: target.className,
+            display: getComputedStyle(target).display,
+            height: getComputedStyle(target).height,
+            visibility: getComputedStyle(target).visibility
+        });
+        
+        // Manual toggle thay vì dựa vào Bootstrap
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            console.log('Manual button clicked');
+            
+            const isCurrentlyHidden = target.style.display === 'none' || 
+                                    getComputedStyle(target).display === 'none' ||
+                                    !target.classList.contains('show');
+            
+            console.log('Currently hidden:', isCurrentlyHidden);
+            
+            if (isCurrentlyHidden) {
+                // Show accordion - FORCE IT!
+                console.log('Showing accordion manually');
+                target.style.display = 'block !important';
+                target.style.height = 'auto !important';
+                target.style.maxHeight = 'none !important';
+                target.style.overflow = 'visible !important';
+                target.style.visibility = 'visible !important';
+                target.style.opacity = '1 !important';
+                target.classList.add('show');
+                target.classList.remove('collapse', 'collapsing');
+                
+                // Remove any inline height that might be set
+                target.style.removeProperty('height');
+                target.style.height = 'auto';
+                
+                button.classList.remove('collapsed');
+                button.setAttribute('aria-expanded', 'true');
+                icon.style.transform = 'rotate(180deg)';
+                
+                // Force recalculate
+                target.offsetHeight; // trigger reflow
+                
+                setTimeout(() => {
+                    console.log('Accordion shown - new state:', {
+                        classes: target.className,
+                        display: getComputedStyle(target).display,
+                        height: getComputedStyle(target).height,
+                        scrollHeight: target.scrollHeight + 'px'
+                    });
+                }, 50);
+            } else {
+                // Hide accordion - FORCE CLOSE!
+                console.log('Hiding accordion manually');
+                target.style.display = 'none !important';
+                target.style.height = '0px !important';
+                target.style.maxHeight = '0px !important';
+                target.style.overflow = 'hidden !important';
+                target.style.opacity = '0 !important';
+                target.classList.remove('show');
+                target.classList.add('collapse');
+                
+                button.classList.add('collapsed');
+                button.setAttribute('aria-expanded', 'false');
+                icon.style.transform = 'rotate(0deg)';
+                
+                console.log('Accordion hidden');
+            }
+        });
+        
+        console.log('Manual accordion ready');
+    } else {
+        console.error('Accordion elements missing');
+    }
+});
+
 // Khởi tạo Select2 cho select phòng với icon và style đẹp hơn
 $('#roomSelect').select2({
     placeholder: "Chọn phòng (gõ để tìm)",
@@ -1087,27 +1435,75 @@ document.getElementById('confirmCreateShowtime').addEventListener('click', funct
 
 // Hàm hoãn suất chiếu
 function postponeShowtime(showtimeId) {
-    if (confirm('Bạn có chắc chắn muốn hoãn suất chiếu này?')) {
-        updateShowtimeStatus(showtimeId, 'postponed');
-    }
+    Swal.fire({
+        title: 'Xác nhận hoãn suất chiếu',
+        text: 'Suất chiếu sẽ được đánh dấu là "hoãn". Nếu có vé đã đặt, bạn cần thông báo cho khách hàng về việc này.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ffc107',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Đồng ý hoãn',
+        cancelButtonText: 'Hủy bỏ'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            updateShowtimeStatus(showtimeId, 'postponed');
+        }
+    });
 }
 
 // Hàm hủy suất chiếu
 function cancelShowtime(showtimeId) {
-    if (confirm('Bạn có chắc chắn muốn hủy suất chiếu này? Hành động này không thể hoàn tác.')) {
-        updateShowtimeStatus(showtimeId, 'cancelled');
-    }
+    Swal.fire({
+        title: 'Xác nhận hủy suất chiếu',
+        html: `
+            <p>⚠️ <strong>Cảnh báo:</strong> Hành động này sẽ hủy hoàn toàn suất chiếu.</p>
+            <p>• Nếu có vé đã đặt, hệ thống sẽ kiểm tra và yêu cầu xử lý hoàn tiền trước</p>
+            <p>• Suất chiếu không thể khôi phục sau khi hủy</p>
+        `,
+        icon: 'error',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Đồng ý hủy',
+        cancelButtonText: 'Không hủy'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            updateShowtimeStatus(showtimeId, 'cancelled');
+        }
+    });
 }
 
 // Hàm kích hoạt lại suất chiếu
 function reactivateShowtime(showtimeId) {
-    if (confirm('Bạn có chắc chắn muốn kích hoạt lại suất chiếu này?')) {
-        updateShowtimeStatus(showtimeId, 'scheduled');
-    }
+    Swal.fire({
+        title: 'Kích hoạt lại suất chiếu',
+        text: 'Suất chiếu sẽ được chuyển về trạng thái "scheduled" và có thể bán vé trở lại.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#28a745',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Kích hoạt',
+        cancelButtonText: 'Hủy bỏ'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            updateShowtimeStatus(showtimeId, 'scheduled');
+        }
+    });
 }
 
 // Hàm cập nhật trạng thái suất chiếu
 function updateShowtimeStatus(showtimeId, status) {
+    // Hiển thị loading
+    Swal.fire({
+        title: 'Đang xử lý...',
+        text: 'Vui lòng chờ trong giây lát',
+        allowOutsideClick: false,
+        showConfirmButton: false,
+        willOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
     fetch(`/admin/showtimes/${showtimeId}/update-status-manual`, {
         method: 'POST',
         headers: {
@@ -1120,16 +1516,55 @@ function updateShowtimeStatus(showtimeId, status) {
     })
     .then(response => response.json())
     .then(data => {
+        Swal.close();
+        
         if (data.success) {
-            // Reload trang để cập nhật trạng thái
-            location.reload();
+            // Hiển thị thông báo thành công với thông tin chi tiết
+            let iconType = 'success';
+            let titleText = 'Cập nhật thành công!';
+            
+            if (status === 'cancelled') {
+                iconType = 'warning';
+                titleText = 'Đã hủy suất chiếu';
+            } else if (status === 'postponed') {
+                iconType = 'info';
+                titleText = 'Đã hoãn suất chiếu';
+            } else if (status === 'scheduled') {
+                iconType = 'success';
+                titleText = 'Đã kích hoạt lại';
+            }
+            
+            Swal.fire({
+                icon: iconType,
+                title: titleText,
+                text: data.message,
+                confirmButtonText: 'Đã hiểu',
+                confirmButtonColor: '#3085d6'
+            }).then(() => {
+                // Reload trang để cập nhật trạng thái
+                location.reload();
+            });
         } else {
-            alert('Có lỗi xảy ra: ' + data.message);
+            // Hiển thị lỗi chi tiết
+            Swal.fire({
+                icon: 'error',
+                title: 'Không thể cập nhật',
+                text: data.message,
+                confirmButtonText: 'Đã hiểu',
+                confirmButtonColor: '#d33'
+            });
         }
     })
     .catch(error => {
+        Swal.close();
         console.error('Error:', error);
-        alert('Có lỗi xảy ra khi cập nhật trạng thái suất chiếu.');
+        Swal.fire({
+            icon: 'error',
+            title: 'Lỗi kết nối',
+            text: 'Có lỗi xảy ra khi kết nối với máy chủ. Vui lòng thử lại.',
+            confirmButtonText: 'Đã hiểu',
+            confirmButtonColor: '#d33'
+        });
     });
 }
 </script>
