@@ -95,30 +95,49 @@
         margin-left: 6px;
     }
 
-    .status-pending { background: #f59e0b; }
-    .status-confirmed { background: #10b981; }
-    .status-cancelled { background: #ef4444; }
-    .status-refunded { background: #3b82f6; }
-    .status-expired { background: #6b7280; }
+    .status-pending {
+        background: #f59e0b;
+    }
+
+    .status-confirmed {
+        background: #10b981;
+    }
+
+    .status-cancelled {
+        background: #ef4444;
+    }
+
+    .status-refunded {
+        background: #3b82f6;
+    }
+
+    .status-expired {
+        background: #6b7280;
+    }
 
     .detail-btn {
         display: inline-block;
         padding: 10px 20px;
-        background: linear-gradient(90deg, #6366f1, #8b5cf6); /* Gradient màu tím nổi bật */
+        background: linear-gradient(90deg, #6366f1, #8b5cf6);
+        /* Gradient màu tím nổi bật */
         color: white;
         border-radius: 8px;
         text-decoration: none;
         font-weight: 600;
         font-size: 14px;
         transition: all 0.3s ease;
-        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); /* Shadow nhẹ */
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        /* Shadow nhẹ */
         margin-top: 10px;
     }
 
     .detail-btn:hover {
-        background: linear-gradient(90deg, #4f46e5, #7c3aed); /* Gradient đậm hơn khi hover */
-        transform: translateY(-2px); /* Nâng lên khi hover */
-        box-shadow: 0 6px 15px rgba(99, 102, 241, 0.4); /* Shadow đậm hơn */
+        background: linear-gradient(90deg, #4f46e5, #7c3aed);
+        /* Gradient đậm hơn khi hover */
+        transform: translateY(-2px);
+        /* Nâng lên khi hover */
+        box-shadow: 0 6px 15px rgba(99, 102, 241, 0.4);
+        /* Shadow đậm hơn */
     }
 
     [data-theme="dark"] .detail-btn {
@@ -139,22 +158,22 @@
         </h3>
 
         @forelse($bookings as $booking)
-    @php
+        @php
         $status = $booking->status instanceof \BackedEnum ? $booking->status->value : $booking->status;
 
         // Gom các vé theo showtime_id hoặc lấy vé đầu tiên để lấy info
         $groupedTickets = $booking->tickets->groupBy('showtime_id');
-    @endphp
+        @endphp
 
-    @foreach($groupedTickets as $tickets)
+        @foreach($groupedTickets as $tickets)
         @php
-            $firstTicket = $tickets->first();
-            $movie = $firstTicket->showtime?->movie;
-            $cinema = $firstTicket->seat?->room?->cinema?->name ?? 'Chưa xác định';
-            $room = $firstTicket->seat?->room?->name ?? 'Chưa xác định';
-            $showDate = $firstTicket->showtime?->show_date;
-            $showTime = $firstTicket->showtime?->show_time;
-            $seats = $tickets->pluck('seat.seat_number')->filter()->implode(', ');
+        $firstTicket = $tickets->first();
+        $movie = $firstTicket->showtime?->movie;
+        $cinema = $firstTicket->seat?->room?->cinema?->name ?? 'Chưa xác định';
+        $room = $firstTicket->seat?->room?->name ?? 'Chưa xác định';
+        $showDate = $firstTicket->showtime?->show_date;
+        $showTime = $firstTicket->showtime?->show_time;
+        $seats = $tickets->pluck('seat.seat_number')->filter()->implode(', ');
         @endphp
 
         <div class="ticket-card">
@@ -179,17 +198,17 @@
                 <a href="{{ route('client.booking.detail', $booking->id) }}" class="detail-btn">Xem chi tiết</a>
             </div>
         </div>
-    @endforeach
+        @endforeach
 
-@empty
-    <p>Chưa có giao dịch nào.</p>
-@endforelse
+        @empty
+        <p>Chưa có giao dịch nào.</p>
+        @endforelse
 
-            <div style="margin-top:20px;">
-                {{ $bookings->links() }}
-            </div>
+        <div style="margin-top:20px;">
+            {{ $bookings->links() }}
         </div>
     </div>
+</div>
 
-    @include('client.footer.footer')
+@include('client.footer.footer')
 @endsection

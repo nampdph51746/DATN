@@ -613,14 +613,14 @@
 
                 {{-- Thể loại --}}
                 <div class="genres-container mt-3">
-    <strong class="d-block mb-1">🎞️ Thể loại:</strong>
-@foreach($movie->genres as $genre)
-    <a href="{{ route('movies.filter', $genre->name) }}" class="genre-badge">
-        {{ $genre->name }}
-    </a>
-@endforeach
+                    <strong class="d-block mb-1">🎞️ Thể loại:</strong>
+                    @foreach($movie->genres as $genre)
+                    <a href="{{ route('movies.filter', $genre->name) }}" class="genre-badge">
+                        {{ $genre->name }}
+                    </a>
+                    @endforeach
 
-</div>
+                </div>
 
                 {{-- Nút đặt vé --}}
                 @if($movie->status->value === 'showing')
@@ -644,14 +644,14 @@
             </div>
         </div>
 
-<div class="movie-detail mt-4 mb-5 text-center">
-    <h3 style="font-size: 24px; font-weight: bold; margin-bottom: 15px; color: #222;">
-        📝 Chi tiết
-    </h3>
-    <p style="font-size: 18px; line-height: 1.8; color: #333;">
-        {{ $movie->description }}
-    </p>
-</div>
+        <div class="movie-detail mt-4 mb-5 text-center">
+            <h3 style="font-size: 24px; font-weight: bold; margin-bottom: 15px; color: #222;">
+                📝 Chi tiết
+            </h3>
+            <p style="font-size: 18px; line-height: 1.8; color: #333;">
+                {{ $movie->description }}
+            </p>
+        </div>
 
         {{-- Trailer --}}
         @if ($movie->trailer_url)
