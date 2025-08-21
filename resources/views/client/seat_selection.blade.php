@@ -400,6 +400,9 @@
                 element.style.backgroundColor = originalColor || '#28a745';
                 element.style.opacity = '1';
                 selectedSeats = selectedSeats.filter(seat => seat.id !== seatId);
+                
+                // Gọi API để release ghế và broadcast real-time
+                await releaseSingleSeat(seatId);
             } else {
                 // Kiểm tra giới hạn số ghế trước khi chọn
                 if (selectedSeats.length >= MAX_SEATS_PER_BOOKING) {
@@ -412,9 +415,10 @@
                 element.style.backgroundColor = '#e5006e';
                 element.style.opacity = '1';
                 selectedSeats.push({ id: seatId, label: label, type: type, price: price });
+                
+                // Gọi API để reserve ghế và broadcast real-time
+                await updateSeatReservation();
             }
-
-            await updateSeatReservation();
         }
 
         async function selectCoupleSeat(element) {
@@ -460,6 +464,9 @@
                 partnerSeat.style.opacity = '1';
                 
                 selectedSeats = selectedSeats.filter(seat => seat.id !== seatId && seat.id !== partnerSeatId);
+                
+                // Gọi API để release cả 2 ghế
+                await releaseCoupleSeat([seatId, partnerSeatId]);
             } else {
                 // Kiểm tra giới hạn số ghế trước khi chọn cả 2 ghế
                 if (selectedSeats.length + 2 > MAX_SEATS_PER_BOOKING) {
@@ -483,9 +490,10 @@
                 if (!selectedSeats.some(seat => seat.id === partnerSeatId)) {
                     selectedSeats.push({ id: partnerSeatId, label: partnerLabel, type: partnerType, price: partnerPrice });
                 }
+                
+                // Gọi API để reserve cả 2 ghế
+                await updateSeatReservation();
             }
-
-            await updateSeatReservation();
         }
 
         function findCouplePartner(seatElement) {
@@ -510,6 +518,15 @@
         async function updateSeatReservation() {
             // Gửi tất cả seat_ids được chọn
             const seatIds = selectedSeats.map(seat => seat.id);
+            
+            // Chỉ gọi API nếu có ghế được chọn
+            if (seatIds.length === 0) {
+                console.log('No seats selected, skipping reservation');
+                updateSummary();
+                sendSeatsToParent();
+                return;
+            }
+            
             console.log('Sending reserve request for seats:', seatIds);
             try {
                 const response = await fetch('{{ route('client.seats.reserve', ['showtimeId' => $showtime->id]) }}', {
@@ -571,6 +588,59 @@
                 seats: seatsSummary.textContent,
                 ticketPrice: ticketPriceSummary.textContent
             });
+        }
+
+        async function releaseSingleSeat(seatId) {
+            try {
+                console.log('Releasing single seat:', seatId);
+                const response = await fetch(`/api/seats/release/${showtimeId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({ seat_ids: [seatId] })
+                });
+                
+                const data = await response.json();
+                console.log('Release single seat response:', data);
+                
+                if (data.error) {
+                    console.warn('Release single seat failed:', data.error);
+                }
+            } catch (error) {
+                console.error('Error releasing single seat:', error);
+            }
+            
+            console.log('selectedSeats after release:', selectedSeats);
+            updateSummary();
+            sendSeatsToParent();
+        }
+
+        async function releaseCoupleSeat(seatIds) {
+            try {
+                console.log('Releasing couple seats:', seatIds);
+                const response = await fetch(`/api/seats/release/${showtimeId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({ seat_ids: seatIds })
+                });
+                
+                const data = await response.json();
+                console.log('Release couple seats response:', data);
+                
+                if (data.error) {
+                    console.warn('Release couple seats failed:', data.error);
+                }
+            } catch (error) {
+                console.error('Error releasing couple seats:', error);
+            }
+            
+            updateSummary();
+            sendSeatsToParent();
         }
 
         function sendSeatsToParent() {
