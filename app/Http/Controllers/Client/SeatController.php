@@ -230,6 +230,15 @@ class SeatController extends Controller
             $seatIds = $request->input('seat_ids');
             Log::info('Seat IDs to reserve: ' . json_encode($seatIds));
 
+            // Kiểm tra giới hạn số ghế tối đa
+            $maxSeats = config('booking.max_seats_per_booking', 8);
+            if (count($seatIds) > $maxSeats) {
+                return response()->json([
+                    'error' => 'Vượt quá giới hạn đặt ghế',
+                    'message' => "Bạn chỉ có thể đặt tối đa {$maxSeats} ghế trong 1 lần đặt vé",
+                ], 400);
+            }
+
             // Kiểm tra user đã login chưa
             if (!Auth::check()) {
                 return response()->json(['error' => 'Bạn cần đăng nhập để đặt ghế'], 401);
