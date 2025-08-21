@@ -67,10 +67,12 @@ class HomeController extends Controller
         if (Auth::check()) {
             $bookingAttemptService = new BookingAttemptService();
             
-            // Auto-cancel các reserved attempts khi user vào trang chủ (reset/reload)
-            $cancelledCount = $bookingAttemptService->cancelAllActiveAttempts(Auth::id());
-            if ($cancelledCount > 0) {
-                Log::info("Auto-cancelled {$cancelledCount} reserved attempts for user " . Auth::id() . " when accessing home page");
+            // Không auto-cancel nếu đang ở bước thanh toán (session/payment flag)
+            if (!session()->has('is_checkout') || !session('is_checkout')) {
+                $cancelledCount = $bookingAttemptService->cancelAllActiveAttempts(Auth::id());
+                if ($cancelledCount > 0) {
+                    Log::info("Auto-cancelled {$cancelledCount} reserved attempts for user " . Auth::id() . " when accessing home page");
+                }
             }
             
             $isUserBanned = $bookingAttemptService->isUserBanned(Auth::id());
@@ -265,10 +267,12 @@ class HomeController extends Controller
         if (Auth::check()) {
             $bookingAttemptService = new BookingAttemptService();
             
-            // Auto-cancel các reserved attempts khi user vào trang chi tiết phim (reset/reload)
-            $cancelledCount = $bookingAttemptService->cancelAllActiveAttempts(Auth::id());
-            if ($cancelledCount > 0) {
-                Log::info("Auto-cancelled {$cancelledCount} reserved attempts for user " . Auth::id() . " when accessing movie detail page");
+            // Không auto-cancel nếu đang ở bước thanh toán (session/payment flag)
+            if (!session()->has('is_checkout') || !session('is_checkout')) {
+                $cancelledCount = $bookingAttemptService->cancelAllActiveAttempts(Auth::id());
+                if ($cancelledCount > 0) {
+                    Log::info("Auto-cancelled {$cancelledCount} reserved attempts for user " . Auth::id() . " when accessing movie detail page");
+                }
             }
             
             $isUserBanned = $bookingAttemptService->isUserBanned(Auth::id());

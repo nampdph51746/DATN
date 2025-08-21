@@ -23,6 +23,12 @@ class Kernel extends ConsoleKernel
                  ->everyTwoMinutes()
                  ->withoutOverlapping();
 
+        // Release ghế hết hạn mỗi phút
+        $schedule->command('seats:release-expired')
+                 ->everyMinute()
+                 ->withoutOverlapping()
+                 ->runInBackground();
+
         // Cập nhật trạng thái phim đã hết hạn mỗi ngày lúc 00:00
         $schedule->command('movies:update-expired')
                  ->daily()

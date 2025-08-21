@@ -131,12 +131,21 @@
         let timerStarted = false;
         let timerInterval;
         let countdownEndTime = null;
+        let cleanupDisabled = false; // Flag để disable cleanup khi đang checkout
 
         const sessionId = '{{ session()->getId() }}';
         const showtimeId = '{{ $showtime->id }}';
         
         // Cấu hình giới hạn số ghế
         const MAX_SEATS_PER_BOOKING = {{ config('booking.max_seats_per_booking', 8) }}; // Tối đa {{ config('booking.max_seats_per_booking', 8) }} ghế mỗi lần đặt
+
+        // Lắng nghe message từ parent frame
+        window.addEventListener('message', function(event) {
+            if (event.data && event.data.type === 'DISABLE_CLEANUP') {
+                cleanupDisabled = true;
+                console.log('Cleanup disabled due to checkout process');
+            }
+        });
 
         function showSeatLimitAlert() {
             Swal.fire({
@@ -254,39 +263,92 @@
 
         // Cleanup khi user thoát trang
         async function cleanupSeats() {
+            // Kiểm tra nếu cleanup bị disable (đang trong quá trình checkout)
+            if (cleanupDisabled) {
+                console.log('Cleanup skipped - checkout process in progress');
+                return;
+            }
+            
+            // Kiểm tra nếu parent đang trong process checkout
+            try {
+                if (window.parent && window.parent.document) {
+                    const checkoutForm = window.parent.document.getElementById('checkoutForm');
+                    if (checkoutForm && checkoutForm.classList.contains('submitting')) {
+                        console.log('Cleanup skipped - form is being submitted');
+                        return;
+                    }
+                }
+            } catch (error) {
+                // Cross-origin restrictions, ignore
+            }
+            
             if (selectedSeats.length > 0) {
-                const seatIds = selectedSeats.map(seat => seat.id);
                 try {
-                    console.log('Cleaning up seats before page unload:', seatIds);
-                    await fetch(`/api/seats/release/${showtimeId}`, {
+                    console.log('Cleaning up seats before page unload:', selectedSeats.map(s => s.id));
+                    
+                    // Gọi API release tất cả ghế của session
+                    await fetch(`/api/seats/release-all/${showtimeId}`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                             'X-CSRF-TOKEN': '{{ csrf_token() }}'
                         },
-                        body: JSON.stringify({ seat_ids: seatIds }),
                         keepalive: true // Đảm bảo request được gửi ngay cả khi trang đang đóng
                     });
+                    
+                    console.log('All seats released successfully');
                 } catch (error) {
                     console.error('Error releasing seats on page unload:', error);
                 }
             }
         }
 
-        // Event listeners cho cleanup
+        // Event listeners cho cleanup - sử dụng nhiều event để đảm bảo
         window.addEventListener('beforeunload', cleanupSeats);
         window.addEventListener('unload', cleanupSeats);
         window.addEventListener('pagehide', cleanupSeats);
 
-        // Cleanup khi focus ra khỏi tab/window (optional - có thể comment out nếu không muốn)
+        // Cleanup khi user chuyển tab hoặc minimize window (sau 30 giây không focus)
+        let unfocusTimeout;
         let isPageVisible = true;
+        
         document.addEventListener('visibilitychange', function() {
             if (document.hidden && isPageVisible) {
                 isPageVisible = false;
-                // Có thể thêm logic cleanup ở đây nếu muốn
-                // cleanupSeats();
+                console.log('Page became hidden, starting unfocus timeout');
+                
+                // Sau 30 giây không focus thì release ghế
+                unfocusTimeout = setTimeout(() => {
+                    console.log('Page unfocused for 30 seconds, releasing seats');
+                    cleanupSeats();
+                }, 30000);
+                
             } else if (!document.hidden) {
                 isPageVisible = true;
+                if (unfocusTimeout) {
+                    console.log('Page became visible again, clearing unfocus timeout');
+                    clearTimeout(unfocusTimeout);
+                    unfocusTimeout = null;
+                }
+            }
+        });
+
+        // Cleanup khi window lose focus (chuyển app khác)
+        let windowUnfocusTimeout;
+        
+        window.addEventListener('blur', function() {
+            console.log('Window lost focus, starting unfocus timeout');
+            windowUnfocusTimeout = setTimeout(() => {
+                console.log('Window unfocused for 30 seconds, releasing seats');
+                cleanupSeats();
+            }, 30000);
+        });
+
+        window.addEventListener('focus', function() {
+            if (windowUnfocusTimeout) {
+                console.log('Window gained focus, clearing unfocus timeout');
+                clearTimeout(windowUnfocusTimeout);
+                windowUnfocusTimeout = null;
             }
         });
 
@@ -368,6 +430,35 @@
                 }
             } else {
                 console.warn('Seat element not found for seat_id:', data.seat_id);
+            }
+        });
+
+        // Listener cho event seat-released
+        channel.bind('seat-released', function(data) {
+            console.log('Received seat-released event:', data);
+            
+            const seatElement = document.querySelector(`.seat[data-seat-id="${data.seat_id}"]`);
+            if (seatElement) {
+                // Kiểm tra nếu không phải session hiện tại release thì cập nhật UI
+                if (data.released_by !== sessionId) {
+                    console.log('Processing seat release for seat_id:', data.seat_id);
+                    
+                    // Reset ghế về trạng thái available
+                    seatElement.classList.remove('available', 'reserved', 'selected', 'maintenance', 'locked');
+                    seatElement.classList.add('available');
+                    
+                    const originalColor = seatElement.getAttribute('data-original-color');
+                    seatElement.style.backgroundColor = originalColor || '#28a745';
+                    seatElement.style.opacity = '1';
+                    seatElement.style.pointerEvents = 'auto';
+                    seatElement.setAttribute('onclick', 'selectSeat(this)');
+                    
+                    console.log('Seat', data.seat_id, 'released and made available');
+                } else {
+                    console.log('Ignoring seat release: released by current session', data.seat_id);
+                }
+            } else {
+                console.warn('Seat element not found for released seat_id:', data.seat_id);
             }
         });
 
@@ -624,9 +715,35 @@
                 
                 if (data.error) {
                     console.warn('Release single seat failed:', data.error);
+                    // Nếu có lỗi, revert lại UI
+                    const seatElement = document.querySelector(`.seat[data-seat-id="${seatId}"]`);
+                    if (seatElement) {
+                        seatElement.classList.add('selected');
+                        seatElement.style.backgroundColor = '#e5006e';
+                        // Thêm lại ghế vào selectedSeats nếu chưa có
+                        if (!selectedSeats.some(seat => seat.id === seatId)) {
+                            const label = seatElement.getAttribute('data-label');
+                            const type = seatElement.getAttribute('data-type');
+                            const price = parseFloat(seatElement.getAttribute('data-price'));
+                            selectedSeats.push({ id: seatId, label: label, type: type, price: price });
+                        }
+                    }
                 }
             } catch (error) {
                 console.error('Error releasing single seat:', error);
+                // Nếu có lỗi network, revert lại UI
+                const seatElement = document.querySelector(`.seat[data-seat-id="${seatId}"]`);
+                if (seatElement) {
+                    seatElement.classList.add('selected');
+                    seatElement.style.backgroundColor = '#e5006e';
+                    // Thêm lại ghế vào selectedSeats nếu chưa có
+                    if (!selectedSeats.some(seat => seat.id === seatId)) {
+                        const label = seatElement.getAttribute('data-label');
+                        const type = seatElement.getAttribute('data-type');
+                        const price = parseFloat(seatElement.getAttribute('data-price'));
+                        selectedSeats.push({ id: seatId, label: label, type: type, price: price });
+                    }
+                }
             }
             
             console.log('selectedSeats after release:', selectedSeats);
@@ -651,9 +768,39 @@
                 
                 if (data.error) {
                     console.warn('Release couple seats failed:', data.error);
+                    // Nếu có lỗi, revert lại UI cho cả 2 ghế
+                    seatIds.forEach(seatId => {
+                        const seatElement = document.querySelector(`.seat[data-seat-id="${seatId}"]`);
+                        if (seatElement) {
+                            seatElement.classList.add('selected');
+                            seatElement.style.backgroundColor = '#e5006e';
+                            // Thêm lại ghế vào selectedSeats nếu chưa có
+                            if (!selectedSeats.some(seat => seat.id === seatId)) {
+                                const label = seatElement.getAttribute('data-label');
+                                const type = seatElement.getAttribute('data-type');
+                                const price = parseFloat(seatElement.getAttribute('data-price'));
+                                selectedSeats.push({ id: seatId, label: label, type: type, price: price });
+                            }
+                        }
+                    });
                 }
             } catch (error) {
                 console.error('Error releasing couple seats:', error);
+                // Nếu có lỗi network, revert lại UI cho cả 2 ghế
+                seatIds.forEach(seatId => {
+                    const seatElement = document.querySelector(`.seat[data-seat-id="${seatId}"]`);
+                    if (seatElement) {
+                        seatElement.classList.add('selected');
+                        seatElement.style.backgroundColor = '#e5006e';
+                        // Thêm lại ghế vào selectedSeats nếu chưa có
+                        if (!selectedSeats.some(seat => seat.id === seatId)) {
+                            const label = seatElement.getAttribute('data-label');
+                            const type = seatElement.getAttribute('data-type');
+                            const price = parseFloat(seatElement.getAttribute('data-price'));
+                            selectedSeats.push({ id: seatId, label: label, type: type, price: price });
+                        }
+                    }
+                });
             }
             
             updateSummary();

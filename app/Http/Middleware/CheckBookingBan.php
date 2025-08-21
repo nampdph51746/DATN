@@ -42,7 +42,7 @@ class CheckBookingBan
                 ], 403);
             }
 
-            return redirect()->route('home')->with('error', 
+            return redirect()->route('client.home')->with('error', 
                 'Tài khoản của bạn đã bị tạm khóa đặt vé do đặt ghế nhiều lần mà không thanh toán. ' .
                 'Tài khoản sẽ được mở khóa vào ' . $banInfo->banned_until->format('d/m/Y H:i')
             );

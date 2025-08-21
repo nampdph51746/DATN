@@ -61,11 +61,17 @@ Route::get('/showtimes/{showtimeId}/seat-map', [SeatController::class, 'showSeat
 Route::middleware(['auth', 'check.booking.ban'])->group(function () {
     Route::post('/showtimes/{showtimeId}/reserve', [SeatController::class, 'reserveSeat'])->name('client.seats.reserve');
     Route::post('/checkout/preview', [CheckoutController::class, 'previewBooking'])->name('checkout.preview');
+    Route::post('/checkout/set-session', [CheckoutController::class, 'setCheckoutSession'])->name('checkout.setSession');
     Route::post('/checkout/vnpay', [VnpayController::class, 'redirectToVnpay'])->name('checkout.vnpay');
 });
 
 Route::get('/api/seats/status/{showtimeId}', [SeatController::class, 'getSeatStatus']);
-Route::post('/api/seats/release/{showtimeId}', [SeatController::class, 'releaseSeat'])->name('client.seats.release');
+Route::post('/api/seats/release/{showtimeId}', [SeatController::class, 'releaseSeat'])
+    ->middleware('prevent.release.during.payment')
+    ->name('client.seats.release');
+Route::post('/api/seats/release-all/{showtimeId}', [SeatController::class, 'releaseAllSeatsOfSession'])
+    ->middleware('prevent.release.during.payment')
+    ->name('client.seats.release.all');
 Route::post('/apply-promotion-auto', [App\Http\Controllers\Client\HomeController::class, 'applyDiscountCodeAutomatically'])->name('client.applyPromotionAuto');
 
 Route::get('/checkout/confirmation', [CheckoutController::class, 'showConfirmation'])->name('checkout.confirmation');

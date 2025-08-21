@@ -23,6 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => RoleMiddleware::class,
             'update.showtime.status' => \App\Http\Middleware\UpdateShowtimeStatus::class,
             'check.booking.ban' => \App\Http\Middleware\CheckBookingBan::class,
+            'prevent.release.during.payment' => \App\Http\Middleware\PreventReleaseDuringPayment::class,
         ]);
 
         

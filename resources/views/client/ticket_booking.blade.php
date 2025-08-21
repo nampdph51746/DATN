@@ -4378,7 +4378,73 @@
         const checkoutForm = document.getElementById('checkoutForm');
         if (checkoutForm) {
             checkoutForm.addEventListener('submit', function(e) {
-                updateOrderSummary(); // Cập nhật dữ liệu vào form trước khi gửi đi
+                // Ngăn form submit tạm thời
+                e.preventDefault();
+                
+                // Đánh dấu form đang được submit
+                checkoutForm.classList.add('submitting');
+                
+                // Gọi API để set session checkout trước khi submit
+                fetch('{{ route("checkout.setSession") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        is_checkout: true
+                    })
+                })
+                .then(response => {
+                    if (response.ok) {
+                        console.log('Checkout session set successfully');
+                        
+                        // Thông báo cho iframe để disable cleanup
+                        const iframe = document.getElementById('seat-map-iframe');
+                        if (iframe && iframe.contentWindow) {
+                            try {
+                                iframe.contentWindow.postMessage({
+                                    type: 'DISABLE_CLEANUP',
+                                    message: 'Starting checkout process'
+                                }, '*');
+                                console.log('Sent disable cleanup message to iframe');
+                            } catch (error) {
+                                console.warn('Could not send message to iframe:', error);
+                            }
+                        }
+                        
+                        // Thêm delay để đảm bảo message được xử lý
+                        setTimeout(() => {
+                            updateOrderSummary(); // Cập nhật dữ liệu vào form
+                            
+                            // Submit form thực sự bằng cách tạo form mới để tránh vòng lặp event
+                            const newForm = document.createElement('form');
+                            newForm.method = 'POST';
+                            newForm.action = checkoutForm.action;
+                            
+                            // Copy tất cả input từ form gốc
+                            Array.from(checkoutForm.elements).forEach(element => {
+                                if (element.name && element.value !== undefined) {
+                                    const input = document.createElement('input');
+                                    input.type = 'hidden';
+                                    input.name = element.name;
+                                    input.value = element.value;
+                                    newForm.appendChild(input);
+                                }
+                            });
+                            
+                            document.body.appendChild(newForm);
+                            newForm.submit();
+                        }, 100);
+                    } else {
+                        console.error('Failed to set checkout session');
+                        checkoutForm.classList.remove('submitting');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error setting checkout session:', error);
+                    checkoutForm.classList.remove('submitting');
+                });
             });
         }
     </script>
