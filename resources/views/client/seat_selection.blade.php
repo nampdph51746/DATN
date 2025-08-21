@@ -123,6 +123,19 @@
 
         const sessionId = '{{ session()->getId() }}';
         const showtimeId = '{{ $showtime->id }}';
+        
+        // Cấu hình giới hạn số ghế
+        const MAX_SEATS_PER_BOOKING = {{ config('booking.max_seats_per_booking', 8) }}; // Tối đa {{ config('booking.max_seats_per_booking', 8) }} ghế mỗi lần đặt
+
+        function showSeatLimitAlert() {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Vượt quá giới hạn',
+                text: `Bạn chỉ có thể chọn tối đa ${MAX_SEATS_PER_BOOKING} ghế trong 1 lần đặt vé`,
+                confirmButtonText: 'Đã hiểu',
+                confirmButtonColor: '#e5006e'
+            });
+        }
 
         async function fetchInitialSeatStatus() {
             try {
@@ -293,11 +306,19 @@
             const originalColor = element.getAttribute('data-original-color');
 
             if (element.classList.contains('selected')) {
+                // Bỏ chọn ghế
                 element.classList.remove('selected');
                 element.style.backgroundColor = originalColor || '#28a745';
                 element.style.opacity = '1';
                 selectedSeats = selectedSeats.filter(seat => seat.id !== seatId);
             } else {
+                // Kiểm tra giới hạn số ghế trước khi chọn
+                if (selectedSeats.length >= MAX_SEATS_PER_BOOKING) {
+                    showSeatLimitAlert();
+                    return;
+                }
+                
+                // Chọn ghế
                 element.classList.add('selected');
                 element.style.backgroundColor = '#e5006e';
                 element.style.opacity = '1';
@@ -351,6 +372,12 @@
                 
                 selectedSeats = selectedSeats.filter(seat => seat.id !== seatId && seat.id !== partnerSeatId);
             } else {
+                // Kiểm tra giới hạn số ghế trước khi chọn cả 2 ghế
+                if (selectedSeats.length + 2 > MAX_SEATS_PER_BOOKING) {
+                    showSeatLimitAlert();
+                    return;
+                }
+                
                 // Chọn cả 2 ghế
                 element.classList.add('selected');
                 element.style.backgroundColor = '#e5006e';
