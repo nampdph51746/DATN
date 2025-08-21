@@ -99,10 +99,19 @@ class GenreController extends Controller
     }
 
     public function destroy(string $id)
-    {
-        $genre = Genre::findOrFail($id);
-        $genre->delete();
+{
+    $genre = Genre::findOrFail($id);
 
-        return redirect()->route('admin.genres.index')->with('success', 'Xóa thể loại thành công!');
+    // Kiểm tra xem có phim nào liên kết với thể loại này không
+    if ($genre->movies()->exists()) {
+        return redirect()->route('admin.genres.index')
+            ->with('error', 'Không thể xóa thể loại này vì đang có phim liên quan.');
     }
+
+    $genre->delete();
+
+    return redirect()->route('admin.genres.index')
+        ->with('success', 'Xóa thể loại thành công!');
+}
+
 }
