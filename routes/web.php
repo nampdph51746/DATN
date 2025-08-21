@@ -230,14 +230,17 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
     Route::patch('cities/{id}/restore', [CityController::class, 'restore'])->name('cities.restore');
     Route::delete('cities/{id}/force-delete', [CityController::class, 'forceDelete'])->name('cities.forceDelete');
     Route::resource('cities', CityController::class);
-    Route::get('cinemas', [CinemaController::class, 'index'])->name('index');
-    Route::get('cinemas-add', [CinemaController::class, 'create'])->name('create');
-    Route::get('cinemas-edit', [CinemaController::class, 'edit'])->name('edit');
-    Route::get('cinemas-detail', [CinemaController::class, 'show'])->name('cinemas.show');
+    Route::get('cinemas', [CinemaController::class, 'index'])->name('cinemas.index');
+    Route::get('cinemas-add', [CinemaController::class, 'create'])->name('cinemas.create');
+    Route::post('cinemas', [CinemaController::class, 'store'])->name('cinemas.store');
+    Route::get('cinemas/{cinema}/edit', [CinemaController::class, 'edit'])->name('cinemas.edit');
+    Route::put('cinemas/{cinema}', [CinemaController::class, 'update'])->name('cinemas.update');
+    Route::get('cinemas-detail/{cinema}', [CinemaController::class, 'show'])->name('cinemas.show');
     Route::get('cinemas/trash', [CinemaController::class, 'trash'])->name('cinemas.trash');
-    Route::patch('cinemas/{id}/restore', [CinemaController::class, 'restore'])->name('cinemas.restore');
-    Route::delete('cinemas/{id}/force-delete', [CinemaController::class, 'forceDelete'])->name('cinemas.forceDelete');
-    Route::resource('cinemas', CinemaController::class);
+    Route::patch('cinemas/{cinema}/restore', [CinemaController::class, 'restore'])->name('cinemas.restore');
+    Route::delete('cinemas/{cinema}/force-delete', [CinemaController::class, 'forceDelete'])->name('cinemas.forceDelete');
+    Route::delete('cinemas/{cinema}', [CinemaController::class, 'destroy'])->name('cinemas.destroy');
+
 
     // QR code scanning routes (chỉ staff và admin)
     Route::middleware(['auth', 'role:admin,staff'])->group(function () {

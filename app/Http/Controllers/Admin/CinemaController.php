@@ -88,54 +88,46 @@ class CinemaController extends Controller
         return redirect()->route('admin.cinemas.index')->with('success', 'Đã thêm rạp chiếu phim mới thành công.');
     }
 
-    public function edit(Cinema $cinema)
-    {
-        $cities = City::orderBy('created_at', 'asc')->get()->reverse();
-        return view('admin.cinemas.edit', compact('cinema', 'cities'));
-    }
+    public function edit($id)
+{
+    $cinema = Cinema::findOrFail($id);
+    $cities = City::orderBy('created_at', 'asc')->get();
+    return view('admin.cinemas.edit', compact('cinema', 'cities'));
+}
 
-    // Cập nhật rạp
-    public function update(Request $request, Cinema $cinema)
-    {
-        $validated = $request->validate([
-            'name'          => 'required|string|max:255',
-            'address'       => 'required|string',
-            'city_id'       => 'required|integer|exists:cities,id',
-            'hotline'       => 'nullable|string|max:20',
-            'email'         => 'nullable|email|max:255',
-            'map_url'       => 'nullable|url|max:500',
-            'opening_hours' => 'nullable|string|max:255',
-            'description'   => 'nullable|string',
-            'status'        => 'required|in:active,inactive',
-            'image'         => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:10000',
-        ]);
+public function update(Request $request, Cinema $cinema)
+{
+    $validated = $request->validate([
+        'name' => 'required|string|max:255',
+        'city_id' => 'required|integer|exists:cities,id',
+        'address' => 'required|string',
+        'hotline' => 'nullable|string|max:20',
+        'email' => 'nullable|email|max:255',
+        'map_url' => 'nullable|url|max:500',
+        'opening_hours' => 'nullable|string|max:255',
+        'description' => 'nullable|string',
+        'status' => 'required|in:active,inactive',
+        'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:10000',
+    ]);
 
-        if ($request->hasFile('image')) {
-            // Xóa ảnh cũ nếu có
-            if ($cinema->image_url && file_exists(public_path('assets/' . $cinema->image_url))) {
-                unlink(public_path('assets/' . $cinema->image_url));
-            }
-
-            $image = $request->file('image');
-            $imageName = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
-            $destinationPath = public_path('assets/images/cinema');
-
-            if (!file_exists($destinationPath)) {
-                mkdir($destinationPath, 0755, true);
-            }
-
-            $image->move($destinationPath, $imageName);
-
-            $validated['image_url'] = 'images/cinema/' . $imageName;
-        } else {
-            // Giữ nguyên ảnh cũ nếu không upload ảnh mới
-            $validated['image_url'] = $cinema->image_url;
+    // Xử lý ảnh
+    if ($request->hasFile('image')) {
+        if ($cinema->image_url && file_exists(public_path('assets/' . $cinema->image_url))) {
+            unlink(public_path('assets/' . $cinema->image_url));
         }
-
-        $cinema->update($validated);
-
-        return redirect()->route('admin.cinemas.index')->with('success', 'Đã cập nhật rạp chiếu phim thành công.');
+        $image = $request->file('image');
+        $imageName = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
+        $image->move(public_path('assets/images/cinema'), $imageName);
+        $validated['image_url'] = 'images/cinema/' . $imageName;
+    } else {
+        $validated['image_url'] = $cinema->image_url;
     }
+
+    $cinema->update($validated);
+
+    return redirect()->route('admin.cinemas.index')->with('success', 'Đã cập nhật rạp chiếu phim thành công.');
+}
+
 
     public function destroy(Cinema $cinema)
     {
