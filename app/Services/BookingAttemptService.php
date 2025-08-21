@@ -15,12 +15,30 @@ class BookingAttemptService
     const ATTEMPT_TIMEOUT_MINUTES = 10; // Thời gian giữ ghế (phút)
 
     /**
-     * Tạo một booking attempt mới
+     * Tạo một booking attempt mới hoặc cập nhật attempt hiện tại
      */
     public function createAttempt(int $userId, int $showtimeId, array $seatIds): BookingAttempt
     {
-        // Hủy các attempt đang active của user cho cùng showtime
-        $this->cancelActiveAttempts($userId, $showtimeId);
+        // Kiểm tra xem có attempt đang active cho cùng user và showtime không
+        $existingAttempt = BookingAttempt::where('user_id', $userId)
+            ->where('showtime_id', $showtimeId)
+            ->where('status', BookingAttemptStatus::Reserved)
+            ->first();
+
+        if ($existingAttempt) {
+            // Cập nhật attempt hiện tại với danh sách ghế mới
+            $existingAttempt->update([
+                'seat_ids' => $seatIds,
+                'reserved_at' => now(),
+                'expired_at' => now()->addMinutes(self::ATTEMPT_TIMEOUT_MINUTES),
+            ]);
+            
+            Log::info("Updated existing booking attempt {$existingAttempt->id} for user {$userId} with new seats");
+            return $existingAttempt;
+        }
+
+        // Hủy các attempt đang active của user cho cùng showtime (từ sessions khác)
+        $this->cancelActiveAttempts($userId, $showtimeId, false); // false = không check ban
 
         $attempt = BookingAttempt::create([
             'user_id' => $userId,
@@ -31,22 +49,22 @@ class BookingAttemptService
             'expired_at' => now()->addMinutes(self::ATTEMPT_TIMEOUT_MINUTES),
         ]);
 
-        Log::info("Created booking attempt {$attempt->id} for user {$userId}");
+        Log::info("Created new booking attempt {$attempt->id} for user {$userId}");
         return $attempt;
     }
 
     /**
      * Hủy các attempt đang active
      */
-    public function cancelActiveAttempts(int $userId, int $showtimeId): void
+    public function cancelActiveAttempts(int $userId, int $showtimeId, bool $checkBan = true): void
     {
         $cancelledCount = BookingAttempt::where('user_id', $userId)
             ->where('showtime_id', $showtimeId)
             ->where('status', BookingAttemptStatus::Reserved)
             ->update(['status' => BookingAttemptStatus::Cancelled]);
             
-        if ($cancelledCount > 0) {
-            // Kiểm tra và ban user nếu cần thiết sau khi cancel
+        if ($cancelledCount > 0 && $checkBan) {
+            // Chỉ kiểm tra và ban user nếu được yêu cầu (không phải khi đang cập nhật attempt)
             $this->checkAndBanUser($userId);
         }
     }
