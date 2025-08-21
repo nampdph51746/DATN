@@ -183,15 +183,6 @@
                         <!-- <div class="row">
                             <div class="col-lg-6">
                                 <div class="mb-3">
-                                    <label for="poster_url" class="form-label">URL Poster</label>
-                                    <input type="url" name="poster_url" id="poster_url" class="form-control @error('poster_url') is-invalid @enderror" value="{{ old('poster_url') }}">
-                                    @error('poster_url')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-                            <div class="col-lg-6">
-                                <div class="mb-3">
                                     <label for="trailer_url" class="form-label">URL Trailer</label>
                                     <input type="url" name="trailer_url" id="trailer_url" class="form-control @error('trailer_url') is-invalid @enderror" value="{{ old('trailer_url') }}">
                                     @error('trailer_url')
