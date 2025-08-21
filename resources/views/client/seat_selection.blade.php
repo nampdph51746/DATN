@@ -18,14 +18,25 @@
                                         });
                                     @endphp
                                     @if ($seat)
-                                        <div class="seat {{ $seat['status'] }} {{ strtolower($seat['seat_type']) }}"
+                                        @php
+                                            $isLockedByCurrentSession = $seat['status'] === 'locked' && $seat['locked_by'] === session()->getId();
+                                            $displayStatus = $isLockedByCurrentSession ? 'selected' : $seat['status'];
+                                            $backgroundColor = $seat['status'] === 'maintenance' ? '#6c757d' : 
+                                                              ($seat['status'] === 'reserved' ? '#dc3545' : 
+                                                              ($seat['status'] === 'locked' ? ($isLockedByCurrentSession ? '#e5006e' : '#ffc107') : 
+                                                              $seat['color_code']));
+                                            $isClickable = !in_array($seat['status'], ['maintenance', 'reserved']) && 
+                                                          !($seat['status'] === 'locked' && !$isLockedByCurrentSession);
+                                        @endphp
+                                        <div class="seat {{ $displayStatus }} {{ strtolower($seat['seat_type']) }}"
                                             data-seat-id="{{ $seat['seat_id'] }}"
                                             data-label="{{ $seat['label'] }}"
                                             data-type="{{ $seat['seat_type'] }}"
                                             data-price="{{ $showtime->base_price * ($seat['price'] ?? 1) }}"
                                             data-original-color="{{ $seat['color_code'] }}"
-                                            style="background-color: {{ $seat['status'] === 'maintenance' ? '#6c757d' : $seat['color_code'] }}; {{ $seat['status'] === 'maintenance' || $seat['status'] === 'reserved' || $seat['status'] === 'locked' ? 'opacity: 0.6; pointer-events: none;' : '' }}"
-                                            @if ($seat['status'] !== 'maintenance' && $seat['status'] !== 'reserved' && $seat['status'] !== 'locked')
+                                            data-locked-by="{{ $seat['locked_by'] ?? '' }}"
+                                            style="background-color: {{ $backgroundColor }}; {{ !$isClickable ? 'opacity: 0.6; pointer-events: none;' : '' }}"
+                                            @if ($isClickable)
                                                 onclick="selectSeat(this)"
                                             @endif>
                                             {{ $col }}
@@ -163,21 +174,29 @@
                             seatElement.style.pointerEvents = 'none';
                         } else if (seat.status === 'locked') {
                             if (seat.locked_by !== sessionId) {
+                                // Ghế bị lock bởi session khác
                                 seatElement.classList.add('locked');
                                 seatElement.style.backgroundColor = '#ffc107';
                                 seatElement.style.opacity = '0.6';
                                 seatElement.style.pointerEvents = 'none';
                             } else {
-                                seatElement.classList.add('selected');
-                                seatElement.style.backgroundColor = '#e5006e';
-                                seatElement.style.opacity = '1';
-                                seatElement.style.pointerEvents = 'auto';
-                                selectedSeats.push({
-                                    id: seat.seat_id.toString(),
-                                    label: seat.label,
-                                    type: seat.type,
-                                    price: seat.price
-                                });
+                                // Ghế được lock bởi session hiện tại - giữ nguyên selected state
+                                if (!seatElement.classList.contains('selected')) {
+                                    seatElement.classList.add('selected');
+                                    seatElement.style.backgroundColor = '#e5006e';
+                                    seatElement.style.opacity = '1';
+                                    seatElement.style.pointerEvents = 'auto';
+                                    
+                                    // Thêm vào selectedSeats nếu chưa có
+                                    if (!selectedSeats.some(s => s.id === seat.seat_id.toString())) {
+                                        selectedSeats.push({
+                                            id: seat.seat_id.toString(),
+                                            label: seat.label,
+                                            type: seat.type,
+                                            price: seat.price
+                                        });
+                                    }
+                                }
                             }
                         } else if (seat.status === 'maintenance') {
                             seatElement.classList.add('maintenance');
@@ -202,11 +221,68 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
+            // Thêm các ghế đã selected (locked bởi session hiện tại) vào selectedSeats
+            document.querySelectorAll('.seat.selected').forEach(seatElement => {
+                const seatId = seatElement.getAttribute('data-seat-id');
+                const label = seatElement.getAttribute('data-label');
+                const type = seatElement.getAttribute('data-type');
+                const price = parseFloat(seatElement.getAttribute('data-price'));
+                
+                selectedSeats.push({
+                    id: seatId,
+                    label: label,
+                    type: type,
+                    price: price
+                });
+            });
+            
             fetchInitialSeatStatus();
             startTimer(); // Start timer immediately when page loads
             timerStarted = true;
             document.getElementById('timer-section').style.display = 'block';
             sendTimerToParent();
+            
+            // Update summary với ghế đã selected
+            updateSummary();
+            sendSeatsToParent();
+        });
+
+        // Cleanup khi user thoát trang
+        async function cleanupSeats() {
+            if (selectedSeats.length > 0) {
+                const seatIds = selectedSeats.map(seat => seat.id);
+                try {
+                    console.log('Cleaning up seats before page unload:', seatIds);
+                    await fetch(`/api/seats/release/${showtimeId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify({ seat_ids: seatIds }),
+                        keepalive: true // Đảm bảo request được gửi ngay cả khi trang đang đóng
+                    });
+                } catch (error) {
+                    console.error('Error releasing seats on page unload:', error);
+                }
+            }
+        }
+
+        // Event listeners cho cleanup
+        window.addEventListener('beforeunload', cleanupSeats);
+        window.addEventListener('unload', cleanupSeats);
+        window.addEventListener('pagehide', cleanupSeats);
+
+        // Cleanup khi focus ra khỏi tab/window (optional - có thể comment out nếu không muốn)
+        let isPageVisible = true;
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden && isPageVisible) {
+                isPageVisible = false;
+                // Có thể thêm logic cleanup ở đây nếu muốn
+                // cleanupSeats();
+            } else if (!document.hidden) {
+                isPageVisible = true;
+            }
         });
 
         console.log('Pusher Config:', {
@@ -251,9 +327,15 @@
                     if (data.status === 'reserved') {
                         seatElement.style.backgroundColor = '#dc3545';
                         seatElement.style.opacity = '0.6';
+                        seatElement.style.pointerEvents = 'none';
                         selectedSeats = selectedSeats.filter(seat => seat.id !== data.seat_id.toString());
                         updateSummary();
                         sendSeatsToParent();
+                    } else if (data.status === 'locked') {
+                        // Ghế bị lock bởi session khác
+                        seatElement.style.backgroundColor = '#ffc107';
+                        seatElement.style.opacity = '0.6';
+                        seatElement.style.pointerEvents = 'none';
                     } else if (data.status === 'maintenance') {
                         seatElement.style.backgroundColor = '#6c757d';
                         seatElement.style.opacity = '0.6';
@@ -281,8 +363,15 @@
 
             console.log('Selecting seat:', { seatId, label, type, price });
 
-            if (element.classList.contains('reserved') || element.classList.contains('locked') || element.classList.contains('maintenance')) {
-                console.log('Seat is reserved, locked, or under maintenance:', seatId);
+            // Kiểm tra ghế maintenance hoặc reserved (đã confirm)
+            if (element.classList.contains('maintenance') || element.classList.contains('reserved')) {
+                console.log('Seat is under maintenance or reserved:', seatId);
+                return;
+            }
+
+            // Kiểm tra ghế locked bởi session khác (không phải selected của session hiện tại)
+            if (element.classList.contains('locked') && !element.classList.contains('selected')) {
+                console.log('Seat is locked by another session:', seatId);
                 return;
             }
 

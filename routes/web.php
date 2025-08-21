@@ -65,6 +65,7 @@ Route::middleware(['auth', 'check.booking.ban'])->group(function () {
 });
 
 Route::get('/api/seats/status/{showtimeId}', [SeatController::class, 'getSeatStatus']);
+Route::post('/api/seats/release/{showtimeId}', [SeatController::class, 'releaseSeat'])->name('client.seats.release');
 Route::post('/apply-promotion-auto', [App\Http\Controllers\Client\HomeController::class, 'applyDiscountCodeAutomatically'])->name('client.applyPromotionAuto');
 
 Route::get('/checkout/confirmation', [CheckoutController::class, 'showConfirmation'])->name('checkout.confirmation');

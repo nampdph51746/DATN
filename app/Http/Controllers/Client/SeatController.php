@@ -52,6 +52,10 @@ class SeatController extends Controller
                     $seatState->locked_until = null;
                     $seatState->locked_by = null;
                     $seatState->save();
+                    
+                    // Broadcast event để thông báo ghế đã available
+                    event(new SeatStatusUpdated($showtimeId, $id, SeatStatus::Available, null, null));
+                    Log::info("Released seat ID $id for showtime ID: $showtimeId");
                 }
             }
             return response()->json(['message' => 'Ghế đã được bỏ giữ']);
@@ -165,6 +169,9 @@ class SeatController extends Controller
             
             if (in_array($seat->id, $bookedSeats)) {
                 $status = 'reserved';
+            } elseif ($seatState && $seatState->status === SeatStatus::Reserved) {
+                // Ghế đang được giữ tạm thời (locked)
+                $status = 'locked';
             } elseif ($seatState && $seatState->status === SeatStatus::Maintenance) {
                 $status = 'maintenance';
             } elseif ($seatState && $seatState->status === SeatStatus::Booked) {
@@ -183,6 +190,7 @@ class SeatController extends Controller
                 'seat_type'   => $seat->seatType->name,
                 'color_code'  => $seat->seatType->color_code,
                 'price'       => $price,
+                'locked_by'   => $seatState ? $seatState->locked_by : null,
             ];
             Log::info('Seat processed for showSeatMap: ' . json_encode($seatInfo));
             return $seatInfo;
@@ -365,20 +373,10 @@ class SeatController extends Controller
 
             if ($seatState) {
                 if ($seatState->status === SeatStatus::Reserved) {
-                    if ($seatState->locked_until && now()->lt($seatState->locked_until)) {
-                        $status = 'locked';
-                        $lockedBy = $seatState->locked_by;
-                        $lockedUntil = $seatState->locked_until->toDateTimeString();
-                    } else {
-                        // ❗ Nếu quá hạn thì reset lại ghế
-                        $seatState->update([
-                            'status' => SeatStatus::Available,
-                            'locked_by' => null,
-                            'locked_until' => null,
-                            'booking_id' => null,
-                        ]);
-                        $status = 'available';
-                    }
+                    // Ghế đang được reserve (locked) bởi session nào đó
+                    $status = 'locked';
+                    $lockedBy = $seatState->locked_by;
+                    $lockedUntil = $seatState->locked_until ? $seatState->locked_until->toDateTimeString() : null;
                 } elseif ($seatState->status === SeatStatus::Booked) {
                     $status = 'reserved';
                 } elseif ($seatState->status === SeatStatus::Maintenance) {
