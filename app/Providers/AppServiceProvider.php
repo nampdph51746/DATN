@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Event;
 use App\Events\BookingConfirmed;
 use App\Listeners\SendBookingConfirmationEmail;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use App\Models\Movie;
+use Carbon\Carbon;
 
 
 class AppServiceProvider extends ServiceProvider
@@ -85,5 +87,19 @@ class AppServiceProvider extends ServiceProvider
             'ticket' => \App\Models\Ticket::class,
             'user' => \App\Models\User::class,
         ]);
+
+        Movie::query()->each(function ($movie) {
+        $now = Carbon::now()->toDateString();
+
+        if ($movie->release_date > $now) {
+            $movie->status = 'upcoming';
+        } elseif ($movie->end_date && $movie->end_date < $now) {
+            $movie->status = 'ended';
+        } else {
+            $movie->status = 'showing';
+        }
+
+        $movie->saveQuietly(); // update mà không bắn event
+    });
     }
 }

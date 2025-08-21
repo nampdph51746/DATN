@@ -300,7 +300,6 @@ class MovieController extends Controller
     }
 }
 
-
     /**
      * Đếm số lượng phim trùng tên
      */
