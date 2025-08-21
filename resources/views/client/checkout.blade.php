@@ -106,6 +106,6 @@
             @endif
         </div>
     </div>
-        @include('client.footer.footer')
 
+@include('client.footer.footer')
 @endsection
