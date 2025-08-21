@@ -172,6 +172,7 @@
                             seatElement.style.backgroundColor = '#dc3545';
                             seatElement.style.opacity = '0.6';
                             seatElement.style.pointerEvents = 'none';
+                            seatElement.removeAttribute('onclick');
                         } else if (seat.status === 'locked') {
                             if (seat.locked_by !== sessionId) {
                                 // Ghế bị lock bởi session khác
@@ -179,6 +180,7 @@
                                 seatElement.style.backgroundColor = '#ffc107';
                                 seatElement.style.opacity = '0.6';
                                 seatElement.style.pointerEvents = 'none';
+                                seatElement.removeAttribute('onclick');
                             } else {
                                 // Ghế được lock bởi session hiện tại - giữ nguyên selected state
                                 if (!seatElement.classList.contains('selected')) {
@@ -186,6 +188,7 @@
                                     seatElement.style.backgroundColor = '#e5006e';
                                     seatElement.style.opacity = '1';
                                     seatElement.style.pointerEvents = 'auto';
+                                    seatElement.setAttribute('onclick', 'selectSeat(this)');
                                     
                                     // Thêm vào selectedSeats nếu chưa có
                                     if (!selectedSeats.some(s => s.id === seat.seat_id.toString())) {
@@ -203,12 +206,14 @@
                             seatElement.style.backgroundColor = '#6c757d';
                             seatElement.style.opacity = '0.6';
                             seatElement.style.pointerEvents = 'none';
+                            seatElement.removeAttribute('onclick');
                         } else {
                             seatElement.classList.add('available');
                             const originalColor = seatElement.getAttribute('data-original-color');
                             seatElement.style.backgroundColor = originalColor || '#28a745';
                             seatElement.style.opacity = '1';
                             seatElement.style.pointerEvents = 'auto';
+                            seatElement.setAttribute('onclick', 'selectSeat(this)');
                         }
                     });
 
@@ -320,14 +325,18 @@
 
             const seatElement = document.querySelector(`.seat[data-seat-id="${data.seat_id}"]`);
             if (seatElement) {
+                console.log('Current seat element classes before update:', seatElement.className);
+                console.log('Current seat onclick before update:', seatElement.getAttribute('onclick'));
+                
                 if (data.locked_by !== sessionId) {
-                    console.log('Processing seat update for seat_id:', data.seat_id);
-                    seatElement.classList.remove('available', 'reserved', 'selected', 'maintenance');
+                    console.log('Processing seat update for seat_id:', data.seat_id, 'status:', data.status);
+                    seatElement.classList.remove('available', 'reserved', 'selected', 'maintenance', 'locked');
                     seatElement.classList.add(data.status);
                     if (data.status === 'reserved') {
                         seatElement.style.backgroundColor = '#dc3545';
                         seatElement.style.opacity = '0.6';
                         seatElement.style.pointerEvents = 'none';
+                        seatElement.removeAttribute('onclick');
                         selectedSeats = selectedSeats.filter(seat => seat.id !== data.seat_id.toString());
                         updateSummary();
                         sendSeatsToParent();
@@ -336,16 +345,24 @@
                         seatElement.style.backgroundColor = '#ffc107';
                         seatElement.style.opacity = '0.6';
                         seatElement.style.pointerEvents = 'none';
+                        seatElement.removeAttribute('onclick');
                     } else if (data.status === 'maintenance') {
                         seatElement.style.backgroundColor = '#6c757d';
                         seatElement.style.opacity = '0.6';
                         seatElement.style.pointerEvents = 'none';
+                        seatElement.removeAttribute('onclick');
                     } else if (data.status === 'available') {
                         const originalColor = seatElement.getAttribute('data-original-color');
                         seatElement.style.backgroundColor = originalColor || '#28a745';
                         seatElement.style.opacity = '1';
                         seatElement.style.pointerEvents = 'auto';
+                        
+                        // Thêm lại onclick event để có thể click
+                        seatElement.setAttribute('onclick', 'selectSeat(this)');
                     }
+                    
+                    console.log('Seat element classes after update:', seatElement.className);
+                    console.log('Seat onclick after update:', seatElement.getAttribute('onclick'));
                 } else {
                     console.log('Ignoring seat update: seat is locked by current session', data.seat_id);
                 }
