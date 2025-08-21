@@ -655,8 +655,8 @@
             <!-- Banner 1 - Combo bắp nước -->
             <div class="item">
                 <li>
-                    <div class="slider-info mid-view bg" 
-                         style="background-image: url('https://images.pexels.com/photos/33129/popcorn-movie-party-entertainment.jpg?auto=compress&cs=tinysrgb&w=1600'); background-size: cover; background-position: center;">
+                    <div class="slider-info mid-view bg"
+                        style="background-image: url('https://images.pexels.com/photos/33129/popcorn-movie-party-entertainment.jpg?auto=compress&cs=tinysrgb&w=1600'); background-size: cover; background-position: center;">
                         <div class="container">
                             <div class="mid-info">
                                 <span class="sub-text">Combo bắp nước</span>
@@ -672,29 +672,27 @@
             <!-- Banner 2 - Khuyến mãi thành viên -->
             <div class="item">
                 <li>
-                    <div class="slider-info mid-view bg" 
-     style="background-image: url('https://images.pexels.com/photos/7991277/pexels-photo-7991277.jpeg?auto=compress&cs=tinysrgb&w=1600'); 
+                    <div class="slider-info mid-view bg"
+                        style="background-image: url('https://images.pexels.com/photos/109669/pexels-photo-109669.jpeg?auto=compress&cs=tinysrgb&w=1600'); 
             background-size: cover; 
             background-position: center;">
-    <div class="container">
-        <div class="mid-info">
-            <span class="sub-text">Thẻ thành viên</span>
-            <h3>Nhận ngay 50 điểm khi đăng ký mới</h3>
-            <p>Đổi điểm để nhận voucher, quà tặng hấp dẫn</p>
-            <a class="watch" href="#"><span class="fa fa-gift"></span> Tham gia ngay</a>
-        </div>
-    </div>
-</div>
-
-
+                        <div class="container">
+                            <div class="mid-info">
+                                <span class="sub-text">Thẻ thành viên</span>
+                                <h3>Nhận ngay 50 điểm khi đăng ký mới</h3>
+                                <p>Đổi điểm để nhận voucher, quà tặng hấp dẫn</p>
+                                <a class="watch" href="#"><span class="fa fa-gift"></span> Tham gia ngay</a>
+                            </div>
+                        </div>
+                    </div>
                 </li>
             </div>
 
             <!-- Banner 3 - Sự kiện khai trương -->
             <div class="item">
                 <li>
-                    <div class="slider-info mid-view bg" 
-                         style="background-image: url('https://images.unsplash.com/photo-1524985069026-dd778a71c7b4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80'); background-size: cover; background-position: center;">
+                    <div class="slider-info mid-view bg"
+                        style="background-image: url('https://images.unsplash.com/photo-1524985069026-dd778a71c7b4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80'); background-size: cover; background-position: center;">
                         <div class="container">
                             <div class="mid-info">
                                 <span class="sub-text">Sự kiện</span>
@@ -710,24 +708,21 @@
             <!-- Banner 4 - Đặt vé online -->
             <div class="item">
                 <li>
-                    <div class="slider-info mid-view bg" 
-     style="background-image: url('https://images.pexels.com/photos/7991373/pexels-photo-7991373.jpeg?auto=compress&cs=tinysrgb&w=1600'); 
+                    <div class="slider-info mid-view bg"
+                        style="background-image: url('https://images.pexels.com/photos/7991373/pexels-photo-7991373.jpeg?auto=compress&cs=tinysrgb&w=1600'); 
             background-size: cover; 
             background-position: center;">
-    <div class="container">
-        <div class="mid-info">
-            <span class="sub-text">Đặt vé online</span>
-            <h3>Chọn ghế yêu thích của bạn</h3>
-            <p>Nhanh chóng, tiện lợi, thanh toán an toàn</p>
-            <a class="watch" href="#"><span class="fa fa-play"></span> Đặt vé ngay</a>
-        </div>
-    </div>
-</div>
-
-
+                        <div class="container">
+                            <div class="mid-info">
+                                <span class="sub-text">Đặt vé online</span>
+                                <h3>Chọn ghế yêu thích của bạn</h3>
+                                <p>Nhanh chóng, tiện lợi, thanh toán an toàn</p>
+                                <a class="watch" href="#"><span class="fa fa-play"></span> Đặt vé ngay</a>
+                            </div>
+                        </div>
+                    </div>
                 </li>
             </div>
-
         </div>
     </div>
 </section>
