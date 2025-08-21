@@ -37,7 +37,7 @@
                     <h4 class="card-title">Chỉnh sửa phim: {{ $movie->name }}</h4>
                 </div>
                 <div class="card-body">
-                    <form id="movieEditForm" action="{{ route('admin.movies.update', ['id' => $movie->id]) }}" method="POST" enctype="multipart/form-data">
+                    <form id="movieEditForm" action="{{ route('admin.movies.update', $movie->id) }}" method="POST" enctype="multipart/form-data">
                         @csrf
                         @method('PUT')
                         <div class="row">
@@ -52,11 +52,16 @@
                             </div>
                             <div class="col-lg-6">
                                 <div class="mb-3">
-                                    <label for="director_id" class="form-label">Đạo diễn <span class="text-danger">*</span></label>
-                                    <select name="director_id" id="director_id" class="form-control @error('director_id') is-invalid @enderror" required>
-                                        <option value="">Chọn đạo diễn</option>
+                                    <label for="director_id" class="form-label">
+                                        <i class="bx bx-user-voice me-2 text-primary"></i>Đạo diễn 
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <select name="director_id" id="director_id" class="form-select @error('director_id') is-invalid @enderror" required>
+                                        <option value="">🎬 Chọn đạo diễn</option>
                                         @foreach ($directors as $director)
-                                            <option value="{{ $director->id }}" {{ old('director_id', $movie->director_id) == $director->id ? 'selected' : '' }}>{{ $director->name }}</option>
+                                            <option value="{{ $director->id }}" {{ old('director_id', $movie->director_id) == $director->id ? 'selected' : '' }}>
+                                                👨‍💼 {{ $director->name }}
+                                            </option>
                                         @endforeach
                                     </select>
                                     @error('director_id')
@@ -68,12 +73,21 @@
                         <div class="row">
                             <div class="col-lg-6">
                                 <div class="mb-3">
-                                    <label for="actor_ids" class="form-label">Diễn viên <span class="text-danger">*</span></label>
-                                    <select name="actor_ids[]" id="actor_ids" class="form-control select2 @error('actor_ids') is-invalid @enderror" multiple required>
+                                    <label for="actor_ids" class="form-label">
+                                        <i class="bx bx-group me-2 text-success"></i>Diễn viên 
+                                        <span class="text-danger">*</span>
+                                        <small class="text-muted">(Có thể chọn nhiều)</small>
+                                    </label>
+                                    <select name="actor_ids[]" id="actor_ids" class="form-select select2 @error('actor_ids') is-invalid @enderror" multiple required>
                                         @foreach ($actors as $actor)
-                                            <option value="{{ $actor->id }}" {{ in_array($actor->id, old('actor_ids', $movie->actors->pluck('id')->toArray())) ? 'selected' : '' }}>{{ $actor->name }}</option>
+                                            <option value="{{ $actor->id }}" {{ in_array($actor->id, old('actor_ids', $movie->actors->pluck('id')->toArray())) ? 'selected' : '' }}>
+                                                🎭 {{ $actor->name }}
+                                            </option>
                                         @endforeach
                                     </select>
+                                    <div class="form-text">
+                                        <i class="bx bx-info-circle me-1"></i>Gõ để tìm kiếm diễn viên
+                                    </div>
                                     @error('actor_ids')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -166,7 +180,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="row">
+                        <!-- <div class="row">
                             <div class="col-lg-6">
                                 <div class="mb-3">
                                     <label for="poster_url" class="form-label">URL Poster</label>
@@ -185,7 +199,7 @@
                                     @enderror
                                 </div>
                             </div>
-                        </div>
+                        </div> -->
                         <div class="row">
                             <div class="col-lg-6">
                                 <div class="mb-3">
@@ -208,19 +222,28 @@
                             </div>
                             <div class="col-lg-6">
                                 <div class="mb-3">
-                                    <label for="genre_ids" class="form-label">Thể loại <span class="text-danger">*</span></label>
-                                    <select name="genre_ids[]" id="genre_ids" class="form-control select2 @error('genre_ids') is-invalid @enderror" multiple required>
+                                    <label for="genre_ids" class="form-label">
+                                        <i class="bx bx-category me-2 text-info"></i>Thể loại 
+                                        <span class="text-danger">*</span>
+                                        <small class="text-muted">(Có thể chọn nhiều)</small>
+                                    </label>
+                                    <select name="genre_ids[]" id="genre_ids" class="form-select select2 @error('genre_ids') is-invalid @enderror" multiple required>
                                         @foreach ($genres as $genre)
-                                            <option value="{{ $genre->id }}" {{ in_array($genre->id, old('genre_ids', $movie->genres->pluck('id')->toArray())) ? 'selected' : '' }}>{{ $genre->name }}</option>
+                                            <option value="{{ $genre->id }}" {{ in_array($genre->id, old('genre_ids', $movie->genres->pluck('id')->toArray())) ? 'selected' : '' }}>
+                                                🎨 {{ $genre->name }}
+                                            </option>
                                         @endforeach
                                     </select>
+                                    <div class="form-text">
+                                        <i class="bx bx-info-circle me-1"></i>Gõ để tìm kiếm thể loại
+                                    </div>
                                     @error('genre_ids')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
                             </div>
                         </div>
-                        <div class="row">
+                        <!-- <div class="row">
                             <div class="col-lg-6">
                                 <div class="mb-3">
                                     <label for="average_rating" class="form-label">Điểm đánh giá (0-10)</label>
@@ -230,7 +253,7 @@
                                     @enderror
                                 </div>
                             </div>
-                        </div>
+                        </div> -->
                         <div class="row">
                             <div class="col-lg-12">
                                 <div class="mb-3">
@@ -262,71 +285,97 @@
 <!-- CSS tùy chỉnh cho Select2 và xem trước ảnh -->
 <style>
 .select2-container--default .select2-selection--multiple {
-    min-height: 38px;
-    border: 1px solid #ced4da;
-    border-radius: 0.375rem;
-    padding: 4px 8px;
-    background-color: #fff;
-    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    min-height: 42px;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    padding: 6px 12px;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
 .select2-container--default .select2-selection--multiple:focus-within {
-    border-color: #86b7fe;
-    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    background: #ffffff;
 }
 
 .select2-container--default .select2-selection--single {
-    min-height: 38px;
-    border: 1px solid #ced4da;
-    border-radius: 0.375rem;
-    background-color: #fff;
-    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    min-height: 42px;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.select2-container--default .select2-selection--single:focus,
+.select2-container--default.select2-container--focus .select2-selection--single {
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    background: #ffffff;
 }
 
 .select2-container--default .select2-selection--single .select2-selection__rendered {
-    line-height: 36px;
-    padding-left: 12px;
-    color: #495057;
+    line-height: 38px;
+    padding-left: 16px;
+    color: #374151;
+    font-weight: 500;
 }
 
 .select2-container--default .select2-selection--single .select2-selection__arrow {
-    height: 36px;
-    right: 10px;
+    height: 38px;
+    right: 12px;
 }
 
 .select2-container--default .select2-selection--multiple .select2-selection__choice {
-    background-color: #0d6efd;
+    background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
     color: #fff;
     border: none;
-    border-radius: 0.25rem;
-    padding: 3px 8px;
-    margin: 2px 3px;
+    border-radius: 6px;
+    padding: 4px 12px;
+    margin: 3px 4px;
     font-size: 0.875rem;
     font-weight: 500;
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
+    box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2);
+    transition: all 0.2s ease;
+}
+
+.select2-container--default .select2-selection--multiple .select2-selection__choice:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(79, 70, 229, 0.3);
 }
 
 .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
-    margin-right: 4px;
+    margin-right: 6px;
     color: #fff;
     font-weight: bold;
     cursor: pointer;
     font-size: 1rem;
     opacity: 0.8;
     transition: opacity 0.2s ease;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .select2-container--default .select2-selection--multiple .select2-selection__choice__remove:hover {
     opacity: 1;
+    background: rgba(255,255,255,0.2);
 }
 
 .select2-container--default .select2-selection--multiple .select2-selection__rendered {
     display: flex;
     flex-wrap: wrap;
-    gap: 4px;
-    padding: 2px;
+    gap: 2px;
+    padding: 4px;
+    min-height: 30px;
 }
 
 .select2-container {
@@ -334,27 +383,48 @@
 }
 
 .select2-dropdown {
-    border: 1px solid #ced4da;
-    border-radius: 0.375rem;
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+    margin-top: 4px;
 }
 
 .select2-container--default .select2-results__option {
-    padding: 8px 12px;
-    font-size: 0.875rem;
-    transition: background-color 0.15s ease;
+    padding: 12px 16px;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    border-bottom: 1px solid #f1f3f5;
+}
+
+.select2-container--default .select2-results__option:last-child {
+    border-bottom: none;
 }
 
 .select2-container--default .select2-results__option--highlighted {
-    background-color: #0d6efd;
+    background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
     color: #fff;
+    transform: translateX(4px);
+}
+
+.select2-container--default .select2-search--dropdown {
+    padding: 12px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
 }
 
 .select2-container--default .select2-search--dropdown .select2-search__field {
-    border: 1px solid #ced4da;
-    border-radius: 0.25rem;
-    padding: 6px 12px;
-    font-size: 0.875rem;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    width: 100%;
+    transition: border-color 0.2s ease;
+}
+
+.select2-container--default .select2-search--dropdown .select2-search__field:focus {
+    border-color: #4f46e5;
+    outline: none;
 }
 
 .img-thumbnail {
@@ -368,7 +438,23 @@
 .form-label {
     font-weight: 600;
     color: #374151;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.form-label i {
+    font-size: 1.1rem;
+}
+
+.form-text {
+    color: #6b7280;
+    font-size: 0.85rem;
+    margin-top: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 4px;
 }
 
 .text-danger {
@@ -392,21 +478,30 @@
 $(document).ready(function() {
     // Khởi tạo Select2 cho thể loại
     $('#genre_ids').select2({
-        placeholder: 'Chọn thể loại (gõ để tìm)',
+        placeholder: '🎨 Chọn thể loại phim...',
         theme: 'bootstrap4',
         allowClear: true,
         width: 'resolve',
+        closeOnSelect: false,
+        templateResult: function(data) {
+            if (data.loading) return data.text;
+            return $('<span class="d-flex align-items-center"><i class="bx bx-category me-2 text-info"></i>' + data.text + '</span>');
+        },
+        templateSelection: function(data) {
+            return data.text;
+        }
     });
 
     // Khởi tạo Select2 cho diễn viên
     $('#actor_ids').select2({
-        placeholder: 'Chọn diễn viên (gõ để tìm)',
+        placeholder: '🎭 Chọn diễn viên...',
         theme: 'bootstrap4',
         allowClear: true,
         width: 'resolve',
+        closeOnSelect: false,
         templateResult: function(data) {
             if (data.loading) return data.text;
-            return $('<span><i class="bx bx-user me-2 text-primary"></i>' + data.text + '</span>');
+            return $('<span class="d-flex align-items-center"><i class="bx bx-user me-2 text-success"></i>' + data.text + '</span>');
         },
         templateSelection: function(data) {
             return data.text;
@@ -415,13 +510,13 @@ $(document).ready(function() {
 
     // Khởi tạo Select2 cho đạo diễn
     $('#director_id').select2({
-        placeholder: 'Chọn đạo diễn (gõ để tìm)', 
+        placeholder: '🎬 Chọn đạo diễn...', 
         theme: 'bootstrap4',
         allowClear: true,
         width: 'resolve',
         templateResult: function(data) {
             if (data.loading) return data.text;
-            return $('<span><i class="bx bx-user-voice me-2 text-success"></i>' + data.text + '</span>');
+            return $('<span class="d-flex align-items-center"><i class="bx bx-user-voice me-2 text-primary"></i>' + data.text + '</span>');
         },
         templateSelection: function(data) {
             return data.text;
