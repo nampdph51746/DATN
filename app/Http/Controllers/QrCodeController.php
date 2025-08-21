@@ -153,10 +153,12 @@ class QrCodeController extends Controller
 
             // Lấy booking với relationships
             $booking = \App\Models\Booking::with([
+                'user',
                 'tickets.seat.seatType',
                 'tickets.showtime.movie',
                 'tickets.showtime.cinema',
-                'bookingItems.productVariant.product'
+                'bookingItems.productVariant.product',
+                'bookingItems.productVariant.productVariantOptions.attributeValue'
             ])->where('booking_code', $code)->first();
 
             if (!$booking) {
