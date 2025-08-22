@@ -330,7 +330,15 @@
                                 </h6>
                             </div>
                             <div class="card-body p-4">
-                                <form action="{{ route('admin.showtimes.storeAuto') }}" method="POST" id="createShowtimeForm">
+                                @if($movie->status->value === 'ended')
+                                    <div class="alert alert-warning d-flex align-items-center" role="alert">
+                                        <i class="bx bx-info-circle fs-5 me-2"></i>
+                                        <div>
+                                            <strong>Phim đã kết thúc!</strong> Không thể tạo suất chiếu mới cho phim có trạng thái "Dừng chiếu".
+                                        </div>
+                                    </div>
+                                @else
+                                    <form action="{{ route('admin.showtimes.storeAuto') }}" method="POST" id="createShowtimeForm">
                                     @csrf
                                     <input type="hidden" name="movie_id" value="{{ $movie->id }}">
                                     
@@ -382,12 +390,21 @@
                                         
                                         <div class="col-md-2">
                                             <div class="d-flex gap-2">
-                                                <button type="button" 
-                                                        class="btn btn-primary btn-lg flex-fill rounded-3 shadow-sm" 
-                                                        data-bs-toggle="modal" 
-                                                        data-bs-target="#confirmShowtimeModal">
-                                                    <i class="bx bx-plus fs-18"></i>
-                                                </button>
+                                                @if($movie->status->value === 'ended')
+                                                    <button type="button" 
+                                                            class="btn btn-secondary btn-lg flex-fill rounded-3 shadow-sm" 
+                                                            disabled
+                                                            title="Không thể tạo suất chiếu cho phim đã kết thúc">
+                                                        <i class="bx bx-block fs-18"></i>
+                                                    </button>
+                                                @else
+                                                    <button type="button" 
+                                                            class="btn btn-primary btn-lg flex-fill rounded-3 shadow-sm" 
+                                                            data-bs-toggle="modal" 
+                                                            data-bs-target="#confirmShowtimeModal">
+                                                        <i class="bx bx-plus fs-18"></i>
+                                                    </button>
+                                                @endif
                                                 <button type="button" 
                                                         class="btn btn-warning rounded-3" 
                                                         onclick="debugSlots()" 
@@ -398,6 +415,7 @@
                                         </div>
                                     </div>
                                 </form>
+                                @endif
                             </div>
                         </div>
                             @error('room_ids')
@@ -1074,7 +1092,13 @@ document.querySelector('[data-bs-target="#confirmShowtimeModal"]').addEventListe
 
 // Xử lý xác nhận tạo suất chiếu
 document.getElementById('confirmCreateShowtime').addEventListener('click', function() {
-    document.getElementById('createShowtimeForm').submit();
+    // Kiểm tra trạng thái phim trước khi submit
+    @if($movie->status->value === 'ended')
+        alert('Không thể tạo suất chiếu cho phim đã kết thúc!');
+        return false;
+    @else
+        document.getElementById('createShowtimeForm').submit();
+    @endif
 });
 
 // Hàm hoãn suất chiếu

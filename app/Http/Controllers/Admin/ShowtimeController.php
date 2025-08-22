@@ -267,7 +267,16 @@ class ShowtimeController extends Controller
         Log::info('Nhận request storeAuto: ' . json_encode($request->all()));
 
         $request->validate([
-            'movie_id' => 'required|exists:movies,id',
+            'movie_id' => [
+                'required',
+                'exists:movies,id',
+                function ($attribute, $value, $fail) {
+                    $movie = Movie::find($value);
+                    if ($movie && $movie->status->value === 'ended') {
+                        $fail('Không thể tạo suất chiếu cho phim đã kết thúc.');
+                    }
+                }
+            ],
             'date' => [
                 'required',
                 'date',
