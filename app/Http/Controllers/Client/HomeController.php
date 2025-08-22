@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\SeatType;
 use App\Models\Showtime;
 use App\Models\Review;
+use App\Models\RoomType;
 use App\Enums\MovieStatus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -307,6 +308,9 @@ class HomeController extends Controller
         $dates = $this->getDates($showtimes);
         $showtimesData = $this->getShowtimesData($showtimes);
 
+        // Get all room types for filtering
+        $roomTypes = RoomType::where('status', 'active')->get(['id', 'name', 'description']);
+
         $showtimeId = request()->input('showtime_id');
         $showtime = null;
         $room = null;
@@ -393,6 +397,7 @@ class HomeController extends Controller
             'movie',
             'dates',
             'showtimesData',
+            'roomTypes',
             'showtimeId',
             'seatTypes',
             'products',
@@ -415,7 +420,7 @@ class HomeController extends Controller
         $showtimes = Showtime::where('movie_id', $movieId)
             ->where('status', 'scheduled')
             ->where('start_time', '>=', Carbon::now())
-            ->with(['room.seats', 'showtimeSeatStates'])
+            ->with(['room.seats', 'room.roomType', 'showtimeSeatStates'])
             ->get();
 
         // Lọc ra các suất chiếu chưa đầy
@@ -459,6 +464,8 @@ class HomeController extends Controller
                 $room = $roomShowtimes->first()->room ?? (object)['name' => 'Unknown Room'];
                 return [
                     'room_name' => $room->name,
+                    'room_type_id' => $room->roomType->id ?? null,
+                    'room_type_name' => $room->roomType->name ?? 'Không xác định',
                     'times' => $roomShowtimes->map(function ($showtime) use ($availabilityService) {
                         $availabilityInfo = $availabilityService->getShowtimeAvailabilityInfo($showtime);
                         

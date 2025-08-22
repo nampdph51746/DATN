@@ -34,13 +34,18 @@ class Kernel extends ConsoleKernel
                  ->daily()
                  ->withoutOverlapping();
 
+        // Auto cleanup expired attempts mỗi 2 phút (hoạt động chắc chắn)
+        $schedule->command('booking:auto-cleanup')
+                 ->everyTwoMinutes()
+                 ->withoutOverlapping();
+
         // Xử lý booking attempts timeout mỗi 5 phút
         $schedule->command('booking:process-timeouts')
                  ->everyFiveMinutes()
                  ->withoutOverlapping();
 
-        // Cleanup booking attempts ngay khi expired mỗi ngày lúc 02:00
-        $schedule->command('booking:cleanup-attempts --days=0')
+        // Cleanup booking attempts cũ mỗi ngày lúc 02:00
+        $schedule->command('booking:cleanup-attempts --days=7')
                  ->dailyAt('02:00')
                  ->withoutOverlapping();
     }
