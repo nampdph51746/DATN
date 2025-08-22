@@ -34,6 +34,9 @@ class HomeController extends Controller
     {
         $query = request('query');
 
+        // Cập nhật trạng thái các phim đã kết thúc
+        Movie::updateExpiredMovies();
+
         // Truy vấn phim đang chiếu
         $showingMovies = Movie::query()
             ->with('genres')
@@ -44,6 +47,11 @@ class HomeController extends Controller
                     });
             })
             ->where('status', MovieStatus::Showing)
+            ->where(function($q) {
+                // Chỉ lấy phim chưa kết thúc hoặc không có ngày kết thúc
+                $q->whereNull('end_date')
+                  ->orWhere('end_date', '>=', now());
+            })
             ->orderBy('release_date', 'desc')
             ->take(8)
             ->get();
@@ -58,6 +66,11 @@ class HomeController extends Controller
                     });
             })
             ->where('status', MovieStatus::Upcoming)
+            ->where(function($q) {
+                // Chỉ lấy phim chưa kết thúc hoặc không có ngày kết thúc
+                $q->whereNull('end_date')
+                  ->orWhere('end_date', '>=', now());
+            })
             ->orderBy('release_date', 'asc')
             ->take(6)
             ->get();
@@ -87,6 +100,9 @@ class HomeController extends Controller
 
         public function filter(Request $request, $genreName = null)
     {
+        // Cập nhật trạng thái các phim đã kết thúc
+        Movie::updateExpiredMovies();
+        
         $data = $request->all();
 
         // Xử lý chuyển chuỗi rỗng thành null cho from_time và to_time
@@ -141,6 +157,15 @@ class HomeController extends Controller
 
         if (!empty($data['status'])) {
             $query->where('status', $data['status']);
+            
+            // Thêm điều kiện lọc theo ngày kết thúc
+            if ($data['status'] === 'showing' || $data['status'] === 'upcoming') {
+                $query->where(function($q) {
+                    $q->whereNull('end_date')
+                      ->orWhere('end_date', '>=', now());
+                });
+            }
+            
             if ($data['status'] === 'showing') {
                 $title = 'Phim đang chiếu';
                 $isShowing = true;

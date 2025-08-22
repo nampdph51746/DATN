@@ -12,6 +12,12 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
+        // Cập nhật trạng thái phim mỗi ngày lúc 00:01
+        $schedule->command('movies:update-status')
+                 ->dailyAt('00:01')
+                 ->withoutOverlapping()
+                 ->runInBackground();
+
         // Cập nhật trạng thái suất chiếu mỗi phút
         $schedule->command('showtime:update-status')
                  ->everyMinute()
