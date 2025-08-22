@@ -97,128 +97,110 @@ public function filter(Request $request)
 {
     $data = $request->all();
 
-    // Xử lý chuyển chuỗi rỗng thành null cho from_time và to_time
-    $data['from_time'] = $data['from_time'] ?? null;
-    $data['to_time'] = $data['to_time'] ?? null;
-    if ($data['from_time'] === '') $data['from_time'] = null;
-    if ($data['to_time'] === '') $data['to_time'] = null;
-
-    // Validation
     $validator = Validator::make($data, [
-        'status'    => 'nullable|in:showing,upcoming',
+        'status'    => 'nullable|in:showing,upcoming,ended',
         'search'    => 'nullable|string|max:255',
-        'actor'     => 'nullable|string|max:255', // ✅ thêm actor
         'date'      => 'nullable|date',
-        'from_time' => ['nullable', 'date_format:H:i'],
-        'to_time'   => ['nullable', 'date_format:H:i', 'after_or_equal:from_time'],
         'genres'    => 'nullable|array',
         'genres.*'  => 'integer|exists:genres,id',
-    ], [
-        'status.in' => 'Trạng thái không hợp lệ.',
-        'search.string' => 'Tìm kiếm phải là chuỗi.',
-        'search.max' => 'Từ khóa tìm kiếm quá dài.',
-        'actor.string' => 'Tên diễn viên phải là chuỗi.',
-        'actor.max' => 'Tên diễn viên quá dài.',
-        'date.date' => 'Ngày không hợp lệ.',
-        'from_time.date_format' => 'Giờ bắt đầu không đúng định dạng.',
-        'to_time.date_format' => 'Giờ kết thúc không đúng định dạng.',
-        'to_time.after_or_equal' => 'Giờ kết thúc phải lớn hơn hoặc bằng giờ bắt đầu.',
-        'genres.array' => 'Thể loại không hợp lệ.',
-        'genres.*.exists' => 'Thể loại không tồn tại.',
     ]);
 
-    // Custom rule: nếu nhập giờ thì phải nhập ngày
-    $validator->sometimes('from_time', 'required', fn($input) => !empty($input->from_time) && empty($input->date));
-    $validator->sometimes('to_time', 'required', fn($input) => !empty($input->to_time) && empty($input->date));
-    $validator->after(function ($validator) use ($data) {
-        if ((!empty($data['from_time']) || !empty($data['to_time'])) && empty($data['date'])) {
-            $validator->errors()->add('date', 'Vui lòng chọn ngày nếu muốn nhập giờ.');
-        }
-    });
-
     if ($validator->fails()) {
-        return redirect()->back()
-            ->withErrors($validator)
-            ->withInput();
+        return redirect()->back()->withErrors($validator)->withInput();
     }
 
-    // Query
-    $query = Movie::query()->with('genres', 'showtimes', 'actors'); // ✅ nhớ load quan hệ actors
+    // Count filters
+    $filterCount = 0;
+    if (!empty($data['status'])) $filterCount++;
+    if (!empty($data['search'])) $filterCount++;
+    if (!empty($data['genres'])) $filterCount++;
+    if (!empty($data['date'])) $filterCount++;
+
+    // Mặc định title
     $title = 'Danh sách phim';
-    $isShowing = false;
 
-    // Lọc status (mặc định bỏ phim ended)
-    if (!empty($data['status'])) {
-        $query->where('status', $data['status']);
-        if ($data['status'] === 'showing') {
-            $title = 'Phim đang chiếu';
-            $isShowing = true;
-        } elseif ($data['status'] === 'upcoming') {
-            $title = 'Phim sắp chiếu';
+    // Query cho từng trạng thái
+    $showingQuery = Movie::query()->with('genres', 'showtimes')->where('status', 'showing');
+    $upcomingQuery = Movie::query()->with('genres', 'showtimes')->where('status', 'upcoming');
+    $endedQuery = Movie::query()->with('genres', 'showtimes')->where('status', 'ended');
+
+    // Hàm apply filter chung
+    $applyFilters = function ($query) use ($data) {
+        if (!empty($data['search'])) {
+            $query->where('name', 'like', '%' . $data['search'] . '%');
         }
-    } else {
-        $query->whereIn('status', ['showing', 'upcoming']);
-    }
-
-    // Lọc tên phim
-    if (!empty($data['search'])) {
-        $query->where('name', 'like', '%' . $data['search'] . '%');
-        $title = 'Kết quả tìm kiếm phim cho: ' . e($data['search']);
-    }
-
-    // ✅ Lọc theo diễn viên
-    if (!empty($data['actor'])) {
-        $query->whereHas('actors', function ($q) use ($data) {
-            $q->where('name', 'like', '%' . $data['actor'] . '%');
-        });
-        $title = 'Kết quả tìm kiếm diễn viên cho: ' . e($data['actor']);
-    }
-
-    // Lọc genres theo AND logic
-    if (!empty($data['genres']) && is_array($data['genres'])) {
-        foreach ($data['genres'] as $genreId) {
-            $query->whereHas('genres', function ($q) use ($genreId) {
-                $q->where('id', $genreId);
-            });
-        }
-    }
-
-    // Lọc ngày/giờ khi đang chiếu
-    if ($isShowing && !empty($data['date'])) {
-        $date = $data['date'];
-        $fromTime = $data['from_time'] ?? null;
-        $toTime = $data['to_time'] ?? null;
-
-        $query->whereHas('showtimes', function ($q) use ($date, $fromTime, $toTime) {
-            $q->whereDate('start_time', $date);
-
-            if ($fromTime && $toTime) {
-                $q->whereTime('start_time', '>=', $fromTime)
-                  ->whereTime('start_time', '<=', $toTime);
-            } elseif ($fromTime) {
-                $q->whereTime('start_time', '>=', $fromTime);
-            } elseif ($toTime) {
-                $q->whereTime('start_time', '<=', $toTime);
+        if (!empty($data['genres'])) {
+            foreach ($data['genres'] as $genreId) {
+                $query->whereHas('genres', function ($q) use ($genreId) {
+                    $q->where('id', $genreId);
+                });
             }
-        });
+        }
+        if (!empty($data['date'])) {
+            $query->whereDate('release_date', $data['date']);
+        }
+        return $query;
+    };
+
+    // Áp dụng filter
+    $applyFilters($showingQuery);
+    $applyFilters($upcomingQuery);
+    $applyFilters($endedQuery);
+
+    // ✅ Thiết lập title
+    if ($filterCount > 1) {
+        $title = 'Kết quả tìm kiếm';
+    } else {
+        if (!empty($data['status'])) {
+            $title = match ($data['status']) {
+                'showing' => 'Phim đang chiếu',
+                'upcoming' => 'Phim sắp chiếu',
+                'ended' => 'Phim đã chiếu',
+                default => $title
+            };
+        } elseif (!empty($data['search'])) {
+            $title = 'Kết quả cho: ' . e($data['search']);
+        } elseif (!empty($data['genres'])) {
+            $genreNames = \App\Models\Genre::whereIn('id', $data['genres'])->pluck('name')->toArray();
+            $title = 'Thể loại: ' . implode(', ', $genreNames);
+        } elseif (!empty($data['date'])) {
+            $title = 'Ngày: ' . \Carbon\Carbon::parse($data['date'])->format('d/m/Y');
+        }
     }
 
     // Sắp xếp
-    if ($isShowing) {
-        $query->withCount(['showtimes as tickets_sold' => function ($q) {
-            $q->join('tickets', 'showtimes.id', '=', 'tickets.showtime_id')
-              ->join('bookings', 'tickets.booking_id', '=', 'bookings.id')
-              ->where('bookings.status', 'confirmed');
-        }])->orderByDesc('tickets_sold')
-          ->orderByDesc('release_date');
-    } else {
-        $query->orderBy('release_date', 'desc');
-    }
+    $showingQuery->withCount(['showtimes as tickets_sold' => function ($q) {
+        $q->join('tickets', 'showtimes.id', '=', 'tickets.showtime_id')
+          ->join('bookings', 'tickets.booking_id', '=', 'bookings.id')
+          ->where('bookings.status', 'confirmed');
+    }])->orderByDesc('tickets_sold')->orderByDesc('release_date');
 
-    $movies = $query->paginate(12);
+    $upcomingQuery->orderBy('release_date', 'desc');
+    $endedQuery->orderBy('release_date', 'desc');
 
-    return view('client.filter', compact('movies', 'title', 'isShowing'));
+    // Lấy tất cả dữ liệu và merge
+    $movies = $showingQuery->get()
+        ->concat($upcomingQuery->get())
+        ->concat($endedQuery->get());
+
+    // ✅ Phân trang 12 phim
+    $perPage = 12;
+    $page = request('page', 1);
+    $pagedMovies = new \Illuminate\Pagination\LengthAwarePaginator(
+        $movies->forPage($page, $perPage),
+        $movies->count(),
+        $perPage,
+        $page,
+        ['path' => request()->url(), 'query' => request()->query()]
+    );
+
+    return view('client.filter', [
+        'movies' => $pagedMovies,
+        'title' => $title,
+        'isShowing' => false
+    ]);
 }
+
 
     public function searchAjax(Request $request)
 {

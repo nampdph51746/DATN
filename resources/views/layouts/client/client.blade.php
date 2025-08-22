@@ -25,7 +25,12 @@
 		}
 
 		/* Đảm bảo Font Awesome icons hiển thị đúng */
-		.fa, .fas, .far, .fal, .fad, .fab {
+		.fa,
+		.fas,
+		.far,
+		.fal,
+		.fad,
+		.fab {
 			-moz-osx-font-smoothing: grayscale;
 			-webkit-font-smoothing: antialiased;
 			display: inline-block;
@@ -35,7 +40,12 @@
 			line-height: 1;
 		}
 
-		.fa:before, .fas:before, .far:before, .fal:before, .fad:before, .fab:before {
+		.fa:before,
+		.fas:before,
+		.far:before,
+		.fal:before,
+		.fad:before,
+		.fab:before {
 			font-family: "Font Awesome 5 Free", "Font Awesome 5 Pro", "Font Awesome 5 Brands" !important;
 			font-weight: inherit;
 		}
@@ -84,13 +94,6 @@
 		.far.fa-star:before {
 			font-weight: 400 !important;
 		}
-
-		/* Nới rộng popup tìm kiếm */
-		.pop-overlay .popup {
-			max-width: 90%;
-			/* thay đổi theo ý bạn, ví dụ 1000px hoặc 80% */
-			width: 80%;
-		}
 	</style>
 	<script src="https://cdn.tailwindcss.com"></script>
 	<!-- ..............Booking............... -->
@@ -126,7 +129,11 @@
 	}
 
 	/* Đảm bảo các icon Font Awesome hiển thị đúng */
-	.fas, .far, .fab, .fal, .fad {
+	.fas,
+	.far,
+	.fab,
+	.fal,
+	.fad {
 		font-family: "Font Awesome 5 Free", "Font Awesome 5 Pro", "Font Awesome 5 Brands" !important;
 		-moz-osx-font-smoothing: grayscale;
 		-webkit-font-smoothing: antialiased;
@@ -191,51 +198,10 @@
 		transition: background-color 0.3s ease;
 	}
 
-	input[type=text] {
-		width: 30%;
+	.search-right .popup form button {
+		top: 1px;
 	}
 
-	/* Overlay toàn màn hình */
-	.pop-overlay {
-		position: fixed;
-		inset: 0;
-		/* top:0; left:0; right:0; bottom:0 */
-		background: rgba(0, 0, 0, 0.7);
-		display: flex;
-		justify-content: center;
-		/* căn giữa ngang */
-		align-items: center;
-		/* căn giữa dọc nếu popup < viewport */
-		padding: 20px;
-		/* tránh sát mép */
-		overflow-y: auto;
-		/* scroll nếu viewport nhỏ */
-		z-index: 9999;
-	}
-
-	.popup {
-		background: #111;
-		padding: 30px;
-		border-radius: 12px;
-		width: 90%;
-		max-width: 1000px;
-		max-height: 90vh;
-		/* giới hạn chiều cao */
-		overflow-y: auto;
-		/* scroll khi nội dung cao */
-		box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-		position: relative;
-	}
-
-	.search-right .popup {
-		top: auto !important;
-		transform: none !important;
-	}
-
-	.btn-submit {
-		position: static !important;
-		color: white;
-	}
 
 	.btn-check:checked+.genre-label {
 		background-color: #0d6efd;
@@ -248,6 +214,11 @@
 	.genre-label:hover {
 		color: #0d6efd;
 		border-color: #0d6efd;
+	}
+
+	.btn-submit {
+		position: static !important;
+		color: white;
 	}
 </style> <!-- JavaScript cho kiểm tra đăng nhập và hiển thị popup -->
 <script>
@@ -314,94 +285,85 @@
 						</li>
 					</ul>
 
-					<form class="mr-3 position-relative"
-						style="width: 250px;"
-						action="{{ route('movies.filter') }}"
-						method="get">
-
-						<input type="search"
-							id="movie-search"
-							name="search"
-							placeholder="Nhập tên phim..."
-							class="form-control"
-							style="border-radius: 25px; padding-left: 36px;"
-							value="{{ request('search') }}">
-
-						<span class="fas fa-search"
-							style="position: absolute; top: 50%; left: 12px; transform: translateY(-50%); color: #888;">
-						</span>
-
-						<!-- Gợi ý hiển thị ở đây -->
-						<ul id="search-results"
-							style="position: absolute; top: 105%; left: 0; width: 100%; background: white; border: 1px solid #ccc; border-radius: 6px; display: none; z-index: 1000; list-style: none; padding: 0; margin: 0;">
-						</ul>
-					</form>
-
 					<!--/search-right-->
 					<div class="search-right">
-						<a href="#search" class="btn search-hny mr-lg-3" title="search">Tìm kiếm nâng cao</a>
+						<a href="#search" class="btn search-hny mr-lg-3" title="search">
+							Tìm kiếm <span class="fas fa-search ml-3" aria-hidden="true"></span>
+						</a>
 						<!-- search popup -->
 						<div id="search" class="pop-overlay">
 							<div class="popup">
-								<form action="{{ route('movies.filter') }}" method="get" class="search-box text-center"
-									style="width: 100%; max-width: 1000px; margin: 0 auto;">
+								<form action="{{ route('movies.filter') }}" method="get" class="search-box">
+    <!-- Tiêu đề cho input tìm kiếm -->
+    <h3 style="font-size: 24px; text-align: center; margin-bottom: 10px; font-weight: bold; color: #fff; text-decoration: none;">
+        Tìm kiếm theo tên
+    </h3>
+    <input type="search" 
+           placeholder="Nhập tên phim" 
+           name="search" 
+           value="{{ request('search') }}" 
+           style="width: 80%; margin: 0 auto;color: #000 !important; display: block; padding: 10px; font-size: 1.1rem; border-radius: 8px; border: 1px solid #ccc;">
 
-									<!-- Tiêu đề chính -->
-									<h2 class="mb-4" style="color: white; font-weight: bold; font-size: 2rem;">
-										Tìm kiếm nâng cao
-									</h2>
+    <!-- Tiêu đề cho input chọn ngày -->
+    <h3 style="font-size: 24px; text-align: center; margin: 20px 0 10px; font-weight: bold; color: #fff; text-decoration: none;">
+        Chọn ngày suất chiếu
+    </h3>
+    <div style="text-align: center; width: 100%; margin-bottom: 10px;">
+        <input type="date" 
+               name="date" 
+               value="{{ request('date') }}" 
+               style="font-size: 1.2rem; padding: 10px 14px; width: 50%; max-width: 300px; border-radius: 8px; border: 1px solid #ccc;">
+    </div>
 
-									<!-- Hàng input -->
-									<div class="d-flex flex-wrap justify-content-center align-items-center mb-3" style="gap: 10px;">
-										<input type="text" placeholder="Tên phim"
-											name="search"
-											value="{{ request('search') }}"
-											class="form-control flex-fill" style="max-width: 300px;">
+    <!-- Tiêu đề cho thể loại -->
+    <h3 style="font-size: 24px; text-align: center; margin: 20px 0 10px; font-weight: bold; color: #fff; text-decoration: none;">
+        Chọn thể loại
+    </h3>
+    <div class="d-flex flex-wrap justify-content-center mb-3" style="gap: 10px;">
+        @foreach($genres as $genre)
+        <input type="checkbox"
+               class="btn-check"
+               id="genre-{{ $genre->id }}"
+               name="genres[]"
+               value="{{ $genre->id }}"
+               autocomplete="off"
+               {{ collect(request('genres'))->contains($genre->id) ? 'checked' : '' }}>
+        <label for="genre-{{ $genre->id }}"
+               class="btn btn-outline-light genre-label"
+               style="font-size: 1.1rem; font-weight: bold; text-decoration: none;">
+            {{ $genre->name }}
+        </label>
+        @endforeach
+    </div>
 
-										<input type="text" placeholder="Tên đạo diễn"
-											name="director"
-											value="{{ request('director') }}"
-											class="form-control flex-fill" style="max-width: 300px;">
+    <!-- Nút submit -->
+    <div class="d-flex justify-content-center mt-3">
+        <button type="submit" class="btn-submit btn btn-primary" style="font-size: 1.2rem; padding: 12px 24px; border-radius: 8px;">
+            <span class="fas fa-search"></span> Lọc
+        </button>
+    </div>
+</form>
 
-										<input type="text" placeholder="Tên diễn viên"
-											name="actor"
-											value="{{ request('actor') }}"
-											class="form-control flex-fill" style="max-width: 300px;">
-									</div>
 
-									<!-- Tiêu đề thể loại -->
-									<h4 class="mb-2" style="color: white; font-weight: bold; font-size: 1.4rem;">
-										Tìm kiếm theo thể loại
-									</h4>
 
-									<div class="d-flex flex-wrap justify-content-center mb-3" style="gap: 10px;">
-										@foreach($genres as $genre)
-										<input type="checkbox"
-											class="btn-check"
-											id="genre-{{ $genre->id }}"
-											name="genres[]"
-											value="{{ $genre->id }}"
-											autocomplete="off"
-											{{ collect(request('genres'))->contains($genre->id) ? 'checked' : '' }}>
-										<label for="genre-{{ $genre->id }}"
-											class="btn btn-outline-light genre-label"
-											style="font-size: 1.1rem; font-weight: bold;">
-											{{ $genre->name }}
-										</label>
-										@endforeach
-									</div>
-
-									<div class="d-flex justify-content-center mt-3">
-										<button type="submit" class="btn-submit btn btn-primary">
-											<span class="fas fa-search"></span> Lọc
-										</button>
-									</div>
-								</form>
+								<!-- <div class="browse-items">
+                <h3 class="hny-title two mt-md-5 mt-4">Tìm theo thể loại:</h3>
+                <ul class="search-items">
+                    @foreach($genres as $genre)
+                    <li>
+                        <a href="{{ route('movies.filter', ['genreName' => $genre->name]) }}">
+                            {{ $genre->name }}
+                        </a>
+                    </li>
+                    @endforeach
+                </ul>
+            </div> -->
 							</div>
 							<a class="close" href="#close">×</a>
 						</div>
 						<!-- /search popup -->
 					</div>
+
 					{{-- <div class="Login_SignUp" id="login" style="font-size: 2rem ; display: inline-block; position: relative;">
 						<a class="nav-link" href="sign_in.html"><i class="far fa-user-circle"></i></a>
 					</div> --}}
@@ -458,62 +420,6 @@
 </body>
 
 </html>
-
-<script>
-	document.getElementById('movie-search').addEventListener('input', function() {
-		let query = this.value.trim();
-		let resultsBox = document.getElementById('search-results');
-
-		if (query.length < 2) {
-			resultsBox.style.display = 'none';
-			resultsBox.innerHTML = '';
-			return;
-		}
-
-		fetch(`{{ route('movies.searchAjax') }}?q=${encodeURIComponent(query)}`)
-			.then(response => response.json())
-			.then(data => {
-				resultsBox.innerHTML = '';
-				if (data.length > 0) {
-					data.forEach(movie => {
-						let li = document.createElement('li');
-						li.style.listStyle = 'none';
-
-						li.innerHTML = `
-                        <a href="/movies/${movie.id}" 
-                           style="display:flex; align-items:center; padding:8px 12px; text-decoration:none; color:#333; border-bottom:1px solid #eee;">
-                            <img src="${movie.poster}" 
-                                 alt="${movie.name}" 
-                                 style="width:45px; height:65px; object-fit:cover; border-radius:4px; margin-right:10px;">
-                            <div>
-                                <strong>${movie.name}</strong><br>
-                                <small style="color:${movie.status === 'showing' ? '#28a745' : '#007bff'}">
-                                    ${movie.status === 'showing' ? '🎬 Đang chiếu' : '📅 Sắp chiếu'}
-                                </small>
-                            </div>
-                        </a>
-                    `;
-
-						li.addEventListener('mouseover', () => li.style.background = '#f8f9fa');
-						li.addEventListener('mouseout', () => li.style.background = 'white');
-						resultsBox.appendChild(li);
-					});
-					resultsBox.style.display = 'block';
-				} else {
-					resultsBox.style.display = 'none';
-				}
-			});
-	});
-
-	// Ẩn khi click ra ngoài ô input + kết quả
-	document.addEventListener('click', function(e) {
-		let searchBox = document.getElementById('movie-search');
-		let resultsBox = document.getElementById('search-results');
-		if (!searchBox.contains(e.target) && !resultsBox.contains(e.target)) {
-			resultsBox.style.display = 'none';
-		}
-	});
-</script>
 
 <script>
 	function toggleUserDropdown() {
