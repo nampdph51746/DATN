@@ -396,6 +396,10 @@ class HomeController extends Controller
         $discount = 0;
         $pointsUsed = 0;
         $promotionId = null;
+        
+        // Tính toán điểm có thể sử dụng cho đơn hàng này
+        $maxDiscountPercentage = $userRank?->discount_percentage ?? 30; // mặc định 30%
+        $maxUsablePoints = 0; // sẽ được tính toán bằng JavaScript dựa trên tổng đơn hàng
 
         $bookingData = [
     'movie_id' => $movie->id,
@@ -431,6 +435,7 @@ class HomeController extends Controller
             'cinemas',
             'userPoints',
             'userRank',
+            'maxDiscountPercentage',
             'promotionStatus',
             'discount',
             'pointsUsed',
@@ -724,17 +729,22 @@ class HomeController extends Controller
         // Tính tiền giảm từ điểm: 1 điểm = 1,000₫
         $pointDiscount = $pointsToUse * 1000;
 
-        // Kiểm tra tổng giảm giá không vượt quá 30% tổng đơn hàng
-        $maxTotalDiscount = $orderAmount * 0.3;
+        // Lấy phần trăm giảm giá tối đa từ hạng của user, mặc định 30%
+        $userRank = $user->customerRank;
+        $maxDiscountPercentage = $userRank ? $userRank->discount_percentage : 30;
+
+        // Kiểm tra tổng giảm giá không vượt quá phần trăm tối đa của đơn hàng
+        $maxTotalDiscount = $orderAmount * ($maxDiscountPercentage / 100);
         $totalDiscount = $currentDiscount + $pointDiscount;
 
         if ($totalDiscount > $maxTotalDiscount) {
             $maxPointsAllowed = floor(($maxTotalDiscount - $currentDiscount) / 1000);
             return response()->json([
-                'error' => "Tổng giảm giá không được vượt quá 30% đơn hàng. Bạn chỉ có thể dùng tối đa {$maxPointsAllowed} điểm.",
+                'error' => "Tổng giảm giá không được vượt quá {$maxDiscountPercentage}% đơn hàng. Bạn chỉ có thể dùng tối đa {$maxPointsAllowed} điểm.",
                 'max_points_allowed' => $maxPointsAllowed,
                 'max_total_discount' => $maxTotalDiscount,
-                'current_discount' => $currentDiscount
+                'current_discount' => $currentDiscount,
+                'max_discount_percentage' => $maxDiscountPercentage
             ], 400);
         }
 

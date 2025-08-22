@@ -1335,10 +1335,18 @@
                                             <h4 style="color: #e5006e; font-size: 1.1em; margin-bottom: 8px;">Điểm thưởng
                                             </h4>
 
-                                            <div>
-                                                <strong>Điểm khả dụng:</strong> <span id="available-points"
-                                                    style="color:#e5006e">{{ $userPoints }}</span>
+                                            <div style="margin-bottom: 8px;">
+                                                <strong>Tổng điểm:</strong> <span style="color:#e5006e">{{ $userPoints }} điểm</span>
                                             </div>
+                                            
+                                            <div style="margin-bottom: 8px;">
+                                                <strong>Điểm có thể sử dụng cho đơn hàng này:</strong> 
+                                                <span id="max-usable-points" style="color:#e5006e">0 điểm</span>
+                                                <small style="color: #aaa; display: block; margin-top: 2px;">
+                                                    (Tối đa {{ $maxDiscountPercentage ?? 30 }}% giá trị đơn hàng)
+                                                </small>
+                                            </div>
+                                            
                                             <div style="display: flex; align-items: center; gap: 10px;">
                                                 <input type="number" id="points-input"
                                                     placeholder="Nhập số điểm sử dụng" min="0"
@@ -3001,6 +3009,10 @@
                     checkMinimumOrderAmount();
                 }, 100);
             }
+            
+            // Cập nhật điểm có thể sử dụng cho đơn hàng
+            updateUsablePoints(subtotal);
+            
             // Lưu dữ liệu vào form để gửi đi
             // Lưu dữ liệu vào form để gửi đi
             document.getElementById('input-movie-title').value = movieTitle || 'N/A';
@@ -4250,6 +4262,9 @@
 
             // Khởi tạo nút đổi điểm (đảm bảo DOM đã load)
             initApplyPointsButton();
+            
+            // Cập nhật điểm có thể sử dụng ban đầu
+            updateUsablePoints(0);
 
             // Room type filter buttons are now handled by onclick attributes
             console.log('Room type filter buttons initialized with onclick handlers');
@@ -4280,8 +4295,11 @@
                 }
 
                 const points = parseInt(pointsInputEl.value) || 0;
-                const availablePointsEl = document.getElementById('available-points');
-                let availablePoints = parseInt(availablePointsEl.textContent) || 0;
+                // Lấy tổng điểm từ backend variable thay vì DOM element đã bị xóa
+                const availablePoints = {{ $userPoints ?? 0 }};
+                const maxUsablePointsEl = document.getElementById('max-usable-points');
+                // Sử dụng điểm có thể sử dụng cho đơn hàng thay vì tổng điểm
+                let maxUsablePoints = parseInt(maxUsablePointsEl.textContent.replace(/[^\d]/g, '')) || 0;
                 const subtotalEl = document.getElementById('subtotalDisplay');
                 const subtotal = parseInt(subtotalEl.textContent.replace(/[^\d]/g, '')) || 0;
                 const currentDiscount = promotionDiscount + pointsDiscount; // Tổng giảm giá hiện tại
@@ -4293,6 +4311,7 @@
                     pointsDiscount: pointsDiscount,
                     currentTotalDiscount: currentDiscount,
                     availablePoints: availablePoints,
+                    maxUsablePoints: maxUsablePoints,
                     pointsInputValue: pointsInputEl.value,
                     subtotalText: subtotalEl.textContent
                 });
@@ -4308,11 +4327,23 @@
                     return;
                 }
 
+                // Kiểm tra không vượt quá điểm có thể sử dụng cho đơn hàng
+                if (points > maxUsablePoints) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Vượt quá điểm có thể sử dụng',
+                        text: `Bạn chỉ có thể sử dụng tối đa ${maxUsablePoints} điểm cho đơn hàng này (tối đa ${(window.userRankDiscountPercentage || 30)}% giá trị đơn hàng).`,
+                        confirmButtonText: 'Đóng',
+                    });
+                    applyPointsBtn.disabled = false;
+                    return;
+                }
+
                 if (points > availablePoints || isNaN(availablePoints)) {
                     Swal.fire({
                         icon: 'warning',
                         title: 'Không đủ điểm',
-                        text: `Bạn chỉ có ${availablePoints} điểm khả dụng.`,
+                        text: `Bạn chỉ có ${availablePoints} điểm trong tài khoản.`,
                         confirmButtonText: 'Đóng',
                     });
                     applyPointsBtn.disabled = false;
@@ -4381,8 +4412,7 @@
                                 pointsUsed: points
                             });
 
-                            // Cập nhật giao diện điểm
-                            availablePointsEl.textContent = availablePoints - points;
+                            // Cập nhật giao diện điểm - không cần cập nhật available-points vì đã xóa
                             document.getElementById('points-used-line').textContent = points;
 
                             // Cập nhật tất cả các element hiển thị discount
@@ -4567,6 +4597,46 @@
                     console.error('Error setting checkout session:', error);
                     checkoutForm.classList.remove('submitting');
                 });
+            });
+        }
+        
+        // Hàm cập nhật điểm có thể sử dụng cho đơn hàng
+        function updateUsablePoints(subtotal) {
+            const maxUsablePointsElement = document.getElementById('max-usable-points');
+            if (!maxUsablePointsElement) return;
+            
+            // Lấy phần trăm giảm giá tối đa theo hạng từ biến PHP (nếu có), mặc định 30%
+            let maxDiscountPercent = 30;
+            if (typeof window.userRankDiscountPercentage !== 'undefined' && !isNaN(window.userRankDiscountPercentage)) {
+                maxDiscountPercent = window.userRankDiscountPercentage;
+            }
+            
+            // Tính toán điểm có thể sử dụng tối đa cho đơn hàng này
+            const maxDiscountAmount = subtotal * (maxDiscountPercent / 100);
+            const maxUsablePoints = Math.floor(maxDiscountAmount / 1000); // 1 điểm = 1000₫
+            
+            // Lấy tổng điểm của user
+            const userPoints = {{ $userPoints ?? 0 }};
+            
+            // Điểm thực tế có thể sử dụng là số nhỏ hơn giữa điểm của user và điểm tối đa cho đơn hàng
+            const actualUsablePoints = Math.min(userPoints, maxUsablePoints);
+            
+            // Cập nhật hiển thị
+            maxUsablePointsElement.textContent = `${actualUsablePoints} điểm`;
+            
+            // Cập nhật max attribute của input điểm
+            const pointsInput = document.getElementById('points-input');
+            if (pointsInput) {
+                pointsInput.setAttribute('max', actualUsablePoints);
+            }
+            
+            console.log('Updated usable points:', {
+                subtotal: subtotal,
+                maxDiscountPercent: maxDiscountPercent,
+                maxDiscountAmount: maxDiscountAmount,
+                maxUsablePoints: maxUsablePoints,
+                userPoints: userPoints,
+                actualUsablePoints: actualUsablePoints
             });
         }
     </script>
