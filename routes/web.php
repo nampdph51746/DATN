@@ -81,6 +81,8 @@ Route::get('/checkout/vnpay_return', [VnpayController::class, 'vnpayReturn'])->n
 
 Route::post('/checkout/preview', [CheckoutController::class, 'previewBooking'])->name('checkout.preview');
 
+// Debug route for booking attempts
+Route::get('/debug/booking-attempts', [App\Http\Controllers\Client\DebugController::class, 'bookingAttempts'])->name('debug.booking-attempts');
 
 Route::get('/payment-success', [PaymentSuccessController::class, 'show'])->name('client.success');
 

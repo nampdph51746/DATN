@@ -49,11 +49,27 @@ class SeatController extends Controller
                 return response()->json(['message' => 'Không thực hiện release khi thanh toán']);
             }
 
-            // Nếu user đã login, hủy booking attempt
+            // Nếu user đã login, hủy booking attempt 
+            // NHƯNG chỉ khi không có booking nào đang được tạo gần đây (trong 5 phút)
             if (Auth::check()) {
                 $userId = Auth::id();
-                $this->bookingAttemptService->cancelActiveAttempts($userId, $showtimeId);
-                Log::info("Cancelled active booking attempts for user {$userId}, showtime {$showtimeId}");
+                
+                // Kiểm tra xem có booking nào được tạo trong 5 phút gần đây không
+                $recentBooking = \App\Models\Booking::where('user_id', $userId)
+                    ->where('created_at', '>=', now()->subMinutes(5))
+                    ->exists();
+                
+                // Chỉ cancel booking attempt nếu:
+                // 1. Không đang trong quá trình thanh toán
+                // 2. Không có booking gần đây (tránh cancel khi vừa thanh toán xong)
+                if (!session('is_processing_payment') && 
+                    !session('checkout_form_submitted') && 
+                    !$recentBooking) {
+                    $this->bookingAttemptService->cancelActiveAttempts($userId, $showtimeId);
+                    Log::info("Cancelled active booking attempts for user {$userId}, showtime {$showtimeId}");
+                } else {
+                    Log::info("Skipped cancelling booking attempts for user {$userId} - recent booking or payment in progress");
+                }
             }
 
             foreach ($seatIds as $id) {
@@ -390,11 +406,27 @@ class SeatController extends Controller
                 Log::info("Released seat ID {$seatState->seat_id} for session {$sessionId} in showtime {$showtimeId}");
             }
 
-            // Nếu user đã login, hủy booking attempt (chỉ khi không đang thanh toán)
+            // Nếu user đã login, hủy booking attempt 
+            // NHƯNG chỉ khi không có booking nào đang được tạo gần đây (trong 5 phút)
             if (Auth::check()) {
                 $userId = Auth::id();
-                $this->bookingAttemptService->cancelActiveAttempts($userId, $showtimeId);
-                Log::info("Cancelled active booking attempts for user {$userId}, showtime {$showtimeId}");
+                
+                // Kiểm tra xem có booking nào được tạo trong 5 phút gần đây không
+                $recentBooking = \App\Models\Booking::where('user_id', $userId)
+                    ->where('created_at', '>=', now()->subMinutes(5))
+                    ->exists();
+                
+                // Chỉ cancel booking attempt nếu:
+                // 1. Không đang trong quá trình thanh toán
+                // 2. Không có booking gần đây (tránh cancel khi vừa thanh toán xong)
+                if (!session('is_processing_payment') && 
+                    !session('checkout_form_submitted') && 
+                    !$recentBooking) {
+                    $this->bookingAttemptService->cancelActiveAttempts($userId, $showtimeId);
+                    Log::info("Cancelled active booking attempts for user {$userId}, showtime {$showtimeId}");
+                } else {
+                    Log::info("Skipped cancelling booking attempts for user {$userId} - recent booking or payment in progress");
+                }
             }
 
             return response()->json([

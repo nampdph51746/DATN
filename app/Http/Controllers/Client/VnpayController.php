@@ -357,10 +357,15 @@ class VnpayController extends Controller
                 }
 
                 // 7. Mark booking attempt as completed
-                $firstSeatState = ShowtimeSeatState::where('booking_id', $booking->id)->first();
-                if ($firstSeatState) {
-                    $this->bookingAttemptService->completeAttempt($booking->user_id, $firstSeatState->showtime_id);
-                }
+                // Sử dụng showtime_id đã xác định ở trước thay vì tìm từ seat state
+                Log::info("About to complete booking attempt:", [
+                    'user_id' => $booking->user_id,
+                    'showtime_id' => $showtimeId,
+                    'booking_id' => $booking->id
+                ]);
+                
+                $this->bookingAttemptService->completeAttempt($booking->user_id, $showtimeId);
+                Log::info("Marked booking attempt as completed for user {$booking->user_id}, showtime {$showtimeId}");
 
                 DB::commit();
                 

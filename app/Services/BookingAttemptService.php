@@ -97,6 +97,9 @@ class BookingAttemptService
      */
     public function completeAttempt(int $userId, int $showtimeId): void
     {
+        Log::info("Looking for booking attempt to complete - User: {$userId}, Showtime: {$showtimeId}");
+        
+        // Tìm attempt với status Reserved trước
         $attempt = BookingAttempt::where('user_id', $userId)
             ->where('showtime_id', $showtimeId)
             ->where('status', BookingAttemptStatus::Reserved)
@@ -104,8 +107,44 @@ class BookingAttemptService
 
         if ($attempt) {
             $attempt->markAsCompleted();
-            Log::info("Completed booking attempt {$attempt->id} for user {$userId}");
+            Log::info("Successfully completed booking attempt {$attempt->id} for user {$userId}");
+            return;
         }
+
+        // Nếu không tìm thấy attempt Reserved, tìm attempt gần nhất (có thể đã bị cancelled)
+        // trong vòng 10 phút gần đây
+        $recentAttempt = BookingAttempt::where('user_id', $userId)
+            ->where('showtime_id', $showtimeId)
+            ->where('created_at', '>=', now()->subMinutes(10))
+            ->orderBy('created_at', 'desc')
+            ->first();
+
+        if ($recentAttempt && in_array($recentAttempt->status, [BookingAttemptStatus::Cancelled, BookingAttemptStatus::Timeout])) {
+            // Khôi phục và complete attempt đã bị cancel
+            $recentAttempt->update([
+                'status' => BookingAttemptStatus::Completed,
+                'completed_at' => now()
+            ]);
+            Log::info("Successfully restored and completed booking attempt {$recentAttempt->id} (was {$recentAttempt->status->value}) for user {$userId}");
+            return;
+        }
+
+        // Thêm log để debug khi không tìm thấy attempt
+        $allAttempts = BookingAttempt::where('user_id', $userId)
+            ->where('showtime_id', $showtimeId)
+            ->get();
+        
+        Log::warning("No booking attempt found to complete for user {$userId}, showtime {$showtimeId}. All attempts for this user/showtime:", [
+            'attempts' => $allAttempts->map(function($attempt) {
+                return [
+                    'id' => $attempt->id,
+                    'status' => $attempt->status->value,
+                    'created_at' => $attempt->created_at,
+                    'expired_at' => $attempt->expired_at,
+                    'completed_at' => $attempt->completed_at,
+                ];
+            })->toArray()
+        ]);
     }
 
     /**
