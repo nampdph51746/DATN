@@ -7,10 +7,6 @@ use App\Models\Country;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
-use App\Models\Notification;
-use App\Enums\NotificationType;
-use Illuminate\Support\Facades\Auth;
-
 class CityController extends Controller
 {
     public function index(Request $request)
@@ -40,21 +36,7 @@ class CityController extends Controller
             'country_id' => 'required|exists:countries,id',
         ]);
 
-        $city = City::create($validated);
-
-        // Tạo thông báo khi thêm mới thành phố
-        Notification::create([
-            'user_id' => Auth::id(),
-            'entity_type' => City::class,
-            'entity_id' => $city->id,
-            'title' => 'Thêm mới thành phố',
-            'message' => 'Thành phố "' . $city->name . '" đã được thêm mới.',
-            'type' => NotificationType::System,
-            'priority' => 'low',
-            'old_status' => null,
-            'new_status' => json_encode($city->getAttributes()),
-            'event_details' => json_encode(['action' => 'create', 'city_id' => $city->id]),
-        ]);
+        City::create($validated);
 
         return redirect()->route('admin.cities.index')->with('success', 'Đã thêm thành phố mới.');
     }
@@ -76,22 +58,7 @@ class CityController extends Controller
             'country_id' => 'required|exists:countries,id',
         ]);
 
-        $oldData = $city->getOriginal();
         $city->update($validated);
-
-        // Tạo thông báo khi cập nhật thành phố
-        Notification::create([
-            'user_id' => Auth::id(),
-            'entity_type' => City::class,
-            'entity_id' => $city->id,
-            'title' => 'Cập nhật thành phố',
-            'message' => 'Thành phố "' . $city->name . '" đã được cập nhật.',
-            'type' => NotificationType::System,
-            'priority' => 'low',
-            'old_status' => json_encode($oldData),
-            'new_status' => json_encode($city->getAttributes()),
-            'event_details' => json_encode(['action' => 'update', 'city_id' => $city->id]),
-        ]);
 
         return redirect()->route('admin.cities.index')->with('success', 'Cập nhật thành công.');
     }
@@ -100,24 +67,26 @@ class CityController extends Controller
     public function destroy($id)
     {
         $city = City::findOrFail($id);
-        $oldData = $city->getOriginal();
         $city->delete();
 
-        // Tạo thông báo khi xóa mềm thành phố
-        Notification::create([
-            'user_id' => Auth::id(),
-            'entity_type' => City::class,
-            'entity_id' => $city->id,
-            'title' => 'Xóa thành phố',
-            'message' => 'Thành phố "' . $city->name . '" đã bị xóa (tạm thời).',
-            'type' => NotificationType::System,
-            'priority' => 'low',
-            'old_status' => json_encode($oldData),
-            'new_status' => null,
-            'event_details' => json_encode(['action' => 'delete', 'city_id' => $city->id]),
+        return redirect()->route('admin.cities.index')->with('success', 'Đã xóa thành phố.');
+    }
+
+    // Xóa hàng loạt
+    public function bulkDelete(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|string'
         ]);
 
-        return redirect()->route('admin.cities.trash')->with('success', 'Đã xóa thành phố (tạm thời).');
+        $ids = explode(',', $request->ids);
+        $cities = City::whereIn('id', $ids);
+        
+        $count = $cities->count();
+        $cities->delete();
+
+        return redirect()->route('admin.cities.index')
+                        ->with('success', "Đã xóa {$count} thành phố thành công.");
     }
 
     // ✅ XEM DANH SÁCH ĐÃ XÓA
@@ -141,20 +110,6 @@ class CityController extends Controller
         $city = City::onlyTrashed()->findOrFail($id);
         $city->restore();
 
-        // Tạo thông báo khi khôi phục thành phố
-        Notification::create([
-            'user_id' => Auth::id(),
-            'entity_type' => City::class,
-            'entity_id' => $city->id,
-            'title' => 'Khôi phục thành phố',
-            'message' => 'Thành phố "' . $city->name . '" đã được khôi phục.',
-            'type' => NotificationType::System,
-            'priority' => 'low',
-            'old_status' => null,
-            'new_status' => json_encode($city->getAttributes()),
-            'event_details' => json_encode(['action' => 'restore', 'city_id' => $city->id]),
-        ]);
-
         return redirect()->route('admin.cities.trash')->with('success', 'Đã khôi phục thành phố.');
     }
 
@@ -162,111 +117,8 @@ class CityController extends Controller
     public function forceDelete($id)
     {
         $city = City::onlyTrashed()->findOrFail($id);
-        $oldData = $city->getOriginal();
         $city->forceDelete();
 
-        // Tạo thông báo khi xóa vĩnh viễn thành phố
-        Notification::create([
-            'user_id' => Auth::id(),
-            'entity_type' => City::class,
-            'entity_id' => $city->id,
-            'title' => 'Xóa vĩnh viễn thành phố',
-            'message' => 'Thành phố "' . $city->name . '" đã bị xóa vĩnh viễn.',
-            'type' => NotificationType::System,
-            'priority' => 'low',
-            'old_status' => json_encode($oldData),
-            'new_status' => null,
-            'event_details' => json_encode(['action' => 'force_delete', 'city_id' => $city->id]),
-        ]);
-
         return redirect()->route('admin.cities.trash')->with('success', 'Đã xóa vĩnh viễn thành phố.');
-    }
-
-    // Xóa nhiều thành phố cùng lúc
-    public function bulkDelete(Request $request)
-    {
-        $ids = explode(',', $request->input('ids'));
-        
-        if (empty($ids)) {
-            return redirect()->route('admin.cities.index')
-                ->with('error', 'Không có thành phố nào được chọn để xóa.');
-        }
-
-        try {
-            $cities = City::whereIn('id', $ids)->get();
-            
-            if ($cities->isEmpty()) {
-                return redirect()->route('admin.cities.index')
-                    ->with('error', 'Không tìm thấy thành phố nào để xóa.');
-            }
-
-            // Kiểm tra xem có thành phố nào đang được sử dụng không
-            $usedCities = [];
-            foreach ($cities as $city) {
-                // Kiểm tra nếu có cinemas sử dụng city này
-                if ($city->cinemas()->exists()) {
-                    $usedCities[] = $city->name;
-                }
-            }
-
-            if (!empty($usedCities)) {
-                return redirect()->route('admin.cities.index')
-                    ->with('error', 'Không thể xóa các thành phố sau vì đang được sử dụng: ' . implode(', ', $usedCities));
-            }
-
-            // Thực hiện xóa mềm
-            City::whereIn('id', $ids)->delete();
-
-            return redirect()->route('admin.cities.index')
-                ->with('success', 'Đã xóa ' . count($ids) . ' thành phố thành công.');
-
-        } catch (\Exception $e) {
-            return redirect()->route('admin.cities.index')
-                ->with('error', 'Có lỗi xảy ra khi xóa thành phố: ' . $e->getMessage());
-        }
-    }
-
-    // Khôi phục nhiều thành phố cùng lúc
-    public function bulkRestore(Request $request)
-    {
-        $ids = explode(',', $request->input('ids'));
-        
-        if (empty($ids)) {
-            return redirect()->route('admin.cities.trash')
-                ->with('error', 'Không có thành phố nào được chọn để khôi phục.');
-        }
-
-        try {
-            $restoredCount = City::onlyTrashed()->whereIn('id', $ids)->restore();
-            
-            return redirect()->route('admin.cities.trash')
-                ->with('success', 'Đã khôi phục ' . count($ids) . ' thành phố thành công.');
-
-        } catch (\Exception $e) {
-            return redirect()->route('admin.cities.trash')
-                ->with('error', 'Có lỗi xảy ra khi khôi phục thành phố: ' . $e->getMessage());
-        }
-    }
-
-    // Xóa vĩnh viễn nhiều thành phố cùng lúc
-    public function bulkForceDelete(Request $request)
-    {
-        $ids = explode(',', $request->input('ids'));
-        
-        if (empty($ids)) {
-            return redirect()->route('admin.cities.trash')
-                ->with('error', 'Không có thành phố nào được chọn để xóa vĩnh viễn.');
-        }
-
-        try {
-            City::onlyTrashed()->whereIn('id', $ids)->forceDelete();
-            
-            return redirect()->route('admin.cities.trash')
-                ->with('success', 'Đã xóa vĩnh viễn ' . count($ids) . ' thành phố thành công.');
-
-        } catch (\Exception $e) {
-            return redirect()->route('admin.cities.trash')
-                ->with('error', 'Có lỗi xảy ra khi xóa vĩnh viễn thành phố: ' . $e->getMessage());
-        }
     }
 }

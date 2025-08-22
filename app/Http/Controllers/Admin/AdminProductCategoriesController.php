@@ -8,10 +8,6 @@ use Illuminate\Support\Facades\Validator;
 use App\Models\ProductCategory;
 use App\Models\Product;
 
-use App\Models\Notification;
-use App\Enums\NotificationType;
-use Illuminate\Support\Facades\Auth;
-
 class AdminProductCategoriesController extends Controller
 {
         public function __construct()
@@ -46,27 +42,11 @@ class AdminProductCategoriesController extends Controller
             'description.string' => 'Mô tả phải là chuỗi ký tự.',
         ]);
 
-        $category = ProductCategory::create([
+        ProductCategory::create([
             'name' => $request->name,
             'description' => $request->description,
             'created_at' => now(),
             'updated_at' => now(),
-        ]);
-
-        // Tạo thông báo khi thêm mới danh mục sản phẩm
-        Notification::create([
-            'user_id' => Auth::id(),
-            'entity_type' => ProductCategory::class,
-            'entity_id' => $category->id,
-            'title' => 'Tạo mới danh mục sản phẩm',
-            'message' => 'Danh mục sản phẩm #' . $category->id . ' đã được tạo mới.',
-            'type' => NotificationType::System,
-            'priority' => 'low',
-            'old_status' => null,
-            'new_status' => $category->name,
-            'event_details' => json_encode([
-                'new' => $category->getAttributes(),
-            ]),
         ]);
 
         return redirect()->route('admin.product-categories.index')->with('success', 'Danh mục sản phẩm đã được tạo thành công.');
@@ -92,28 +72,10 @@ class AdminProductCategoriesController extends Controller
         ]);
 
         $category = ProductCategory::findOrFail($id);
-        $oldData = $category->getOriginal();
         $category->update([
             'name' => $request->name,
             'description' => $request->description,
             'updated_at' => now(),
-        ]);
-
-        // Tạo thông báo mức độ cao khi cập nhật danh mục sản phẩm
-        Notification::create([
-            'user_id' => Auth::id(),
-            'entity_type' => ProductCategory::class,
-            'entity_id' => $category->id,
-            'title' => 'Cập nhật danh mục sản phẩm',
-            'message' => 'Danh mục sản phẩm #' . $category->id . ' đã được cập nhật.',
-            'type' => NotificationType::System,
-            'priority' => 'low',
-            'old_status' => $oldData['name'] ?? null,
-            'new_status' => $category->name,
-            'event_details' => json_encode([
-                'old' => $oldData,
-                'new' => $category->getAttributes(),
-            ]),
         ]);
 
         return redirect()->route('admin.product-categories.index')->with('success', 'Danh mục sản phẩm đã được cập nhật thành công.');
@@ -122,19 +84,14 @@ class AdminProductCategoriesController extends Controller
     public function destroy($id)
     {
         $category = ProductCategory::findOrFail($id);
-        
-        // Sửa tên cột từ product_category_id thành category_id
         $productCount = Product::where('category_id', $id)->count();
 
         if ($productCount > 0) {
-            return redirect()->route('admin.product-categories.index')
-                ->with('error', 'Không thể xóa danh mục vì vẫn còn ' . $productCount . ' sản phẩm thuộc danh mục này.');
+            return redirect()->route('admin.product-categories.index')->with('error', 'Không thể xóa danh mục vì vẫn còn ' . $productCount . ' sản phẩm thuộc danh mục này.');
         }
 
-        $oldData = $category->getOriginal();
         $category->delete();
-        return redirect()->route('admin.product-categories.index')
-            ->with('success', 'Danh mục sản phẩm đã được xóa thành công.');
+        return redirect()->route('admin.product-categories.index')->with('success', 'Danh mục sản phẩm đã được xóa thành công.');
     }
 
     public function trash()
@@ -153,25 +110,7 @@ class AdminProductCategoriesController extends Controller
     public function forceDelete($id)
     {
         $category = ProductCategory::onlyTrashed()->findOrFail($id);
-        $oldData = $category->getOriginal();
         $category->forceDelete();
-
-        // Tạo thông báo khi xóa cứng danh mục sản phẩm
-        Notification::create([
-            'user_id' => Auth::id(),
-            'entity_type' => ProductCategory::class,
-            'entity_id' => $category->id,
-            'title' => 'Xóa vĩnh viễn danh mục sản phẩm',
-            'message' => 'Danh mục sản phẩm #' . $category->id . ' đã bị xóa vĩnh viễn.',
-            'type' => NotificationType::System,
-            'priority' => 'low',
-            'old_status' => $oldData['name'] ?? null,
-            'new_status' => null,
-            'event_details' => json_encode([
-                'old' => $oldData,
-            ]),
-        ]);
-
         return redirect()->route('admin.product-categories.trash')->with('success', 'Danh mục sản phẩm đã được xóa vĩnh viễn.');
     }
 }

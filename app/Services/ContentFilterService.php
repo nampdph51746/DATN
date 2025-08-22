@@ -8,8 +8,6 @@ use App\Models\SensitiveWord;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\DB;
 
 class ContentFilterService
 {
@@ -20,38 +18,11 @@ class ContentFilterService
 
     public function __construct()
     {
-        // Kiểm tra xem bảng có tồn tại không trước khi truy vấn
-        try {
-            if (Schema::hasTable('sensitive_words')) {
-                $this->sensitiveWords = SensitiveWord::active()->pluck('word')->toArray();
-            } else {
-                $this->sensitiveWords = [];
-                Log::info('Sensitive words table does not exist yet, using empty array');
-            }
-        } catch (\Exception $e) {
-            // Fallback nếu có lỗi khác
-            $this->sensitiveWords = [];
-            Log::warning('Error loading sensitive words: ' . $e->getMessage());
-        }
-        
+        // Get sensitive words from database instead of config
+        $this->sensitiveWords = SensitiveWord::active()->pluck('word')->toArray();
         $this->regexPatterns = Config::get('content_filter.regex_patterns', []);
         $this->autoApproveConfig = Config::get('content_filter.auto_approve', []);
         $this->userTrustConfig = Config::get('content_filter.user_trust_score', []);
-    }
-
-    // Lazy loading cho sensitive words
-    private function getSensitiveWords()
-    {
-        if (empty($this->sensitiveWords) && Schema::hasTable('sensitive_words')) {
-            try {
-                $this->sensitiveWords = SensitiveWord::active()->pluck('word')->toArray();
-            } catch (\Exception $e) {
-                Log::warning('Error loading sensitive words: ' . $e->getMessage());
-                $this->sensitiveWords = [];
-            }
-        }
-        
-        return $this->sensitiveWords;
     }
 
     /**
@@ -62,44 +33,42 @@ class ContentFilterService
         $reasons = [];
         $shouldPending = false;
 
-        // 1. Kiểm tra từ khóa nhạy cảm (QUAN TRỌNG NHẤT)
+        // 1. Kiểm tra từ khóa nhạy cảm
         $sensitiveWordFound = $this->checkSensitiveWords($content);
         if ($sensitiveWordFound) {
             $reasons[] = 'Chứa từ khóa nhạy cảm: ' . $sensitiveWordFound;
             $shouldPending = true;
         }
 
-        // 2. Kiểm tra pattern regex (email, phone, links)
+        // 2. Kiểm tra pattern regex
         $regexViolation = $this->checkRegexPatterns($content);
         if ($regexViolation) {
             $reasons[] = 'Chứa nội dung không phù hợp: ' . $regexViolation;
             $shouldPending = true;
         }
 
-        // 3. Kiểm tra spam (ký tự lặp lại)
+        // 3. Kiểm tra độ dài
+        $lengthIssue = $this->checkContentLength($content);
+        if ($lengthIssue) {
+            $reasons[] = $lengthIssue;
+            $shouldPending = true;
+        }
+
+        // 4. Bỏ kiểm tra độ tin cậy người dùng - chỉ focus vào nội dung
+        // $userTrustIssue = $this->checkUserTrust($userId);
+        // if ($userTrustIssue) {
+        //     $reasons[] = $userTrustIssue;
+        //     $shouldPending = true;
+        // }
+
+        // 5. Kiểm tra spam (ký tự lặp lại)
         $spamCheck = $this->checkSpam($content);
         if ($spamCheck) {
             $reasons[] = $spamCheck;
             $shouldPending = true;
         }
 
-        // 4. Kiểm tra độ dài (KHÔNG QUÁ NGHIÊM NGẶT)
-        $lengthIssue = $this->checkContentLength($content);
-        if ($lengthIssue) {
-            // Chỉ chặn nếu quá ngắn (dưới 5 ký tự) hoặc quá dài (trên 1000 ký tự)
-            $length = mb_strlen($content, 'UTF-8');
-            if ($length < 5 || $length > 1000) {
-                $reasons[] = $lengthIssue;
-                $shouldPending = true;
-            }
-        }
-
-        // 5. TỰ ĐỘNG DUYỆT nếu nội dung sạch
-        if (!$shouldPending && $this->autoApproveConfig['auto_approve_clean_content'] ?? true) {
-            $status = 'approved';
-        } else {
-            $status = 'pending';
-        }
+        $status = $shouldPending ? 'pending' : 'approved';
 
         return [
             'status' => $status,
@@ -114,9 +83,8 @@ class ContentFilterService
     private function checkSensitiveWords(string $content): ?string
     {
         $content = mb_strtolower($content, 'UTF-8');
-        $sensitiveWords = $this->getSensitiveWords(); // Sử dụng getSensitiveWords()
         
-        foreach ($sensitiveWords as $word) {
+        foreach ($this->sensitiveWords as $word) {
             $word = mb_strtolower($word, 'UTF-8');
             if (mb_strpos($content, $word) !== false) {
                 Log::info('Sensitive word detected', [
@@ -161,8 +129,8 @@ class ContentFilterService
     private function checkContentLength(string $content): ?string
     {
         $length = mb_strlen($content, 'UTF-8');
-        $minLength = $this->autoApproveConfig['min_length'] ?? 5;
-        $maxLength = $this->autoApproveConfig['max_length'] ?? 1000;
+        $minLength = $this->autoApproveConfig['min_length'] ?? 10;
+        $maxLength = $this->autoApproveConfig['max_length'] ?? 500;
 
         if ($length < $minLength) {
             return "Nội dung quá ngắn (< {$minLength} ký tự)";
@@ -170,6 +138,35 @@ class ContentFilterService
 
         if ($length > $maxLength) {
             return "Nội dung quá dài (> {$maxLength} ký tự)";
+        }
+
+        return null;
+    }
+
+    /**
+     * Kiểm tra độ tin cậy người dùng
+     */
+    private function checkUserTrust(int $userId): ?string
+    {
+        if (!$this->autoApproveConfig['check_user_history']) {
+            return null;
+        }
+
+        $user = User::find($userId);
+        if (!$user) {
+            return 'Không tìm thấy thông tin người dùng';
+        }
+
+        // Bỏ kiểm tra người dùng mới - cho phép tất cả user đăng ký mới
+
+        // Kiểm tra số lượng review đã được duyệt
+        $minApprovedReviews = $this->userTrustConfig['min_approved_reviews'] ?? 3;
+        $approvedReviewsCount = Review::where('user_id', $userId)
+            ->where('status', 'approved')
+            ->count();
+
+        if ($approvedReviewsCount < $minApprovedReviews) {
+            return "Chưa đủ review đã duyệt (< {$minApprovedReviews})";
         }
 
         return null;
@@ -223,11 +220,6 @@ class ContentFilterService
      */
     public function addSensitiveWord(string $word, string $category = 'general'): void
     {
-        if (!Schema::hasTable('sensitive_words')) {
-            Log::warning('Cannot add sensitive word: table does not exist');
-            return;
-        }
-
         $existingWord = SensitiveWord::where('word', $word)->first();
         
         if (!$existingWord) {
@@ -250,11 +242,6 @@ class ContentFilterService
      */
     public function removeSensitiveWord(string $word): void
     {
-        if (!Schema::hasTable('sensitive_words')) {
-            Log::warning('Cannot remove sensitive word: table does not exist');
-            return;
-        }
-
         $sensitiveWord = SensitiveWord::where('word', $word)->first();
         
         if ($sensitiveWord) {
@@ -268,15 +255,10 @@ class ContentFilterService
     }
 
     /**
-     * Liệt kê tất cả từ khóa nhạy cảm
+     * Lấy danh sách từ khóa nhạy cảm
      */
-    public function listSensitiveWords()
+    public function getSensitiveWords(): array
     {
-        // Sửa lỗi: kiểm tra bảng tồn tại trước khi truy vấn
-        if (Schema::hasTable('sensitive_words')) {
-            return DB::table('sensitive_words')->pluck('word')->toArray();
-        }
-        // Nếu bảng chưa tồn tại, trả về mảng rỗng
-        return [];
+        return SensitiveWord::active()->pluck('word')->toArray();
     }
 }

@@ -4,7 +4,7 @@
             <div class="container py-lg-4">
                 <div class="text-txt">
                     <div class="right-side">
-                        <!-- <div class="row footer-about">
+                        <div class="row footer-about">
                             <div class="col-md-3 col-6 footer-img mb-lg-0 mb-4">
                                 <a href="movies.html"><img class="img-fluid" src="client_assets/assets/images/banner1.jpg" alt=""></a>
                             </div>
@@ -17,56 +17,51 @@
                             <div class="col-md-3 col-6 footer-img mb-lg-0 mb-4">
                                 <a href="movies.html"><img class="img-fluid" src="client_assets/assets/images/banner4.jpg" alt=""></a>
                             </div>
-                        </div> -->
+                        </div>
                         <div class="row footer-links">
 
 
                             <div class="col-md-3 col-sm-6 sub-two-right mt-5">
-                                <h6>CineVN</h6>
+                                <h6>Movies</h6>
                                 <ul>
-                                    <li><a href="#">Giới thiệu</a></li>
-                                    <li><a href="#">Tiện ích</a></li>
-                                    <li><a href="#">Quà tặng</a></li>
-                                    <li><a href="#">Tuyển dụng</a></li>
-                                    <li><a href="#">Liên hệ quảng cáo</a></li>
+                                    <li><a href="#">Movies</a></li>
+                                    <li><a href="#">Videos</a></li>
+                                    <li><a href="#">English Movies</a></li>
+                                    <li><a href="#">Tailor</a></li>
+                                    <li><a href="#">Upcoming Movies</a></li>
+                                    <li><a href="Contact_Us.html">Contact Us</a></li>
                                 </ul>
                             </div>
                             <div class="col-md-3 col-sm-6 sub-two-right mt-5">
-                                <h6>Điều khoản sử dụng</h6>
+                                <h6>Information</h6>
                                 <ul>
-                                    <li><a href="#">Điều khoản chung</a> </li>
-                                    <li><a href="about.html">Điều khoản Giao dịch</a> </li>
-                                    <li><a href="#">Chính sách thanh toán</a> </li>
-                                    <li><a href="#">Chính sách bảo mật</a> </li>
-                                    <li><a href="sign_in.html">Câu hỏi thường gặp</a></li>
+                                    <li><a href="index.html">Home</a> </li>
+                                    <li><a href="about.html">About</a> </li>
+                                    <li><a href="#">Tv Series</a> </li>
+                                    <li><a href="#">Blogs</a> </li>
+                                    <li><a href="sign_in.html">Login</a></li>
+                                    <li><a href="Contact_Us.html">Contact</a></li>
                                 </ul>
                             </div>
                             <div class="col-md-3 col-sm-6 sub-two-right mt-5">
-                                <h6>Chăm sóc khách hàng</h6>
+                                <h6>Locations</h6>
                                 <ul>
-                                    <li><a href="#">Hotline: 1900 6017</a></li>
-                                    <li><a href="movies.html">Giờ làm việc: 8:00 - 22:00 (Tất cả các ngày bao gồm cả Lễ Tết)</a></li>
-                                    <li><a href="movies.html">Email hỗ trợ: hoidap@cgv.vn</a></li>
-
+                                    <li><a href="movies.html">Asia</a></li>
+                                    <li><a href="movies.html">France</a></li>
+                                    <li><a href="movies.html">Taiwan</a></li>
+                                    <li><a href="movies.html">United States</a></li>
+                                    <li><a href="movies.html">Korea</a></li>
+                                    <li><a href="movies.html">United Kingdom</a></li>
                                 </ul>
                             </div>
                             <div class="col-md-3 col-sm-6 sub-two-right mt-5">
-                                <h6>Liên hệ với chúng tôi</h6>
-                                <p>Hãy kết nối với chúng tôi qua các mạng xã hội để nhận tin tức và hỗ trợ nhanh nhất.</p>
-                                <div class="social-icons mb-3">
-                                    <a href="" target="_blank" rel="noopener" aria-label="Facebook" class="me-2">
-                                        <span class="fa fa-facebook"></span>
-                                    </a>
-                                    <a href="" target="_blank" rel="noopener" aria-label="Twitter" class="me-2">
-                                        <span class="fa fa-twitter"></span>
-                                    </a>
-                                    <a href="" target="_blank" rel="noopener" aria-label="Instagram" class="me-2">
-                                        <span class="fa fa-instagram"></span>
-                                    </a>
-                                    <a href="" target="_blank" rel="noopener" aria-label="LinkedIn" class="me-2">
-                                        <span class="fa fa-linkedin"></span>
-                                    </a>
-                                </div>
+                                <h6>Newsletter</h6>
+                                <form action="#" class="subscribe mb-3" method="post">
+                                    <input type="email" name="email" placeholder="Your Email Address" required="">
+                                    <button><span class="fa fa-envelope-o"></span></button>
+                                </form>
+                                <p>Enter your email and receive the latest news, updates and special offers from us.
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -74,13 +69,34 @@
             </div>
         </div>
         </div>
+        <div class="below-section">
+            <div class="container">
+                <div class="copyright-footer">
+                    <div class="columns text-lg-left">
+                        <p>&copy; 2021 MyShowz. All rights reserved</p>
+                    </div>
+
+                    <ul class="social text-lg-right">
+                        <li><a href="#facebook"><span class="fa fa-facebook" aria-hidden="true"></span></a>
+                        </li>
+                        <li><a href="#linkedin"><span class="fa fa-linkedin" aria-hidden="true"></span></a>
+                        </li>
+                        <li><a href="#twitter"><span class="fa fa-twitter" aria-hidden="true"></span></a>
+                        </li>
+                        <li><a href="#google"><span class="fa fa-google-plus" aria-hidden="true"></span></a>
+                        </li>
+
+                    </ul>
+                </div>
+            </div>
+        </div>
         <!-- move top -->
         <button onclick="topFunction()" id="movetop" title="Go to top">
             <span class="fa fa-arrow-up" aria-hidden="true"></span>
         </button>
         <script>
             // When the user scrolls down 20px from the top of the document, show the button
-            window.onscroll = function() {
+            window.onscroll = function () {
                 scrollFunction()
             };
 
@@ -99,5 +115,6 @@
             }
         </script>
         <!-- /move top -->
+
     </section>
 </footer>

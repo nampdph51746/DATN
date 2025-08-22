@@ -6,6 +6,10 @@
 <div class="container">
     <h1>Chỉnh sửa trạng thái thanh toán #{{ $payment->id }}</h1>
 
+    @if(session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
+
     <form action="{{ route('admin.payments.updateStatus', $payment->id) }}" method="POST" class="mt-4">
         @csrf
         @method('PUT')

@@ -1,851 +1,669 @@
 @extends('layouts.admin.admin')
 
 @section('content')
-<div class="container-fluid px-4 py-5">
-    <!-- Alert Messages -->
-    @include('admin.partials.notifications')
-
-    <!-- Hero Header Section -->
-    <div class="row mb-5">
-        <div class="col-12">
-            <div class="hero-section position-relative overflow-hidden rounded-4 p-5">
-                <div class="hero-bg"></div>
-                <div class="hero-content position-relative z-2">
-                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-4">
-                        <div class="hero-text">
-                            <h1 class="display-5 fw-bold text-white mb-2">
-                                <i class="bi bi-ticket-perforated-fill me-3"></i> Quản lý đặt vé
-                            </h1>
-                            <p class="lead text-white-75 mb-0">Quản lý tập trung và tối ưu hóa đơn đặt vé</p>
-                        </div>
-                        <div class="hero-actions d-flex gap-3 flex-wrap">
-                            <button class="btn btn-outline-light rounded-pill px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#filterModal">
-                                <i class="bi bi-funnel-fill me-2"></i> Bộ lọc nâng cao
-                            </button>
-                            <button class="btn btn-blue rounded-pill px-4 shadow-sm">
-                                <i class="bi bi-download me-2"></i> Xuất báo cáo
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <div class="hero-pattern"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Stats Dashboard -->
-    <div class="row mb-5 g-4">
-        <div class="col-xl-3 col-lg-6">
-            <div class="stats-card h-100">
-                <div class="stats-card-body">
-                    <div class="stats-icon bg-blue">
-                        <i class="bi bi-ticket-perforated-fill fs-2"></i>
-                    </div>
-                    <div class="stats-content">
-                        <h3 class="stats-number">{{ $bookings->total() }}</h3>
-                        <p class="stats-label">Tổng đơn đặt</p>
-                    </div>
-                </div>
-                <div class="stats-overlay"></div>
-            </div>
-        </div>
-        <div class="col-xl-3 col-lg-6">
-            <div class="stats-card h-100">
-                <div class="stats-card-body">
-                    <div class="stats-icon bg-success">
-                        <i class="bi bi-check-circle-fill fs-2"></i>
-                    </div>
-                    <div class="stats-content">
-                        <h3 class="stats-number">{{ $bookings->where('payment_status', 'paid')->count() }}</h3>
-                        <p class="stats-label">Đã thanh toán</p>
-                    </div>
-                </div>
-                <div class="stats-overlay"></div>
-            </div>
-        </div>
-        <div class="col-xl-3 col-lg-6">
-            <div class="stats-card h-100">
-                <div class="stats-card-body">
-                    <div class="stats-icon bg-warning">
-                        <i class="bi bi-clock-fill fs-2"></i>
-                    </div>
-                    <div class="stats-content">
-                        <h3 class="stats-number">{{ $bookings->where('payment_status', 'pending')->count() }}</h3>
-                        <p class="stats-label">Chờ thanh toán</p>
-                        <div class="stats-trend">
-                        </div>
-                    </div>
-                </div>
-                <div class="stats-overlay"></div>
-            </div>
-        </div>
-        <div class="col-xl-3 col-lg-6">
-            <div class="stats-card h-100">
-                <div class="stats-card-body">
-                    <div class="stats-icon bg-danger">
-                        <i class="bi bi-x-circle-fill fs-2"></i>
-                    </div>
-                    <div class="stats-content">
-                        <h3 class="stats-number">{{ $bookings->where('payment_status', 'failed')->count() }}</h3>
-                        <p class="stats-label">Thất bại</p>
-                        <div class="stats-trend">
-                        </div>
-                    </div>
-                </div>
-                <div class="stats-overlay"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Search & Filter Section -->
-    <div class="row mb-5">
-        <div class="col-12">
-            <div class="filter-section rounded-4 p-4 shadow-lg">
-                <form action="{{ route('admin.bookings.index') }}" method="GET" class="filter-form">
-                    <div class="row align-items-center g-3">
-                        <div class="col-lg-4 col-md-6">
-                            <div class="search-input-group">
-                                <i class="bi bi-search search-icon"></i>
-                                <input type="text" 
-                                       name="search" 
-                                       value="{{ request('search') }}" 
-                                       class="search-input"
-                                       placeholder="Tìm theo mã đặt, email, số điện thoại...">
-                            </div>
-                        </div>
-                        <div class="col-lg-3 col-md-6">
-                            <div class="filter-group">
-                                <label class="filter-label">
-                                    <i class="bi bi-funnel-fill me-2"></i> Trạng thái thanh toán
-                                </label>
-                                <select name="payment_status" class="filter-select">
-                                    <option value="">-- Tất cả --</option>
-                                    <option value="paid" {{ request('payment_status') == 'paid' ? 'selected' : '' }}>Đã thanh toán</option>
-                                    <option value="pending" {{ request('payment_status') == 'pending' ? 'selected' : '' }}>Chờ thanh toán</option>
-                                    <option value="failed" {{ request('payment_status') == 'failed' ? 'selected' : '' }}>Thất bại</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-lg-3 col-md-6">
-                            <div class="filter-group">
-                                <label class="filter-label">
-                                    <i class="bi bi-calendar-date me-2"></i> Ngày đặt
-                                </label>
-                                <input type="date" name="date" value="{{ request('date') }}" class="filter-select">
-                            </div>
-                        </div>
-                        <div class="col-lg-2 col-md-6">
-                            <div class="d-flex gap-2 flex-wrap">
-                                <button type="submit" class="btn btn-blue rounded-pill px-4 shadow-sm">
-                                    <i class="bi bi-search me-2"></i> Tìm
-                                </button>
-                                @if(request()->anyFilled(['search', 'payment_status', 'date']))
-                                    <a href="{{ route('admin.bookings.index') }}" class="btn btn-outline-secondary rounded-pill px-3 shadow-sm">
-                                        <i class="bi bi-x-circle-fill"></i>
-                                    </a>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Bookings Grid -->
-    <div class="row g-4">
-        @forelse($bookings as $booking)
-            <div class="col-xl-6 col-lg-12">
-                <div class="booking-card h-100">
-                    <div class="booking-card-header">
-                        <div class="booking-info-main">
-                            <div class="booking-code">
-                                <i class="bi bi-qr-code-scan text-blue"></i>
-                                <span class="code-text">#{{ $booking->booking_code }}</span>
-                            </div>
-                            <div class="booking-status">
-                                @if($booking->payment_status == 'paid')
-                                    <span class="status-badge status-paid">
-                                        <i class="bi bi-check-circle-fill me-1"></i> Đã thanh toán
-                                    </span>
-                                @elseif($booking->payment_status == 'pending')
-                                    <span class="status-badge status-pending">
-                                        <i class="bi bi-clock-fill me-1"></i> Chờ thanh toán
-                                    </span>
-                                @else
-                                    <span class="status-badge status-failed">
-                                        <i class="bi bi-x-circle-fill me-1"></i> Thất bại
-                                    </span>
-                                @endif
-                            </div>
-                        </div>
-                        <div class="booking-amount">
-                            <span class="amount-label">Tổng tiền</span>
-                            <span class="amount-value">{{ number_format($booking->total_amount) }}đ</span>
-                        </div>
-                    </div>
-                    
-                    <div class="booking-card-body">
-                        <div class="customer-info">
-                            <div class="customer-avatar">
-                                <i class="bi bi-person-circle"></i>
-                            </div>
-                            <div class="customer-details">
-                                <h6 class="customer-name">{{ $booking->user_name ?? 'Khách hàng' }}</h6>
-                                <div class="customer-contact">
-                                    @if($booking->user_email)
-                                        <span class="contact-item">
-                                            <i class="bi bi-envelope-fill text-muted"></i>
-                                            {{ $booking->user_email }}
-                                        </span>
-                                    @endif
-                                    @if($booking->user_phone)
-                                        <span class="contact-item">
-                                            <i class="bi bi-telephone-fill text-muted"></i>
-                                            {{ $booking->user_phone }}
-                                        </span>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="movie-info">
-                            <div class="movie-poster">
-                                @if(isset($booking->showtime->movie->poster))
-                                    <img src="{{ asset($booking->showtime->movie->poster) }}" alt="Movie poster">
-                                @else
-                                    <div class="poster-placeholder">
-                                        <i class="bi bi-film fs-3"></i>
-                                    </div>
-                                @endif
-                            </div>
-                            <div class="movie-details">
-                                <h6 class="movie-title">{{ $booking->showtime->movie->title ?? 'Phim không xác định' }}</h6>
-                                <div class="showtime-info">
-                                    <div class="info-item">
-                                        <i class="bi bi-calendar-date text-blue"></i>
-                                        <span>{{ $booking->showtime->start_time ?? 'N/A' }}</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <i class="bi bi-geo-alt-fill text-orange"></i>
-                                        <span>{{ $booking->showtime->room->cinema->name ?? 'N/A' }}</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <i class="bi bi-door-open-fill text-success"></i>
-                                        <span>{{ $booking->showtime->room->name ?? 'N/A' }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="tickets-summary">
-                            <div class="tickets-count">
-                                <i class="bi bi-ticket-perforated-fill text-purple"></i>
-                                <span>{{ $booking->tickets->count() }} vé</span>
-                            </div>
-                            <div class="seats-list">
-                                <span class="seats-label">Ghế:</span>
-                                <span class="seats-numbers">
-                                    {{ $booking->tickets->pluck('seat_number')->implode(', ') }}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="booking-card-footer">
-                        <div class="booking-meta">
-                            <small class="text-muted">
-                                <i class="bi bi-clock-history me-1"></i>
-                                {{ $booking->created_at->format('d/m/Y H:i') }}
-                            </small>
-                        </div>
-                        <div class="action-buttons">
-                            <a href="{{ route('admin.bookings.show', $booking->id) }}" 
-                               class="btn btn-outline-blue btn-sm rounded-pill shadow-sm" 
-                               title="Xem chi tiết" data-bs-toggle="tooltip">
-                                <i class="bi bi-eye-fill"></i>
-                            </a>
-                            <a href="{{ route('admin.bookings.edit', $booking->id) }}" 
-                               class="btn btn-outline-warning btn-sm rounded-pill shadow-sm" 
-                               title="Chỉnh sửa" data-bs-toggle="tooltip">
-                                <i class="bi bi-pencil-square"></i>
-                            </a>
-                            <a href="{{ route('admin.bookings.print', $booking->id) }}" 
-                               class="btn btn-outline-success btn-sm rounded-pill shadow-sm" 
-                               title="In vé" data-bs-toggle="tooltip" target="_blank">
-                                <i class="bi bi-printer-fill"></i>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        @empty
-            <div class="col-12">
-                <div class="empty-state text-center py-5 rounded-4 shadow-lg">
-                    <div class="empty-icon">
-                        <i class="bi bi-ticket-perforated-fill fs-1 text-blue"></i>
-                    </div>
-                    <h4 class="empty-title">Chưa có đơn đặt vé nào</h4>
-                    <p class="empty-description">Các đơn đặt vé sẽ hiển thị tại đây khi có khách hàng thực hiện đặt vé</p>
-                </div>
-            </div>
-        @endforelse
-    </div>
-
-    <!-- Pagination -->
-    @if($bookings->hasPages())
-        <div class="row mt-5">
-            <div class="col-12">
-                <div class="pagination-wrapper rounded-4 p-4 shadow-lg">
-                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-                        <div class="pagination-info">
-                            <span class="text-muted">
-                                Hiển thị {{ $bookings->firstItem() }}-{{ $bookings->lastItem() }} 
-                                trong tổng {{ $bookings->total() }} đơn đặt vé
-                            </span>
-                        </div>
-                        <div class="pagination-links">
-                            {{ $bookings->appends(request()->query())->links('pagination::bootstrap-5') }}
-                        </div>
-                    </div>
-                </div>
-            </div>
+<div class="container-fluid">
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
+
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6">
+            <div class="card stats-card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <h5 class="card-title text-muted mb-2 fs-14 text-uppercase fw-semibold">Chờ xác nhận</h5>
+                            <h3 class="mb-0 fw-bold text-dark">{{ $bookings->where('status', 'pending')->count() }}</h3>
+                            <small class="text-muted">đơn đặt vé</small>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <div class="avatar-lg bg-warning bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center">
+                                <iconify-icon icon="solar:clock-circle-bold" class="fs-28 text-warning"></iconify-icon>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6">
+            <div class="card stats-card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <h5 class="card-title text-muted mb-2 fs-14 text-uppercase fw-semibold">Đã xác nhận</h5>
+                            <h3 class="mb-0 fw-bold text-dark">{{ $bookings->where('status', 'confirmed')->count() }}</h3>
+                            <small class="text-muted">đơn đặt vé</small>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <div class="avatar-lg bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center">
+                                <iconify-icon icon="solar:clipboard-check-bold" class="fs-28 text-success"></iconify-icon>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6">
+            <div class="card stats-card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <h5 class="card-title text-muted mb-2 fs-14 text-uppercase fw-semibold">Đã hủy</h5>
+                            <h3 class="mb-0 fw-bold text-dark">{{ $bookings->where('status', 'cancelled')->count() }}</h3>
+                            <small class="text-muted">đơn đặt vé</small>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <div class="avatar-lg bg-danger bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center">
+                                <iconify-icon icon="solar:cart-cross-bold" class="fs-28 text-danger"></iconify-icon>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6">
+            <div class="card stats-card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <h5 class="card-title text-muted mb-2 fs-14 text-uppercase fw-semibold">Tổng doanh thu</h5>
+                            <h3 class="mb-0 fw-bold text-primary">
+                                {{ number_format($bookings->where('status', 'confirmed')->sum('final_amount') / 1000000, 1) }}M
+                            </h3>
+                            <small class="text-muted">VNĐ</small>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <div class="avatar-lg bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center">
+                                <iconify-icon icon="solar:dollar-minimalistic-bold" class="fs-28 text-primary"></iconify-icon>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Data Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header">
+                    <div class="row align-items-center g-3">
+                        <div class="col-md-4">
+                            <h4 class="card-title mb-0 fw-semibold">🎫 Danh sách đơn đặt vé</h4>
+                            <small class="text-muted" style="color: #666666;">Quản lý tất cả đơn đặt vé trong hệ thống</small>
+                        </div>
+                        <div class="col-md-8">
+                            <form method="GET" class="d-flex flex-wrap gap-2 justify-content-md-end">
+                                <div class="position-relative">
+                                    <input type="search" name="search" class="form-control form-control-sm ps-4 pe-3" 
+                                           style="min-width: 280px;" placeholder="Tìm mã đặt vé, tên khách hàng..." 
+                                           autocomplete="off" value="{{ request('search') }}">
+                                    <iconify-icon icon="solar:magnifer-linear"
+                                        class="position-absolute top-50 start-0 translate-middle-y ms-2 text-muted"
+                                        style="font-size: 14px;"></iconify-icon>
+                                </div>
+                                
+                                <select name="status" class="form-select form-select-sm" style="width:140px;">
+                                    <option value="">Tất cả trạng thái</option>
+                                    <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Chờ xác nhận</option>
+                                    <option value="confirmed" {{ request('status') == 'confirmed' ? 'selected' : '' }}>Đã xác nhận</option>
+                                    <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>Đã hủy</option>
+                                </select>
+                                
+                                    <button type="submit" class="btn btn-sm btn-primary">
+                                        <i class="bx bx-search"></i>
+                                    </button>
+                                
+                                <!-- <a href="{{ route('admin.bookings.index') }}" class="btn btn-sm btn-outline-secondary">
+                                    <i class="bi bi-arrow-clockwise"></i>
+                                </a> -->
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0 table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="px-4 py-3" style="width: 80px;">
+                                        <span class="text-muted fw-semibold fs-12 text-uppercase">ID</span>
+                                    </th>
+                                    <th class="px-4 py-3" style="width: 180px;">
+                                        <span class="text-muted fw-semibold fs-12 text-uppercase">Mã đặt vé</span>
+                                    </th>
+                                    <th class="px-4 py-3" style="width: 200px;">
+                                        <span class="text-muted fw-semibold fs-12 text-uppercase">Khách hàng</span>
+                                    </th>
+                                    <th class="px-4 py-3" style="width: 200px;">
+                                        <span class="text-muted fw-semibold fs-12 text-uppercase">Phim & Suất chiếu</span>
+                                    </th>
+                                    <th class="px-4 py-3" style="width: 120px;">
+                                        <span class="text-muted fw-semibold fs-12 text-uppercase">Số vé</span>
+                                    </th>
+                                    <th class="px-4 py-3" style="width: 140px;">
+                                        <span class="text-muted fw-semibold fs-12 text-uppercase">Tổng tiền</span>
+                                    </th>
+                                    <th class="px-4 py-3" style="width: 120px;">
+                                        <span class="text-muted fw-semibold fs-12 text-uppercase">Trạng thái</span>
+                                    </th>
+                                    <th class="px-4 py-3 text-center" style="width: 140px;">
+                                        <span class="text-muted fw-semibold fs-12 text-uppercase">Hành động</span>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($bookings as $booking)
+                                    @php
+                                        $firstTicket = $booking->tickets->first();
+                                        $showtime = $firstTicket ? $firstTicket->showtime : null;
+                                        $movie = $showtime ? $showtime->movie : null;
+                                    @endphp
+                                    <tr class="border-bottom">
+                                        <td class="px-4 py-3">
+                                            <span class="text-muted fw-medium">#{{ $booking->id }}</span>
+                                        </td>
+                                        <td class="px-4 py-3">
+                                            <div class="d-flex align-items-center">
+                                                <div class="flex-shrink-0 me-3">
+                                                    <div class="avatar-sm bg-light rounded d-flex align-items-center justify-content-center">
+                                                        <iconify-icon icon="solar:ticket-bold" class="fs-20 text-primary"></iconify-icon>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <h6 class="mb-0 fw-semibold">{{ $booking->booking_code }}</h6>
+                                                    <small class="text-muted">{{ $booking->created_at->format('d/m/Y H:i') }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-4 py-3">
+                                            <div>
+                                                <h6 class="mb-1 fw-medium">{{ $booking->user->name ?? 'N/A' }}</h6>
+                                                <small class="text-muted">{{ $booking->user->email ?? 'N/A' }}</small>
+                                            </div>
+                                        </td>
+                                        <td class="px-4 py-3">
+                                            @if($movie && $showtime)
+                                                <div>
+                                                    <h6 class="mb-1 fw-medium text-truncate" style="max-width: 180px;" title="{{ $movie->name }}">
+                                                        {{ $movie->name }}
+                                                    </h6>
+                                                    <small class="text-muted">
+                                                        {{ $showtime->start_time->format('d/m H:i') }} - {{ $showtime->room->cinema->name }}
+                                                    </small>
+                                                </div>
+                                            @else
+                                                <span class="text-muted">N/A</span>
+                                            @endif
+                                        </td>
+                                        <td class="px-4 py-3">
+                                            <div class="text-center">
+                                                <span class="badge bg-info-subtle text-info fs-13 px-3 py-2">
+                                                    {{ $booking->tickets->count() }} vé
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td class="px-4 py-3">
+                                            <div>
+                                                <h6 class="mb-0 fw-bold text-success">
+                                                    {{ number_format($booking->final_amount, 0, ',', '.') }}đ
+                                                </h6>
+                                                @if($booking->discount_amount > 0)
+                                                    <small class="text-muted">
+                                                        Giảm: {{ number_format($booking->discount_amount, 0, ',', '.') }}đ
+                                                    </small>
+                                                @endif
+                                            </div>
+                                        </td>
+                                        <td class="px-4 py-3">
+                                            @switch($booking->status?->value)
+                                                @case('pending')
+                                                    <span class="badge bg-warning-subtle text-warning px-3 py-2 fs-12 fw-medium">
+                                                        <i class="bi bi-clock me-1"></i>Chờ xác nhận
+                                                    </span>
+                                                @break
+                                                @case('confirmed')
+                                                    <span class="badge bg-success-subtle text-success px-3 py-2 fs-12 fw-medium">
+                                                        <i class="bi bi-check-circle me-1"></i>Đã xác nhận
+                                                    </span>
+                                                @break
+                                                @case('cancelled')
+                                                    <span class="badge bg-danger-subtle text-danger px-3 py-2 fs-12 fw-medium">
+                                                        <i class="bi bi-x-circle me-1"></i>Đã hủy
+                                                    </span>
+                                                @break
+                                                @default
+                                                    <span class="badge bg-secondary-subtle text-secondary px-3 py-2 fs-12 fw-medium">
+                                                        Không xác định
+                                                    </span>
+                                            @endswitch
+                                        </td>
+                                        <td class="px-4 py-3">
+                                            <div class="d-flex gap-1 justify-content-center">
+                                                <a href="{{ route('admin.bookings.show', $booking->id) }}"
+                                                    class="btn btn-light btn-sm" title="Xem chi tiết">
+                                                    <iconify-icon icon="solar:eye-bold" class="fs-16"></iconify-icon>
+                                                </a>
+                                                @php
+                                                    $showtimeStart = $firstTicket ? $firstTicket->showtime->start_time : null;
+                                                @endphp
+                                                <a href="{{ route('admin.bookings.print', $booking->booking_code) }}" target="_blank"
+                                                    class="btn btn-primary btn-sm print-ticket-btn"
+                                                    data-showtime-start="{{ $showtimeStart ? $showtimeStart->toISOString() : '' }}"
+                                                    data-booking-code="{{ $booking->booking_code }}"
+                                                    title="In vé">
+                                                    <iconify-icon icon="solar:printer-bold" class="fs-16"></iconify-icon>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                                @if($bookings->isEmpty())
+                                    <tr>
+                                        <td colspan="8" class="text-center py-5">
+                                            <div class="d-flex flex-column align-items-center">
+                                                <iconify-icon icon="solar:ticket-broken" class="fs-48 text-muted mb-3"></iconify-icon>
+                                                <h6 class="text-muted">Không tìm thấy đơn đặt vé nào</h6>
+                                                <small class="text-muted">Thử thay đổi bộ lọc hoặc tìm kiếm khác</small>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endif
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer bg-white border-top-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="text-muted">
+                            Hiển thị {{ $bookings->firstItem() ?? 0 }} - {{ $bookings->lastItem() ?? 0 }} trong {{ $bookings->total() }} kết quả
+                        </div>
+                        <div>
+                            {{ $bookings->withQueryString()->links('pagination::bootstrap-5') }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+@endsection
 
+@section('styles')
 <style>
-:root {
-    --blue-primary: #3B82F6;
-    --blue-secondary: #60A5FA;
-    --blue-light: #93C5FD;
-    --blue-dark: #1D4ED8;
-    --blue-subtle: rgba(59, 130, 246, 0.1);
-    --purple: #6B46C1;
-    --orange: #F59E0B;
-}
-
-/* Hero Section */
-.hero-section {
-    background: linear-gradient(135deg, var(--blue-primary) 0%, var(--blue-dark) 100%);
-    min-height: 180px;
-    position: relative;
-    overflow: hidden;
-    border-radius: 1rem;
-}
-
-.hero-bg {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="12" height="12" patternUnits="userSpaceOnUse"><path d="M 12 0 L 0 0 0 12" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
-    opacity: 0.9;
-}
-
-.hero-pattern {
-    position: absolute;
-    top: -30%;
-    right: -15%;
-    width: 250px;
-    height: 250px;
-    background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
-    border-radius: 50%;
-}
-
-.z-2 {
-    z-index: 2;
-}
-
-.text-white-75 {
-    color: rgba(255, 255, 255, 0.75) !important;
-}
-
-/* Stats Cards */
+/* Statistics Cards */
 .stats-card {
-    background: linear-gradient(145deg, #ffffff, #f9fafb);
-    border-radius: 1rem;
-    border: 1px solid var(--blue-subtle);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
     transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
+    border-radius: 12px;
 }
 
 .stats-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 12px 30px rgba(59, 130, 246, 0.15);
-}
-
-.stats-card-body {
-    padding: 1.5rem;
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-    position: relative;
-    z-index: 2;
-}
-
-.stats-icon {
-    width: 3.5rem;
-    height: 3.5rem;
-    border-radius: 0.75rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 1.5rem;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-}
-
-.stats-icon.bg-blue {
-    background: linear-gradient(135deg, var(--blue-primary), var(--blue-dark));
-}
-
-.stats-number {
-    font-size: 2.25rem;
-    font-weight: 700;
-    color: #111827;
-    margin-bottom: 0.25rem;
-}
-
-.stats-label {
-    font-size: 0.875rem;
-    color: #6b7280;
-    font-weight: 500;
-}
-
-.stats-trend {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.85rem;
-    font-weight: 600;
-}
-
-.stats-overlay {
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 80px;
-    height: 80px;
-    background: linear-gradient(135deg, var(--blue-subtle), transparent);
-    border-radius: 50%;
-    transform: translate(20px, -20px);
-}
-
-/* Filter Section */
-.filter-section {
-    background: linear-gradient(145deg, #ffffff, #f9fafb);
-    border: 1px solid var(--blue-subtle);
-    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.1);
-}
-
-.search-input-group {
-    position: relative;
-}
-
-.search-icon {
-    position: absolute;
-    left: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--blue-primary);
-    font-size: 1rem;
-}
-
-.search-input {
-    padding: 0.75rem 1rem 0.75rem 3rem;
-    border: 2px solid var(--blue-subtle);
-    border-radius: 2rem;
-    font-size: 0.95rem;
-    transition: all 0.3s ease;
-    background: white;
-}
-
-.search-input:focus {
-    border-color: var(--blue-primary);
-    box-shadow: 0 0 0 3px var(--blue-subtle);
-    outline: none;
-}
-
-.filter-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.filter-label {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: #374151;
-}
-
-.filter-select {
-    padding: 0.75rem 1rem;
-    border: 2px solid var(--blue-subtle);
-    border-radius: 1rem;
-    font-size: 0.95rem;
-    background: white;
-    transition: all 0.3s ease;
-}
-
-.filter-select:focus {
-    border-color: var(--blue-primary);
-    box-shadow: 0 0 0 3px var(--blue-subtle);
-    outline: none;
-}
-
-.btn-blue {
-    background: linear-gradient(135deg, var(--blue-primary), var(--blue-dark));
-    border: none;
-    color: white;
-    font-weight: 600;
-    transition: all 0.3s ease;
-}
-
-.btn-blue:hover {
-    background: linear-gradient(135deg, var(--blue-dark), var(--blue-primary));
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
-    color: white;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1) !important;
 }
 
-/* Booking Cards */
-.booking-card {
-    background: white;
-    border-radius: 1rem;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
-    border: 1px solid var(--blue-subtle);
-    transition: all 0.3s ease;
+.avatar-lg {
+    width: 4rem;
+    height: 4rem;
+}
+
+/* Enhanced table styling */
+.table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.table th {
+    background: #f8f9fa;
+    font-weight: 600;
+    color: #6c757d;
+    border-top: none;
+    border-bottom: 1px solid #dee2e6;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.table td {
+    vertical-align: middle;
+    border-top: 1px solid #f1f3f4;
+    border-bottom: none;
+}
+
+.table tbody tr {
+    transition: all 0.2s ease;
+}
+
+.table tbody tr:hover {
+    background-color: #f8f9ff;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+/* Card enhancements */
+.card {
+    border: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    border-radius: 12px;
     overflow: hidden;
 }
 
-.booking-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 12px 30px rgba(59, 130, 246, 0.15);
+.card-header {
+    background: #ffffff;
+    border-bottom: 1px solid #f1f3f4;
+    padding: 1.5rem;
 }
 
-.booking-card-header {
-    background: linear-gradient(145deg, #f8fafc, #f1f5f9);
-    padding: 1.25rem;
-    border-bottom: 1px solid #e2e8f0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+/* Form controls */
+.form-control-sm, .form-select-sm {
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+    transition: all 0.2s ease;
+    font-size: 0.875rem;
 }
 
-.booking-info-main {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
+.form-control-sm:focus, .form-select-sm:focus {
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
 }
 
-.booking-code {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-weight: 700;
-    color: #111827;
-    font-size: 1.1rem;
+/* Button enhancements */
+.btn-sm {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.825rem;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.2s ease;
 }
 
-.status-badge {
-    padding: 0.5rem 1rem;
-    border-radius: 1.5rem;
-    font-size: 0.85rem;
-    font-weight: 600;
+.btn-primary {
+    background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+    border: none;
+}
+
+.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+}
+
+.btn-light {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    color: #6c757d;
+}
+
+.btn-light:hover {
+    background: #e9ecef;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.btn-outline-secondary {
+    border-color: #e9ecef;
+    color: #6c757d;
+}
+
+.btn-outline-secondary:hover {
+    background: #f8f9fa;
+    border-color: #dee2e6;
+    transform: translateY(-1px);
+}
+
+/* Badge styling */
+.badge {
+    font-size: 0.75rem;
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    font-weight: 500;
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
-    backdrop-filter: blur(8px);
 }
 
-.status-paid {
-    background: rgba(16, 185, 129, 0.1);
-    color: #10B981;
-    border: 1px solid rgba(16, 185, 129, 0.2);
+/* Status badges - keeping original colors */
+.bg-warning-subtle {
+    background: rgba(255, 193, 7, 0.1) !important;
+    color: #ff6b35 !important;
 }
 
-.status-pending {
-    background: rgba(245, 158, 11, 0.1);
-    color: #F59E0B;
-    border: 1px solid rgba(245, 158, 11, 0.2);
+.bg-success-subtle {
+    background: rgba(25, 135, 84, 0.1) !important;
+    color: #198754 !important;
 }
 
-.status-failed {
-    background: rgba(239, 68, 68, 0.1);
-    color: #EF4444;
-    border: 1px solid rgba(239, 68, 68, 0.2);
+.bg-danger-subtle {
+    background: rgba(220, 53, 69, 0.1) !important;
+    color: #dc3545 !important;
 }
 
-.booking-amount {
-    text-align: right;
+.bg-info-subtle {
+    background: rgba(13, 202, 240, 0.1) !important;
+    color: #0dcaf0 !important;
 }
 
-.amount-label {
-    display: block;
-    font-size: 0.85rem;
-    color: #6b7280;
-    margin-bottom: 0.25rem;
+.bg-secondary-subtle {
+    background: rgba(108, 117, 125, 0.1) !important;
+    color: #6c757d !important;
 }
 
-.amount-value {
-    font-size: 1.4rem;
-    font-weight: 700;
-    color: var(--blue-primary);
-}
-
-.booking-card-body {
-    padding: 1.25rem;
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
-}
-
-.customer-info {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.customer-avatar {
-    width: 2.5rem;
-    height: 2.5rem;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--blue-light), var(--blue-secondary));
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.25rem;
-    color: white;
-}
-
-.customer-name {
-    font-weight: 700;
-    color: #111827;
-    margin-bottom: 0.5rem;
-}
-
-.customer-contact {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-}
-
-.contact-item {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.85rem;
-    color: #6b7280;
-}
-
-.movie-info {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.movie-poster {
-    width: 3.5rem;
-    height: 5rem;
-    border-radius: 0.5rem;
-    overflow: hidden;
-    flex-shrink: 0;
-}
-
-.movie-poster img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.4s ease;
-}
-
-.booking-card:hover .movie-poster img {
-    transform: scale(1.1);
-}
-
-.poster-placeholder {
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, #e5e7eb, #d1d5db);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #9ca3af;
-}
-
-.movie-title {
-    font-weight: 700;
-    color: #111827;
-    margin-bottom: 0.5rem;
-}
-
-.showtime-info {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.info-item {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.85rem;
-    color: #6b7280;
-}
-
-.tickets-summary {
-    background: var(--blue-subtle);
-    border-radius: 0.75rem;
-    padding: 0.75rem;
-    border: 1px solid var(--blue-subtle);
-}
-
-.tickets-count {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-weight: 600;
-    color: #111827;
-    margin-bottom: 0.5rem;
-}
-
-.seats-list {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.85rem;
-}
-
-.seats-label {
-    color: #6b7280;
-    font-weight: 500;
-}
-
-.seats-numbers {
-    color: #111827;
-    font-weight: 600;
-}
-
-.booking-card-footer {
-    padding: 1.25rem;
-    border-top: 1px solid #f3f4f6;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.action-buttons {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.btn-outline-blue {
-    border-color: var(--blue-primary);
-    color: var(--blue-primary);
-}
-
-.btn-outline-blue:hover {
-    background: var(--blue-primary);
-    border-color: var(--blue-primary);
-    color: white;
-}
-
-/* Empty State */
-.empty-state {
-    background: linear-gradient(145deg, #ffffff, #f9fafb);
-    border: 1px solid var(--blue-subtle);
-    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.1);
-}
-
-.empty-icon {
-    font-size: 3.5rem;
-    color: var(--blue-primary);
-    margin-bottom: 1rem;
-}
-
-.empty-title {
-    color: #111827;
-    margin-bottom: 0.75rem;
-}
-
-.empty-description {
-    color: #6b7280;
+/* Alert styling */
+.alert {
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     margin-bottom: 1.5rem;
 }
 
-/* Pagination */
-.pagination-wrapper {
-    background: linear-gradient(145deg, #ffffff, #f9fafb);
-    border: 1px solid var(--blue-subtle);
-    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.1);
+.alert-success {
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    color: #065f46;
 }
 
-/* Animations */
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+.alert-danger {
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    color: #991b1b;
 }
 
-.stats-card, .booking-card, .filter-section, .pagination-wrapper, .empty-state {
-    animation: fadeIn 0.5s ease-out;
+/* Avatar styling */
+.avatar-sm {
+    width: 2.5rem;
+    height: 2.5rem;
 }
 
-/* Responsive */
+/* Empty state */
+.table tbody tr td iconify-icon {
+    opacity: 0.3;
+}
+
+/* Responsive improvements */
 @media (max-width: 768px) {
-    .hero-section {
-        padding: 1.5rem;
+    .stats-card .card-body {
+        padding: 1.5rem 1rem;
     }
     
-    .hero-text h1 {
-        font-size: 1.75rem;
+    .avatar-lg {
+        width: 3rem;
+        height: 3rem;
     }
     
-    .hero-actions {
-        flex-direction: column;
-        width: 100%;
-        gap: 1rem;
+    .table td, .table th {
+        padding: 0.75rem 0.5rem;
+        font-size: 0.8rem;
     }
     
-    .stats-card-body {
-        padding: 1.25rem;
-        flex-direction: column;
-        text-align: center;
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
     }
     
-    .filter-section {
-        padding: 1.25rem;
+    .card-header {
+        padding: 1rem;
     }
     
-    .booking-card-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1rem;
+    .badge {
+        font-size: 0.65rem;
+        padding: 0.3rem 0.6rem;
     }
-    
-    .movie-info {
-        flex-direction: column;
-        align-items: flex-start;
-    }
+}
+
+/* Loading state */
+.table tbody tr.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* Truncate text */
+.text-truncate {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 </style>
+@endsection
 
-<!-- Bootstrap Icons CDN -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-
+@push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    // Initialize tooltips
-    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
-    tooltipTriggerList.forEach(tooltipTriggerEl => {
-        new bootstrap.Tooltip(tooltipTriggerEl, {
-            placement: 'top',
-            trigger: 'hover'
+document.addEventListener('DOMContentLoaded', function() {
+    const printButtons = document.querySelectorAll('.print-ticket-btn');
+    
+    // Function để xử lý click event cho nút bị vô hiệu hóa
+    function handleDisabledButtonClick(e, message) {
+        e.preventDefault();
+        e.stopPropagation();
+        Swal.fire({
+            icon: 'warning',
+            title: 'Không thể in vé',
+            text: message,
+            confirmButtonText: 'Đã hiểu',
+            confirmButtonColor: '#3085d6'
         });
+        return false;
+    }
+    
+    printButtons.forEach(button => {
+        const showtimeStartStr = button.getAttribute('data-showtime-start');
+        const bookingCode = button.getAttribute('data-booking-code');
+        
+        if (!showtimeStartStr) {
+            // Nếu không có thời gian suất chiếu, vô hiệu hóa nút
+            button.disabled = true;
+            button.classList.remove('btn-primary');
+            button.classList.add('btn-secondary');
+            button.title = 'Không tìm thấy thông tin suất chiếu';
+            button.removeAttribute('href');
+            button.onclick = function(e) {
+                return handleDisabledButtonClick(e, 'Không tìm thấy thông tin suất chiếu cho đơn đặt vé này.');
+            };
+            return;
+        }
+        
+        const showtimeStart = new Date(showtimeStartStr);
+        const currentTime = new Date();
+        
+        // Kiểm tra nếu suất chiếu đã bắt đầu
+        // if (currentTime >= showtimeStart) {
+        //     button.disabled = true;
+        //     button.classList.remove('btn-primary');
+        //     button.classList.add('btn-secondary');
+        //     button.title = 'Không thể in vé sau khi suất chiếu đã bắt đầu. Suất chiếu: ' + showtimeStart.toLocaleString('vi-VN');
+        //     button.removeAttribute('href');
+        //     button.onclick = function(e) {
+        //         return handleDisabledButtonClick(e, 'Không thể in vé sau khi suất chiếu đã bắt đầu.\nSuất chiếu: ' + showtimeStart.toLocaleString('vi-VN'));
+        //     };
+        //     return;
+        // }
+        
+        // Kiểm tra nếu còn NHIỀU HƠN 1 tiếng trước suất chiếu (không cho phép in)
+        // const oneHourBeforeShowtime = new Date(showtimeStart.getTime() - (60 * 60 * 1000));
+        // if (currentTime < oneHourBeforeShowtime) {
+        //     button.disabled = true;
+        //     button.classList.remove('btn-primary');
+        //     button.classList.add('btn-warning');
+        //     button.title = 'Vé chỉ có thể in trong vòng 1 tiếng trước suất chiếu. Suất chiếu: ' + showtimeStart.toLocaleString('vi-VN');
+        //     button.removeAttribute('href');
+        //     button.onclick = function(e) {
+        //         return handleDisabledButtonClick(e, 'Vé chỉ có thể in trong vòng 1 tiếng trước suất chiếu.\nSuất chiếu: ' + showtimeStart.toLocaleString('vi-VN'));
+        //     };
+        //     return;
+        // }
+        
+        // Nếu trong khoảng thời gian cho phép in vé (từ 1 tiếng trước suất chiếu đến khi suất chiếu bắt đầu)
+        button.title = 'In vé (Suất chiếu: ' + showtimeStart.toLocaleString('vi-VN') + ')';
     });
+    
+    // Cập nhật trạng thái nút mỗi phút
+    setInterval(() => {
+        printButtons.forEach(button => {
+            const showtimeStartStr = button.getAttribute('data-showtime-start');
+            const originalHref = button.getAttribute('href') || button.dataset.originalHref;
+            
+            if (!showtimeStartStr) return;
+            
+            const showtimeStart = new Date(showtimeStartStr);
+            const currentTime = new Date();
+            
+            // Lưu href gốc nếu chưa có
+            if (!button.dataset.originalHref && button.getAttribute('href')) {
+                button.dataset.originalHref = button.getAttribute('href');
+            }
+            
+            // Kiểm tra nếu suất chiếu đã bắt đầu
+            // if (currentTime >= showtimeStart) {
+            //     button.disabled = true;
+            //     button.classList.remove('btn-primary', 'btn-warning');
+            //     button.classList.add('btn-secondary');
+            //     button.title = 'Không thể in vé sau khi suất chiếu đã bắt đầu. Suất chiếu: ' + showtimeStart.toLocaleString('vi-VN');
+            //     button.removeAttribute('href');
+            //     button.onclick = function(e) {
+            //         return handleDisabledButtonClick(e, 'Không thể in vé sau khi suất chiếu đã bắt đầu.\nSuất chiếu: ' + showtimeStart.toLocaleString('vi-VN'));
+            //     };
+            //     return;
+            // }
+            
+            // Kiểm tra nếu còn NHIỀU HƠN 1 tiếng trước suất chiếu (không cho phép in)
+            // const oneHourBeforeShowtime = new Date(showtimeStart.getTime() - (60 * 60 * 1000));
+            // if (currentTime < oneHourBeforeShowtime) {
+            //     button.disabled = true;
+            //     button.classList.remove('btn-primary', 'btn-secondary');
+            //     button.classList.add('btn-warning');
+            //     button.title = 'Vé chỉ có thể in trong vòng 1 tiếng trước suất chiếu. Suất chiếu: ' + showtimeStart.toLocaleString('vi-VN');
+            //     button.removeAttribute('href');
+            //     button.onclick = function(e) {
+            //         return handleDisabledButtonClick(e, 'Vé chỉ có thể in trong vòng 1 tiếng trước suất chiếu.\nSuất chiếu: ' + showtimeStart.toLocaleString('vi-VN'));
+            //     };
+            //     return;
+            // }
+            
+            // Nếu trong khoảng thời gian cho phép in vé (từ 1 tiếng trước suất chiếu đến khi suất chiếu bắt đầu)
+            // if (button.disabled) {
+            //     button.disabled = false;
+            //     button.classList.remove('btn-secondary', 'btn-warning');
+            //     button.classList.add('btn-primary');
+            //     button.title = 'In vé (Suất chiếu: ' + showtimeStart.toLocaleString('vi-VN') + ')';
+            //     // Khôi phục href gốc
+            //     if (button.dataset.originalHref) {
+            //         button.setAttribute('href', button.dataset.originalHref);
+            //     }
+            //     button.onclick = null; // Xóa event handler cũ
+            // }
+        });
+    }, 60000); // Cập nhật mỗi phút
 });
 </script>
-@endsection
+@endpush

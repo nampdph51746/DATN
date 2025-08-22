@@ -22,9 +22,12 @@ class ReviewController extends Controller
     public function store(Request $request, $movieId)
     {
         $request->validate([
-            'comment' => 'required|string|max:1000',
+            'rating_star' => 'required|integer|min:1|max:5',
+            'comment' => 'nullable|string|max:1000',
         ], [
-            'comment.required' => 'Vui lòng nhập bình luận.',
+            'rating_star.required' => 'Vui lòng chọn số sao đánh giá.',
+            'rating_star.min' => 'Đánh giá tối thiểu 1 sao.',
+            'rating_star.max' => 'Đánh giá tối đa 5 sao.',
             'comment.max' => 'Bình luận không được vượt quá 1000 ký tự.',
         ]);
 
@@ -42,11 +45,11 @@ class ReviewController extends Controller
         if (!$hasWatchedMovie) {
             return response()->json([
                 'success' => false,
-                'message' => 'Bạn cần xem phim này trước khi có thể bình luận.'
+                'message' => 'Bạn cần xem phim này trước khi có thể đánh giá.'
             ], 403);
         }
 
-        // Kiểm tra người dùng đã bình luận phim này chưa
+        // Kiểm tra người dùng đã đánh giá phim này chưa
         $existingReview = Review::where('user_id', $user->id)
             ->where('movie_id', $movieId)
             ->first();
@@ -54,16 +57,17 @@ class ReviewController extends Controller
         if ($existingReview) {
             return response()->json([
                 'success' => false,
-                'message' => 'Bạn đã bình luận phim này rồi.'
+                'message' => 'Bạn đã đánh giá phim này rồi.'
             ], 400);
         }
 
-        // Tạo bình luận mới
+        // Tạo review mới
         $contentCheck = $this->contentFilterService->checkContent($request->comment ?? '', $user->id);
-
+        
         $review = Review::create([
             'user_id' => $user->id,
             'movie_id' => $movieId,
+            'rating_star' => $request->rating_star,
             'comment' => $request->comment,
             'status' => $contentCheck['status'], // 'approved' hoặc 'pending' tùy vào kết quả kiểm tra
             'admin_note' => $contentCheck['auto_flagged'] 
@@ -71,9 +75,14 @@ class ReviewController extends Controller
                 : null,
         ]);
 
+        // Chỉ cập nhật rating nếu review được approve ngay
+        if ($contentCheck['status'] === 'approved') {
+            $this->updateMovieAverageRating($movieId);
+        }
+
         $message = $contentCheck['status'] === 'approved' 
-            ? 'Bình luận của bạn đã được gửi thành công!'
-            : 'Bình luận của bạn đã được gửi và đang chờ kiểm duyệt.';
+            ? 'Đánh giá của bạn đã được gửi thành công!'
+            : 'Đánh giá của bạn đã được gửi và đang chờ kiểm duyệt.';
 
         return response()->json([
             'success' => true,
@@ -81,6 +90,7 @@ class ReviewController extends Controller
             'status' => $contentCheck['status'],
             'review' => [
                 'id' => $review->id,
+                'rating_star' => $review->rating_star,
                 'comment' => $review->comment,
                 'user_name' => $user->name,
                 'created_at' => $review->created_at->format('d/m/Y H:i'),
@@ -97,20 +107,9 @@ class ReviewController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
-        // Chỉ trả về bình luận, không trả về rating
-        $comments = collect($reviews->items())->map(function ($review) {
-            return [
-                'id' => $review->id,
-                'comment' => $review->comment,
-                'user_name' => $review->user->name ?? '',
-                'created_at' => $review->created_at->format('d/m/Y H:i'),
-                'status' => $review->status,
-            ];
-        });
-
         return response()->json([
             'success' => true,
-            'comments' => $comments,
+            'reviews' => $reviews->items(),
             'pagination' => [
                 'current_page' => $reviews->currentPage(),
                 'last_page' => $reviews->lastPage(),
@@ -120,16 +119,25 @@ class ReviewController extends Controller
         ]);
     }
 
-    // Đã loại bỏ chức năng tính average rating
+    private function updateMovieAverageRating($movieId)
+    {
+        $averageRating = Review::where('movie_id', $movieId)
+            ->where('status', 'approved')
+            ->avg('rating_star');
 
-    public function checkUserCanComment($movieId)
+        Movie::where('id', $movieId)->update([
+            'average_rating' => round($averageRating, 1)
+        ]);
+    }
+
+    public function checkUserCanReview($movieId)
     {
         $user = Auth::user();
         
         if (!$user) {
             return response()->json([
-                'can_comment' => false,
-                'message' => 'Vui lòng đăng nhập để bình luận.'
+                'can_review' => false,
+                'message' => 'Vui lòng đăng nhập để đánh giá.'
             ]);
         }
 
@@ -143,26 +151,26 @@ class ReviewController extends Controller
 
         if (!$hasWatchedMovie) {
             return response()->json([
-                'can_comment' => false,
-                'message' => 'Bạn cần xem phim này trước khi có thể bình luận.'
+                'can_review' => false,
+                'message' => 'Bạn cần xem phim này trước khi có thể đánh giá.'
             ]);
         }
 
-        // Kiểm tra đã bình luận chưa
-        $hasCommented = Review::where('user_id', $user->id)
+        // Kiểm tra đã đánh giá chưa
+        $hasReviewed = Review::where('user_id', $user->id)
             ->where('movie_id', $movieId)
             ->exists();
 
-        if ($hasCommented) {
+        if ($hasReviewed) {
             return response()->json([
-                'can_comment' => false,
-                'message' => 'Bạn đã bình luận phim này rồi.'
+                'can_review' => false,
+                'message' => 'Bạn đã đánh giá phim này rồi.'
             ]);
         }
 
         return response()->json([
-            'can_comment' => true,
-            'message' => 'Bạn có thể bình luận phim này.'
+            'can_review' => true,
+            'message' => 'Bạn có thể đánh giá phim này.'
         ]);
     }
 }

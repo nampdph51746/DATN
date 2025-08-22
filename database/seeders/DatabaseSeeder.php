@@ -71,6 +71,7 @@ class DatabaseSeeder extends Seeder
         // // Bảng phụ thuộc tiếp theo
         // Room::factory()->count(20)->create();
         // MovieGenre::factory()->count(30)->create();
+        // Review::factory()->count(50)->create();
         // ProductVariant::factory()->count(50)->create();
         // Point::factory()->count(20)->create();
         // CustomerRankPromotion::factory()->count(10)->create();

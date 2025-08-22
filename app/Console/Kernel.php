@@ -27,6 +27,11 @@ class Kernel extends ConsoleKernel
         $schedule->command('movies:update-expired')
                  ->daily()
                  ->withoutOverlapping();
+
+        // Xử lý booking attempts timeout mỗi 5 phút
+        $schedule->command('booking:process-timeouts')
+                 ->everyFiveMinutes()
+                 ->withoutOverlapping();
     }
 
     /**

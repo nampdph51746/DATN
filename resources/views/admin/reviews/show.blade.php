@@ -1,12 +1,12 @@
 @extends('layouts.admin.admin')
 
-@section('title', 'Chi tiết bình luận')
+@section('title', 'Chi tiết đánh giá')
 
 @section('content')
 <div class="container-fluid">
     <!-- Page Heading -->
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Chi tiết bình luận</h1>
+        <h1 class="h3 mb-0 text-gray-800">Chi tiết đánh giá</h1>
         <a href="{{ route('admin.reviews.index') }}" class="btn btn-secondary btn-sm">
             <i class="fas fa-arrow-left"></i> Quay lại
         </a>
@@ -17,7 +17,7 @@
         <div class="col-lg-8">
             <div class="card shadow mb-4">
                 <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Thông tin bình luận</h6>
+                    <h6 class="m-0 font-weight-bold text-primary">Thông tin đánh giá</h6>
                 </div>
                 <div class="card-body">
                     <div class="row mb-3">
@@ -45,6 +45,23 @@
                         </div>
                     </div>
 
+                    <div class="row mb-3">
+                        <div class="col-sm-3 font-weight-bold">Đánh giá:</div>
+                        <div class="col-sm-9">
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-warning text-dark me-2 p-2">{{ $review->rating_star }}/5</span>
+                                <div class="stars">
+                                    @for($i = 1; $i <= 5; $i++)
+                                        @if($i <= $review->rating_star)
+                                            <i class="fas fa-star text-warning"></i>
+                                        @else
+                                            <i class="far fa-star text-muted"></i>
+                                        @endif
+                                    @endfor
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
                     <div class="row mb-3">
                         <div class="col-sm-3 font-weight-bold">Trạng thái:</div>
@@ -155,6 +172,9 @@
                         </button>
                     @endif
 
+                    <button type="button" class="btn btn-danger btn-block" onclick="deleteReview()">
+                        <i class="fas fa-trash"></i> Xóa đánh giá
+                    </button>
                 </div>
             </div>
 
@@ -174,9 +194,11 @@
                     
                     <div class="row">
                         <div class="col-6">
+                            <small class="text-muted">Đánh giá TB:</small><br>
+                            <strong>{{ $review->movie->average_rating ?? 0 }}/5</strong>
                         </div>
                         <div class="col-6">
-                            <small class="text-muted">Tổng bình luận:</small><br>
+                            <small class="text-muted">Tổng đánh giá:</small><br>
                             <strong>{{ $review->movie->reviews()->where('status', 'approved')->count() }}</strong>
                         </div>
                     </div>
@@ -259,7 +281,7 @@
 @section('scripts')
 <script>
 function deleteReview() {
-    if (confirm('Bạn có chắc muốn xóa bình luận này? Hành động này không thể hoàn tác!')) {
+    if (confirm('Bạn có chắc muốn xóa đánh giá này? Hành động này không thể hoàn tác!')) {
         $('#deleteForm').submit();
     }
 }

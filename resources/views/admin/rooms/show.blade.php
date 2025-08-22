@@ -5,8 +5,8 @@
     <div class="row g-4">
         <div class="col-lg-4 col-md-12">
             <div class="card shadow-sm mb-4">
-                <div class="card-header bg-light">
-                    <h5 class="mb-0">Thông tin phòng chiếu</h5>
+                <div class="card-header" style="background: #ff6633; border-bottom: 1px solid #e55a2b;">
+                    <h5 class="mb-0" style="color: #333333; font-weight: 600;">Thông tin phòng chiếu</h5>
                 </div>
                 <div class="card-body">
                     <p><strong>Tên phòng:</strong> {{ $room->name }}</p>

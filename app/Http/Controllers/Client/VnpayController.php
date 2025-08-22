@@ -23,9 +23,16 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use App\Events\BookingConfirmed;
+use App\Services\BookingAttemptService;
 
 class VnpayController extends Controller
 {
+    protected $bookingAttemptService;
+
+    public function __construct(BookingAttemptService $bookingAttemptService)
+    {
+        $this->bookingAttemptService = $bookingAttemptService;
+    }
   public function redirectToVnpay(Request $request)
   {
     // Log request data để debug
@@ -302,6 +309,12 @@ class VnpayController extends Controller
                             $variant->save();
                         }
                     }
+                }
+
+                // 7. Mark booking attempt as completed
+                $firstSeatState = ShowtimeSeatState::where('booking_id', $booking->id)->first();
+                if ($firstSeatState) {
+                    $this->bookingAttemptService->completeAttempt($booking->user_id, $firstSeatState->showtime_id);
                 }
 
                 DB::commit();

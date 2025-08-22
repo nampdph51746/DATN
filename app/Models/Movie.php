@@ -10,20 +10,26 @@ class Movie extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name', /*'director_id',*/ 'duration_minutes', 'release_date',
+        'name', 'director_id', 'duration_minutes', 'release_date',
         'end_date', 'description', 'poster_url', 'trailer_url', 'language',
-        'country_id', 'age_limit_id', 'status', 'image_path',
+        'country_id', 'age_limit_id', 'status', 'average_rating', 'image_path', 
     ];
 
     protected $casts = [
         'release_date' => 'date',
         'end_date' => 'date',
+        'average_rating' => 'decimal:1',
         'status' => \App\Enums\MovieStatus::class,
     ];
 
     public function country()
     {
         return $this->belongsTo(Country::class);
+    }
+
+    public function director()
+    {
+        return $this->belongsTo(Director::class);
     }
 
     public function actors()
@@ -40,7 +46,7 @@ class Movie extends Model
 
     public function genres()
     {
-        return $this->belongsToMany(Genre::class, 'movie_genres', 'movie_id', 'genre_id');
+        return $this->belongsToMany(Genre::class, 'movie_genres');
     }
 
     public function reviews()
@@ -120,10 +126,5 @@ class Movie extends Model
         return $query->where('end_date', '<', now())
                     ->where('status', '!=', \App\Enums\MovieStatus::Ended)
                     ->update(['status' => \App\Enums\MovieStatus::Ended]);
-    }
-
-    public function directors()
-    {
-        return $this->belongsToMany(Director::class, 'movie_directors');
     }
 }

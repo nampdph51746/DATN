@@ -85,14 +85,4 @@ class Booking extends Model
             'showtime_id' // Local key on tickets table
         );
     }
-
-    public function items()
-    {
-        return $this->hasMany(BookingItem::class, 'booking_id');
-    }
-
-    public function movie()
-    {
-        return $this->belongsTo(Movie::class, 'movie_id', 'id');
-    }
 }

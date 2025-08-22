@@ -4,17 +4,13 @@ namespace App\Http\Controllers\Admin;
 
 use App\Models\Product;
 use App\Models\Attribute;
-use Illuminate\Support\Str;
-use Illuminate\Http\Request;
 use App\Models\AttributeValue;
 use App\Models\ProductVariant;
-use App\Http\Controllers\Controller;
 use App\Models\ProductVariantOption;
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-
-use App\Models\Notification;
-use App\Enums\NotificationType;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class AdminProductVariantController extends Controller
 {
@@ -37,14 +33,8 @@ class AdminProductVariantController extends Controller
         $products = Product::all();
         $selectedProductId = $request->input('product_id');
         $attributes = Attribute::with('attributeValues')->get();
-        
-        // Thêm dòng này để lấy selectedProduct
-        $selectedProduct = null;
-        if ($selectedProductId) {
-            $selectedProduct = Product::find($selectedProductId);
-        }
 
-        return view('admin.product_variants.create', compact('products', 'selectedProductId', 'selectedProduct', 'attributes'));
+        return view('admin.product_variants.create', compact('products', 'selectedProductId', 'attributes'));
     }
 
     public function store(Request $request)
@@ -154,22 +144,6 @@ class AdminProductVariantController extends Controller
                 }
             }
 
-            // Tạo thông báo khi tạo mới biến thể sản phẩm
-            Notification::create([
-                'user_id' => Auth::id(),
-                'entity_type' => ProductVariant::class,
-                'entity_id' => $productVariant->id,
-                'title' => 'Tạo mới biến thể sản phẩm',
-                'message' => 'Biến thể sản phẩm #' . $productVariant->id . ' đã được tạo mới.',
-                'type' => NotificationType::System,
-                'priority' => 'low',
-                'old_status' => null,
-                'new_status' => $productVariant->sku,
-                'event_details' => json_encode([
-                    'new' => $productVariant->getAttributes(),
-                ]),
-            ]);
-
             $createdVariants[] = $productVariant;
         }
 
@@ -232,46 +206,74 @@ class AdminProductVariantController extends Controller
             'product_id' => 'required|exists:products,id',
             'price' => 'required|numeric|min:0',
             'stock_quantity' => 'required|integer|min:0',
-            'image' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
+            'image_url' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
             'is_active' => 'required|in:0,1',
             'attribute_values' => 'required|array|min:1',
             'attribute_values.*' => 'exists:attribute_values,id',
+        ], [
+            'product_id.required' => 'Sản phẩm là bắt buộc.',
+            'product_id.exists' => 'Sản phẩm không tồn tại.',
+            'price.required' => 'Giá bán là bắt buộc.',
+            'price.numeric' => 'Giá bán phải là số.',
+            'price.min' => 'Giá bán không được nhỏ hơn 0.',
+            'stock_quantity.required' => 'Số lượng tồn kho là bắt buộc.',
+            'stock_quantity.integer' => 'Số lượng tồn kho phải là số nguyên.',
+            'stock_quantity.min' => 'Số lượng tồn kho không được nhỏ hơn 0.',
+            'image_url.image' => 'File tải lên phải là ảnh.',
+            'image_url.mimes' => 'Ảnh phải có định dạng jpg, jpeg, png hoặc gif.',
+            'image_url.max' => 'Ảnh không được vượt quá 2MB.',
+            'is_active.required' => 'Trạng thái biến thể là bắt buộc.',
+            'is_active.in' => 'Trạng thái biến thể phải là Hoạt động hoặc Không hoạt động.',
+            'attribute_values.required' => 'Vui lòng chọn ít nhất một giá trị thuộc tính.',
+            'attribute_values.*.exists' => 'Giá trị thuộc tính không hợp lệ.',
         ]);
 
         $productVariant = ProductVariant::findOrFail($id);
 
-        // Xử lý ảnh
-        $imageUrl = $productVariant->image_url;
-        if ($request->hasFile('image')) {
-            if ($imageUrl && Storage::disk('public')->exists($imageUrl)) {
-                Storage::disk('public')->delete($imageUrl);
-            }
-            $imageUrl = $request->file('image')->store('product_variants', 'public');
-        }
+        // Lấy danh sách attribute_value_id hiện tại
+        $existingOptions = ProductVariantOption::where('product_variant_id', $productVariant->id)
+            ->pluck('attribute_value_id')->toArray();
 
-        // Tạo SKU mới nếu thay đổi thuộc tính hoặc sản phẩm
         $newAttributeValues = $request->attribute_values;
+
+        // So sánh thuộc tính và giá trị thuộc tính
         $shouldRegenerateSku = (
             $productVariant->product_id != $request->product_id ||
-            array_diff($productVariant->productVariantOptions->pluck('attribute_value_id')->toArray(), $newAttributeValues) ||
-            array_diff($newAttributeValues, $productVariant->productVariantOptions->pluck('attribute_value_id')->toArray())
+            count($existingOptions) !== count($newAttributeValues) ||
+            array_diff($existingOptions, $newAttributeValues) ||
+            array_diff($newAttributeValues, $existingOptions)
         );
 
         if ($shouldRegenerateSku) {
+            // Lấy sản phẩm để lấy SKU
             $product = Product::findOrFail($request->product_id);
             $productSku = $product->sku;
-            $attributeValues = \App\Models\AttributeValue::whereIn('id', $newAttributeValues)
+
+            // Lấy các giá trị thuộc tính được chọn
+            $attributeValues = AttributeValue::whereIn('id', $newAttributeValues)
                 ->pluck('value')
                 ->map(function ($value) {
-                    return \Illuminate\Support\Str::slug($value, '-');
+                    return Str::slug($value, '-');
                 })
                 ->toArray();
-            $sku = mb_strtoupper($productSku . '-' . implode('-', $attributeValues));
+
+            // Tạo SKU: product_sku + các giá trị thuộc tính
+            $sku = $productSku . '-' . implode('-', $attributeValues);
+            $sku = mb_strtoupper($sku);
+
+        
         } else {
             $sku = $productVariant->sku;
         }
 
-        // Cập nhật biến thể
+        $imageUrl = $productVariant->image_url;
+        if ($request->hasFile('image')) {
+            if ($productVariant->image_url && Storage::disk('public')->exists($productVariant->image_url)) {
+                Storage::disk('public')->delete($productVariant->image_url);
+            }
+            $imageUrl = $request->file('image')->store('product_variants', 'public');
+        }
+
         $productVariant->update([
             'product_id' => $request->product_id,
             'sku' => $sku,
@@ -279,44 +281,26 @@ class AdminProductVariantController extends Controller
             'stock_quantity' => $request->stock_quantity,
             'image_url' => $imageUrl,
             'is_active' => $request->is_active,
+            'updated_at' => now(),
         ]);
 
-        // Xóa hết các option cũ và thêm lại mới
-        \App\Models\ProductVariantOption::where('product_variant_id', $productVariant->id)->delete();
-        foreach ($newAttributeValues as $attributeValueId) {
-            \App\Models\ProductVariantOption::create([
+        // Xóa các bản ghi không còn trong request
+        $optionsToDelete = array_diff($existingOptions, $newAttributeValues);
+        if ($optionsToDelete) {
+            ProductVariantOption::where('product_variant_id', $productVariant->id)
+                ->whereIn('attribute_value_id', $optionsToDelete)
+                ->delete();
+        }
+
+        // Thêm các bản ghi mới
+        $optionsToAdd = array_diff($newAttributeValues, $existingOptions);
+        foreach ($optionsToAdd as $attributeValueId) {
+            ProductVariantOption::create([
                 'product_variant_id' => $productVariant->id,
                 'attribute_value_id' => $attributeValueId,
             ]);
         }
 
-        // Tạo thông báo khi cập nhật biến thể sản phẩm
-        Notification::create([
-            'user_id' => Auth::id(),
-            'entity_type' => ProductVariant::class,
-            'entity_id' => $productVariant->id,
-            'title' => 'Cập nhật biến thể sản phẩm',
-            'message' => 'Biến thể sản phẩm #' . $productVariant->id . ' đã được cập nhật.',
-            'type' => NotificationType::System,
-            'priority' => 'low',
-            'old_status' => $oldData['sku'] ?? null,
-            'new_status' => $productVariant->sku,
-            'event_details' => json_encode([
-                'old' => $oldData,
-                'new' => $productVariant->getAttributes(),
-            ]),
-        ]);
-
         return redirect()->route('admin.product-variants.index')->with('success', 'Biến thể sản phẩm đã được cập nhật thành công.');
-    }
-
-    public function show($id)
-    {
-        $productVariant = ProductVariant::with([
-            'product.category',
-            'productVariantOptions.attributeValue.attribute'
-        ])->findOrFail($id);
-        
-        return view('admin.product_variants.show', compact('productVariant'));
     }
 }
