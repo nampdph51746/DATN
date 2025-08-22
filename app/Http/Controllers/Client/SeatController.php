@@ -58,11 +58,11 @@ class SeatController extends Controller
                 return response()->json(['message' => 'Không thực hiện release khi đang thanh toán']);
             }
 
-            // Nếu user đã login, hủy booking attempt
-            if (Auth::check()) {
+            // Nếu user đã đăng nhập, hủy booking attempt (chỉ khi không đang thanh toán)
+            if (Auth::check() && !session('is_checkout') && !session('is_processing_payment')) {
                 $userId = Auth::id();
                 $this->bookingAttemptService->cancelActiveAttempts($userId, $showtimeId);
-                Log::info("Cancelled active booking attempts for user {$userId}, showtime {$showtimeId}");
+                Log::info("Đã hủy các booking attempt đang hoạt động cho user {$userId}, showtime {$showtimeId}");
             }
 
             foreach ($seatIds as $id) {
@@ -391,11 +391,11 @@ class SeatController extends Controller
                 Log::info("Released seat ID {$seatState->seat_id} for session {$sessionId} in showtime {$showtimeId}");
             }
 
-            // Nếu user đã login, hủy booking attempt (chỉ khi không đang thanh toán)
-            if (Auth::check()) {
+            // Nếu user đã đăng nhập, hủy booking attempt (chỉ khi không đang thanh toán)
+            if (Auth::check() && !session('is_checkout') && !session('is_processing_payment')) {
                 $userId = Auth::id();
                 $this->bookingAttemptService->cancelActiveAttempts($userId, $showtimeId);
-                Log::info("Cancelled active booking attempts for user {$userId}, showtime {$showtimeId}");
+                Log::info("Đã hủy các booking attempt đang hoạt động cho user {$userId}, showtime {$showtimeId}");
             }
 
             return response()->json([
@@ -403,7 +403,7 @@ class SeatController extends Controller
                 'released_seats' => $releasedSeatIds
             ]);
         } catch (\Exception $e) {
-            Log::error("Error releasing all seats for session in showtime {$showtimeId}: " . $e->getMessage());
+            Log::error("Lỗi khi trả lại tất cả ghế cho session trong showtime {$showtimeId}: " . $e->getMessage());
             return response()->json(['error' => 'Lỗi khi trả lại ghế.'], 500);
         }
     }

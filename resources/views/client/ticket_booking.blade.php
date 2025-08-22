@@ -1620,6 +1620,7 @@
                                             <input type="hidden" name="cinema_name" id="input-cinema-name">
                                             <input type="hidden" name="room_name" id="input-room-name">
                                             <input type="hidden" name="showtime" id="input-showtime">
+                                            <input type="hidden" name="showtime_id" id="input-showtime-id">
                                             <input type="hidden" name="snack_items" id="input-snack-items">
 
                                             <input type="hidden" name="total_amount_before_discount"
@@ -3217,11 +3218,11 @@
             updateUsablePoints(subtotal);
             
             // Lưu dữ liệu vào form để gửi đi
-            // Lưu dữ liệu vào form để gửi đi
             document.getElementById('input-movie-title').value = movieTitle || 'N/A';
             document.getElementById('input-cinema-name').value = cinemaName || 'N/A';
             document.getElementById('input-room-name').value = roomName || 'N/A';
             document.getElementById('input-showtime').value = selectedDate + ' ' + (selectedTime || 'N/A');
+            document.getElementById('input-showtime-id').value = selectedShowtimeId || '';
 
             document.getElementById('input-total-before').value = ticketTotal + (snackTotal || 0);
             document.getElementById('input-discount').value = validDiscount;

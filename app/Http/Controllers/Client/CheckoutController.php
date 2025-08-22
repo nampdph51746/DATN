@@ -73,6 +73,7 @@ class CheckoutController extends Controller
             'cinema_name' => $request->input('cinema_name'),
             'room_name' => $request->input('room_name'),
             'showtime' => $request->input('showtime'),
+            'showtime_id' => $request->input('showtime_id'), // Thêm showtime_id
             'snack_items' => $request->input('snack_items'),
             'items' => is_string($request->input('items'))
                 ? (json_decode($request->input('items', '[]'), true) ?? [])
@@ -84,7 +85,8 @@ class CheckoutController extends Controller
             'promotion_id' => $promotionId,
             'user_id' => Auth::id(),
             'booking_code' => $bookingData['booking_code'],
-            'final_amount' => $bookingData['final_amount']
+            'final_amount' => $bookingData['final_amount'],
+            'showtime_id' => $bookingData['showtime_id'] // Log showtime_id để debug
         ]);
 
         // dd($bookingData); 

@@ -34,6 +34,7 @@ use App\Http\Controllers\Admin\PaymentMethodController;
 use App\Http\Controllers\Admin\AdminAttributeController;
 use App\Http\Controllers\Client\ClientPaymentController;
 use App\Http\Controllers\Client\PaymentSuccessController;
+use App\Http\Controllers\Client\PaymentFailedController;
 use App\Http\Controllers\Admin\AdminAttributeValueController;
 use App\Http\Controllers\Admin\AdminProductVariantController;
 use App\Http\Controllers\Admin\CustomerRankPromotionController;
@@ -84,23 +85,12 @@ Route::post('/checkout/preview', [CheckoutController::class, 'previewBooking'])-
 
 Route::get('/payment-success', [PaymentSuccessController::class, 'show'])->name('client.success');
 
-Route::get('/payment-failed', function () {
-    return 'Thanh toán thất bại!';
-})->name('client.failed');
+// Payment Failed Routes
+Route::get('/payment-failed', [PaymentFailedController::class, 'show'])->name('client.failed');
+Route::post('/payment-failed/store', [PaymentFailedController::class, 'storeFailedInfo'])->name('client.failed.store');
+Route::post('/payment-failed/handle', [PaymentFailedController::class, 'handlePaymentFailure'])->name('client.failed.handle');
+Route::get('/payment-failed/retry', [PaymentFailedController::class, 'retryPayment'])->name('client.failed.retry');
 
-// Route::middleware('guest')->group(function () {
-//     Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])
-//         ->name('password.request');
-
-//     Route::post('forgot-password', [PasswordResetLinkController::class, 'store'])
-//         ->name('password.email');
-
-//     Route::get('reset-password/{token}', [NewPasswordController::class, 'create'])
-//         ->name('password.reset');
-
-//     Route::put('reset-password', [NewPasswordController::class, 'store'])
-//         ->name('password.reset.submit');
-// });
 
 Route::post('/apply-promotion', [App\Http\Controllers\Client\HomeController::class, 'applyDiscountCode'])->name('client.applyPromotion');
 
@@ -392,17 +382,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('products/{id}/variants', [AdminProductController::class, 'getVariants'])->name('products.variants');
 });
 
-});
-
-// Test route for barcode
-Route::get('/test-barcode-api', function () {
-    $barcodeService = new \App\Services\BarcodeService();
-    $barcode = $barcodeService->generateBarcode('BK1754063915');
-    
-    return response()->json([
-        'barcode' => $barcode,
-        'booking_code' => 'BK1754063915'
-    ]);
 });
 
 // Admin Reviews Routes
