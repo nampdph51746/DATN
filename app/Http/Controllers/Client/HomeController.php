@@ -353,11 +353,15 @@ class HomeController extends Controller
 
         $seatTypes = SeatType::all();
         $products = Product::where('is_active', true)
-            ->with(['productVariants' => function ($query) {
-                $query->where('is_active', true)
-                    ->with(['productVariantOptions.attributeValue.attribute']);
-            }])
-            ->get();
+            ->with([
+                'category',
+                'productVariants' => function ($query) {
+                    $query->where('is_active', true)
+                        ->with(['productVariantOptions.attributeValue.attribute']);
+                }
+            ])
+            ->get()
+            ->groupBy('category.name'); // Group by category name
         $roomIds = $showtimes->pluck('room_id')->unique()->toArray();
         $roomsData = Room::query()
             ->with(['cinema' => function ($query) {
