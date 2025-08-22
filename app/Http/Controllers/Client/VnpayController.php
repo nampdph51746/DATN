@@ -38,8 +38,8 @@ class VnpayController extends Controller
     // Log request data để debug
     Log::info('VNPay Redirect Request:', $request->all());
     
-    // Đánh dấu đang xử lý thanh toán
-    session(['is_processing_payment' => true]);
+    // Đánh dấu form checkout đã được submit và đang xử lý thanh toán
+    session(['checkout_form_submitted' => true, 'is_processing_payment' => true]);
     
     // dd($request->all());
     $data = $request->all();
@@ -358,7 +358,14 @@ class VnpayController extends Controller
                 // Fire event để gửi email xác nhận booking
                 event(new BookingConfirmed($booking));
                 
-                session()->forget(['booking_preview', 'selected_seats_info', 'is_checkout', 'is_processing_payment']);
+                session()->forget([
+                    'booking_preview', 
+                    'selected_seats_info', 
+                    'is_checkout', 
+                    'is_processing_payment',
+                    'user_booking_in_progress',
+                    'checkout_form_submitted'
+                ]);
 
                 return redirect()->route('client.success')->with('success', 'Thanh toán thành công!');
             } catch (\Exception $e) {
@@ -367,7 +374,7 @@ class VnpayController extends Controller
                     'file' => $e->getFile(),
                     'line' => $e->getLine(),
                 ]);
-                session()->forget(['is_checkout', 'is_processing_payment']);
+                session()->forget(['is_checkout', 'is_processing_payment', 'user_booking_in_progress', 'checkout_form_submitted']);
                 return redirect()->route('client.failed')->with('error', 'Thanh toán không thành công: ' . $e->getMessage());
             }
         } else {
@@ -377,7 +384,7 @@ class VnpayController extends Controller
             ]);
             
             // Clear payment session khi thanh toán thất bại
-            session()->forget(['is_checkout', 'is_processing_payment']);
+            session()->forget(['is_checkout', 'is_processing_payment', 'user_booking_in_progress', 'checkout_form_submitted']);
         }
 
         return redirect()->route('client.failed')->with('error', 'Thanh toán không thành công! Mã lỗi: ' . $vnp_ResponseCode);

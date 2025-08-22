@@ -29,10 +29,10 @@ class SeatController extends Controller
     // API bỏ giữ ghế khi người dùng thoát hoặc reload trang
     public function releaseSeat(Request $request, $showtimeId)
     {
-        // Nếu đang ở bước thanh toán thì không thực hiện release/cancel
-        if (session()->has('is_checkout') && session('is_checkout')) {
-            Log::info('releaseSeat: Bỏ qua release do session đang thanh toán');
-            return response()->json(['message' => 'Không thực hiện release khi đang thanh toán']);
+        // Chỉ chặn release khi thực sự đang xử lý thanh toán hoặc form đã submit
+        if (session('is_processing_payment') || (session('is_checkout') && session('checkout_form_submitted'))) {
+            Log::info('releaseSeat: Bỏ qua release do đang xử lý thanh toán');
+            return response()->json(['message' => 'Không thực hiện release khi đang xử lý thanh toán']);
         }
 
         $request->validate([
@@ -47,15 +47,6 @@ class SeatController extends Controller
             if ($request->has('from_payment') && $request->input('from_payment') == 1) {
                 Log::info('releaseSeat: Bỏ qua release do đang thanh toán');
                 return response()->json(['message' => 'Không thực hiện release khi thanh toán']);
-            }
-
-            // Kiểm tra session payment để tránh release ghế khi đang thanh toán
-            if (session('is_checkout') || session('is_processing_payment')) {
-                Log::info('releaseSeat: Bỏ qua release do đang trong quá trình thanh toán', [
-                    'is_checkout' => session('is_checkout'),
-                    'is_processing_payment' => session('is_processing_payment')
-                ]);
-                return response()->json(['message' => 'Không thực hiện release khi đang thanh toán']);
             }
 
             // Nếu user đã login, hủy booking attempt
@@ -214,6 +205,17 @@ class SeatController extends Controller
                 ], 403);
             }
 
+            // Kiểm tra số lần thất bại gần đây để cảnh báo trước khi ban
+            $recentFailedAttempts = \App\Models\BookingAttempt::where('user_id', $userId)
+                ->whereIn('status', [\App\Enums\BookingAttemptStatus::Timeout, \App\Enums\BookingAttemptStatus::Cancelled])
+                ->where('reserved_at', '>=', now()->subDay())
+                ->count();
+                
+            if ($recentFailedAttempts >= 2) {
+                Log::warning("User {$userId} has {$recentFailedAttempts} failed attempts - close to ban limit");
+                // Không block ngay, nhưng log để theo dõi
+            }
+
             $states = ShowtimeSeatState::where('showtime_id', $showtimeId)
                 ->whereIn('seat_id', $seatIds)
                 ->get();
@@ -367,13 +369,10 @@ class SeatController extends Controller
 
             $releasedSeatIds = [];
             
-            // Kiểm tra session payment để tránh release ghế khi đang thanh toán
-            if (session('is_checkout') || session('is_processing_payment')) {
-                Log::info('releaseAllSeatsOfSession: Bỏ qua release do đang trong quá trình thanh toán', [
-                    'is_checkout' => session('is_checkout'),
-                    'is_processing_payment' => session('is_processing_payment')
-                ]);
-                return response()->json(['message' => 'Không thực hiện release khi đang thanh toán']);
+            // Chỉ chặn release khi thực sự đang xử lý thanh toán hoặc form đã submit
+            if (session('is_processing_payment') || (session('is_checkout') && session('checkout_form_submitted'))) {
+                Log::info('releaseAllSeatsOfSession: Bỏ qua release do đang xử lý thanh toán');
+                return response()->json(['message' => 'Không thực hiện release khi đang xử lý thanh toán']);
             }
 
             foreach ($seatStates as $seatState) {

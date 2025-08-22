@@ -64,8 +64,10 @@ class BookingAttemptService
             ->update(['status' => BookingAttemptStatus::Cancelled]);
             
         if ($cancelledCount > 0 && $checkBan) {
-            // Chỉ kiểm tra và ban user nếu được yêu cầu (không phải khi đang cập nhật attempt)
-            $this->checkAndBanUser($userId);
+            // Chỉ kiểm tra và ban user nếu được yêu cầu và không đang trong quá trình đặt vé/thanh toán
+            if (!session('is_checkout') && !session('is_processing_payment') && !session('user_booking_in_progress')) {
+                $this->checkAndBanUser($userId);
+            }
         }
     }
 
@@ -81,8 +83,10 @@ class BookingAttemptService
         if ($cancelledCount > 0) {
             Log::info("Auto-cancelled {$cancelledCount} reserved attempts for user {$userId} due to page reload/reset");
             
-            // Kiểm tra và ban user nếu cần thiết sau khi cancel
-            $this->checkAndBanUser($userId);
+            // Chỉ kiểm tra và ban user nếu không đang trong quá trình đặt vé/thanh toán
+            if (!session('is_checkout') && !session('is_processing_payment') && !session('user_booking_in_progress')) {
+                $this->checkAndBanUser($userId);
+            }
         }
 
         return $cancelledCount;
@@ -194,13 +198,19 @@ class BookingAttemptService
      */
     public function checkAndBanUser(int $userId): bool
     {
-        // Đếm số lần thất bại trong 24h gần nhất
+        // Không ban user nếu đang trong quá trình thanh toán hoặc đặt ghế
+        if (session('is_checkout') || session('is_processing_payment') || session('user_booking_in_progress')) {
+            Log::info("Skip ban check for user {$userId} - user is in booking/payment process");
+            return false;
+        }
+        
+        // Đếm số lần thất bại trong 24h gần nhất (chỉ tính timeout và cancelled, không tính reserved)
         $failedCount = BookingAttempt::where('user_id', $userId)
-            ->failed()
+            ->whereIn('status', [BookingAttemptStatus::Timeout, BookingAttemptStatus::Cancelled])
             ->where('reserved_at', '>=', now()->subDay())
             ->count();
 
-        Log::info("User {$userId} has {$failedCount} failed attempts in last 24h");
+        Log::info("User {$userId} has {$failedCount} actually failed attempts in last 24h");
 
         if ($failedCount >= self::MAX_FAILED_ATTEMPTS) {
             $this->banUser($userId, $failedCount);
