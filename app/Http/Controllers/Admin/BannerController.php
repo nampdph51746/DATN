@@ -14,7 +14,7 @@ class BannerController extends Controller
     // Hiển thị danh sách quốc gia chưa xóa
     public function index(Request $request)
 {
-    $query = Banner::orderBy('created_at', 'desc');
+    $query = Banner::orderBy('display_order', 'asc'); // Sắp xếp theo thứ tự hiển thị
 
     if ($request->filled('keyword')) {
         $query->where('title', 'like', '%' . $request->keyword . '%');
@@ -25,22 +25,6 @@ class BannerController extends Controller
 
     return view('admin.banners.list', compact('banners'));
 }
-
-
-    // Hiển thị danh sách quốc gia đã xóa mềm (trashed)
-    public function trash(Request $request)
-    {
-        $query = Banner::onlyTrashed()->orderBy('deleted_at', 'desc');
-
-        if ($request->filled('keyword')) {
-            $query->where('name', 'like', '%' . $request->keyword . '%');
-        }
-
-        $banners = $query->paginate(10);
-        $banners->appends($request->only('keyword'));
-
-        return view('admin.countries.trash', compact('countries'));
-    }
 
     // Hiển thị form thêm mới
     public function create()
@@ -105,69 +89,143 @@ class BannerController extends Controller
 
     // Hiển thị form sửa
     public function edit($id)
-    {
-        $Banner = Banner::findOrFail($id);
-        return view('admin.countries.edit', compact('Banner'));
-    }
+{
+    $banner = Banner::findOrFail($id);
+    return view('admin.banners.edit', compact('banner'));
+}
 
-    // Cập nhật quốc gia
-    public function update(Request $request, $id)
+public function update(Request $request, $id)
     {
-        $Banner = Banner::findOrFail($id);
+        $banner = Banner::findOrFail($id);
 
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'code' => 'required|string|max:10|unique:countries,code,' . $id,
+            'title' => 'required|string|max:255',
+            'image' => 'nullable|image|max:5120', // 5MB
+            'link_url' => 'nullable|url|max:255',
+            'display_order' => 'required|integer|min:1',
+            'is_active' => 'required|boolean',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+        ], [
+            'title.required' => 'Tiêu đề không được để trống',
+            'image.image' => 'Ảnh không hợp lệ',
+            'image.max' => 'Ảnh không được vượt quá 5MB',
+            'link_url.url' => 'Đường dẫn không hợp lệ',
+            'display_order.required' => 'Thứ tự hiển thị không được để trống',
+            'is_active.required' => 'Trạng thái bắt buộc chọn',
+            'start_date.required' => 'Ngày bắt đầu không được để trống',
+            'end_date.required' => 'Ngày kết thúc không được để trống',
+            'end_date.after_or_equal' => 'Ngày kết thúc phải sau hoặc bằng ngày bắt đầu',
         ]);
 
-        $Banner->update($validated);
+        // Upload ảnh mới nếu có, xóa ảnh cũ
+        if ($request->hasFile('image')) {
+            if ($banner->image_url) {
+                $oldPath = str_replace('/storage/', '', $banner->image_url);
+                Storage::disk('public')->delete($oldPath);
+            }
+            $path = $request->file('image')->store('banners', 'public');
+            $banner->image_url = Storage::url($path);
+        }
 
-        return redirect()->route('admin.countries.index')->with('success', 'Cập nhật thành công.');
+        // Đẩy các banner khác ra sau nếu trùng display_order
+        if ($banner->display_order != $validated['display_order']) {
+            Banner::where('display_order', '>=', $validated['display_order'])
+                ->where('id', '!=', $banner->id)
+                ->where('is_active', 1)
+                ->where('end_date', '>=', now())
+                ->increment('display_order');
+        }
+
+        $banner->update([
+            'title' => $validated['title'],
+            'link_url' => $validated['link_url'] ?? null,
+            'display_order' => $validated['display_order'],
+            'is_active' => $validated['is_active'],
+            'start_date' => $validated['start_date'],
+            'end_date' => $validated['end_date'],
+        ]);
+
+        return redirect()->route('admin.banners.index')
+                         ->with('success', 'Cập nhật banner thành công.');
     }
 
     // Xóa mềm quốc gia
     public function destroy($id)
     {
-        $Banner = Banner::findOrFail($id);
-        $Banner->delete();
+        $banner = Banner::findOrFail($id);
+        $banner->delete();
 
-        return redirect()->route('admin.countries.index')->with('success', 'Đã xóa quốc gia.');
+        return redirect()->route('admin.banners.index')
+                         ->with('success', 'Đã xóa banner (xóa mềm).');
     }
 
-    // Xóa hàng loạt
+    // Danh sách banner đã xóa (trash)
+    public function trash(Request $request)
+    {
+        $query = Banner::onlyTrashed()->orderBy('deleted_at', 'desc');
+
+        if ($request->filled('keyword')) {
+            $query->where('title', 'like', '%' . $request->keyword . '%');
+        }
+
+        $banners = $query->paginate(10);
+        $banners->appends($request->only('keyword'));
+
+        return view('admin.banners.trash', compact('banners'));
+    }
+
+    // Khôi phục banner đã xóa
+    public function restore($id)
+    {
+        $banner = Banner::onlyTrashed()->findOrFail($id);
+        $banner->restore();
+
+        return redirect()->route('admin.banners.trash')
+                         ->with('success', 'Banner đã được khôi phục.');
+    }
+
+    // Xóa vĩnh viễn banner
+    public function forceDelete($id)
+    {
+        $banner = Banner::onlyTrashed()->findOrFail($id);
+
+        // Xóa file ảnh trước khi xóa bản ghi
+        if ($banner->image_url) {
+            $oldPath = str_replace('/storage/', '', $banner->image_url);
+            \Storage::disk('public')->delete($oldPath);
+        }
+
+        $banner->forceDelete();
+
+        return redirect()->route('admin.banners.trash')
+                         ->with('success', 'Banner đã bị xóa vĩnh viễn.');
+    }
+
+    // Xóa hàng loạt banner
     public function bulkDelete(Request $request)
     {
         $request->validate([
             'ids' => 'required|string'
+        ], [
+            'ids.required' => 'Vui lòng chọn ít nhất một banner để xóa.'
         ]);
 
         $ids = explode(',', $request->ids);
         $banners = Banner::whereIn('id', $ids);
-        
         $count = $banners->count();
+
+        // Xóa file ảnh
+        foreach ($banners->get() as $b) {
+            if ($b->image_url) {
+                $oldPath = str_replace('/storage/', '', $b->image_url);
+                \Storage::disk('public')->delete($oldPath);
+            }
+        }
+
         $banners->delete();
 
-        return redirect()->route('admin.countries.index')
-                        ->with('success', "Đã xóa {$count} quốc gia thành công.");
-    }
-
-    // Khôi phục quốc gia đã xóa mềm
-    public function restore($id)
-    {
-        $Banner = Banner::onlyTrashed()->findOrFail($id);
-        $Banner->restore();
-
-        alert('Quốc gia đã được khôi phục thành công.');
-        return redirect()->route('admin.countries.trash')->with('success', 'Quốc gia đã được khôi phục.');
-    }
-
-    // Xóa vĩnh viễn quốc gia
-    public function forceDelete($id)
-    {
-        $Banner = Banner::onlyTrashed()->findOrFail($id);
-        $Banner->forceDelete();
-
-        alert('Quốc gia đã bị xóa vĩnh viễn.');
-        return redirect()->route('admin.countries.trash')->with('success', 'Đã xóa quốc gia vĩnh viễn.');
+        return redirect()->route('admin.banners.index')
+                         ->with('success', "Đã xóa {$count} banner thành công.");
     }
 }

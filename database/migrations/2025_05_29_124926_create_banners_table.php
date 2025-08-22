@@ -19,6 +19,7 @@ return new class extends Migration
             $table->timestamp('end_date')->nullable()->comment('Ngày kết thúc hiển thị');
             $table->timestamp('created_at')->nullable()->comment('Thời gian tạo');
             $table->timestamp('updated_at')->nullable()->comment('Thời gian cập nhật');
+            $table->softDeletes();
         });
     }
 
