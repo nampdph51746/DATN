@@ -24,6 +24,9 @@ class ProcessTimeoutBookingAttempts implements ShouldQueue
         $bookingAttemptService->processTimeoutAttempts();
         $bookingAttemptService->cleanupExpiredBans();
         
+        // Cleanup các attempts cũ mỗi lần chạy (xóa ngay khi expired)
+        $bookingAttemptService->cleanupExpiredAttempts(0); // 0 = xóa ngay khi expired
+        
         Log::info('Completed processing timeout booking attempts');
     }
 }

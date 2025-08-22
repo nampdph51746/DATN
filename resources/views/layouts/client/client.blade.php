@@ -216,31 +216,6 @@
 			}
 		});
 	}
-
-	// Function để hiển thị thông báo tài khoản bị khóa
-	function showBanAlert(event, bannedUntil, failedAttempts) {
-		event.preventDefault();
-		
-		Swal.fire({
-			icon: 'error',
-			title: 'Tài khoản bị tạm khóa',
-			html: `
-				<div style="text-align: left; padding: 10px;">
-					<p><strong>Lý do:</strong> Vi phạm quy định đặt ghế (đặt ghế nhiều lần mà không thanh toán)</p>
-					<p><strong>Số lần vi phạm:</strong> ${failedAttempts} lần</p>
-					<p><strong>Thời gian khóa:</strong> Đến ${bannedUntil}</p>
-					<hr>
-					<p style="color: #666; font-size: 14px;"><i class="fa fa-info-circle"></i> Vui lòng liên hệ admin nếu bạn cho rằng đây là nhầm lẫn.</p>
-				</div>
-			`,
-			confirmButtonText: 'Đã hiểu',
-			confirmButtonColor: '#dc3545',
-			width: 500,
-			customClass: {
-				popup: 'ban-alert-popup'
-			}
-		});
-	}
 </script>
 
 <body>
@@ -326,18 +301,7 @@
 					<nav class="navigation" style="display: flex; align-items: center; justify-content: flex-end; gap: 30px;">
 						<div class="user-navigation" style="position: relative; margin-left: 10px;">
 							<button onclick="toggleUserDropdown()" class="user-container" style="background: none; border: none; cursor: pointer;">
-								@auth
-									@if(Auth::user()->avatar_url)
-										<img src="{{ asset('storage/' . Auth::user()->avatar_url) }}" alt="Avatar" 
-											 style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover; border: 2px solid #ddd;">
-									@else
-										<div style="width: 30px; height: 30px; border-radius: 50%; background-color: #6366f1; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px;">
-											{{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
-										</div>
-									@endif
-								@else
-									<i class="far fa-user-circle" style="font-size: 30px;"></i>
-								@endauth
+								<i class="far fa-user-circle" style="font-size: 30px;"></i>
 							</button>
 
 							<ul id="userDropdown" style=" display: none; position: absolute; right: 0; top: 120%; background-color: white; border: 1px solid #ccc; box-shadow: 0 2px 8px rgba(0,0,0,0.1); list-style: none; padding: 0;

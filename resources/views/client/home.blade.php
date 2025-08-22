@@ -207,7 +207,7 @@
                     <hr>
                     <p class="mb-0">
                         <strong>Thời gian khóa:</strong> Đến {{ $banInfo->banned_until->format('d/m/Y H:i') }}<br>
-                        <strong>Số lần vi phạm:</strong> {{ $banInfo->failed_attempts }} lần<br>
+                        <strong>Số lần vi phạm:</strong> {{ $banInfo->failed_attempts_count }} lần<br>
                         <small class="text-muted">Vui lòng liên hệ admin nếu bạn cho rằng đây là nhầm lẫn.</small>
                     </p>
                 </div>
@@ -256,7 +256,7 @@
                             <div class="text-center mt-3">
                                 @auth
                                     @if(isset($isUserBanned) && $isUserBanned)
-                                        <a href="#" class="ticket-btn" onclick="showBanAlert(event, '{{ $banInfo->banned_until->format('d/m/Y H:i') }}', {{ $banInfo->failed_attempts }})">
+                                        <a href="#" class="ticket-btn" onclick="showBanAlert(event, '{{ $banInfo->banned_until->format('d/m/Y H:i') }}', {{ $banInfo->failed_attempts_count }})">
                                             <i class="fa fa-ticket" aria-hidden="true"></i> Đặt vé
                                         </a>
                                     @else
@@ -318,7 +318,7 @@
                             <div class="text-center mt-3">
                                 @auth
                                     @if(isset($isUserBanned) && $isUserBanned)
-                                        <a href="#" class="ticket-btn" onclick="showBanAlert(event, '{{ $banInfo->banned_until->format('d/m/Y H:i') }}', {{ $banInfo->failed_attempts }})">
+                                        <a href="#" class="ticket-btn" onclick="showBanAlert(event, '{{ $banInfo->banned_until->format('d/m/Y H:i') }}', {{ $banInfo->failed_attempts_count }})">
                                             <i class="fa fa-ticket" aria-hidden="true"></i> Đặt vé
                                         </a>
                                     @else
@@ -397,6 +397,30 @@
     @include('client.footer.footer')
 
     <script>
+        function showBanAlert(event, bannedUntil, failedAttempts) {
+            event.preventDefault();
+            
+            Swal.fire({
+                icon: 'error',
+                title: 'Tài khoản bị tạm khóa',
+                html: `
+                    <div style="text-align: left; padding: 10px;">
+                        <p><strong>Lý do:</strong> Vi phạm quy định đặt ghế (đặt ghế nhiều lần mà không thanh toán)</p>
+                        <p><strong>Số lần vi phạm:</strong> ${failedAttempts} lần</p>
+                        <p><strong>Thời gian khóa:</strong> Đến ${bannedUntil}</p>
+                        <hr>
+                        <p style="color: #666; font-size: 14px;"><i class="fa fa-info-circle"></i> Vui lòng liên hệ admin nếu bạn cho rằng đây là nhầm lẫn.</p>
+                    </div>
+                `,
+                confirmButtonText: 'Đã hiểu',
+                confirmButtonColor: '#dc3545',
+                width: 500,
+                customClass: {
+                    popup: 'ban-alert-popup'
+                }
+            });
+        }
+
         // Function để show login prompt (nếu chưa có)
         function showLoginPrompt(event, redirectUrl) {
             event.preventDefault();

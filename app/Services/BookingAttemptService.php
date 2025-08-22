@@ -15,12 +15,30 @@ class BookingAttemptService
     const ATTEMPT_TIMEOUT_MINUTES = 10; // Thời gian giữ ghế (phút)
 
     /**
-     * Tạo một booking attempt mới
+     * Tạo một booking attempt mới hoặc cập nhật attempt hiện tại
      */
     public function createAttempt(int $userId, int $showtimeId, array $seatIds): BookingAttempt
     {
-        // Hủy các attempt đang active của user cho cùng showtime
-        $this->cancelActiveAttempts($userId, $showtimeId);
+        // Kiểm tra xem có attempt đang active cho cùng user và showtime không
+        $existingAttempt = BookingAttempt::where('user_id', $userId)
+            ->where('showtime_id', $showtimeId)
+            ->where('status', BookingAttemptStatus::Reserved)
+            ->first();
+
+        if ($existingAttempt) {
+            // Cập nhật attempt hiện tại với danh sách ghế mới
+            $existingAttempt->update([
+                'seat_ids' => $seatIds,
+                'reserved_at' => now(),
+                'expired_at' => now()->addMinutes(self::ATTEMPT_TIMEOUT_MINUTES),
+            ]);
+            
+            Log::info("Updated existing booking attempt {$existingAttempt->id} for user {$userId} with new seats");
+            return $existingAttempt;
+        }
+
+        // Hủy các attempt đang active của user cho cùng showtime (từ sessions khác)
+        $this->cancelActiveAttempts($userId, $showtimeId, false); // false = không check ban
 
         $attempt = BookingAttempt::create([
             'user_id' => $userId,
@@ -31,22 +49,22 @@ class BookingAttemptService
             'expired_at' => now()->addMinutes(self::ATTEMPT_TIMEOUT_MINUTES),
         ]);
 
-        Log::info("Created booking attempt {$attempt->id} for user {$userId}");
+        Log::info("Created new booking attempt {$attempt->id} for user {$userId}");
         return $attempt;
     }
 
     /**
      * Hủy các attempt đang active
      */
-    public function cancelActiveAttempts(int $userId, int $showtimeId): void
+    public function cancelActiveAttempts(int $userId, int $showtimeId, bool $checkBan = true): void
     {
         $cancelledCount = BookingAttempt::where('user_id', $userId)
             ->where('showtime_id', $showtimeId)
             ->where('status', BookingAttemptStatus::Reserved)
             ->update(['status' => BookingAttemptStatus::Cancelled]);
             
-        if ($cancelledCount > 0) {
-            // Kiểm tra và ban user nếu cần thiết sau khi cancel
+        if ($cancelledCount > 0 && $checkBan) {
+            // Chỉ kiểm tra và ban user nếu được yêu cầu (không phải khi đang cập nhật attempt)
             $this->checkAndBanUser($userId);
         }
     }
@@ -91,6 +109,9 @@ class BookingAttemptService
      */
     public function processTimeoutAttempts(): array
     {
+        // LUÔN cleanup expired attempts trước khi xử lý timeout
+        $this->autoCleanupExpiredAttempts();
+        
         $expiredAttempts = BookingAttempt::where('status', BookingAttemptStatus::Reserved)
             ->where('expired_at', '<=', now())
             ->get();
@@ -114,6 +135,58 @@ class BookingAttemptService
             'processed' => $processed,
             'bans_created' => $bansCreated
         ];
+    }
+
+    /**
+     * Tự động cleanup dữ liệu cũ (luôn chạy)
+     */
+    private function autoCleanupExpiredAttempts(): void
+    {
+        try {
+            // Xóa ngay tất cả attempts đã expired (timeout/cancelled)
+            $deletedCount = BookingAttempt::whereIn('status', [
+                    BookingAttemptStatus::Timeout, 
+                    BookingAttemptStatus::Cancelled
+                ])
+                ->where('expired_at', '<=', now())
+                ->delete();
+
+            if ($deletedCount > 0) {
+                Log::info("Auto-cleaned up {$deletedCount} expired booking attempts");
+            }
+        } catch (\Exception $e) {
+            Log::warning("Failed to auto-cleanup expired booking attempts: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Tự động cleanup dữ liệu cũ (gọi khi xử lý timeout)
+     */
+    private function autoCleanupOldAttempts(): void
+    {
+        try {
+            // Chỉ cleanup ngẫu nhiên (1/5 lần) để tránh làm chậm hệ thống
+            if (rand(1, 5) === 1) {
+                // Xóa ngay các attempts đã hết hạn (không cần chờ)
+                $deletedExpired = BookingAttempt::whereIn('status', [
+                        BookingAttemptStatus::Timeout, 
+                        BookingAttemptStatus::Cancelled
+                    ])
+                    ->where('expired_at', '<=', now())
+                    ->delete();
+
+                // Xóa các attempts completed cũ hơn 7 ngày
+                $deletedCompleted = BookingAttempt::where('status', BookingAttemptStatus::Completed)
+                    ->where('completed_at', '<=', now()->subDays(7))
+                    ->delete();
+
+                if ($deletedExpired > 0 || $deletedCompleted > 0) {
+                    Log::info("Auto-cleaned up {$deletedExpired} expired attempts and {$deletedCompleted} completed attempts");
+                }
+            }
+        } catch (\Exception $e) {
+            Log::warning("Failed to auto-cleanup old booking attempts: " . $e->getMessage());
+        }
     }
 
     /**
@@ -243,6 +316,54 @@ class BookingAttemptService
             'successful_attempts' => $successfulAttempts,
             'recent_failed_attempts' => $recentFailedAttempts,
             'success_rate' => $totalAttempts > 0 ? round(($successfulAttempts / $totalAttempts) * 100, 2) : 0,
+        ];
+    }
+
+    /**
+     * Xóa các booking attempts cũ đã hết hạn
+     * Chỉ xóa các attempts đã hết hạn sau một khoảng thời gian nhất định
+     */
+    public function cleanupExpiredAttempts(int $daysOld = 0): array
+    {
+        if ($daysOld == 0) {
+            // Xóa ngay khi hết hạn
+            $cutoffDate = now();
+        } else {
+            // Xóa sau X ngày
+            $cutoffDate = now()->subDays($daysOld);
+        }
+        
+        // Xóa các attempts đã timeout/cancelled và đã hết hạn
+        $deletedTimeouts = BookingAttempt::whereIn('status', [
+                BookingAttemptStatus::Timeout, 
+                BookingAttemptStatus::Cancelled
+            ])
+            ->where('expired_at', '<=', $cutoffDate)
+            ->count();
+            
+        BookingAttempt::whereIn('status', [
+                BookingAttemptStatus::Timeout, 
+                BookingAttemptStatus::Cancelled
+            ])
+            ->where('expired_at', '<=', $cutoffDate)
+            ->delete();
+
+        // Xóa các attempts completed cũ (sau 7 ngày để giữ lại cho báo cáo)
+        $completedCutoff = $daysOld == 0 ? now()->subDays(7) : $cutoffDate;
+        $deletedCompleted = BookingAttempt::where('status', BookingAttemptStatus::Completed)
+            ->where('completed_at', '<=', $completedCutoff)
+            ->count();
+            
+        BookingAttempt::where('status', BookingAttemptStatus::Completed)
+            ->where('completed_at', '<=', $completedCutoff)
+            ->delete();
+
+        Log::info("Cleaned up {$deletedTimeouts} timeout/cancelled attempts and {$deletedCompleted} completed attempts (daysOld: {$daysOld})");
+
+        return [
+            'deleted_timeouts' => $deletedTimeouts,
+            'deleted_completed' => $deletedCompleted,
+            'total_deleted' => $deletedTimeouts + $deletedCompleted
         ];
     }
 }

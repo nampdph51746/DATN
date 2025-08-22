@@ -11,6 +11,7 @@ use App\Models\Showtime;
 use App\Enums\SeatStatus;
 use Illuminate\Http\Request;
 use App\Events\SeatStatusUpdated;
+use App\Events\SeatReleased;
 use App\Models\ShowtimeSeatState;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
@@ -28,6 +29,12 @@ class SeatController extends Controller
     // API bỏ giữ ghế khi người dùng thoát hoặc reload trang
     public function releaseSeat(Request $request, $showtimeId)
     {
+        // Nếu đang ở bước thanh toán thì không thực hiện release/cancel
+        if (session()->has('is_checkout') && session('is_checkout')) {
+            Log::info('releaseSeat: Bỏ qua release do session đang thanh toán');
+            return response()->json(['message' => 'Không thực hiện release khi đang thanh toán']);
+        }
+
         $request->validate([
             'seat_ids' => 'required|array',
             'seat_ids.*' => 'exists:seats,id',
@@ -35,104 +42,51 @@ class SeatController extends Controller
 
         try {
             $seatIds = $request->input('seat_ids');
-            
+
+            // Nếu request đến từ bước thanh toán thì không thực hiện release
+            if ($request->has('from_payment') && $request->input('from_payment') == 1) {
+                Log::info('releaseSeat: Bỏ qua release do đang thanh toán');
+                return response()->json(['message' => 'Không thực hiện release khi thanh toán']);
+            }
+
+            // Kiểm tra session payment để tránh release ghế khi đang thanh toán
+            if (session('is_checkout') || session('is_processing_payment')) {
+                Log::info('releaseSeat: Bỏ qua release do đang trong quá trình thanh toán', [
+                    'is_checkout' => session('is_checkout'),
+                    'is_processing_payment' => session('is_processing_payment')
+                ]);
+                return response()->json(['message' => 'Không thực hiện release khi đang thanh toán']);
+            }
+
             // Nếu user đã login, hủy booking attempt
             if (Auth::check()) {
                 $userId = Auth::id();
                 $this->bookingAttemptService->cancelActiveAttempts($userId, $showtimeId);
                 Log::info("Cancelled active booking attempts for user {$userId}, showtime {$showtimeId}");
             }
-            
+
             foreach ($seatIds as $id) {
                 $seatState = ShowtimeSeatState::where('showtime_id', $showtimeId)
                     ->where('seat_id', $id)
                     ->first();
+
                 if ($seatState && $seatState->status === SeatStatus::Reserved) {
                     $seatState->status = SeatStatus::Available;
                     $seatState->locked_until = null;
                     $seatState->locked_by = null;
                     $seatState->save();
+                    
+                    // Broadcast event để thông báo ghế đã available
+                    event(new SeatStatusUpdated($showtimeId, $id, SeatStatus::Available, null, null));
+                    event(new SeatReleased($showtimeId, $id, $request->session()->getId()));
+                    Log::info("Released seat ID $id for showtime ID: $showtimeId");
                 }
             }
+
             return response()->json(['message' => 'Ghế đã được bỏ giữ']);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Lỗi khi bỏ giữ ghế.'], 500);
         }
-    }
-    public function getSeatsForShowtime($showtimeId)
-    {
-        Log::info('Starting getSeatsForShowtime for showtime ID: ' . $showtimeId);
-
-        $showtime = Showtime::with([
-            'room.seats.seatType',
-            'room.seats.showtimeSeatStates' => function ($q) use ($showtimeId) {
-                $q->where('showtime_id', $showtimeId);
-            }
-        ])->findOrFail($showtimeId);
-
-        Log::info('Showtime loaded: ' . json_encode([
-            'id' => $showtime->id,
-            'room_id' => $showtime->room_id,
-            'base_price' => $showtime->base_price,
-        ]));
-
-        $room = $showtime->room;
-
-        if (!$room || $room->seats->isEmpty()) {
-            Log::warning("Room or seats not found for showtime ID: $showtimeId");
-            return response()->json(['error' => 'Phòng chiếu không có ghế.'], 404);
-        }
-
-        Log::info('Room loaded: ' . json_encode([
-            'id' => $room->id,
-            'name' => $room->name,
-            'seat_count' => $room->seats->count(),
-        ]));
-
-        $rows = $room->seats->pluck('row_char')->unique()->count();
-        $cols = $room->seats->pluck('seat_number')->max();
-
-        Log::info('Room dimensions: ' . json_encode([
-            'rows' => $rows,
-            'cols' => $cols,
-        ]));
-
-        $seatData = $room->seats->map(function ($seat) use ($showtime) {
-            $seatState = $seat->showtimeSeatStates->first();
-            $price = $seat->seatType->price_modifier ?? $showtime->base_price; // Sử dụng price_modifier, fallback về base_price
-            $seatInfo = [
-                'seat_id'       => $seat->id,
-                'row_char'      => $seat->row_char,
-                'seat_number'   => $seat->seat_number,
-                'status'        => $seatState ? $seatState->status : $seat->status,
-                'seat_type'     => $seat->seatType->name,
-                'color_code'    => $seat->seatType->color_code,
-                'price'         => $price,
-                'locked_until'  => $seatState && $seatState->locked_until
-                    ? $seatState->locked_until->toDateTimeString()
-                    : null,
-                'locked_by'     => $seatState ? $seatState->locked_by : null,
-            ];
-            Log::info('Seat data processed: ' . json_encode($seatInfo));
-            return $seatInfo;
-        });
-
-        $response = [
-            'room' => [
-                'id'    => $room->id,
-            'name'  => $room->name,
-                'rows'  => $rows,
-                'cols'  => $cols,
-            ],
-            'seats' => $seatData,
-            'showtime' => [
-                'id'         => $showtime->id,
-                'base_price' => $showtime->base_price,
-            ],
-        ];
-
-        Log::info('Returning seat data for showtime ID: ' . $showtimeId);
-        return response()->json($response);
     }
 
     public function showSeatMap($showtimeId)
@@ -165,6 +119,9 @@ class SeatController extends Controller
             
             if (in_array($seat->id, $bookedSeats)) {
                 $status = 'reserved';
+            } elseif ($seatState && $seatState->status === SeatStatus::Reserved) {
+                // Ghế đang được giữ tạm thời (locked)
+                $status = 'locked';
             } elseif ($seatState && $seatState->status === SeatStatus::Maintenance) {
                 $status = 'maintenance';
             } elseif ($seatState && $seatState->status === SeatStatus::Booked) {
@@ -183,6 +140,7 @@ class SeatController extends Controller
                 'seat_type'   => $seat->seatType->name,
                 'color_code'  => $seat->seatType->color_code,
                 'price'       => $price,
+                'locked_by'   => $seatState ? $seatState->locked_by : null,
             ];
             Log::info('Seat processed for showSeatMap: ' . json_encode($seatInfo));
             return $seatInfo;
@@ -229,6 +187,15 @@ class SeatController extends Controller
         try {
             $seatIds = $request->input('seat_ids');
             Log::info('Seat IDs to reserve: ' . json_encode($seatIds));
+
+            // Kiểm tra giới hạn số ghế tối đa
+            $maxSeats = config('booking.max_seats_per_booking', 8);
+            if (count($seatIds) > $maxSeats) {
+                return response()->json([
+                    'error' => 'Vượt quá giới hạn đặt ghế',
+                    'message' => "Bạn chỉ có thể đặt tối đa {$maxSeats} ghế trong 1 lần đặt vé",
+                ], 400);
+            }
 
             // Kiểm tra user đã login chưa
             if (!Auth::check()) {
@@ -356,20 +323,10 @@ class SeatController extends Controller
 
             if ($seatState) {
                 if ($seatState->status === SeatStatus::Reserved) {
-                    if ($seatState->locked_until && now()->lt($seatState->locked_until)) {
-                        $status = 'locked';
-                        $lockedBy = $seatState->locked_by;
-                        $lockedUntil = $seatState->locked_until->toDateTimeString();
-                    } else {
-                        // ❗ Nếu quá hạn thì reset lại ghế
-                        $seatState->update([
-                            'status' => SeatStatus::Available,
-                            'locked_by' => null,
-                            'locked_until' => null,
-                            'booking_id' => null,
-                        ]);
-                        $status = 'available';
-                    }
+                    // Ghế đang được reserve (locked) bởi session nào đó
+                    $status = 'locked';
+                    $lockedBy = $seatState->locked_by;
+                    $lockedUntil = $seatState->locked_until ? $seatState->locked_until->toDateTimeString() : null;
                 } elseif ($seatState->status === SeatStatus::Booked) {
                     $status = 'reserved';
                 } elseif ($seatState->status === SeatStatus::Maintenance) {
@@ -389,5 +346,65 @@ class SeatController extends Controller
         });
 
         return response()->json(['seats' => $seatData]);
+    }
+
+    // API để release tất cả ghế của session khi user disconnect
+    public function releaseAllSeatsOfSession(Request $request, $showtimeId)
+    {
+        try {
+            $sessionId = $request->session()->getId();
+            
+            // Tìm tất cả ghế đang được giữ bởi session hiện tại
+            $seatStates = ShowtimeSeatState::where('showtime_id', $showtimeId)
+                ->where('locked_by', $sessionId)
+                ->where('status', SeatStatus::Reserved)
+                ->get();
+
+            if ($seatStates->isEmpty()) {
+                Log::info("No seats to release for session {$sessionId} in showtime {$showtimeId}");
+                return response()->json(['message' => 'Không có ghế nào cần trả lại']);
+            }
+
+            $releasedSeatIds = [];
+            
+            // Kiểm tra session payment để tránh release ghế khi đang thanh toán
+            if (session('is_checkout') || session('is_processing_payment')) {
+                Log::info('releaseAllSeatsOfSession: Bỏ qua release do đang trong quá trình thanh toán', [
+                    'is_checkout' => session('is_checkout'),
+                    'is_processing_payment' => session('is_processing_payment')
+                ]);
+                return response()->json(['message' => 'Không thực hiện release khi đang thanh toán']);
+            }
+
+            foreach ($seatStates as $seatState) {
+                $seatState->status = SeatStatus::Available;
+                $seatState->locked_until = null;
+                $seatState->locked_by = null;
+                $seatState->save();
+                
+                $releasedSeatIds[] = $seatState->seat_id;
+                
+                // Broadcast events
+                event(new SeatStatusUpdated($showtimeId, $seatState->seat_id, SeatStatus::Available, null, null));
+                event(new SeatReleased($showtimeId, $seatState->seat_id, $sessionId));
+                
+                Log::info("Released seat ID {$seatState->seat_id} for session {$sessionId} in showtime {$showtimeId}");
+            }
+
+            // Nếu user đã login, hủy booking attempt (chỉ khi không đang thanh toán)
+            if (Auth::check()) {
+                $userId = Auth::id();
+                $this->bookingAttemptService->cancelActiveAttempts($userId, $showtimeId);
+                Log::info("Cancelled active booking attempts for user {$userId}, showtime {$showtimeId}");
+            }
+
+            return response()->json([
+                'message' => 'Đã trả lại tất cả ghế',
+                'released_seats' => $releasedSeatIds
+            ]);
+        } catch (\Exception $e) {
+            Log::error("Error releasing all seats for session in showtime {$showtimeId}: " . $e->getMessage());
+            return response()->json(['error' => 'Lỗi khi trả lại ghế.'], 500);
+        }
     }
 }

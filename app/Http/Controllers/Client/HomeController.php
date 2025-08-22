@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\SeatType;
 use App\Models\Showtime;
 use App\Models\Review;
+use App\Models\RoomType;
 use App\Enums\MovieStatus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -33,6 +34,9 @@ class HomeController extends Controller
     {
         $query = request('query');
 
+        // Cập nhật trạng thái các phim đã kết thúc
+        Movie::updateExpiredMovies();
+
         // Truy vấn phim đang chiếu
         $showingMovies = Movie::query()
             ->with('genres')
@@ -43,6 +47,11 @@ class HomeController extends Controller
                     });
             })
             ->where('status', MovieStatus::Showing)
+            ->where(function($q) {
+                // Chỉ lấy phim chưa kết thúc hoặc không có ngày kết thúc
+                $q->whereNull('end_date')
+                  ->orWhere('end_date', '>=', now());
+            })
             ->orderBy('release_date', 'desc')
             ->take(8)
             ->get();
@@ -57,6 +66,11 @@ class HomeController extends Controller
                     });
             })
             ->where('status', MovieStatus::Upcoming)
+            ->where(function($q) {
+                // Chỉ lấy phim chưa kết thúc hoặc không có ngày kết thúc
+                $q->whereNull('end_date')
+                  ->orWhere('end_date', '>=', now());
+            })
             ->orderBy('release_date', 'asc')
             ->take(6)
             ->get();
@@ -67,10 +81,12 @@ class HomeController extends Controller
         if (Auth::check()) {
             $bookingAttemptService = new BookingAttemptService();
             
-            // Auto-cancel các reserved attempts khi user vào trang chủ (reset/reload)
-            $cancelledCount = $bookingAttemptService->cancelAllActiveAttempts(Auth::id());
-            if ($cancelledCount > 0) {
-                Log::info("Auto-cancelled {$cancelledCount} reserved attempts for user " . Auth::id() . " when accessing home page");
+            // Không auto-cancel nếu đang ở bước thanh toán (session/payment flag)
+            if (!session()->has('is_checkout') || !session('is_checkout')) {
+                $cancelledCount = $bookingAttemptService->cancelAllActiveAttempts(Auth::id());
+                if ($cancelledCount > 0) {
+                    Log::info("Auto-cancelled {$cancelledCount} reserved attempts for user " . Auth::id() . " when accessing home page");
+                }
             }
             
             $isUserBanned = $bookingAttemptService->isUserBanned(Auth::id());
@@ -84,6 +100,9 @@ class HomeController extends Controller
 
         public function filter(Request $request, $genreName = null)
     {
+        // Cập nhật trạng thái các phim đã kết thúc
+        Movie::updateExpiredMovies();
+        
         $data = $request->all();
 
         // Xử lý chuyển chuỗi rỗng thành null cho from_time và to_time
@@ -138,6 +157,15 @@ class HomeController extends Controller
 
         if (!empty($data['status'])) {
             $query->where('status', $data['status']);
+            
+            // Thêm điều kiện lọc theo ngày kết thúc
+            if ($data['status'] === 'showing' || $data['status'] === 'upcoming') {
+                $query->where(function($q) {
+                    $q->whereNull('end_date')
+                      ->orWhere('end_date', '>=', now());
+                });
+            }
+            
             if ($data['status'] === 'showing') {
                 $title = 'Phim đang chiếu';
                 $isShowing = true;
@@ -265,10 +293,12 @@ class HomeController extends Controller
         if (Auth::check()) {
             $bookingAttemptService = new BookingAttemptService();
             
-            // Auto-cancel các reserved attempts khi user vào trang chi tiết phim (reset/reload)
-            $cancelledCount = $bookingAttemptService->cancelAllActiveAttempts(Auth::id());
-            if ($cancelledCount > 0) {
-                Log::info("Auto-cancelled {$cancelledCount} reserved attempts for user " . Auth::id() . " when accessing movie detail page");
+            // Không auto-cancel nếu đang ở bước thanh toán (session/payment flag)
+            if (!session()->has('is_checkout') || !session('is_checkout')) {
+                $cancelledCount = $bookingAttemptService->cancelAllActiveAttempts(Auth::id());
+                if ($cancelledCount > 0) {
+                    Log::info("Auto-cancelled {$cancelledCount} reserved attempts for user " . Auth::id() . " when accessing movie detail page");
+                }
             }
             
             $isUserBanned = $bookingAttemptService->isUserBanned(Auth::id());
@@ -302,6 +332,9 @@ class HomeController extends Controller
 
         $dates = $this->getDates($showtimes);
         $showtimesData = $this->getShowtimesData($showtimes);
+
+        // Get all room types for filtering
+        $roomTypes = RoomType::where('status', 'active')->get(['id', 'name', 'description']);
 
         $showtimeId = request()->input('showtime_id');
         $showtime = null;
@@ -363,6 +396,10 @@ class HomeController extends Controller
         $discount = 0;
         $pointsUsed = 0;
         $promotionId = null;
+        
+        // Tính toán điểm có thể sử dụng cho đơn hàng này
+        $maxDiscountPercentage = $userRank?->discount_percentage ?? 30; // mặc định 30%
+        $maxUsablePoints = 0; // sẽ được tính toán bằng JavaScript dựa trên tổng đơn hàng
 
         $bookingData = [
     'movie_id' => $movie->id,
@@ -389,6 +426,7 @@ class HomeController extends Controller
             'movie',
             'dates',
             'showtimesData',
+            'roomTypes',
             'showtimeId',
             'seatTypes',
             'products',
@@ -397,6 +435,7 @@ class HomeController extends Controller
             'cinemas',
             'userPoints',
             'userRank',
+            'maxDiscountPercentage',
             'promotionStatus',
             'discount',
             'pointsUsed',
@@ -411,7 +450,7 @@ class HomeController extends Controller
         $showtimes = Showtime::where('movie_id', $movieId)
             ->where('status', 'scheduled')
             ->where('start_time', '>=', Carbon::now())
-            ->with(['room.seats', 'showtimeSeatStates'])
+            ->with(['room.seats', 'room.roomType', 'showtimeSeatStates'])
             ->get();
 
         // Lọc ra các suất chiếu chưa đầy
@@ -455,6 +494,8 @@ class HomeController extends Controller
                 $room = $roomShowtimes->first()->room ?? (object)['name' => 'Unknown Room'];
                 return [
                     'room_name' => $room->name,
+                    'room_type_id' => $room->roomType->id ?? null,
+                    'room_type_name' => $room->roomType->name ?? 'Không xác định',
                     'times' => $roomShowtimes->map(function ($showtime) use ($availabilityService) {
                         $availabilityInfo = $availabilityService->getShowtimeAvailabilityInfo($showtime);
                         
@@ -688,17 +729,22 @@ class HomeController extends Controller
         // Tính tiền giảm từ điểm: 1 điểm = 1,000₫
         $pointDiscount = $pointsToUse * 1000;
 
-        // Kiểm tra tổng giảm giá không vượt quá 30% tổng đơn hàng
-        $maxTotalDiscount = $orderAmount * 0.3;
+        // Lấy phần trăm giảm giá tối đa từ hạng của user, mặc định 30%
+        $userRank = $user->customerRank;
+        $maxDiscountPercentage = $userRank ? $userRank->discount_percentage : 30;
+
+        // Kiểm tra tổng giảm giá không vượt quá phần trăm tối đa của đơn hàng
+        $maxTotalDiscount = $orderAmount * ($maxDiscountPercentage / 100);
         $totalDiscount = $currentDiscount + $pointDiscount;
 
         if ($totalDiscount > $maxTotalDiscount) {
             $maxPointsAllowed = floor(($maxTotalDiscount - $currentDiscount) / 1000);
             return response()->json([
-                'error' => "Tổng giảm giá không được vượt quá 30% đơn hàng. Bạn chỉ có thể dùng tối đa {$maxPointsAllowed} điểm.",
+                'error' => "Tổng giảm giá không được vượt quá {$maxDiscountPercentage}% đơn hàng. Bạn chỉ có thể dùng tối đa {$maxPointsAllowed} điểm.",
                 'max_points_allowed' => $maxPointsAllowed,
                 'max_total_discount' => $maxTotalDiscount,
-                'current_discount' => $currentDiscount
+                'current_discount' => $currentDiscount,
+                'max_discount_percentage' => $maxDiscountPercentage
             ], 400);
         }
 
