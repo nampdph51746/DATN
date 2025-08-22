@@ -43,7 +43,8 @@
                             <div class="col-lg-6">
                                 <div class="mb-3">
                                     <label for="name" class="form-label">Tên phim <span class="text-danger">*</span></label>
-                                    <input type="text" name="name" id="name" class="form-control @error('name') is-invalid @enderror" value="{{ old('name') }}" required maxlength="255">
+                                    <!-- class="form-control @error('name') is-invalid @enderror" -->
+                                    <input type="text" name="name" id="name" class="form-control" value="{{ old('name') }}" required maxlength="255">
                                     <div class="form-text">Tối đa 255 ký tự</div>
                                     @error('name')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -182,15 +183,6 @@
                         <!-- <div class="row">
                             <div class="col-lg-6">
                                 <div class="mb-3">
-                                    <label for="poster_url" class="form-label">URL Poster</label>
-                                    <input type="url" name="poster_url" id="poster_url" class="form-control @error('poster_url') is-invalid @enderror" value="{{ old('poster_url') }}">
-                                    @error('poster_url')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-                            <div class="col-lg-6">
-                                <div class="mb-3">
                                     <label for="trailer_url" class="form-label">URL Trailer</label>
                                     <input type="url" name="trailer_url" id="trailer_url" class="form-control @error('trailer_url') is-invalid @enderror" value="{{ old('trailer_url') }}">
                                     @error('trailer_url')
@@ -236,17 +228,6 @@
                                 </div>
                             </div>
                         </div>
-                        <!-- <div class="row">
-                            <div class="col-lg-6">
-                                <div class="mb-3">
-                                    <label for="average_rating" class="form-label">Điểm đánh giá (0-10)</label>
-                                    <input type="number" name="average_rating" id="average_rating" class="form-control @error('average_rating') is-invalid @enderror" value="{{ old('average_rating') }}" step="0.1" min="0" max="10">
-                                    @error('average_rating')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-                        </div> -->
                         <div class="row">
                             <div class="col-lg-12">
                                 <div class="mb-3">

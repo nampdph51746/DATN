@@ -13,6 +13,10 @@ class CheckoutController extends Controller
 {
     public function previewBooking(Request $request)
     {
+        // Đánh dấu đang ở bước thanh toán ngay lập tức để bảo vệ trạng thái ghế
+        session(['is_checkout' => true]);
+        Log::info('CheckoutController - is_checkout session set at start of previewBooking');
+
         $user = Auth::user();
         $promotionId = $request->input('promotion_id');
         
@@ -85,7 +89,17 @@ class CheckoutController extends Controller
 
         // dd($bookingData); 
         session(['booking_preview' => $bookingData]);
+        // Đánh dấu đang ở bước thanh toán để bảo vệ trạng thái ghế
+        session(['is_checkout' => true]);
 
         return view('client.checkout', compact('bookingData'));
+    }
+
+    public function setCheckoutSession(Request $request)
+    {
+        session(['is_checkout' => true]);
+        Log::info('Checkout session set via API');
+        
+        return response()->json(['success' => true]);
     }
 }

@@ -1,7 +1,6 @@
 <?php
 
 namespace App\Http\Middleware;
-
 use Closure;
 use Illuminate\Http\Request;
 use App\Services\BookingAttemptService;
@@ -30,6 +29,16 @@ class CheckBookingBan
         // Cleanup expired bans trước khi check
         $this->bookingAttemptService->cleanupExpiredBans();
         
+        // Cleanup expired booking attempts mỗi request (xóa ngay khi expired)
+        // Chạy thường xuyên hơn để đảm bảo cleanup kịp thời
+        if (rand(1, 2) === 1) { // 50% chance
+            try {
+                $this->bookingAttemptService->cleanupExpiredAttempts(0); // 0 = xóa ngay khi expired
+            } catch (\Exception $e) {
+                // Bỏ qua lỗi để không ảnh hưởng đến request chính
+            }
+        }
+        
         if ($this->bookingAttemptService->isUserBanned($userId)) {
             $banInfo = $this->bookingAttemptService->getUserBanInfo($userId);
             
@@ -42,7 +51,7 @@ class CheckBookingBan
                 ], 403);
             }
 
-            return redirect()->route('home')->with('error', 
+            return redirect()->route('client.home')->with('error', 
                 'Tài khoản của bạn đã bị tạm khóa đặt vé do đặt ghế nhiều lần mà không thanh toán. ' .
                 'Tài khoản sẽ được mở khóa vào ' . $banInfo->banned_until->format('d/m/Y H:i')
             );

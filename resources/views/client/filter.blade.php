@@ -153,12 +153,14 @@
                                     @endforeach
                                 </div>
                                 <div class="text-center mt-3 mb-3">
-                                    @if($movie->status === 'showing')
+                                    @if($movie->status->value === 'showing')
                                         <a href="{{ route('client.movies.ticketBooking', ['id' => $movie->id]) }}" class="ticket-btn">
                                             <i class="fa fa-ticket" aria-hidden="true"></i> Đặt vé
                                         </a>
+                                    @elseif($movie->status->value === 'upcoming')
+                                        <span class="badge badge-info">Sắp chiếu</span>
                                     @else
-                                        <span class="badge badge-warning">{{ $movie->status === 'upcoming' ? 'Sắp chiếu' : 'Đã kết thúc' }}</span>
+                                        <span class="badge badge-secondary">Đã kết thúc</span>
                                     @endif
                                 </div>
                             </div>

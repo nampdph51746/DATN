@@ -413,4 +413,19 @@ class AdminMovieController extends Controller
 
         return view('admin.movies.show', compact('movie', 'showtimes', 'rooms'));
     }
+
+    /**
+     * Đếm số lượng phim trùng tên
+     */
+    public function countDuplicateName(Request $request)
+    {
+        $name = $request->input('name');
+        $excludeId = $request->input('exclude_id');
+        $count = Movie::where('name', $name)
+            ->when($excludeId, function ($q) use ($excludeId) {
+                $q->where('id', '!=', $excludeId);
+            })
+            ->count();
+        return response()->json(['count' => $count]);
+    }
 }
