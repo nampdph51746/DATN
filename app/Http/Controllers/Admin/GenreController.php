@@ -17,18 +17,9 @@ class GenreController extends Controller
         $this->middleware('can:edit genre')->only(['edit', 'update']);
         $this->middleware('can:delete genre')->only('destroy');
     }
-    public function index(Request $request)
+    public function index()
     {
-        $query = Genre::withCount('movies');
-        
-        // Tìm kiếm theo tên
-        if ($request->has('search') && $request->search) {
-            $query->where('name', 'like', '%' . $request->search . '%')
-                  ->orWhere('description', 'like', '%' . $request->search . '%');
-        }
-        
-        $genres = $query->orderBy('created_at', 'desc')->paginate(10);
-        
+        $genres = Genre::paginate(10);
         return view('admin.movieGenres.index', compact('genres'));
     }
 
@@ -41,9 +32,16 @@ class GenreController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-        'name' => 'required|string|max:100|unique:genres,name',
-        'description' => 'nullable|string',
-        ]);
+    'name' => 'required|string|max:100|unique:genres,name',
+    'description' => 'nullable|string',
+], [
+    'name.required' => 'Tên thể loại không được để trống.',
+    'name.string' => 'Tên thể loại phải là chuỗi ký tự.',
+    'name.max' => 'Tên thể loại không được dài quá 100 ký tự.',
+    'name.unique' => 'Tên thể loại đã tồn tại.',
+    'description.string' => 'Mô tả phải là chuỗi ký tự.',
+]);
+
 
         Genre::create([
             'name' => $request->name,
@@ -81,9 +79,15 @@ class GenreController extends Controller
     public function update(Request $request, string $id)
     {
         $request->validate([
-        'name' => 'required|string|max:100|unique:genres,name,' . $id,
-        'description' => 'nullable|string',
-    ]);
+    'name' => 'required|string|max:100|unique:genres,name',
+    'description' => 'nullable|string',
+], [
+    'name.required' => 'Tên thể loại không được để trống.',
+    'name.string' => 'Tên thể loại phải là chuỗi ký tự.',
+    'name.max' => 'Tên thể loại không được dài quá 100 ký tự.',
+    'name.unique' => 'Tên thể loại đã tồn tại.',
+    'description.string' => 'Mô tả phải là chuỗi ký tự.',
+]);
 
         $genre = Genre::findOrFail($id);
         $genre->update([
@@ -95,10 +99,19 @@ class GenreController extends Controller
     }
 
     public function destroy(string $id)
-    {
-        $genre = Genre::findOrFail($id);
-        $genre->delete();
+{
+    $genre = Genre::findOrFail($id);
 
-        return redirect()->route('admin.genres.index')->with('success', 'Xóa thể loại thành công!');
+    // Kiểm tra xem có phim nào liên kết với thể loại này không
+    if ($genre->movies()->exists()) {
+        return redirect()->route('admin.genres.index')
+            ->with('error', 'Không thể xóa thể loại này vì đang có phim liên quan.');
     }
+
+    $genre->delete();
+
+    return redirect()->route('admin.genres.index')
+        ->with('success', 'Xóa thể loại thành công!');
+}
+
 }
