@@ -109,6 +109,9 @@ class BookingAttemptService
      */
     public function processTimeoutAttempts(): array
     {
+        // LUÔN cleanup expired attempts trước khi xử lý timeout
+        $this->autoCleanupExpiredAttempts();
+        
         $expiredAttempts = BookingAttempt::where('status', BookingAttemptStatus::Reserved)
             ->where('expired_at', '<=', now())
             ->get();
@@ -132,6 +135,58 @@ class BookingAttemptService
             'processed' => $processed,
             'bans_created' => $bansCreated
         ];
+    }
+
+    /**
+     * Tự động cleanup dữ liệu cũ (luôn chạy)
+     */
+    private function autoCleanupExpiredAttempts(): void
+    {
+        try {
+            // Xóa ngay tất cả attempts đã expired (timeout/cancelled)
+            $deletedCount = BookingAttempt::whereIn('status', [
+                    BookingAttemptStatus::Timeout, 
+                    BookingAttemptStatus::Cancelled
+                ])
+                ->where('expired_at', '<=', now())
+                ->delete();
+
+            if ($deletedCount > 0) {
+                Log::info("Auto-cleaned up {$deletedCount} expired booking attempts");
+            }
+        } catch (\Exception $e) {
+            Log::warning("Failed to auto-cleanup expired booking attempts: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Tự động cleanup dữ liệu cũ (gọi khi xử lý timeout)
+     */
+    private function autoCleanupOldAttempts(): void
+    {
+        try {
+            // Chỉ cleanup ngẫu nhiên (1/5 lần) để tránh làm chậm hệ thống
+            if (rand(1, 5) === 1) {
+                // Xóa ngay các attempts đã hết hạn (không cần chờ)
+                $deletedExpired = BookingAttempt::whereIn('status', [
+                        BookingAttemptStatus::Timeout, 
+                        BookingAttemptStatus::Cancelled
+                    ])
+                    ->where('expired_at', '<=', now())
+                    ->delete();
+
+                // Xóa các attempts completed cũ hơn 7 ngày
+                $deletedCompleted = BookingAttempt::where('status', BookingAttemptStatus::Completed)
+                    ->where('completed_at', '<=', now()->subDays(7))
+                    ->delete();
+
+                if ($deletedExpired > 0 || $deletedCompleted > 0) {
+                    Log::info("Auto-cleaned up {$deletedExpired} expired attempts and {$deletedCompleted} completed attempts");
+                }
+            }
+        } catch (\Exception $e) {
+            Log::warning("Failed to auto-cleanup old booking attempts: " . $e->getMessage());
+        }
     }
 
     /**
@@ -261,6 +316,54 @@ class BookingAttemptService
             'successful_attempts' => $successfulAttempts,
             'recent_failed_attempts' => $recentFailedAttempts,
             'success_rate' => $totalAttempts > 0 ? round(($successfulAttempts / $totalAttempts) * 100, 2) : 0,
+        ];
+    }
+
+    /**
+     * Xóa các booking attempts cũ đã hết hạn
+     * Chỉ xóa các attempts đã hết hạn sau một khoảng thời gian nhất định
+     */
+    public function cleanupExpiredAttempts(int $daysOld = 0): array
+    {
+        if ($daysOld == 0) {
+            // Xóa ngay khi hết hạn
+            $cutoffDate = now();
+        } else {
+            // Xóa sau X ngày
+            $cutoffDate = now()->subDays($daysOld);
+        }
+        
+        // Xóa các attempts đã timeout/cancelled và đã hết hạn
+        $deletedTimeouts = BookingAttempt::whereIn('status', [
+                BookingAttemptStatus::Timeout, 
+                BookingAttemptStatus::Cancelled
+            ])
+            ->where('expired_at', '<=', $cutoffDate)
+            ->count();
+            
+        BookingAttempt::whereIn('status', [
+                BookingAttemptStatus::Timeout, 
+                BookingAttemptStatus::Cancelled
+            ])
+            ->where('expired_at', '<=', $cutoffDate)
+            ->delete();
+
+        // Xóa các attempts completed cũ (sau 7 ngày để giữ lại cho báo cáo)
+        $completedCutoff = $daysOld == 0 ? now()->subDays(7) : $cutoffDate;
+        $deletedCompleted = BookingAttempt::where('status', BookingAttemptStatus::Completed)
+            ->where('completed_at', '<=', $completedCutoff)
+            ->count();
+            
+        BookingAttempt::where('status', BookingAttemptStatus::Completed)
+            ->where('completed_at', '<=', $completedCutoff)
+            ->delete();
+
+        Log::info("Cleaned up {$deletedTimeouts} timeout/cancelled attempts and {$deletedCompleted} completed attempts (daysOld: {$daysOld})");
+
+        return [
+            'deleted_timeouts' => $deletedTimeouts,
+            'deleted_completed' => $deletedCompleted,
+            'total_deleted' => $deletedTimeouts + $deletedCompleted
         ];
     }
 }

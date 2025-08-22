@@ -78,16 +78,16 @@ class GenreController extends Controller
 
     public function update(Request $request, string $id)
     {
-        $request->validate([
+    $request->validate([
     'name' => 'required|string|max:100|unique:genres,name',
     'description' => 'nullable|string',
-], [
-    'name.required' => 'Tên thể loại không được để trống.',
-    'name.string' => 'Tên thể loại phải là chuỗi ký tự.',
-    'name.max' => 'Tên thể loại không được dài quá 100 ký tự.',
-    'name.unique' => 'Tên thể loại đã tồn tại.',
-    'description.string' => 'Mô tả phải là chuỗi ký tự.',
-]);
+    ], [
+        'name.required' => 'Tên thể loại không được để trống.',
+        'name.string' => 'Tên thể loại phải là chuỗi ký tự.',
+        'name.max' => 'Tên thể loại không được dài quá 100 ký tự.',
+        'name.unique' => 'Tên thể loại đã tồn tại.',
+        'description.string' => 'Mô tả phải là chuỗi ký tự.',
+    ]);
 
         $genre = Genre::findOrFail($id);
         $genre->update([

@@ -12,6 +12,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        // Thêm auto cleanup vào global middleware
+        $middleware->append(\App\Http\Middleware\AutoCleanupBookingAttempts::class);
+        
         $middleware->group('web', [
             \Illuminate\Session\Middleware\StartSession::class,
             \Illuminate\View\Middleware\ShareErrorsFromSession::class,

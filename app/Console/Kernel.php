@@ -38,6 +38,11 @@ class Kernel extends ConsoleKernel
         $schedule->command('booking:process-timeouts')
                  ->everyFiveMinutes()
                  ->withoutOverlapping();
+
+        // Cleanup booking attempts ngay khi expired mỗi ngày lúc 02:00
+        $schedule->command('booking:cleanup-attempts --days=0')
+                 ->dailyAt('02:00')
+                 ->withoutOverlapping();
     }
 
     /**
