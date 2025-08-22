@@ -201,7 +201,6 @@ class AdminMovieController extends Controller
             'average_rating.min' => 'Điểm đánh giá phải từ 0 trở lên.',
             'average_rating.max' => 'Điểm đánh giá không được vượt quá 10.',
         ]);
-
         $data = $request->except(['image', 'genre_ids', 'actor_ids']);
 
         // Đảm bảo thư mục tồn tại

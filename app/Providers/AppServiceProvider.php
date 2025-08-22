@@ -99,7 +99,7 @@ class AppServiceProvider extends ServiceProvider
             $movie->status = 'showing';
         }
 
-        $movie->saveQuietly(); // update mà không bắn event
+        $movie->saveQuietly();
     });
     }
 }
