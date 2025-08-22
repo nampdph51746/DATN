@@ -39,6 +39,7 @@ use App\Http\Controllers\Admin\AdminAttributeValueController;
 use App\Http\Controllers\Admin\AdminProductVariantController;
 use App\Http\Controllers\Admin\CustomerRankPromotionController;
 use App\Http\Controllers\Admin\AdminProductCategoriesController;
+use App\Http\Controllers\Admin\BannerController;
 use App\Http\Controllers\Client\BookingHistoryController;
 use Symfony\Component\HttpKernel\Profiler\Profile;
 
@@ -223,6 +224,14 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
     Route::post('countries/{id}/restore', [CountryController::class, 'restore'])->name('countries.restore');
     Route::delete('countries/{id}/force-delete', [CountryController::class, 'forceDelete'])->name('countries.forceDelete');
     Route::resource('countries', CountryController::class);
+        Route::get('banners', [BannerController::class, 'index'])->name('banners.index');
+    Route::get('banners-add', [BannerController::class, 'create'])->name('banners.create');
+    Route::get('banners-edit', [BannerController::class, 'edit'])->name('banners.edit');
+    Route::get('banners/trash', [BannerController::class, 'trash'])->name('banners.trash');
+    Route::post('banners/{id}/restore', [BannerController::class, 'restore'])->name('banners.restore');
+    Route::delete('banners/{id}/force-delete', [BannerController::class, 'forceDelete'])->name('banners.forceDelete');
+    Route::delete('banners/bulk-delete', [BannerController::class, 'bulkDelete'])->name('banners.bulkDelete');
+    Route::resource('banners', BannerController::class);
     Route::get('cities', [CityController::class, 'index'])->name('index');
     Route::get('cities-add', [CityController::class, 'create'])->name('create');
     Route::get('cities-edit', [CityController::class, 'edit'])->name('edit');
