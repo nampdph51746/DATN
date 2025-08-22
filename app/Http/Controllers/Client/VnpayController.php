@@ -231,7 +231,7 @@ class VnpayController extends Controller
                     \Log::warning("Points not added. Points: {$pointsToAdd}, Existing history: " . (PointHistory::where('booking_id', $booking->id)->exists() ? 'Yes' : 'No'));
                 }
 
-                // 4. Lấy showtime từ ghế đã đặt và tạo tickets
+                // 4. Lấy showtime từ booking data thay vì từ seat state để đảm bảo chính xác
                 $selectedSeatInfos = session('selected_seats_info', []);
 
                 // Log selected_seats_info để debug
@@ -240,53 +240,62 @@ class VnpayController extends Controller
                 if (empty($selectedSeatInfos)) {
                     throw new \Exception('Không tìm thấy thông tin ghế đã chọn.');
                 }
-
-                // Lấy showtime_id từ showtime_seat_states của ghế đầu tiên
-                $firstSeatId = $selectedSeatInfos[0]['seat_id'];
-                $currentSessionId = session()->getId();
                 
-                Log::info('Searching for seat state:', [
-                    'seat_id' => $firstSeatId,
-                    'session_id' => $currentSessionId
-                ]);
+                $showtimeId = $bookingData['showtime_id'] ?? null;
                 
-                // Tìm ghế theo session ID đầu tiên (ưu tiên)
-                $seatState = ShowtimeSeatState::where('seat_id', $firstSeatId)
-                    ->where('locked_by', $currentSessionId)
-                    ->orderBy('updated_at', 'desc')
-                    ->first();
+                if (!$showtimeId) {
+                    Log::error('Showtime ID not found in booking data');
+                    // Fallback: lấy từ seat state như trước
+                    $firstSeatId = $selectedSeatInfos[0]['seat_id'];
+                    $currentSessionId = session()->getId();
                     
-                // Nếu không tìm thấy theo session, thử tìm theo status Reserved
-                if (!$seatState) {
-                    Log::info('No seat found by session, trying by Reserved status');
+                    Log::info('Fallback: Searching for seat state:', [
+                        'seat_id' => $firstSeatId,
+                        'session_id' => $currentSessionId
+                    ]);
+                    
+                    // Tìm ghế theo session ID đầu tiên (ưu tiên)
                     $seatState = ShowtimeSeatState::where('seat_id', $firstSeatId)
-                        ->where('status', SeatStatus::Reserved)
+                        ->where('locked_by', $currentSessionId)
                         ->orderBy('updated_at', 'desc')
                         ->first();
-                }
-                
-                // Nếu vẫn không tìm thấy, tìm theo seat_id (trường hợp ghế đã bị release)
-                if (!$seatState) {
-                    Log::info('No reserved seat found, trying by seat_id only');
-                    $seatState = ShowtimeSeatState::where('seat_id', $firstSeatId)
-                        ->orderBy('updated_at', 'desc')
-                        ->first();
-                }
+                        
+                    // Nếu không tìm thấy theo session, thử tìm theo status Reserved
+                    if (!$seatState) {
+                        Log::info('No seat found by session, trying by Reserved status');
+                        $seatState = ShowtimeSeatState::where('seat_id', $firstSeatId)
+                            ->where('status', SeatStatus::Reserved)
+                            ->orderBy('updated_at', 'desc')
+                            ->first();
+                    }
                     
-                if (!$seatState) {
-                    Log::error('Cannot find any seat state for seat_id: ' . $firstSeatId);
-                    throw new \Exception('Không tìm thấy trạng thái ghế đã đặt.');
+                    // Nếu vẫn không tìm thấy, tìm theo seat_id (trường hợp ghế đã bị release)
+                    if (!$seatState) {
+                        Log::info('No reserved seat found, trying by seat_id only');
+                        $seatState = ShowtimeSeatState::where('seat_id', $firstSeatId)
+                            ->orderBy('updated_at', 'desc')
+                            ->first();
+                    }
+                        
+                    if (!$seatState) {
+                        Log::error('Cannot find any seat state for seat_id: ' . $firstSeatId);
+                        throw new \Exception('Không tìm thấy trạng thái ghế đã đặt.');
+                    }
+                    
+                    $showtimeId = $seatState->showtime_id;
                 }
                 
-                Log::info('Found seat state:', [
-                    'seat_state_id' => $seatState->id,
-                    'showtime_id' => $seatState->showtime_id,
-                    'status' => $seatState->status->value ?? 'unknown',
-                    'locked_by' => $seatState->locked_by
+                Log::info('Using showtime ID from booking data:', [
+                    'showtime_id' => $showtimeId,
+                    'source' => isset($bookingData['showtime_id']) ? 'booking_data' : 'seat_state_fallback'
                 ]);
                 
-                $showtime = Showtime::findOrFail($seatState->showtime_id);
-                Log::info('Using showtime ID: ' . $showtime->id);
+                $showtime = Showtime::findOrFail($showtimeId);
+                Log::info('Showtime found:', [
+                    'id' => $showtime->id,
+                    'movie_title' => $showtime->movie->title ?? 'unknown',
+                    'start_time' => $showtime->start_time
+                ]);
 
                 // 5. Tạo bản ghi trong bảng tickets và cập nhật showtime_seat_states
                 foreach ($selectedSeatInfos as $seatInfo) {
