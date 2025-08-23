@@ -263,6 +263,49 @@
             .poster-image {
                 width: 100px;
             }
+
+            .category-tabs {
+                flex-direction: column;
+                gap: 6px;
+            }
+
+            .category-tab {
+                padding: 8px 16px;
+                font-size: 13px;
+                text-align: center;
+            }
+
+            .products-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .snack-select-div {
+                flex-direction: column !important;
+            }
+
+            .basis-\[70\%\] {
+                flex-basis: 100% !important;
+            }
+
+            .basis-\[30\%\] {
+                flex-basis: 100% !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .category-tab {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+
+            .products-grid {
+                gap: 8px;
+            }
+
+            .snack-info h4 {
+                font-size: 14px;
+            }
         }
 
         /* Custom classes */
@@ -968,6 +1011,97 @@
             border: 1px solid rgba(229, 0, 110, 0.2);
         }
 
+        /* Category tabs styling */
+        .category-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 20px;
+            padding: 0;
+        }
+
+        .category-tab {
+            padding: 10px 20px;
+            background: #333333;
+            color: #ffffff;
+            border: 2px solid #555555;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .category-tab:hover {
+            background: #444444;
+            border-color: #e5006e;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(229, 0, 110, 0.2);
+        }
+
+        .category-tab.active {
+            background: linear-gradient(135deg, #e5006e, #c4005c);
+            border-color: #e5006e;
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(229, 0, 110, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .category-tab::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .category-tab:hover::before {
+            left: 100%;
+        }
+
+        .category-count {
+            background: rgba(255,255,255,0.2);
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .category-tab.active .category-count {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .category-content {
+            display: none;
+        }
+
+        .category-content.active {
+            display: block;
+        }
+
+        .category-title {
+            color: #e5006e;
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #e5006e;
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+        }
+
         .room-type-dropdown-wrapper {
             position: relative;
             max-width: 250px;
@@ -1057,55 +1191,95 @@
                             <fieldset>
                                 <div id="snack-select-div" class="flex gap-4 p-4">
                                     <div class="basis-[70%] bg-[#121212] rounded-lg shadow-md p-4">
-                                        <h2 class="text-lg text-white font-semibold mb-3 border-b border-fuchsia pb-1">Snack
-                                            Selection</h2>
-                                        <div class="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-4">
-                                            @foreach ($products as $product)
-                                                <div class="flex flex-col items-center bg-white p-3 rounded-lg text-center">
-                                                    <img src="{{ asset('storage/' . $product->image_url) }}"
-                                                        alt="{{ $product->name }}"
-                                                        class="mb-2 w-24 h-24 object-cover rounded" />
-                                                    <div class="snack-info">
-                                                        <h4 class="text-base">{{ $product->name }}</h4>
-                                                        @if ($product->productVariants->isNotEmpty())
-                                                            <select
-                                                                class="variant-select form-select mt-2 p-1.5 rounded-md border text-sm"
-                                                                data-product-id="{{ $product->id }}"
-                                                                onchange="updateVariant('{{ $product->id }}')"
-                                                                style="max-width: 220px; white-space: normal; word-break: break-word;">
-                                                                @foreach ($product->productVariants as $variant)
-                                                                    @if ($variant->stock_quantity > 0)
-                                                                        <option value="{{ $variant->id }}"
-                                                                            data-variant-id="{{ $variant->id }}"
-                                                                            data-price="{{ $variant->price }}"
-                                                                            data-sku="{{ $variant->sku }}"
-                                                                            data-stock="{{ $variant->stock_quantity }}"
-                                                                            style="white-space: normal; word-break: break-word;">
-                                                                            {{ $variant->productVariantOptions->map(fn($option) => $option->attributeValue->value)->join(' - ') }}
-                                                                            ({{ number_format($variant->price) }} VNĐ - Còn
-                                                                            {{ $variant->stock_quantity }})
-                                                                        </option>
-                                                                    @endif
-                                                                @endforeach
-                                                            </select>
-                                                        @else
-                                                            <p class="text-sm">No variants available</p>
-                                                        @endif
-                                                    </div>
-                                                    <div class="snack-quantity flex items-center gap-2 mt-2"
-                                                        data-product-id="{{ $product->id }}">
-                                                        <button onclick="updateQuantity('{{ $product->id }}', -1)"
-                                                            class="p-1.5 bg-red-500 text-white border-none rounded-md text-sm">-</button>
-                                                        <input type="number" id="quantity-{{ $product->id }}"
-                                                            value="0" min="0"
-                                                            class="w-12 text-center border border-gray-300 rounded-md p-1 text-sm"
-                                                            readonly />
-                                                        <button onclick="updateQuantity('{{ $product->id }}', 1)"
-                                                            class="p-1.5 bg-red-500 text-white border-none rounded-md text-sm">+</button>
-                                                    </div>
-                                                </div>
+                                        <h2 class="text-lg text-white font-semibold mb-3 border-b border-fuchsia pb-1">Lựa chọn đồ ăn & nước uống</h2>
+                                        
+                                        <!-- Category Tabs -->
+                                        <div class="category-tabs" id="category-tabs">
+                                            @php $firstCategory = true; @endphp
+                                            @foreach ($products as $categoryName => $categoryProducts)
+                                                <button class="category-tab {{ $firstCategory ? 'active' : '' }}" 
+                                                        onclick="showCategory('{{ Str::slug($categoryName) }}')"
+                                                        data-category="{{ Str::slug($categoryName) }}">
+                                                    {{ $categoryName ?: 'Khác' }}
+                                                    <span class="category-count">
+                                                        {{ count($categoryProducts) }}
+                                                    </span>
+                                                </button>
+                                                @php $firstCategory = false; @endphp
                                             @endforeach
                                         </div>
+
+                                        <!-- Category Content -->
+                                        @php $firstCategoryContent = true; @endphp
+                                        @foreach ($products as $categoryName => $categoryProducts)
+                                            <div class="category-content {{ $firstCategoryContent ? 'active' : '' }}" 
+                                                 id="category-{{ Str::slug($categoryName) }}">
+                                                <div class="category-title">
+                                                    {{ $categoryName ?: 'Sản phẩm khác' }}
+                                                    <small style="color: #aaa; font-size: 0.8em; font-weight: 400;">
+                                                        ({{ count($categoryProducts) }} sản phẩm)
+                                                    </small>
+                                                </div>
+                                                
+                                                <div class="products-grid">
+                                                    @foreach ($categoryProducts as $product)
+                                                        <div class="flex flex-col items-center bg-white p-3 rounded-lg text-center">
+                                                            <img src="{{ asset('storage/' . $product->image_url) }}"
+                                                                alt="{{ $product->name }}"
+                                                                class="mb-2 w-24 h-24 object-cover rounded" />
+                                                            <div class="snack-info">
+                                                                <h4 class="text-base">{{ $product->name }}</h4>
+                                                                @if ($product->description)
+                                                                    <p class="text-xs text-gray-600 mt-1">{{ Str::limit($product->description, 60) }}</p>
+                                                                @endif
+                                                                @if ($product->productVariants->isNotEmpty())
+                                                                    <select
+                                                                        class="variant-select form-select mt-2 p-1.5 rounded-md border text-sm"
+                                                                        data-product-id="{{ $product->id }}"
+                                                                        onchange="updateVariant('{{ $product->id }}')"
+                                                                        style="max-width: 220px; white-space: normal; word-break: break-word;">
+                                                                        @foreach ($product->productVariants as $variant)
+                                                                            @if ($variant->stock_quantity > 0)
+                                                                                <option value="{{ $variant->id }}"
+                                                                                    data-variant-id="{{ $variant->id }}"
+                                                                                    data-price="{{ $variant->price }}"
+                                                                                    data-sku="{{ $variant->sku }}"
+                                                                                    data-stock="{{ $variant->stock_quantity }}"
+                                                                                    style="white-space: normal; word-break: break-word;">
+                                                                                    {{ $variant->productVariantOptions->map(fn($option) => $option->attributeValue->value)->join(' - ') }}
+                                                                                    ({{ number_format($variant->price) }} VNĐ - Còn
+                                                                                    {{ $variant->stock_quantity }})
+                                                                                </option>
+                                                                            @endif
+                                                                        @endforeach
+                                                                    </select>
+                                                                @else
+                                                                    <p class="text-sm text-gray-500">Không có phiên bản</p>
+                                                                @endif
+                                                            </div>
+                                                            <div class="snack-quantity flex items-center gap-2 mt-2"
+                                                                data-product-id="{{ $product->id }}">
+                                                                <button onclick="updateQuantity('{{ $product->id }}', -1)"
+                                                                    class="p-1.5 bg-red-500 text-white border-none rounded-md text-sm hover:bg-red-600 transition-colors">-</button>
+                                                                <input type="number" id="quantity-{{ $product->id }}"
+                                                                    value="0" min="0"
+                                                                    class="w-12 text-center border border-gray-300 rounded-md p-1 text-sm"
+                                                                    readonly />
+                                                                <button onclick="updateQuantity('{{ $product->id }}', 1)"
+                                                                    class="p-1.5 bg-red-500 text-white border-none rounded-md text-sm hover:bg-red-600 transition-colors">+</button>
+                                                            </div>
+                                                        </div>
+                                                    @endforeach
+                                                </div>
+                                            </div>
+                                            @php $firstCategoryContent = false; @endphp
+                                        @endforeach
+                                        
+                                        @if($products->isEmpty())
+                                            <div style="text-align: center; padding: 40px; color: #aaa;">
+                                                <p>Không có sản phẩm nào khả dụng</p>
+                                            </div>
+                                        @endif
                                     </div>
                                     <div class="basis-[30%] summary-section">
                                         <h3 class="summary-title">Thông tin đặt vé</h3>
@@ -1937,6 +2111,35 @@
             if (placeholder) placeholder.style.display = 'block';
             
             updateOrderSummary();
+        }
+
+        // Hàm hiển thị category sản phẩm
+        function showCategory(categorySlug) {
+            console.log('Switching to category:', categorySlug);
+            
+            // Hide all category contents
+            const categoryContents = document.querySelectorAll('.category-content');
+            categoryContents.forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remove active class from all tabs
+            const categoryTabs = document.querySelectorAll('.category-tab');
+            categoryTabs.forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected category content
+            const selectedContent = document.getElementById(`category-${categorySlug}`);
+            if (selectedContent) {
+                selectedContent.classList.add('active');
+            }
+            
+            // Add active class to selected tab
+            const selectedTab = document.querySelector(`[data-category="${categorySlug}"]`);
+            if (selectedTab) {
+                selectedTab.classList.add('active');
+            }
         }
 
         // Hàm cập nhật biến thể sản phẩm
@@ -3014,7 +3217,6 @@
             // Cập nhật điểm có thể sử dụng cho đơn hàng
             updateUsablePoints(subtotal);
             
-            // Lưu dữ liệu vào form để gửi đi
             // Lưu dữ liệu vào form để gửi đi
             document.getElementById('input-movie-title').value = movieTitle || 'N/A';
             document.getElementById('input-cinema-name').value = cinemaName || 'N/A';

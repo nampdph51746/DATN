@@ -58,14 +58,18 @@ class BookingAttempt extends Model
     }
 
     /**
-     * Đánh dấu attempt là completed
+     * Đánh dấu attempt là hoàn thành
      */
     public function markAsCompleted(): void
     {
-        $this->update([
-            'status' => BookingAttemptStatus::Completed,
-            'completed_at' => now()
-        ]);
+        $updateData = ['status' => BookingAttemptStatus::Completed];
+        
+        // Chỉ set completed_at nếu chưa có (tránh ghi đè)
+        if (!$this->completed_at) {
+            $updateData['completed_at'] = now();
+        }
+        
+        $this->update($updateData);
     }
 
     /**

@@ -33,6 +33,7 @@ use App\Http\Controllers\Admin\AdminSeatTypeController;
 use App\Http\Controllers\Admin\PaymentMethodController;
 use App\Http\Controllers\Admin\AdminAttributeController;
 use App\Http\Controllers\Client\ClientPaymentController;
+use App\Http\Controllers\Client\PaymentFailedController;
 use App\Http\Controllers\Client\PaymentSuccessController;
 use App\Http\Controllers\Admin\AdminAttributeValueController;
 use App\Http\Controllers\Admin\AdminProductVariantController;
@@ -85,10 +86,14 @@ Route::post('/checkout/preview', [CheckoutController::class, 'previewBooking'])-
 Route::get('/debug/booking-attempts', [App\Http\Controllers\Client\DebugController::class, 'bookingAttempts'])->name('debug.booking-attempts');
 
 Route::get('/payment-success', [PaymentSuccessController::class, 'show'])->name('client.success');
+Route::get('/payment-success/clear-and-home', [PaymentSuccessController::class, 'clearAndGoHome'])->name('client.success.clear-home');
 
-Route::get('/payment-failed', function () {
-    return 'Thanh toán thất bại!';
-})->name('client.failed');
+// Payment Failed Routes
+Route::get('/payment-failed', [PaymentFailedController::class, 'show'])->name('client.failed');
+Route::post('/payment-failed/store', [PaymentFailedController::class, 'storeFailedInfo'])->name('client.failed.store');
+Route::post('/payment-failed/handle', [PaymentFailedController::class, 'handlePaymentFailure'])->name('client.failed.handle');
+Route::get('/payment-failed/retry', [PaymentFailedController::class, 'retryPayment'])->name('client.failed.retry');
+Route::get('/payment-failed/clear-and-home', [PaymentFailedController::class, 'clearAndGoHome'])->name('client.failed.clear-home');
 
 // Route::middleware('guest')->group(function () {
 //     Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])

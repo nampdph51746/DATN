@@ -38,13 +38,134 @@ class VnpayController extends Controller
     // Log request data để debug
     Log::info('VNPay Redirect Request:', $request->all());
     
-    // Đánh dấu form checkout đã được submit và đang xử lý thanh toán
-    session(['checkout_form_submitted' => true, 'is_processing_payment' => true]);
+    // Đánh dấu đang xử lý thanh toán
+    session(['is_processing_payment' => true]);
     
-    // dd($request->all());
+    // Kiểm tra nếu đây là retry payment
+    $retryBookingId = $request->get('retry_booking_id');
+    $bookingId = null;
+    
+    if ($retryBookingId) {
+        Log::info('Processing retry payment for booking ID: ' . $retryBookingId);
+        $bookingId = $retryBookingId;
+    } else {
+        // Kiểm tra xem có booking hiện có chưa, nếu có thì sử dụng lại
+        try {
+            $bookingData = session('booking_preview');
+            $existingBookingId = session('current_booking_id');
+            
+            if ($bookingData) {
+                $promotionId = $bookingData['promotion_id'] ?? null;
+                if ($promotionId === '' || $promotionId === '0' || $promotionId === 0) {
+                    $promotionId = null;
+                } else if ($promotionId) {
+                    $promotionId = (int) $promotionId;
+                }
+
+                // Kiểm tra xem có booking hiện có không (pending)
+                $existingBooking = null;
+                if ($existingBookingId) {
+                    $existingBooking = Booking::where('id', $existingBookingId)
+                        ->where('status', BookingStatus::Pending)
+                        ->first();
+                }
+
+                if ($existingBooking) {
+                    // Cập nhật booking hiện có thay vì tạo mới
+                    $existingBooking->update([
+                        'total_amount_before_discount' => $bookingData['total_amount_before_discount'] ?? 0,
+                        'discount_amount' => (float) $bookingData['discount_amount'] ?? 0,
+                        'final_amount' => (float) $bookingData['final_amount'],
+                        'promotion_id' => $promotionId,
+                        'payment_method_id' => (int) $bookingData['payment_method_id'],
+                        'status' => BookingStatus::Pending,
+                        'notes' => $bookingData['notes'],
+                        'updated_at' => now(),
+                    ]);
+                    
+                    $bookingId = $existingBooking->id;
+                    Log::info('Updated existing booking: ' . $bookingId);
+                } else {
+                    // Tạo booking mới nếu chưa có booking nào
+                    $pendingBooking = Booking::create([
+                        'user_id' => (int) $bookingData['user_id'],
+                        'booking_code' => $bookingData['booking_code'],
+                        'total_amount_before_discount' => $bookingData['total_amount_before_discount'] ?? 0,
+                        'discount_amount' => (float) $bookingData['discount_amount'] ?? 0,
+                        'final_amount' => (float) $bookingData['final_amount'],
+                        'promotion_id' => $promotionId,
+                        'payment_method_id' => (int) $bookingData['payment_method_id'],
+                        'status' => BookingStatus::Pending,
+                        'notes' => $bookingData['notes'],
+                    ]);
+                    
+                    $bookingId = $pendingBooking->id;
+                    Log::info('Created new pending booking: ' . $bookingId);
+                    
+                    // Lưu booking ID vào session để sử dụng sau này
+                    session(['current_booking_id' => $bookingId]);
+                }
+
+                // Cập nhật showtime_seat_states cho booking từ selected_seats_info
+                $selectedSeatsInfo = session('selected_seats_info', []);
+                $showtimeId = $bookingData['showtime_id'] ?? null;
+                
+                if (!empty($selectedSeatsInfo) && $showtimeId) {
+                    foreach ($selectedSeatsInfo as $seatInfo) {
+                        ShowtimeSeatState::updateOrCreate(
+                            [
+                                'showtime_id' => $showtimeId,
+                                'seat_id' => $seatInfo['seat_id'],
+                            ],
+                            [
+                                'status' => SeatStatus::Reserved,
+                                'booking_id' => $bookingId,
+                                'locked_by' => session()->getId(),
+                                'locked_until' => now()->addMinutes(10), // 10 phút để thanh toán
+                            ]
+                        );
+                    }
+                }
+
+                // Tạo booking_items ngay khi tạo booking để đảm bảo data có sẵn kể cả khi thanh toán thất bại
+                $booking = Booking::find($bookingId);
+                if ($booking && !$booking->bookingItems()->exists()) {
+                    $items = is_string($bookingData['items'] ?? '')
+                        ? json_decode($bookingData['items'], true)
+                        : ($bookingData['items'] ?? []);
+                    
+                    if (is_array($items) && !empty($items)) {
+                        foreach ($items as $item) {
+                            BookingItem::create([
+                                'booking_id' => $booking->id,
+                                'product_variant_id' => $item['product_variant_id'],
+                                'quantity' => $item['quantity'],
+                                'price_at_purchase' => $item['price_at_purchase'],
+                            ]);
+                        }
+                        Log::info('Created booking items for pending booking: ' . $booking->id);
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            Log::error('Error processing booking: ' . $e->getMessage());
+        }
+    }
+    
     $data = $request->all();
     $final_amount = $data['final_amount'];
-    $code_cart = rand(00, 9999);
+    
+    // Sử dụng booking ID hiện có để tạo code cart
+    if ($bookingId) {
+        if ($retryBookingId) {
+            $code_cart = 'RETRY_' . $bookingId . '_' . rand(1000, 9999);
+        } else {
+            $code_cart = 'BOOKING_' . $bookingId . '_' . rand(1000, 9999);
+        }
+    } else {
+        $code_cart = 'TEMP_' . rand(100000, 999999); // Fallback case
+    }
+    
     $vnp_Url = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
     $vnp_Returnurl = route('vnpay.return'); // Đường dẫn trả về sau khi thanh toán thành công
     
@@ -53,7 +174,7 @@ class VnpayController extends Controller
     $vnp_HashSecret = "NX3ZCRHQUHCZZO6CYTWKQG1URUCNBFXW"; //Chuỗi bí mật
 
     $vnp_TxnRef = $code_cart; //Mã đơn hàng. Trong thực tế Merchant cần insert đơn hàng vào DB và gửi mã này sang VNPAY
-    $vnp_OrderInfo = 'Thanh toán đơn hàng test';
+    $vnp_OrderInfo = $bookingId ? "Thanh toán cho booking #{$bookingId}" : 'Thanh toán đơn hàng';
     $vnp_OrderType = 'billpayment';
     $vnp_Amount = (int)$final_amount * 100; // Số tiền cần thanh toán, nhân với 100 để chuyển sang đơn vị đồng
     $vnp_Locale = 'vn';
@@ -148,6 +269,32 @@ class VnpayController extends Controller
                 // Log bookingData để debug
                 Log::info('Booking data:', $bookingData);
 
+                // Kiểm tra xem đây có phải là retry payment không
+                $isRetryPayment = strpos($vnp_TxnRef, 'RETRY_') === 0;
+                $existingBookingId = null;
+                
+                if ($isRetryPayment) {
+                    // Extract booking ID từ TxnRef (format: RETRY_123_4567)
+                    preg_match('/RETRY_(\d+)_/', $vnp_TxnRef, $matches);
+                    if (isset($matches[1])) {
+                        $existingBookingId = $matches[1];
+                        Log::info('Retry payment detected for existing booking: ' . $existingBookingId);
+                    }
+                } else {
+                    // Check nếu có booking được tạo từ redirectToVnpay
+                    preg_match('/BOOKING_(\d+)_/', $vnp_TxnRef, $matches);
+                    if (isset($matches[1])) {
+                        $existingBookingId = $matches[1];
+                        Log::info('Found existing pending booking: ' . $existingBookingId);
+                    } else {
+                        // Fallback: check session
+                        $existingBookingId = session('current_booking_id');
+                        if ($existingBookingId) {
+                            Log::info('Using booking ID from session: ' . $existingBookingId);
+                        }
+                    }
+                }
+
                 $promotionId = $bookingData['promotion_id'] ?? null;
 
                 // Xử lý promotion_id - đảm bảo nó là integer hoặc null
@@ -163,7 +310,7 @@ class VnpayController extends Controller
                     'type' => gettype($promotionId)
                 ]);
 
-                if ($promotionId) {
+                if ($promotionId && !$isRetryPayment) {
                     $hasUsedPromotion = Booking::where('user_id', $bookingData['user_id'])
                         ->where('promotion_id', $promotionId)
                         ->where('status', 'confirmed')
@@ -175,18 +322,35 @@ class VnpayController extends Controller
                     }
                 }
 
-                // 1. Tạo bản ghi trong bảng bookings
-                $booking = Booking::create([
-                    'user_id' => (int) $bookingData['user_id'],
-                    'booking_code' => $bookingData['booking_code'],
-                    'total_amount_before_discount' => $bookingData['total_amount_before_discount'] ?? 0,
-                    'discount_amount' => (float) $bookingData['discount_amount'] ?? 0,
-                    'final_amount' => (float) $bookingData['final_amount'],
-                    'promotion_id' => $promotionId,
-                    'payment_method_id' => (int) $bookingData['payment_method_id'],
-                    'status' => BookingStatus::Confirmed,
-                    'notes' => $bookingData['notes'],
-                ]);
+                // 1. Tạo hoặc cập nhật bản ghi trong bảng bookings
+                if ($existingBookingId) {
+                    // Cập nhật booking hiện có từ pending/failed thành confirmed
+                    $booking = Booking::findOrFail($existingBookingId);
+                    
+                    $booking->update([
+                        'status' => BookingStatus::Confirmed,
+                        'updated_at' => now(),
+                    ]);
+                    Log::info('Updated existing booking to confirmed: ' . $booking->id);
+                    
+                    // Kiểm tra xem đây có phải là booking đã có tickets chưa (retry case)
+                    $hasTickets = $booking->tickets()->exists();
+                } else {
+                    // Tạo booking mới (trường hợp fallback)
+                    $booking = Booking::create([
+                        'user_id' => (int) $bookingData['user_id'],
+                        'booking_code' => $bookingData['booking_code'],
+                        'total_amount_before_discount' => $bookingData['total_amount_before_discount'] ?? 0,
+                        'discount_amount' => (float) $bookingData['discount_amount'] ?? 0,
+                        'final_amount' => (float) $bookingData['final_amount'],
+                        'promotion_id' => $promotionId,
+                        'payment_method_id' => (int) $bookingData['payment_method_id'],
+                        'status' => BookingStatus::Confirmed,
+                        'notes' => $bookingData['notes'],
+                    ]);
+                    Log::info('Created new booking: ' . $booking->id);
+                    $hasTickets = false;
+                }
 
                 // 2. Tạo bản ghi trong bảng payments
                 Payment::create([
@@ -199,196 +363,246 @@ class VnpayController extends Controller
                     'paid_at' => now(),
                 ]);
 
-                // 3. Cộng điểm thưởng cho người dùng
-                $user = $booking->user;
-                if (!$user) {
-                    \Log::error("User not found for booking ID: {$booking->id}, User ID: {$booking->user_id}");
-                    throw new \Exception('Không tìm thấy người dùng.');
-                }
+                // 3. Cộng điểm thưởng cho người dùng (chỉ cho booking mới hoặc booking chưa có điểm)
+                $hasPointHistory = PointHistory::where('booking_id', $booking->id)->exists();
+                if (!$hasPointHistory) {
+                    $user = $booking->user;
+                    if (!$user) {
+                        Log::error("User not found for booking ID: {$booking->id}, User ID: {$booking->user_id}");
+                        throw new \Exception('Không tìm thấy người dùng.');
+                    }
 
-                $pointsToAdd = max(1, floor($booking->final_amount / 10000));
-                \Log::info("Points to add: {$pointsToAdd}, Booking ID: {$booking->id}, User ID: {$user->id}");
+                    $pointsToAdd = max(1, floor($booking->final_amount / 10000));
+                    Log::info("Points to add: {$pointsToAdd}, Booking ID: {$booking->id}, User ID: {$user->id}");
 
-                if ($pointsToAdd > 0 && !PointHistory::where('booking_id', $booking->id)->exists()) {
-                    $point = Point::firstOrCreate(
-                        ['user_id' => $user->id],
-                        ['points_expiry_date' => now()->addYear(), 'created_at' => now(), 'updated_at' => now()]
-                    );
-                    $point->total_points = ($point->total_points ?? 0) + $pointsToAdd;
-                    $point->save();
+                    if ($pointsToAdd > 0) {
+                        $point = Point::firstOrCreate(
+                            ['user_id' => $user->id],
+                            ['points_expiry_date' => now()->addYear(), 'created_at' => now(), 'updated_at' => now()]
+                        );
+                        $point->total_points = ($point->total_points ?? 0) + $pointsToAdd;
+                        $point->save();
 
-                    PointHistory::create([
-                        'user_id' => $user->id,
-                        'booking_id' => $booking->id,
-                        'points_change' => $pointsToAdd,
-                        'reason_type' => 'earned',
-                        'description' => 'Cộng điểm cho đơn hàng #' . $booking->id,
-                        'created_at' => now(),
-                    ]);
+                        PointHistory::create([
+                            'user_id' => $user->id,
+                            'booking_id' => $booking->id,
+                            'points_change' => $pointsToAdd,
+                            'reason_type' => 'earned',
+                            'description' => 'Cộng điểm cho đơn hàng #' . $booking->id,
+                            'created_at' => now(),
+                        ]);
 
-                    \Log::info("Points added for user ID: {$user->id}, Booking ID: {$booking->id}, Points: {$pointsToAdd}");
+                        Log::info("Points added for user ID: {$user->id}, Booking ID: {$booking->id}, Points: {$pointsToAdd}");
+                    }
                 } else {
-                    \Log::warning("Points not added. Points: {$pointsToAdd}, Existing history: " . (PointHistory::where('booking_id', $booking->id)->exists() ? 'Yes' : 'No'));
+                    Log::info("Skipped adding points for booking with existing point history: {$booking->id}");
                 }
 
-                // 4. Lấy showtime từ booking data thay vì từ seat state để đảm bảo chính xác
-                $selectedSeatInfos = session('selected_seats_info', []);
+                // 4. Lấy thông tin ghế từ showtime_seat_states thay vì session/notes
+                $selectedSeatInfos = [];
+
+                // Ưu tiên lấy từ showtime_seat_states của booking hiện tại
+                if ($existingBookingId) {
+                    $seatStates = ShowtimeSeatState::with(['seat.seatType', 'showtime'])
+                        ->where('booking_id', $existingBookingId)
+                        ->get();
+                    
+                    if ($seatStates->isNotEmpty()) {
+                        foreach ($seatStates as $seatState) {
+                            $seat = $seatState->seat;
+                            $showtime = $seatState->showtime;
+                            
+                            if ($seat && $showtime) {
+                                // Tính giá vé từ base price và modifier
+                                $ticketPrice = $showtime->base_price * ($seat->seatType->price_modifier ?? 1.0);
+                                
+                                $selectedSeatInfos[] = [
+                                    'seat_id' => $seat->id,
+                                    'row_char' => $seat->row_char,
+                                    'seat_number' => $seat->seat_number,
+                                    'price' => $ticketPrice,
+                                ];
+                            }
+                        }
+                        Log::info('Retrieved seat info from showtime_seat_states: ' . count($selectedSeatInfos) . ' seats');
+                    }
+                }
+
+                // Fallback: lấy từ session nếu chưa có (booking mới)
+                if (empty($selectedSeatInfos)) {
+                    $selectedSeatInfos = session('selected_seats_info', []);
+                    if (!empty($selectedSeatInfos)) {
+                        Log::info('Retrieved seat info from session: ' . count($selectedSeatInfos) . ' seats');
+                    }
+                }
+
+                // Fallback cuối cùng: lấy từ tickets nếu có
+                if (empty($selectedSeatInfos) && $existingBookingId) {
+                    $existingBooking = Booking::with(['tickets.seat', 'tickets.showtime'])->find($existingBookingId);
+                    if ($existingBooking && $existingBooking->tickets->isNotEmpty()) {
+                        foreach ($existingBooking->tickets as $ticket) {
+                            $selectedSeatInfos[] = [
+                                'seat_id' => $ticket->seat_id,
+                                'row_char' => $ticket->seat->row_char ?? '',
+                                'seat_number' => $ticket->seat->seat_number ?? '',
+                                'price' => $ticket->price_at_purchase,
+                            ];
+                        }
+                        Log::info('Retrieved seat info from existing tickets: ' . count($selectedSeatInfos) . ' seats');
+                    }
+                }
 
                 // Log selected_seats_info để debug
-                Log::info('Selected seats info:', $selectedSeatInfos);
+                Log::info('Final selected seats info:', $selectedSeatInfos);
                 
                 if (empty($selectedSeatInfos)) {
-                    throw new \Exception('Không tìm thấy thông tin ghế đã chọn.');
+                    throw new \Exception('Không tìm thấy thông tin ghế đã chọn. Vui lòng đặt lại vé.');
                 }
-                
-                $showtimeId = $bookingData['showtime_id'] ?? null;
+
+                // Lấy showtime_id từ seat states hoặc booking data
+                $showtimeId = null;
+                if ($existingBookingId) {
+                    $seatState = ShowtimeSeatState::where('booking_id', $existingBookingId)->first();
+                    if ($seatState) {
+                        $showtimeId = $seatState->showtime_id;
+                        Log::info('Retrieved showtime ID from seat states: ' . $showtimeId);
+                    }
+                }
                 
                 if (!$showtimeId) {
-                    Log::error('Showtime ID not found in booking data');
-                    // Fallback: lấy từ seat state như trước
-                    $firstSeatId = $selectedSeatInfos[0]['seat_id'];
-                    $currentSessionId = session()->getId();
-                    
-                    Log::info('Fallback: Searching for seat state:', [
-                        'seat_id' => $firstSeatId,
-                        'session_id' => $currentSessionId
-                    ]);
-                    
-                    // Tìm ghế theo session ID đầu tiên (ưu tiên)
-                    $seatState = ShowtimeSeatState::where('seat_id', $firstSeatId)
-                        ->where('locked_by', $currentSessionId)
-                        ->orderBy('updated_at', 'desc')
-                        ->first();
-                        
-                    // Nếu không tìm thấy theo session, thử tìm theo status Reserved
-                    if (!$seatState) {
-                        Log::info('No seat found by session, trying by Reserved status');
-                        $seatState = ShowtimeSeatState::where('seat_id', $firstSeatId)
-                            ->where('status', SeatStatus::Reserved)
-                            ->orderBy('updated_at', 'desc')
-                            ->first();
+                    $showtimeId = $bookingData['showtime_id'] ?? null;
+                    if ($showtimeId) {
+                        Log::info('Retrieved showtime ID from booking data: ' . $showtimeId);
                     }
-                    
-                    // Nếu vẫn không tìm thấy, tìm theo seat_id (trường hợp ghế đã bị release)
-                    if (!$seatState) {
-                        Log::info('No reserved seat found, trying by seat_id only');
-                        $seatState = ShowtimeSeatState::where('seat_id', $firstSeatId)
-                            ->orderBy('updated_at', 'desc')
-                            ->first();
-                    }
-                        
-                    if (!$seatState) {
-                        Log::error('Cannot find any seat state for seat_id: ' . $firstSeatId);
-                        throw new \Exception('Không tìm thấy trạng thái ghế đã đặt.');
-                    }
-                    
-                    $showtimeId = $seatState->showtime_id;
                 }
                 
-                Log::info('Using showtime ID from booking data:', [
-                    'showtime_id' => $showtimeId,
-                    'source' => isset($bookingData['showtime_id']) ? 'booking_data' : 'seat_state_fallback'
-                ]);
+                if (!$showtimeId) {
+                    throw new \Exception('Không tìm thấy thông tin suất chiếu. Vui lòng đặt lại vé.');
+                }
                 
                 $showtime = Showtime::findOrFail($showtimeId);
-                Log::info('Showtime found:', [
-                    'id' => $showtime->id,
-                    'movie_title' => $showtime->movie->title ?? 'unknown',
-                    'start_time' => $showtime->start_time
-                ]);
+                Log::info('Using showtime ID: ' . $showtime->id);
 
-                // 5. Tạo bản ghi trong bảng tickets và cập nhật showtime_seat_states
-                foreach ($selectedSeatInfos as $seatInfo) {
-                    $seat = Seat::where('id', $seatInfo['seat_id'])->first();
+                // 5. Tạo bản ghi trong bảng tickets và cập nhật showtime_seat_states (chỉ khi chưa có tickets)
+                if (!$hasTickets) {
+                    foreach ($selectedSeatInfos as $seatInfo) {
+                        $seat = Seat::where('id', $seatInfo['seat_id'])->first();
 
-                    if (!$seat) {
-                        throw new \Exception('Không tìm thấy seat ID: ' . $seatInfo['seat_id']);
-                    }
+                        if (!$seat) {
+                            throw new \Exception('Không tìm thấy seat ID: ' . $seatInfo['seat_id']);
+                        }
 
-                    // Sử dụng giá từ session
-                    $ticketPrice = (float) ($seatInfo['price'] ?? $showtime->base_price);
+                        // Sử dụng giá từ session
+                        $ticketPrice = (float) ($seatInfo['price'] ?? $showtime->base_price);
 
-                    // Log để kiểm tra giá vé
-                    Log::info('Ticket price calculation:', [
-                        'seat_id' => $seat->id,
-                        'seat_type_id' => $seat->seat_type_id,
-                        'price' => $seatInfo['price'] ?? 'not set',
-                        'ticket_price' => $ticketPrice,
-                    ]);
-
-                    Ticket::create([
-                        'booking_id' => $booking->id,
-                        'showtime_id' => $showtime->id,
-                        'seat_id' => $seat->id,
-                        'ticket_code' => 'TICKET_' . uniqid(),
-                        'price_at_purchase' => $ticketPrice,
-                        'status' => TicketStatus::Valid,
-                    ]);
-
-                    ShowtimeSeatState::where('showtime_id', $showtime->id)
-                        ->where('seat_id', $seat->id)
-                        ->update([
-                            'status' => SeatStatus::Booked,
-                            'booking_id' => $booking->id,
-                            'locked_by' => null,
-                            'locked_until' => null,
+                        // Log để kiểm tra giá vé
+                        Log::info('Ticket price calculation:', [
+                            'seat_id' => $seat->id,
+                            'seat_type_id' => $seat->seat_type_id,
+                            'price' => $seatInfo['price'] ?? 'not set',
+                            'ticket_price' => $ticketPrice,
                         ]);
+
+                        Ticket::create([
+                            'booking_id' => $booking->id,
+                            'showtime_id' => $showtime->id,
+                            'seat_id' => $seat->id,
+                            'ticket_code' => 'TICKET_' . uniqid(),
+                            'price_at_purchase' => $ticketPrice,
+                            'status' => TicketStatus::Valid,
+                        ]);
+
+                        ShowtimeSeatState::where('showtime_id', $showtime->id)
+                            ->where('seat_id', $seat->id)
+                            ->update([
+                                'status' => SeatStatus::Booked,
+                                'booking_id' => $booking->id,
+                                'locked_by' => null,
+                                'locked_until' => null,
+                            ]);
+                    }
+                    Log::info('Created tickets for booking: ' . $booking->id);
+                } else {
+                    // Đối với booking đã có tickets, chỉ cần cập nhật seat states và ticket status
+                    $existingTickets = $booking->tickets;
+                    foreach ($existingTickets as $ticket) {
+                        // Update ticket status to valid
+                        $ticket->update(['status' => TicketStatus::Valid]);
+                        
+                        // Update seat states
+                        ShowtimeSeatState::where('showtime_id', $ticket->showtime_id)
+                            ->where('seat_id', $ticket->seat_id)
+                            ->update([
+                                'status' => SeatStatus::Booked,
+                                'booking_id' => $booking->id,
+                                'locked_by' => null,
+                                'locked_until' => null,
+                            ]);
+                    }
+                    Log::info('Updated existing tickets and seat states for booking: ' . $booking->id);
                 }
 
-                // 6. Tạo bản ghi trong bảng booking_items
-                $items = is_string($bookingData['items'])
-                    ? json_decode($bookingData['items'], true)
-                    : ($bookingData['items'] ?? []);
-                if (is_array($items)) {
-                    foreach ($items as $item) {
-                        BookingItem::create([
-                            'booking_id' => $booking->id,
-                            'product_variant_id' => $item['product_variant_id'],
-                            'quantity' => $item['quantity'],
-                            'price_at_purchase' => $item['price_at_purchase'],
-                        ]);
-
-                        $variant = ProductVariant::find($item['product_variant_id']);
-                        if ($variant) {
-                            $variant->stock_quantity = max(0, $variant->stock_quantity - (int)$item['quantity']);
-                            $variant->save();
+                // 6. Tạo bản ghi trong bảng booking_items (chỉ khi chưa có booking items) và cập nhật stock khi thanh toán thành công
+                $hasBookingItems = $booking->bookingItems()->exists();
+                if (!$hasBookingItems) {
+                    // Tạo booking items nếu chưa có (trường hợp fallback)
+                    $items = is_string($bookingData['items'])
+                        ? json_decode($bookingData['items'], true)
+                        : ($bookingData['items'] ?? []);
+                    if (is_array($items)) {
+                        foreach ($items as $item) {
+                            BookingItem::create([
+                                'booking_id' => $booking->id,
+                                'product_variant_id' => $item['product_variant_id'],
+                                'quantity' => $item['quantity'],
+                                'price_at_purchase' => $item['price_at_purchase'],
+                            ]);
                         }
+                        Log::info('Created booking items for booking: ' . $booking->id);
+                    }
+                }
+
+                // Cập nhật stock quantity chỉ khi thanh toán thành công
+                foreach ($booking->bookingItems as $bookingItem) {
+                    $variant = ProductVariant::find($bookingItem->product_variant_id);
+                    if ($variant) {
+                        $variant->stock_quantity = max(0, $variant->stock_quantity - (int)$bookingItem->quantity);
+                        $variant->save();
+                        Log::info('Updated stock for product variant: ' . $variant->id);
                     }
                 }
 
                 // 7. Mark booking attempt as completed
-                // Sử dụng showtime_id đã xác định ở trước thay vì tìm từ seat state
-                Log::info("About to complete booking attempt:", [
-                    'user_id' => $booking->user_id,
-                    'showtime_id' => $showtimeId,
-                    'booking_id' => $booking->id
-                ]);
-                
-                $this->bookingAttemptService->completeAttempt($booking->user_id, $showtimeId);
-                Log::info("Marked booking attempt as completed for user {$booking->user_id}, showtime {$showtimeId}");
+                $firstSeatState = ShowtimeSeatState::where('booking_id', $booking->id)->first();
+                if ($firstSeatState) {
+                    $this->bookingAttemptService->completeAttempt($booking->user_id, $firstSeatState->showtime_id);
+                }
 
                 DB::commit();
                 
-                // Fire event để gửi email xác nhận booking
-                event(new BookingConfirmed($booking));
+                // Fire event để gửi email xác nhận booking (chỉ cho booking lần đầu confirm)
+                $isFirstTimeConfirm = !$hasTickets || !$hasBookingItems;
+                if ($isFirstTimeConfirm) {
+                    event(new BookingConfirmed($booking));
+                }
                 
-                session()->forget([
-                    'booking_preview', 
-                    'selected_seats_info', 
-                    'is_checkout', 
-                    'is_processing_payment',
-                    'user_booking_in_progress',
-                    'checkout_form_submitted'
-                ]);
+                session()->forget(['booking_preview', 'selected_seats_info', 'is_checkout', 'is_processing_payment', 'current_booking_id']);
 
-                return redirect()->route('client.success')->with('success', 'Thanh toán thành công!');
+                $successMessage = $existingBookingId ? 'Thanh toán thành công!' : 'Thanh toán thành công!';
+                return redirect()->route('client.success')->with('success', $successMessage);
             } catch (\Exception $e) {
                 DB::rollBack();
                 Log::error('VNPay payment processing failed: ' . $e->getMessage(), [
                     'file' => $e->getFile(),
                     'line' => $e->getLine(),
                 ]);
-                session()->forget(['is_checkout', 'is_processing_payment', 'user_booking_in_progress', 'checkout_form_submitted']);
+                session()->forget(['is_checkout', 'is_processing_payment']);
+                
+                // Lưu thông tin booking để hiển thị trên trang failed
+                if (isset($booking)) {
+                    session()->put('failed_booking_id', $booking->id);
+                }
+                
                 return redirect()->route('client.failed')->with('error', 'Thanh toán không thành công: ' . $e->getMessage());
             }
         } else {
@@ -398,7 +612,38 @@ class VnpayController extends Controller
             ]);
             
             // Clear payment session khi thanh toán thất bại
-            session()->forget(['is_checkout', 'is_processing_payment', 'user_booking_in_progress', 'checkout_form_submitted']);
+            session()->forget(['is_checkout', 'is_processing_payment']);
+            
+            // Lấy booking ID từ transaction reference hoặc session
+            $bookingId = null;
+            if (strpos($vnp_TxnRef, 'BOOKING_') === 0) {
+                preg_match('/BOOKING_(\d+)_/', $vnp_TxnRef, $matches);
+                if (isset($matches[1])) {
+                    $bookingId = $matches[1];
+                }
+            } elseif (strpos($vnp_TxnRef, 'RETRY_') === 0) {
+                preg_match('/RETRY_(\d+)_/', $vnp_TxnRef, $matches);
+                if (isset($matches[1])) {
+                    $bookingId = $matches[1];
+                }
+            } else {
+                $bookingId = session('current_booking_id');
+            }
+            
+            if ($bookingId) {
+                session()->put('failed_booking_id', $bookingId);
+                Log::info('Payment failed for booking: ' . $bookingId);
+            }
+            
+            // Lưu thông tin booking preview để hiển thị
+            $bookingPreview = session('booking_preview');
+            if ($bookingPreview) {
+                session()->put('booking_info', [
+                    'total_price' => $bookingPreview['final_amount'] ?? ($bookingPreview['total_amount'] ?? 0),
+                    'seat_row' => $bookingPreview['selected_seats'][0]['row'] ?? null,
+                    'seat_number' => $bookingPreview['selected_seats'][0]['seat_number'] ?? null,
+                ]);
+            }
         }
 
         return redirect()->route('client.failed')->with('error', 'Thanh toán không thành công! Mã lỗi: ' . $vnp_ResponseCode);

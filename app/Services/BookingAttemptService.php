@@ -33,7 +33,7 @@ class BookingAttemptService
                 'expired_at' => now()->addMinutes(self::ATTEMPT_TIMEOUT_MINUTES),
             ]);
             
-            Log::info("Updated existing booking attempt {$existingAttempt->id} for user {$userId} with new seats");
+            Log::info("Đã cập nhật booking attempt hiện tại {$existingAttempt->id} cho user {$userId} với ghế mới");
             return $existingAttempt;
         }
 
@@ -49,7 +49,7 @@ class BookingAttemptService
             'expired_at' => now()->addMinutes(self::ATTEMPT_TIMEOUT_MINUTES),
         ]);
 
-        Log::info("Created new booking attempt {$attempt->id} for user {$userId}");
+        Log::info("Đã tạo booking attempt mới {$attempt->id} cho user {$userId}");
         return $attempt;
     }
 
@@ -64,10 +64,8 @@ class BookingAttemptService
             ->update(['status' => BookingAttemptStatus::Cancelled]);
             
         if ($cancelledCount > 0 && $checkBan) {
-            // Chỉ kiểm tra và ban user nếu được yêu cầu và không đang trong quá trình đặt vé/thanh toán
-            if (!session('is_checkout') && !session('is_processing_payment') && !session('user_booking_in_progress')) {
-                $this->checkAndBanUser($userId);
-            }
+            // Chỉ kiểm tra và ban user nếu được yêu cầu (không phải khi đang cập nhật attempt)
+            $this->checkAndBanUser($userId);
         }
     }
 
@@ -81,12 +79,10 @@ class BookingAttemptService
             ->update(['status' => BookingAttemptStatus::Cancelled]);
 
         if ($cancelledCount > 0) {
-            Log::info("Auto-cancelled {$cancelledCount} reserved attempts for user {$userId} due to page reload/reset");
+            Log::info("Đã tự động hủy {$cancelledCount} attempt đang giữ chỗ cho user {$userId} do tải lại/reset trang");
             
-            // Chỉ kiểm tra và ban user nếu không đang trong quá trình đặt vé/thanh toán
-            if (!session('is_checkout') && !session('is_processing_payment') && !session('user_booking_in_progress')) {
-                $this->checkAndBanUser($userId);
-            }
+            // Kiểm tra và ban user nếu cần thiết sau khi cancel
+            $this->checkAndBanUser($userId);
         }
 
         return $cancelledCount;
@@ -97,54 +93,18 @@ class BookingAttemptService
      */
     public function completeAttempt(int $userId, int $showtimeId): void
     {
-        Log::info("Looking for booking attempt to complete - User: {$userId}, Showtime: {$showtimeId}");
-        
-        // Tìm attempt với status Reserved trước
+        // Tìm attempt gần nhất của user cho showtime này (bất kể status)
         $attempt = BookingAttempt::where('user_id', $userId)
             ->where('showtime_id', $showtimeId)
-            ->where('status', BookingAttemptStatus::Reserved)
+            ->orderBy('created_at', 'desc')
             ->first();
 
         if ($attempt) {
             $attempt->markAsCompleted();
-            Log::info("Successfully completed booking attempt {$attempt->id} for user {$userId}");
-            return;
+            Log::info("Hoàn thành booking attempt {$attempt->id} cho user {$userId} (trạng thái trước đó: {$attempt->status->value})");
+        } else {
+            Log::warning("Không tìm thấy booking attempt nào để hoàn thành cho user {$userId}, showtime {$showtimeId}");
         }
-
-        // Nếu không tìm thấy attempt Reserved, tìm attempt gần nhất (có thể đã bị cancelled)
-        // trong vòng 10 phút gần đây
-        $recentAttempt = BookingAttempt::where('user_id', $userId)
-            ->where('showtime_id', $showtimeId)
-            ->where('created_at', '>=', now()->subMinutes(10))
-            ->orderBy('created_at', 'desc')
-            ->first();
-
-        if ($recentAttempt && in_array($recentAttempt->status, [BookingAttemptStatus::Cancelled, BookingAttemptStatus::Timeout])) {
-            // Khôi phục và complete attempt đã bị cancel
-            $recentAttempt->update([
-                'status' => BookingAttemptStatus::Completed,
-                'completed_at' => now()
-            ]);
-            Log::info("Successfully restored and completed booking attempt {$recentAttempt->id} (was {$recentAttempt->status->value}) for user {$userId}");
-            return;
-        }
-
-        // Thêm log để debug khi không tìm thấy attempt
-        $allAttempts = BookingAttempt::where('user_id', $userId)
-            ->where('showtime_id', $showtimeId)
-            ->get();
-        
-        Log::warning("No booking attempt found to complete for user {$userId}, showtime {$showtimeId}. All attempts for this user/showtime:", [
-            'attempts' => $allAttempts->map(function($attempt) {
-                return [
-                    'id' => $attempt->id,
-                    'status' => $attempt->status->value,
-                    'created_at' => $attempt->created_at,
-                    'expired_at' => $attempt->expired_at,
-                    'completed_at' => $attempt->completed_at,
-                ];
-            })->toArray()
-        ]);
     }
 
     /**
@@ -164,7 +124,7 @@ class BookingAttemptService
 
         foreach ($expiredAttempts as $attempt) {
             $attempt->markAsTimeout();
-            Log::info("Timeout booking attempt {$attempt->id} for user {$attempt->user_id}");
+            Log::info("Timeout booking attempt {$attempt->id} cho user {$attempt->user_id}");
             $processed++;
             
             // Kiểm tra và cấm user nếu cần
@@ -195,10 +155,10 @@ class BookingAttemptService
                 ->delete();
 
             if ($deletedCount > 0) {
-                Log::info("Auto-cleaned up {$deletedCount} expired booking attempts");
+                Log::info("Đã tự động dọn dẹp {$deletedCount} booking attempt đã hết hạn");
             }
         } catch (\Exception $e) {
-            Log::warning("Failed to auto-cleanup expired booking attempts: " . $e->getMessage());
+            Log::warning("Lỗi khi tự động dọn dẹp booking attempt hết hạn: " . $e->getMessage());
         }
     }
 
@@ -224,11 +184,11 @@ class BookingAttemptService
                     ->delete();
 
                 if ($deletedExpired > 0 || $deletedCompleted > 0) {
-                    Log::info("Auto-cleaned up {$deletedExpired} expired attempts and {$deletedCompleted} completed attempts");
+                    Log::info("Đã tự động dọn dẹp {$deletedExpired} attempt hết hạn và {$deletedCompleted} attempt hoàn thành");
                 }
             }
         } catch (\Exception $e) {
-            Log::warning("Failed to auto-cleanup old booking attempts: " . $e->getMessage());
+            Log::warning("Lỗi khi tự động dọn dẹp booking attempt cũ: " . $e->getMessage());
         }
     }
 
@@ -237,19 +197,13 @@ class BookingAttemptService
      */
     public function checkAndBanUser(int $userId): bool
     {
-        // Không ban user nếu đang trong quá trình thanh toán hoặc đặt ghế
-        if (session('is_checkout') || session('is_processing_payment') || session('user_booking_in_progress')) {
-            Log::info("Skip ban check for user {$userId} - user is in booking/payment process");
-            return false;
-        }
-        
-        // Đếm số lần thất bại trong 24h gần nhất (chỉ tính timeout và cancelled, không tính reserved)
+        // Đếm số lần thất bại trong 24h gần nhất
         $failedCount = BookingAttempt::where('user_id', $userId)
-            ->whereIn('status', [BookingAttemptStatus::Timeout, BookingAttemptStatus::Cancelled])
+            ->failed()
             ->where('reserved_at', '>=', now()->subDay())
             ->count();
 
-        Log::info("User {$userId} has {$failedCount} actually failed attempts in last 24h");
+        Log::info("User {$userId} có {$failedCount} lần thất bại trong 24h qua");
 
         if ($failedCount >= self::MAX_FAILED_ATTEMPTS) {
             $this->banUser($userId, $failedCount);
@@ -264,7 +218,7 @@ class BookingAttemptService
      */
     public function forceCheckAndBanUser(int $userId): bool
     {
-        Log::info("Force checking ban status for user {$userId}");
+        Log::info("Đang kiểm tra trạng thái cấm cho user {$userId}");
         return $this->checkAndBanUser($userId);
     }
 
@@ -279,7 +233,7 @@ class BookingAttemptService
             ->first();
 
         if ($existingBan) {
-            Log::info("User {$userId} is already banned until {$existingBan->banned_until}");
+            Log::info("User {$userId} đã bị cấm trước đó đến {$existingBan->banned_until}");
             return;
         }
 
@@ -292,7 +246,7 @@ class BookingAttemptService
             'reason' => "Tự động cấm do đặt ghế {$failedAttempts} lần liên tiếp mà không thanh toán trong 24h gần nhất",
         ]);
 
-        Log::warning("Banned user {$userId} for {$failedAttempts} failed booking attempts. Ban ID: {$ban->id}");
+        Log::warning("Đã cấm user {$userId} do {$failedAttempts} lần thất bại đặt vé. ID cấm: {$ban->id}");
     }
 
     /**
@@ -326,7 +280,7 @@ class BookingAttemptService
 
         if ($ban) {
             $ban->expire();
-            Log::info("Unbanned user {$userId}");
+            Log::info("Đã bỏ cấm user {$userId}");
             return true;
         }
 
@@ -407,7 +361,7 @@ class BookingAttemptService
             ->where('completed_at', '<=', $completedCutoff)
             ->delete();
 
-        Log::info("Cleaned up {$deletedTimeouts} timeout/cancelled attempts and {$deletedCompleted} completed attempts (daysOld: {$daysOld})");
+        Log::info("Đã dọn dẹp {$deletedTimeouts} attempt timeout/cancelled và {$deletedCompleted} attempt hoàn thành (daysOld: {$daysOld})");
 
         return [
             'deleted_timeouts' => $deletedTimeouts,
