@@ -235,12 +235,8 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
     Route::post('rooms/{room}/update-seat-percentages', [AdminRoomController::class, 'updateSeatPercentages'])->name('rooms.update-seat-percentages');
     Route::post('rooms/{room}/update-capacity', [AdminRoomController::class, 'updateCapacity'])->name('rooms.update-capacity');
     Route::get('rooms/{room}/edit-status', [AdminRoomController::class, 'editStatus'])->name('rooms.editStatus');
-<<<<<<< HEAD
-    Route::post('rooms/{room}/update-status', [AdminRoomController::class, 'updateStatus'])->name('rooms.updateStatus');
-=======
 
-Route::post('rooms/{room}/update-status', [AdminRoomController::class, 'updateStatus'])->name('rooms.updateStatus');
->>>>>>> a545743fd409dc9334e132aee12e670394cf985b
+    Route::post('rooms/{room}/update-status', [AdminRoomController::class, 'updateStatus'])->name('rooms.updateStatus');
 
     //Son
     Route::get('countries', [CountryController::class, 'index'])->name('countries.index');
@@ -286,10 +282,14 @@ Route::post('rooms/{room}/update-status', [AdminRoomController::class, 'updateSt
             Route::post('/check-status', [QrCodeController::class, 'checkTicketStatus'])->name('qr.check');
             Route::post('/scan-ticket', [QrCodeController::class, 'scanTicketByCode'])->name('qr.scanTicket');
         });
+        
+        // Route hiển thị trang in vé (print-tickets.blade.php)
+        Route::get('print-tickets/{code}', [QrCodeController::class, 'printTickets'])->name('print-tickets');
+        
         // Route in vé riêng theo ticket_code
         // Route::get('/tickets/{ticket_code}/print', [TicketPrintController::class, 'printTicket'])->name('tickets.print');
         // Route in chung đồ ăn, đồ uống theo booking_code
-        Route::get('admin/bookings/{booking_code}/print', [BookingController::class, 'print'])->name('bookings.print');
+        Route::get('bookings/{booking_code}/print', [BookingController::class, 'print'])->name('bookings.print');
         // Trang quét QR code cho nhân viên
         Route::get('/qr-scanner', function () {
             return view('admin.Qrcode-scanner'); // Nếu bạn đổi tên view thành qr-scanner thì sửa lại ở đây
@@ -383,18 +383,18 @@ Route::put('admin/bookings/{booking}/update-status', [BookingController::class, 
 Route::middleware(['auth'])->group(function () {
     Route::post('/api/ticket/print/{ticketId}', [App\Http\Controllers\TicketPrintController::class, 'printTicketApi']);
     Route::post('/api/food/print/{itemId}', [App\Http\Controllers\TicketPrintController::class, 'printFoodApi']);
+    
+    // Hiển thị QR cho từng vé
+    Route::get('tickets/qr/{ticket_id}', [App\Http\Controllers\TicketPrintController::class, 'showTicketQr'])->name('tickets.qr');
+    // Hiển thị QR cho từng sản phẩm
+    Route::get('foods/qr/{item_id}', [App\Http\Controllers\TicketPrintController::class, 'showFoodQr'])->name('foods.qr');
+
+    // Route tải PDF cho vé
+    Route::get('tickets/print/{ticket_id}', [App\Http\Controllers\TicketPrintController::class, 'printTicketPdf'])->name('tickets.print');
+
+    // Route tải PDF cho sản phẩm
+    Route::get('foods/print/{item_id}', [App\Http\Controllers\TicketPrintController::class, 'printFoodPdf'])->name('foods.print');
 });
-
-// Hiển thị QR cho từng vé
-Route::get('admin/ticket/qr/{ticket_id}', [App\Http\Controllers\TicketPrintController::class, 'showTicketQr'])->name('admin.tickets.qr');
-// Hiển thị QR cho từng sản phẩm
-Route::get('admin/food/qr/{item_id}', [App\Http\Controllers\TicketPrintController::class, 'showFoodQr'])->name('admin.foods.qr');
-
-// Route tải PDF cho vé
-Route::get('admin/ticket/print/{ticket_id}', [App\Http\Controllers\TicketPrintController::class, 'printTicketPdf'])->name('admin.tickets.print');
-
-// Route tải PDF cho sản phẩm
-Route::get('admin/food/print/{item_id}', [App\Http\Controllers\TicketPrintController::class, 'printFoodPdf'])->name('admin.foods.print');
 
 Route::get('admin/payments', [PaymentController::class, 'index'])->name('admin.payments.index');
 Route::get('admin/payments/{payment}', [PaymentController::class, 'show'])->name('admin.payments.show');

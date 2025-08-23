@@ -6,7 +6,7 @@
     @if($qrCodeBase64)
         <img src="{{ $qrCodeBase64 }}" alt="QR Vé" style="max-width:300px;">
         <br>
-    <a href="{{ route('admin.tickets.print', ['ticket_id' => $ticket->id]) }}" class="btn btn-success mt-3" target="_blank">Tải PDF vé</a>
+    <a href="{{ route('tickets.print', ['ticket_id' => $ticket->id]) }}" class="btn btn-success mt-3" target="_blank">Tải PDF vé</a>
     @else
         <p class="text-danger">Không tạo được mã QR!</p>
     @endif

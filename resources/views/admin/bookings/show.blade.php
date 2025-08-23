@@ -183,7 +183,7 @@
                                                         <td>{{ $ticket->created_at ? $ticket->created_at->format('d/m/Y H:i') : '' }}
                                                         </td>
                                                         <td>
-                                                            <a href="{{ route('admin.tickets.qr', ['ticket_id' => $ticket->id]) }}" target="_blank"
+                                                            <a href="{{ route('tickets.qr', ['ticket_id' => $ticket->id]) }}" target="_blank"
                                                                 @if (in_array($statusValue, ['used', 'cancelled'])) class="btn btn-sm btn-primary ms-2 disabled" style="opacity:0.6;cursor:not-allowed;" @else class="btn btn-sm btn-primary ms-2" @endif>
                                                                 In vé
                                                             </a>
@@ -268,7 +268,7 @@
                                                             </span>
                                                         </td>
                                                         <td>
-                                                            <a href="{{ route('admin.foods.qr', ['item_id' => $item->id]) }}" target="_blank"
+                                                            <a href="{{ route('foods.qr', ['item_id' => $item->id]) }}" target="_blank"
                                                                 @if (in_array($statusValue, ['used', 'cancelled'])) class="btn btn-sm btn-primary ms-2 disabled" style="opacity:0.6;cursor:not-allowed;" @else class="btn btn-sm btn-primary ms-2" @endif>
                                                                 In đồ ăn
                                                             </a>

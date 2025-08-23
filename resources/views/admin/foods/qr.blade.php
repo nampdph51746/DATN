@@ -7,7 +7,7 @@
     @if($qrCodeBase64)
         <img src="{{ $qrCodeBase64 }}" alt="QR Sản phẩm" style="max-width:300px;">
         <br>
-        <a href="{{ route('admin.foods.print', ['item_id' => $item->id]) }}" class="btn btn-success mt-3" target="_blank">Tải PDF sản phẩm</a>
+        <a href="{{ route('foods.print', ['item_id' => $item->id]) }}" class="btn btn-success mt-3" target="_blank">Tải PDF sản phẩm</a>
     @else
         <p class="text-danger">Không tạo được mã QR!</p>
     @endif

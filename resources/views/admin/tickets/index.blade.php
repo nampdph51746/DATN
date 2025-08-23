@@ -168,7 +168,7 @@
                                                 <iconify-icon icon="solar:eye-broken" class="align-middle fs-18"></iconify-icon>
                                             </a>
                                             <!-- Print Ticket Button -->
-                                            <a href="{{ route('admin.tickets.print', $ticket->ticket_code) }}" 
+                                            <a href="{{ route('tickets.print', $ticket->id) }}" 
                                                class="btn btn-success btn-sm print-ticket-btn" 
                                                title="In vé" 
                                                target="_blank"
