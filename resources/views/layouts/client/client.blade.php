@@ -168,35 +168,58 @@
 	}
 
 	.search-box {
-    display: flex;
-    align-items: center; /* Căn giữa nút và input */
-    border: 2px solid #dc3545; /* Viền đỏ */
-    border-radius: 6px;
-    overflow: hidden; /* Bo góc đều */
-    max-width: 400px; /* Giới hạn chiều rộng */
-}
+		display: flex;
+		align-items: center;
+		/* Căn giữa nút và input */
+		border: 2px solid #dc3545;
+		/* Viền đỏ */
+		border-radius: 6px;
+		overflow: hidden;
+		/* Bo góc đều */
+		max-width: 400px;
+		/* Giới hạn chiều rộng */
+	}
 
-.search-box input[type="search"] {
-    flex: 1; /* Chiếm toàn bộ chiều rộng còn lại */
-    padding: 10px 12px;
-    border: none;
-    outline: none;
-    font-size: 16px;
-}
+	.search-box input[type="search"] {
+		flex: 1;
+		/* Chiếm toàn bộ chiều rộng còn lại */
+		padding: 10px 12px;
+		border: none;
+		outline: none;
+		font-size: 16px;
+	}
 
-.search-box button {
-    color: white;
-    padding: 10px 16px;
-    border: none;
-    cursor: pointer;
-    font-size: 16px;
-    transition: background-color 0.3s ease;
-}
+	.search-box button {
+		color: white;
+		padding: 10px 16px;
+		border: none;
+		cursor: pointer;
+		font-size: 16px;
+		transition: background-color 0.3s ease;
+	}
 
-.search-right .popup form button {
-	top: 1px;
-}
+	.search-right .popup form button {
+		top: 1px;
+	}
 
+
+	.btn-check:checked+.genre-label {
+		background-color: #0d6efd;
+		/* màu xanh Bootstrap primary */
+		color: white;
+		border-color: #0d6efd;
+	}
+
+	/* Hiệu ứng hover */
+	.genre-label:hover {
+		color: #0d6efd;
+		border-color: #0d6efd;
+	}
+
+	.btn-submit {
+		position: static !important;
+		color: white;
+	}
 </style> <!-- JavaScript cho kiểm tra đăng nhập và hiển thị popup -->
 <script>
 	function showLoginPrompt(event, redirectUrl) {
@@ -264,34 +287,83 @@
 
 					<!--/search-right-->
 					<div class="search-right">
-						<a href="#search" class="btn search-hny mr-lg-3" title="search">Tìm kiếm <span class="fas fa-search ml-3" aria-hidden="true"></span></a>
+						<a href="#search" class="btn search-hny mr-lg-3" title="search">
+							Tìm kiếm <span class="fas fa-search ml-3" aria-hidden="true"></span>
+						</a>
 						<!-- search popup -->
 						<div id="search" class="pop-overlay">
 							<div class="popup">
 								<form action="{{ route('movies.filter') }}" method="get" class="search-box">
-									<input type="search" placeholder="Tìm kiếm theo tên" name="search" value="{{ request('search') }}">
-									<button type="submit" class="btn">
-										<span class="fas fa-search" aria-hidden="true"></span>
-									</button>
-								</form>
+    <!-- Tiêu đề cho input tìm kiếm -->
+    <h3 style="font-size: 24px; text-align: center; margin-bottom: 10px; font-weight: bold; color: #fff; text-decoration: none;">
+        Tìm kiếm theo tên
+    </h3>
+    <input type="search" 
+           placeholder="Nhập tên phim" 
+           name="search" 
+           value="{{ request('search') }}" 
+           style="width: 80%; margin: 0 auto;color: #000 !important; display: block; padding: 10px; font-size: 1.1rem; border-radius: 8px; border: 1px solid #ccc;">
 
-								<div class="browse-items">
-									<h3 class="hny-title two mt-md-5 mt-4">Tìm theo thể loại:</h3>
-									<ul class="search-items">
-										@foreach($genres as $genre)
-										<li>
-											<a href="{{ route('movies.filter', ['genreName' => $genre->name]) }}">
-												{{ $genre->name }}
-											</a>
-										</li>
-										@endforeach
-									</ul>
-								</div>
+    <!-- Tiêu đề cho input chọn ngày -->
+    <h3 style="font-size: 24px; text-align: center; margin: 20px 0 10px; font-weight: bold; color: #fff; text-decoration: none;">
+        Chọn ngày suất chiếu
+    </h3>
+    <div style="text-align: center; width: 100%; margin-bottom: 10px;">
+        <input type="date" 
+               name="date" 
+               value="{{ request('date') }}" 
+               style="font-size: 1.2rem; padding: 10px 14px; width: 50%; max-width: 300px; border-radius: 8px; border: 1px solid #ccc;">
+    </div>
+
+    <!-- Tiêu đề cho thể loại -->
+    <h3 style="font-size: 24px; text-align: center; margin: 20px 0 10px; font-weight: bold; color: #fff; text-decoration: none;">
+        Chọn thể loại
+    </h3>
+    <div class="d-flex flex-wrap justify-content-center mb-3" style="gap: 10px;">
+        @foreach($genres as $genre)
+        <input type="checkbox"
+               class="btn-check"
+               id="genre-{{ $genre->id }}"
+               name="genres[]"
+               value="{{ $genre->id }}"
+               autocomplete="off"
+               {{ collect(request('genres'))->contains($genre->id) ? 'checked' : '' }}>
+        <label for="genre-{{ $genre->id }}"
+               class="btn btn-outline-light genre-label"
+               style="font-size: 1.1rem; font-weight: bold; text-decoration: none;">
+            {{ $genre->name }}
+        </label>
+        @endforeach
+    </div>
+
+    <!-- Nút submit -->
+    <div class="d-flex justify-content-center mt-3">
+        <button type="submit" class="btn-submit btn btn-primary" style="font-size: 1.2rem; padding: 12px 24px; border-radius: 8px;">
+            <span class="fas fa-search"></span> Lọc
+        </button>
+    </div>
+</form>
+
+
+
+								<!-- <div class="browse-items">
+                <h3 class="hny-title two mt-md-5 mt-4">Tìm theo thể loại:</h3>
+                <ul class="search-items">
+                    @foreach($genres as $genre)
+                    <li>
+                        <a href="{{ route('movies.filter', ['genreName' => $genre->name]) }}">
+                            {{ $genre->name }}
+                        </a>
+                    </li>
+                    @endforeach
+                </ul>
+            </div> -->
 							</div>
 							<a class="close" href="#close">×</a>
 						</div>
 						<!-- /search popup -->
 					</div>
+
 					{{-- <div class="Login_SignUp" id="login" style="font-size: 2rem ; display: inline-block; position: relative;">
 						<a class="nav-link" href="sign_in.html"><i class="far fa-user-circle"></i></a>
 					</div> --}}

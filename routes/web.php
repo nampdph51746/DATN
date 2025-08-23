@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\PointController;
 use App\Http\Controllers\Client\HomeController;
 use App\Http\Controllers\Client\SeatController;
 use App\Http\Controllers\TicketPrintController;
+use App\Http\Controllers\Admin\BannerController;
 use App\Http\Controllers\Admin\CinemaController;
 use App\Http\Controllers\Admin\TicketController;
 use App\Http\Controllers\Client\VnpayController;
@@ -34,6 +35,7 @@ use App\Http\Controllers\Admin\AdminSeatTypeController;
 use App\Http\Controllers\Admin\PaymentMethodController;
 use App\Http\Controllers\Admin\AdminAttributeController;
 use App\Http\Controllers\Client\ClientPaymentController;
+use App\Http\Controllers\Client\PaymentFailedController;
 use App\Http\Controllers\Client\PaymentSuccessController;
 use App\Http\Controllers\Admin\AdminAttributeValueController;
 use App\Http\Controllers\Admin\AdminProductVariantController;
@@ -82,12 +84,18 @@ Route::get('/checkout/vnpay_return', [VnpayController::class, 'vnpayReturn'])->n
 
 Route::post('/checkout/preview', [CheckoutController::class, 'previewBooking'])->name('checkout.preview');
 
+// Debug route for booking attempts
+Route::get('/debug/booking-attempts', [App\Http\Controllers\Client\DebugController::class, 'bookingAttempts'])->name('debug.booking-attempts');
 
 Route::get('/payment-success', [PaymentSuccessController::class, 'show'])->name('client.success');
+Route::get('/payment-success/clear-and-home', [PaymentSuccessController::class, 'clearAndGoHome'])->name('client.success.clear-home');
 
-Route::get('/payment-failed', function () {
-    return 'Thanh toán thất bại!';
-})->name('client.failed');
+// Payment Failed Routes
+Route::get('/payment-failed', [PaymentFailedController::class, 'show'])->name('client.failed');
+Route::post('/payment-failed/store', [PaymentFailedController::class, 'storeFailedInfo'])->name('client.failed.store');
+Route::post('/payment-failed/handle', [PaymentFailedController::class, 'handlePaymentFailure'])->name('client.failed.handle');
+Route::get('/payment-failed/retry', [PaymentFailedController::class, 'retryPayment'])->name('client.failed.retry');
+Route::get('/payment-failed/clear-and-home', [PaymentFailedController::class, 'clearAndGoHome'])->name('client.failed.clear-home');
 
 // Route::middleware('guest')->group(function () {
 //     Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])
@@ -239,6 +247,16 @@ Route::post('rooms/{room}/update-status', [AdminRoomController::class, 'updateSt
     Route::delete('countries/{id}/force-delete', [CountryController::class, 'forceDelete'])->name('countries.forceDelete');
     Route::delete('countries/bulk-delete', [CountryController::class, 'bulkDelete'])->name('countries.bulkDelete');
     Route::resource('countries', CountryController::class);
+
+    Route::get('banners', [BannerController::class, 'index'])->name('banners.index');
+    Route::get('banners-add', [BannerController::class, 'create'])->name('banners.create');
+    Route::get('banners-edit', [BannerController::class, 'edit'])->name('banners.edit');
+    Route::get('banners/trash', [BannerController::class, 'trash'])->name('banners.trash');
+    Route::post('banners/{id}/restore', [BannerController::class, 'restore'])->name('banners.restore');
+    Route::delete('banners/{id}/force-delete', [BannerController::class, 'forceDelete'])->name('banners.forceDelete');
+    Route::delete('banners/bulk-delete', [BannerController::class, 'bulkDelete'])->name('banners.bulkDelete');
+    Route::resource('banners', BannerController::class);
+    
     Route::get('cities', [CityController::class, 'index'])->name('cities.index');
     Route::get('cities-add', [CityController::class, 'create'])->name('cities.create');
     Route::get('cities-edit', [CityController::class, 'edit'])->name('cities.edit');

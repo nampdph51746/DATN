@@ -120,16 +120,107 @@
             display: block;
         }
 
-        .seats-list p,
-        .snacks-list ul {
+        .seat-details {
             font-size: 14px;
             font-weight: 500;
             color: #495057;
-            margin: 0;
+            margin: 5px 0;
+            padding: 8px;
+            background: #ffffff;
+            border-radius: 4px;
+            border-left: 4px solid #28a745;
+        }
+
+        .snacks-item {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            padding: 12px;
+            background: #ffffff;
+            border-radius: 6px;
+            border-left: 4px solid #007bff;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .snacks-item img {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 6px;
+            margin-right: 12px;
+            border: 1px solid #dee2e6;
+            flex-shrink: 0;
+        }
+
+        .snacks-item-info {
+            flex: 1;
+            font-size: 14px;
+            font-weight: 500;
+            color: #495057;
+        }
+
+        @media (max-width: 640px) {
+            .snacks-item {
+                flex-direction: column;
+                align-items: flex-start;
+                text-align: left;
+            }
+
+            .snacks-item img {
+                margin-right: 0;
+                margin-bottom: 8px;
+                width: 80px;
+                height: 80px;
+            }
         }
 
         .snacks-list ul {
             padding-left: 20px;
+            margin: 0;
+        }
+
+        .snacks-list li {
+            font-size: 14px;
+            font-weight: 500;
+            color: #495057;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: #ffffff;
+            border-radius: 6px;
+            border-left: 4px solid #007bff;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .variant-detail-badge {
+            display: inline-block;
+            background: #f8f9fa;
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin-right: 8px;
+            font-size: 13px;
+            border: 1px solid #dee2e6;
+        }
+
+        .showtime-details {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+            border-left: 4px solid #2196f3;
+        }
+
+        .showtime-details strong {
+            color: #1976d2;
+            font-size: 16px;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .showtime-item {
+            font-size: 14px;
+            color: #424242;
+            margin: 5px 0;
+            font-weight: 500;
         }
 
         .detail-price {
@@ -156,9 +247,7 @@
 
         .back-btn:hover {
             background: #0056b3;
-        }
-
-        @media (max-width: 640px) {
+        }        @media (max-width: 640px) {
             .detail-container {
                 margin: 20px;
                 padding: 15px;
@@ -195,27 +284,6 @@
                     $statusValue = $booking->status instanceof \BackedEnum ? $booking->status->value : $booking->status;
                     $firstTicket = $booking->tickets->first();
                     $movie = $firstTicket?->showtime?->movie;
-
-                    // Lấy danh sách ghế, lọc null, unique rồi sắp xếp theo hàng ghế (chữ cái) rồi số ghế
-                    $seats = $booking->tickets
-                        ->map(fn($t) => $t->seat ? $t->seat->row . $t->seat->seat_number : null)
-                        ->filter()
-                        ->unique()
-                        ->sort(function ($a, $b) {
-                            preg_match('/([A-Za-z]+)(\d+)/', $a, $matchA);
-                            preg_match('/([A-Za-z]+)(\d+)/', $b, $matchB);
-
-                            $rowA = $matchA[1] ?? '';
-                            $numA = intval($matchA[2] ?? 0);
-                            $rowB = $matchB[1] ?? '';
-                            $numB = intval($matchB[2] ?? 0);
-
-                            $cmpRow = strcmp($rowA, $rowB);
-                            if ($cmpRow !== 0)
-                                return $cmpRow;
-                            return $numA <=> $numB;
-                        })
-                        ->values();
                 @endphp
 
                 <div class="detail-header">
@@ -235,29 +303,113 @@
                         <div class="show-info">
                             📅
                             {{ $firstTicket?->showtime?->show_date ? \Carbon\Carbon::parse($firstTicket->showtime->show_date)->format('d/m/Y') : '' }}
-                            | ⏰ {{ $firstTicket?->showtime?->show_time ?? '' }}
+                            | ⏰ {{ $firstTicket?->showtime?->formatted_start_time ?? '' }}
                         </div>
 
                         <div class="show-info">
-                            🎬 {{ $firstTicket->seat?->room?->cinema?->name ?? 'Chưa xác định' }} -
-                            {{ $firstTicket->seat?->room?->name ?? 'Chưa xác định' }}
+                            🎬 {{ $firstTicket?->showtime?->room?->cinema?->name ?? 'Chưa xác định' }} -
+                            {{ $firstTicket?->showtime?->room?->name ?? 'Chưa xác định' }}
                         </div>
                     </div>
                 </div>
 
+                <!-- Thông tin chi tiết về suất chiếu -->
+                @if($firstTicket?->showtime)
+                    <div class="showtime-details">
+                        <strong>🎬 Thông tin suất chiếu</strong>
+                        <div class="showtime-item">
+                            📅 Ngày chiếu: {{ \Carbon\Carbon::parse($firstTicket->showtime->show_date)->format('d/m/Y') }}
+                        </div>
+                        <div class="showtime-item">
+                            ⏰ Giờ chiếu: {{ $firstTicket->showtime->formatted_start_time ?? 'Chưa có thông tin' }}
+                        </div>
+                        <div class="showtime-item">
+                            ⏱️ Thời lượng: {{ $movie?->duration_minutes ?? 'Chưa xác định' }} phút
+                        </div>
+                        <div class="showtime-item">
+                            🏢 Rạp: {{ $firstTicket->showtime->room?->cinema?->name ?? 'Chưa xác định' }}
+                        </div>
+                        <div class="showtime-item">
+                            🎪 Phòng chiếu: {{ $firstTicket->showtime->room?->name ?? 'Chưa xác định' }}
+                        </div>
+                    </div>
+                @endif
+
                 <div class="seats-list">
                     <strong>💺 Danh sách ghế đã đặt:</strong>
-                    <p>{{ $seats->join(', ') }}</p>
+                    @if($booking->tickets && $booking->tickets->count() > 0)
+                        @foreach($booking->tickets as $ticket)
+                            @if($ticket->seat)
+                                <div class="seat-details">
+                                    🪑 Hàng {{ $ticket->seat->row_char ?? 'N/A' }} - Ghế {{ $ticket->seat->seat_number ?? 'N/A' }}
+                                    | Loại: {{ $ticket->seat->seatType->name ?? 'Thường' }}
+                                    | Giá: {{ number_format($ticket->price_at_purchase ?? 0, 0, ',', '.') }}đ
+                                    | Trạng thái: 
+                                    <span style="color: #28a745; font-weight: bold;">
+                                        {{ $ticket->status->value ?? 'Valid' }}
+                                    </span>
+                                </div>
+                            @endif
+                        @endforeach
+                    @else
+                        <p>Không có thông tin ghế.</p>
+                    @endif
                 </div>
 
-                @if($booking->items->count() > 0)
+                @if($booking->bookingItems && $booking->bookingItems->count() > 0)
                     <div class="snacks-list">
                         <strong>🍿 Đồ ăn kèm:</strong>
-                        <ul>
-                            @foreach($booking->items as $item)
-                                <li>{{ $item->productVariant->product->name ?? 'Chưa xác định' }} x {{ $item->quantity ?? 1 }}</li>
-                            @endforeach
-                        </ul>
+                        @foreach($booking->bookingItems as $item)
+                            @php
+                                $productVariant = $item->productVariant;
+                                $product = $productVariant?->product;
+                                $productName = $product ? $product->name : 'Sản phẩm không xác định';
+                                
+                                // Lấy thông tin chi tiết biến thể
+                                $variantDetails = [];
+                                if ($productVariant && $productVariant->productVariantOptions) {
+                                    foreach ($productVariant->productVariantOptions as $option) {
+                                        $attributeValue = $option->attributeValue;
+                                        $attribute = $attributeValue?->attribute;
+                                        if ($attribute && $attributeValue) {
+                                            $variantDetails[] = $attribute->name . ': ' . $attributeValue->value;
+                                        }
+                                    }
+                                }
+                                
+                                // Fallback về tên biến thể nếu không có variant options
+                                if (empty($variantDetails) && $productVariant) {
+                                    $variantName = $productVariant->name ?? null;
+                                    if ($variantName && $variantName !== $productName) {
+                                        $variantDetails[] = $variantName;
+                                    }
+                                }
+                                
+                                $variantText = !empty($variantDetails) ? ' (' . implode(' | ', $variantDetails) . ')' : '';
+                                
+                                // Lấy ảnh sản phẩm - ưu tiên ảnh variant, sau đó ảnh product
+                                $imageUrl = null;
+                                if ($productVariant && $productVariant->image_url) {
+                                    $imageUrl = asset('storage/' . $productVariant->image_url);
+                                } elseif ($product && $product->image_url) {
+                                    $imageUrl = asset('storage/' . $product->image_url);
+                                } 
+                            @endphp
+                            <div class="snacks-item">
+                                <img src="{{ $imageUrl }}" alt="{{ $productName }}">
+                                <div class="snacks-item-info">
+                                     {{ $productName }}{{ $variantText }}
+                                    | Số lượng: {{ $item->quantity ?? 1 }}
+                                    | Giá: {{ number_format($item->price_at_purchase ?? 0, 0, ',', '.') }}đ
+                                    | Tổng: {{ number_format(($item->price_at_purchase ?? 0) * ($item->quantity ?? 1), 0, ',', '.') }}đ
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="snacks-list">
+                        <strong>🍿 Đồ ăn kèm:</strong>
+                        <p>Không có đồ ăn kèm trong đơn hàng này.</p>
                     </div>
                 @endif
 

@@ -13,9 +13,8 @@ class CheckoutController extends Controller
 {
     public function previewBooking(Request $request)
     {
-        // Đánh dấu đang ở bước thanh toán ngay lập tức để bảo vệ trạng thái ghế
-        session(['is_checkout' => true]);
-        Log::info('CheckoutController - is_checkout session set at start of previewBooking');
+        // Không set is_checkout ở đây, chỉ set khi thực sự vào trang checkout
+        Log::info('CheckoutController - previewBooking started');
 
         $user = Auth::user();
         $promotionId = $request->input('promotion_id');
@@ -73,6 +72,7 @@ class CheckoutController extends Controller
             'cinema_name' => $request->input('cinema_name'),
             'room_name' => $request->input('room_name'),
             'showtime' => $request->input('showtime'),
+            'showtime_id' => $request->input('showtime_id'),
             'snack_items' => $request->input('snack_items'),
             'items' => is_string($request->input('items'))
                 ? (json_decode($request->input('items', '[]'), true) ?? [])
@@ -89,7 +89,7 @@ class CheckoutController extends Controller
 
         // dd($bookingData); 
         session(['booking_preview' => $bookingData]);
-        // Đánh dấu đang ở bước thanh toán để bảo vệ trạng thái ghế
+        // Đánh dấu đang ở bước checkout (nhưng user vẫn có thể thay đổi ghế)
         session(['is_checkout' => true]);
 
         return view('client.checkout', compact('bookingData'));
@@ -97,8 +97,13 @@ class CheckoutController extends Controller
 
     public function setCheckoutSession(Request $request)
     {
-        session(['is_checkout' => true]);
-        Log::info('Checkout session set via API');
+        if ($request->has('checkout_form_submitted')) {
+            session(['checkout_form_submitted' => true]);
+            Log::info('Checkout form submitted session set via API');
+        } else {
+            session(['is_checkout' => true]);
+            Log::info('Checkout session set via API');
+        }
         
         return response()->json(['success' => true]);
     }

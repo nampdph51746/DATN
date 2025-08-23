@@ -29,10 +29,10 @@ class SeatController extends Controller
     // API bỏ giữ ghế khi người dùng thoát hoặc reload trang
     public function releaseSeat(Request $request, $showtimeId)
     {
-        // Nếu đang ở bước thanh toán thì không thực hiện release/cancel
-        if (session()->has('is_checkout') && session('is_checkout')) {
-            Log::info('releaseSeat: Bỏ qua release do session đang thanh toán');
-            return response()->json(['message' => 'Không thực hiện release khi đang thanh toán']);
+        // Chỉ chặn release khi thực sự đang xử lý thanh toán hoặc form đã submit
+        if (session('is_processing_payment') || (session('is_checkout') && session('checkout_form_submitted'))) {
+            Log::info('releaseSeat: Bỏ qua release do đang xử lý thanh toán');
+            return response()->json(['message' => 'Không thực hiện release khi đang xử lý thanh toán']);
         }
 
         $request->validate([
@@ -49,20 +49,12 @@ class SeatController extends Controller
                 return response()->json(['message' => 'Không thực hiện release khi thanh toán']);
             }
 
-            // Kiểm tra session payment để tránh release ghế khi đang thanh toán
-            if (session('is_checkout') || session('is_processing_payment')) {
-                Log::info('releaseSeat: Bỏ qua release do đang trong quá trình thanh toán', [
-                    'is_checkout' => session('is_checkout'),
-                    'is_processing_payment' => session('is_processing_payment')
-                ]);
-                return response()->json(['message' => 'Không thực hiện release khi đang thanh toán']);
-            }
-
-            // Nếu user đã login, hủy booking attempt
+            // KHÔNG cancel booking attempt khi release seat để chọn ghế khác
+            // Chỉ cancel khi thực sự thoát trang (trong releaseAllSeatsOfSession)
+            // Điều này cho phép logic createAttempt() tự động update attempt hiện tại
             if (Auth::check()) {
                 $userId = Auth::id();
-                $this->bookingAttemptService->cancelActiveAttempts($userId, $showtimeId);
-                Log::info("Cancelled active booking attempts for user {$userId}, showtime {$showtimeId}");
+                Log::info("Released seats for user {$userId}, showtime {$showtimeId} - keeping booking attempt active for potential update");
             }
 
             foreach ($seatIds as $id) {
@@ -212,6 +204,17 @@ class SeatController extends Controller
                     'message' => 'Bạn đã đặt ghế nhiều lần liên tiếp mà không thanh toán. Tài khoản sẽ được mở khóa vào ' . $banInfo->banned_until->format('d/m/Y H:i'),
                     'banned_until' => $banInfo->banned_until->toISOString(),
                 ], 403);
+            }
+
+            // Kiểm tra số lần thất bại gần đây để cảnh báo trước khi ban
+            $recentFailedAttempts = \App\Models\BookingAttempt::where('user_id', $userId)
+                ->whereIn('status', [\App\Enums\BookingAttemptStatus::Timeout, \App\Enums\BookingAttemptStatus::Cancelled])
+                ->where('reserved_at', '>=', now()->subDay())
+                ->count();
+                
+            if ($recentFailedAttempts >= 2) {
+                Log::warning("User {$userId} has {$recentFailedAttempts} failed attempts - close to ban limit");
+                // Không block ngay, nhưng log để theo dõi
             }
 
             $states = ShowtimeSeatState::where('showtime_id', $showtimeId)
@@ -367,13 +370,10 @@ class SeatController extends Controller
 
             $releasedSeatIds = [];
             
-            // Kiểm tra session payment để tránh release ghế khi đang thanh toán
-            if (session('is_checkout') || session('is_processing_payment')) {
-                Log::info('releaseAllSeatsOfSession: Bỏ qua release do đang trong quá trình thanh toán', [
-                    'is_checkout' => session('is_checkout'),
-                    'is_processing_payment' => session('is_processing_payment')
-                ]);
-                return response()->json(['message' => 'Không thực hiện release khi đang thanh toán']);
+            // Chỉ chặn release khi thực sự đang xử lý thanh toán hoặc form đã submit
+            if (session('is_processing_payment') || (session('is_checkout') && session('checkout_form_submitted'))) {
+                Log::info('releaseAllSeatsOfSession: Bỏ qua release do đang xử lý thanh toán');
+                return response()->json(['message' => 'Không thực hiện release khi đang xử lý thanh toán']);
             }
 
             foreach ($seatStates as $seatState) {
@@ -391,11 +391,27 @@ class SeatController extends Controller
                 Log::info("Released seat ID {$seatState->seat_id} for session {$sessionId} in showtime {$showtimeId}");
             }
 
-            // Nếu user đã login, hủy booking attempt (chỉ khi không đang thanh toán)
+            // Nếu user đã login, hủy booking attempt 
+            // NHƯNG chỉ khi không có booking nào đang được tạo gần đây (trong 5 phút)
             if (Auth::check()) {
                 $userId = Auth::id();
-                $this->bookingAttemptService->cancelActiveAttempts($userId, $showtimeId);
-                Log::info("Cancelled active booking attempts for user {$userId}, showtime {$showtimeId}");
+                
+                // Kiểm tra xem có booking nào được tạo trong 5 phút gần đây không
+                $recentBooking = \App\Models\Booking::where('user_id', $userId)
+                    ->where('created_at', '>=', now()->subMinutes(5))
+                    ->exists();
+                
+                // Chỉ cancel booking attempt nếu:
+                // 1. Không đang trong quá trình thanh toán
+                // 2. Không có booking gần đây (tránh cancel khi vừa thanh toán xong)
+                if (!session('is_processing_payment') && 
+                    !session('checkout_form_submitted') && 
+                    !$recentBooking) {
+                    $this->bookingAttemptService->cancelActiveAttempts($userId, $showtimeId);
+                    Log::info("Cancelled active booking attempts for user {$userId}, showtime {$showtimeId}");
+                } else {
+                    Log::info("Skipped cancelling booking attempts for user {$userId} - recent booking or payment in progress");
+                }
             }
 
             return response()->json([

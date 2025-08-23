@@ -39,6 +39,11 @@ class CheckBookingBan
             }
         }
         
+        // Không kiểm tra ban nếu đang trong quá trình thanh toán hoặc đặt ghế
+        if (session('is_checkout') || session('is_processing_payment') || session('user_booking_in_progress')) {
+            return $next($request);
+        }
+        
         if ($this->bookingAttemptService->isUserBanned($userId)) {
             $banInfo = $this->bookingAttemptService->getUserBanInfo($userId);
             

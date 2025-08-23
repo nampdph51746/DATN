@@ -219,7 +219,7 @@
                             <h3 class="hny-title">Phim Đang Chiếu</h3>
                         </div>
                         <div class="headerhny-right text-lg-right">
-                            <h4><a class="show-title" href="{{ route('movies.show', ['id' => $showingMovies->first()->id ?? 1]) }}">Xem tất cả</a></h4>
+                            <h4><a class="show-title" href="{{ route('movies.filter', ['status' => 'showing']) }}">Xem thêm</a></h4>
                         </div>
                     </div>
                 </div>
@@ -239,7 +239,7 @@
                                              alt="{{ $movie->name }}">
                                     </figure>
                                     <div class="box-content">
-                                        <h3 class="title">{{ $movie->name }}</h3>
+                                        <h2 class="title">{{ $movie->name }}</h3>
                                         <h4>
                                             <span class="post"><span class="fa fa-clock-o"></span> {{ $movie->duration_minutes }} phút</span>
                                             <span class="post fa fa-heart text-right"></span>
@@ -286,7 +286,7 @@
                             <h3 class="hny-title">Phim Sắp Chiếu</h3>
                         </div>
                         <div class="headerhny-right text-lg-right">
-                            <h4><a class="show-title" href="{{ route('movies.show', ['id' => $upcomingMovies->first()->id ?? 1]) }}">Xem tất cả</a></h4>
+                            <h4><a class="show-title" href="{{ route('movies.filter', ['status' => 'upcoming']) }}">Xem thêm</a></h4>
                         </div>
                     </div>
                 </div>
@@ -301,7 +301,7 @@
                                              alt="{{ $movie->name }}">
                                     </figure>
                                     <div class="box-content">
-                                        <h3 class="title">{{ $movie->name }}</h3>
+                                        <h2 class="title">{{ $movie->name }}</h3>
                                         <h4>
                                             <span class="post"><span class="fa fa-clock-o"></span> {{ $movie->duration_minutes }} phút</span>
                                             <span class="post fa fa-heart text-right"></span>
