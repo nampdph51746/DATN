@@ -42,13 +42,16 @@ class AdminRoomController extends Controller
     }
 
     // Lưu phòng chiếu mới
-    public function store(StoreRoomRequest $request)
-    {
-        Room::create($request->all());
+public function store(StoreRoomRequest $request)
+{
+    $data = $request->all();  // Không lấy capacity
+    if (!isset($data['capacity'])) {
+    $data['capacity'] = 0;
+}
+    Room::create($data);
 
-        return redirect()->route('admin.rooms.index')->with('success', 'Tạo phòng chiếu thành công');
-    }
-
+    return redirect()->route('admin.rooms.index')->with('success', 'Tạo phòng chiếu thành công');
+}
     // Xem chi tiết phòng chiếu
     public function show(Request $request, $id)
     {
@@ -226,6 +229,24 @@ class AdminRoomController extends Controller
     }
 
     // Hiển thị form chỉnh sửa
+
+    public function editStatus($id)
+{
+    $room = Room::findOrFail($id);
+return view('admin.rooms.edit_status', compact('room'));
+}
+
+public function updateStatus(Request $request, $id)
+{
+    $room = Room::findOrFail($id);
+    $request->validate([
+        'status' => 'required|string|max:20',
+    ]);
+    $room->status = $request->status;
+    $room->save();
+
+    return redirect()->route('admin.rooms.index')->with('success', 'Cập nhật trạng thái phòng thành công');
+}
     public function edit($id)
     {
         $room = Room::with(['cinema', 'roomType'])->findOrFail($id);

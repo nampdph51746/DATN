@@ -1,5 +1,6 @@
 <?php
 
+use App\Services\BarcodeService;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\QrCodeController;
 use App\Http\Controllers\ProfileController;
@@ -225,6 +226,9 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
     Route::patch('rooms/{id}/update-percentages', [AdminRoomController::class, 'updateSeatPercentages'])->name('rooms.updatePercentages');
     Route::post('rooms/{room}/update-seat-percentages', [AdminRoomController::class, 'updateSeatPercentages'])->name('rooms.update-seat-percentages');
     Route::post('rooms/{room}/update-capacity', [AdminRoomController::class, 'updateCapacity'])->name('rooms.update-capacity');
+    Route::get('rooms/{room}/edit-status', [AdminRoomController::class, 'editStatus'])->name('rooms.editStatus');
+
+Route::post('rooms/{room}/update-status', [AdminRoomController::class, 'updateStatus'])->name('rooms.updateStatus');
 
     //Son
     Route::get('countries', [CountryController::class, 'index'])->name('countries.index');
@@ -396,7 +400,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
 // Test route for barcode
 Route::get('/test-barcode-api', function () {
-    $barcodeService = new \App\Services\BarcodeService();
+    $barcodeService = new BarcodeService();
     $barcode = $barcodeService->generateBarcode('BK1754063915');
     
     return response()->json([
