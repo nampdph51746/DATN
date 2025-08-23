@@ -3,16 +3,36 @@
 namespace App\Http\Controllers;
 
 use App\Services\TicketScanService;
+use App\Services\FoodScanService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Log;
+
 
 class QrCodeController extends Controller
 {
     protected $ticketScanService;
+    protected $foodScanService;
 
-    public function __construct(TicketScanService $ticketScanService)
+    public function __construct(TicketScanService $ticketScanService, FoodScanService $foodScanService)
     {
         $this->ticketScanService = $ticketScanService;
+        $this->foodScanService = $foodScanService;
+    }
+    /**
+     * Quét mã QR cho sản phẩm/đồ ăn
+     */
+    public function scanFoodQr(Request $request): JsonResponse
+    {
+        $request->validate([
+            'booking_item_id' => 'required|integer'
+        ]);
+        $result = $this->foodScanService->scanFoodByCode($request->input('booking_item_id'));
+        if ($result['success']) {
+            return response()->json(['success' => true, 'message' => $result['message'], 'data' => $result['data']], 200);
+        } else {
+            return response()->json(['success' => false, 'message' => $result['message']], 400);
+        }
     }
 
     /**
@@ -26,16 +46,31 @@ class QrCodeController extends Controller
             ]);
 
             $bookingCode = $request->input('booking_code');
-            
+
+            // Gọi service để quét vé
             $result = $this->ticketScanService->scanTicket($bookingCode);
 
             if ($result['success']) {
+                // Cập nhật trạng thái đồ ăn trong booking sang checked
+                $booking = \App\Models\Booking::with('bookingItems')->where('booking_code', $bookingCode)->first();
+                if ($booking && $booking->bookingItems) {
+                    foreach ($booking->bookingItems as $item) {
+                        if ($item->product_status === 'valid') {
+                            $item->product_status = 'checked';
+                            $item->checked_at = now();
+                            $item->save();
+                            Log::info("BookingItem {$item->id} updated to checked for booking {$bookingCode}");
+                        }
+                    }
+                }
+
                 return response()->json([
                     'success' => true,
                     'message' => $result['message'],
                     'data' => [
                         'booking' => $result['booking'],
-                        'updated_tickets' => $result['updated_tickets']
+                        'updated_tickets' => $result['updated_tickets'],
+                        'updated_items' => $booking->bookingItems->pluck('id')->toArray() // Trả về danh sách ID đồ ăn đã cập nhật
                     ]
                 ], 200);
             } else {
@@ -44,7 +79,6 @@ class QrCodeController extends Controller
                     'message' => $result['message']
                 ], 400);
             }
-
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'success' => false,
@@ -52,6 +86,7 @@ class QrCodeController extends Controller
                 'errors' => $e->errors()
             ], 422);
         } catch (\Exception $e) {
+            Log::error("Error scanning QR for booking {$bookingCode}: {$e->getMessage()}");
             return response()->json([
                 'success' => false,
                 'message' => 'Có lỗi xảy ra khi quét mã'
@@ -70,7 +105,7 @@ class QrCodeController extends Controller
             ]);
 
             $bookingCode = $request->input('booking_code');
-            
+
             $result = $this->ticketScanService->getTicketStatus($bookingCode);
 
             if ($result['success']) {
@@ -84,7 +119,6 @@ class QrCodeController extends Controller
                     'message' => $result['message']
                 ], 404);
             }
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -102,6 +136,18 @@ class QrCodeController extends Controller
             $request->validate([
                 'ticket_code' => 'required|string|max:50'
             ]);
+
+            // Cập nhật trạng thái đồ ăn trong booking sang checked
+            $ticket = \App\Models\Ticket::where('ticket_code', $request->ticket_code)->first();
+            if ($ticket && $ticket->booking) {
+                foreach ($ticket->booking->bookingItems as $item) {
+                    if ($item->product_status === 'valid') {
+                        $item->product_status = 'checked';
+                        $item->checked_at = now();
+                        $item->save();
+                    }
+                }
+            }
 
             $ticketCode = $request->input('ticket_code');
             if (!method_exists($this->ticketScanService, 'scanTicketByCode')) {
@@ -146,7 +192,7 @@ class QrCodeController extends Controller
         try {
             // Lấy thông tin booking dựa vào code
             $isBookingCode = preg_match('/^BK\d{6,}$/', $code) || preg_match('/^\d{8,}$/', $code);
-            
+
             if (!$isBookingCode) {
                 return redirect()->back()->with('error', 'Mã không hợp lệ');
             }
@@ -169,7 +215,6 @@ class QrCodeController extends Controller
             $bookingItems = $booking->bookingItems ?? [];
 
             return view('admin.print-tickets', compact('booking', 'tickets', 'bookingItems', 'code'));
-
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Có lỗi xảy ra khi tải trang in vé: ' . $e->getMessage());
         }

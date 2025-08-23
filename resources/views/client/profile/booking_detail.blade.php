@@ -246,8 +246,19 @@
                 </div>
 
                 <div class="seats-list">
-                    <strong>💺 Danh sách ghế đã đặt:</strong>
-                    <p>{{ $seats->join(', ') }}</p>
+                    <strong>💺 Danh sách vé:</strong>
+                    <ul>
+                        @foreach($booking->tickets as $ticket)
+                            <li>
+                                Ghế: {{ $ticket->seat ? $ticket->seat->row . $ticket->seat->seat_number : 'N/A' }}
+                                | Trạng thái: <span style="font-weight:bold; color:@if($ticket->status == 'used')#dc3545;@elseif($ticket->status == 'checked')#ffc107;@else#28a745;@endif">{{ ucfirst($ticket->status) }}</span>
+                                <button 
+                                    onclick="printTicketQR('{{ $ticket->id }}')"
+                                    @if(in_array($ticket->status, ['used','cancelled'])) disabled style="opacity:0.6;cursor:not-allowed;" @endif
+                                >In vé</button>
+                            </li>
+                        @endforeach
+                    </ul>
                 </div>
 
                 @if($booking->items->count() > 0)
@@ -255,11 +266,58 @@
                         <strong>🍿 Đồ ăn kèm:</strong>
                         <ul>
                             @foreach($booking->items as $item)
-                                <li>{{ $item->productVariant->product->name ?? 'Chưa xác định' }} x {{ $item->quantity ?? 1 }}</li>
+                                <li>
+                                    {{ $item->productVariant->product->name ?? 'Chưa xác định' }} x {{ $item->quantity ?? 1 }}
+                                    | Trạng thái: <span style="font-weight:bold; color:@if($item->product_status == 'used')#dc3545;@elseif($item->product_status == 'checked')#ffc107;@else#28a745;@endif">{{ ucfirst($item->product_status) }}</span>
+                                    <button 
+                                        onclick="printFoodQR('{{ $item->id }}')"
+                                        @if(in_array($item->product_status, ['used','cancelled'])) disabled style="opacity:0.6;cursor:not-allowed;" @endif
+                                    >In đồ ăn</button>
+                                </li>
                             @endforeach
                         </ul>
                     </div>
                 @endif
+    <script>
+    function printTicketQR(ticketId) {
+        // Gọi API chuyển trạng thái sang used và lấy mã QR
+        fetch(`/api/ticket/print/${ticketId}`, {method: 'POST'})
+            .then(res => res.json())
+            .then(data => {
+                if(data.success && data.qr) {
+                    showQrModal(data.qr);
+                } else {
+                    alert(data.message || 'Có lỗi xảy ra!');
+                }
+            });
+    }
+    function printFoodQR(itemId) {
+        // Gọi API chuyển trạng thái sang used và lấy mã QR
+        fetch(`/api/food/print/${itemId}`, {method: 'POST'})
+            .then(res => res.json())
+            .then(data => {
+                if(data.success && data.qr) {
+                    showQrModal(data.qr);
+                } else {
+                    alert(data.message || 'Có lỗi xảy ra!');
+                }
+            });
+    }
+    function showQrModal(qrBase64) {
+        const modal = document.createElement('div');
+        modal.style.position = 'fixed';
+        modal.style.top = '0';
+        modal.style.left = '0';
+        modal.style.width = '100vw';
+        modal.style.height = '100vh';
+        modal.style.background = 'rgba(0,0,0,0.5)';
+        modal.style.display = 'flex';
+        modal.style.alignItems = 'center';
+        modal.style.justifyContent = 'center';
+        modal.innerHTML = `<div style='background:#fff;padding:30px;border-radius:10px;text-align:center;'><img src='data:image/png;base64,${qrBase64}' style='max-width:300px;'><br><button onclick='this.parentNode.parentNode.remove()' style='margin-top:20px;'>Đóng</button></div>`;
+        document.body.appendChild(modal);
+    }
+    </script>
 
                 <div class="detail-price">💰 {{ number_format($booking->final_amount, 0, ',', '.') }} VNĐ</div>
 

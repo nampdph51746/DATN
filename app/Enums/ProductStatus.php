@@ -2,9 +2,9 @@
 
 namespace App\Enums;
 
-enum TicketStatus: string {
+enum ProductStatus: string {
     case Valid = 'valid';
+    case Checked = 'checked';
     case Used = 'used';
     case Cancelled = 'cancelled';
-    case Checked = 'checked';
 }
