@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\PointController;
 use App\Http\Controllers\Client\HomeController;
 use App\Http\Controllers\Client\SeatController;
 use App\Http\Controllers\TicketPrintController;
+use App\Http\Controllers\Admin\BannerController;
 use App\Http\Controllers\Admin\CinemaController;
 use App\Http\Controllers\Admin\TicketController;
 use App\Http\Controllers\Client\VnpayController;
@@ -242,6 +243,16 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
     Route::delete('countries/{id}/force-delete', [CountryController::class, 'forceDelete'])->name('countries.forceDelete');
     Route::delete('countries/bulk-delete', [CountryController::class, 'bulkDelete'])->name('countries.bulkDelete');
     Route::resource('countries', CountryController::class);
+
+    Route::get('banners', [BannerController::class, 'index'])->name('banners.index');
+    Route::get('banners-add', [BannerController::class, 'create'])->name('banners.create');
+    Route::get('banners-edit', [BannerController::class, 'edit'])->name('banners.edit');
+    Route::get('banners/trash', [BannerController::class, 'trash'])->name('banners.trash');
+    Route::post('banners/{id}/restore', [BannerController::class, 'restore'])->name('banners.restore');
+    Route::delete('banners/{id}/force-delete', [BannerController::class, 'forceDelete'])->name('banners.forceDelete');
+    Route::delete('banners/bulk-delete', [BannerController::class, 'bulkDelete'])->name('banners.bulkDelete');
+    Route::resource('banners', BannerController::class);
+    
     Route::get('cities', [CityController::class, 'index'])->name('cities.index');
     Route::get('cities-add', [CityController::class, 'create'])->name('cities.create');
     Route::get('cities-edit', [CityController::class, 'edit'])->name('cities.edit');

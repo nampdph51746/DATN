@@ -180,4 +180,5 @@
             </div>
         </div>
     </section>
+    @include('client.footer.footer')
 @endsection
