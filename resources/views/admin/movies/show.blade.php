@@ -71,7 +71,11 @@
                                     <i class="bx bx-user-circle text-primary fs-20"></i>
                                     <span class="fw-semibold text-dark">Đạo diễn</span>
                                 </div>
-                                <p class="text-muted mb-0 ps-4">{{ $movie->director?->name ?? 'N/A' }}</p>
+                                <p class="text-muted mb-0 ps-4"> @forelse($movie->directors as $director)
+                                    {{ $director->name }}{{ !$loop->last ? ', ' : '' }}
+                                @empty
+                                    N/A
+                                @endforelse</p>
                             </div>
                         </div>
                         
@@ -330,7 +334,7 @@
                                 </h6>
                             </div>
                             <div class="card-body p-4">
-                                @if($movie->status->value === 'ended')
+                                @if($movie->status === 'ended')
                                     <div class="alert alert-warning d-flex align-items-center" role="alert">
                                         <i class="bx bx-info-circle fs-5 me-2"></i>
                                         <div>
@@ -390,7 +394,7 @@
                                         
                                         <div class="col-md-2">
                                             <div class="d-flex gap-2">
-                                                @if($movie->status->value === 'ended')
+                                                @if($movie->status === 'ended')
                                                     <button type="button" 
                                                             class="btn btn-secondary btn-lg flex-fill rounded-3 shadow-sm" 
                                                             disabled
@@ -1093,7 +1097,7 @@ document.querySelector('[data-bs-target="#confirmShowtimeModal"]').addEventListe
 // Xử lý xác nhận tạo suất chiếu
 document.getElementById('confirmCreateShowtime').addEventListener('click', function() {
     // Kiểm tra trạng thái phim trước khi submit
-    @if($movie->status->value === 'ended')
+    @if($movie->status === 'ended')
         alert('Không thể tạo suất chiếu cho phim đã kết thúc!');
         return false;
     @else

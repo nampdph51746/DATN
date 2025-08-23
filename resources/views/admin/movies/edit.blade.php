@@ -50,25 +50,28 @@
                                     @enderror
                                 </div>
                             </div>
-                            <div class="col-lg-6">
-                                <div class="mb-3">
-                                    <label for="director_id" class="form-label">
-                                        <i class="bx bx-user-voice me-2 text-primary"></i>Đạo diễn 
-                                        <span class="text-danger">*</span>
-                                    </label>
-                                    <select name="director_id" id="director_id" class="form-select @error('director_id') is-invalid @enderror" required>
-                                        <option value="">🎬 Chọn đạo diễn</option>
-                                        @foreach ($directors as $director)
-                                            <option value="{{ $director->id }}" {{ old('director_id', $movie->director_id) == $director->id ? 'selected' : '' }}>
-                                                👨‍💼 {{ $director->name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    @error('director_id')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
+                                <div class="col-lg-6">
+                                    <div class="mb-3">
+                                        <label for="director_id" class="form-label">
+                                            <i class="bx bx-user-voice me-2 text-primary"></i>Đạo diễn
+                                            <span class="text-danger">*</span>
+                                        </label>
+                                        <select name="director_id[]" id="director_id" 
+                                                class="form-select @error('director_id') is-invalid @enderror" 
+                                                multiple required>
+                                            <option value="">🎬 Chọn đạo diễn</option>
+                                            @foreach ($directors as $director)
+                                                <option value="{{ $director->id }}" 
+                                                    {{ in_array($director->id, old('director_id', $movie->directors->pluck('id')->toArray())) ? 'selected' : '' }}>
+                                                    👨‍💼 {{ $director->name }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        @error('director_id')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
                                 </div>
-                            </div>
                         </div>
                         <div class="row">
                             <div class="col-lg-6">
@@ -166,58 +169,19 @@
                                     @enderror
                                 </div>
                             </div>
-                            <div class="col-lg-6">
-                                <div class="mb-3">
-                                    <label for="status" class="form-label">Trạng thái <span class="text-danger">*</span></label>
-                                    <select name="status" id="status" class="form-control @error('status') is-invalid @enderror" required>
-                                        @foreach (\App\Enums\MovieStatus::cases() as $status)
-                                            <option value="{{ $status->value }}" {{ old('status', $movie->status->value) == $status->value ? 'selected' : '' }}>{{ ucfirst($status->value) }}</option>
-                                        @endforeach
-                                    </select>
-                                    @error('status')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
                         </div>
-                        <!-- <div class="row">
-                            <div class="col-lg-6">
-                                <div class="mb-3">
-                                    <label for="poster_url" class="form-label">URL Poster</label>
-                                    <input type="url" name="poster_url" id="poster_url" class="form-control @error('poster_url') is-invalid @enderror" value="{{ old('poster_url', $movie->poster_url) }}">
-                                    @error('poster_url')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-                            <div class="col-lg-6">
-                                <div class="mb-3">
-                                    <label for="trailer_url" class="form-label">URL Trailer</label>
-                                    <input type="url" name="trailer_url" id="trailer_url" class="form-control @error('trailer_url') is-invalid @enderror" value="{{ old('trailer_url', $movie->trailer_url) }}">
-                                    @error('trailer_url')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-                        </div> -->
                         <div class="row">
                             <div class="col-lg-6">
                                 <div class="mb-3">
                                     <label for="image" class="form-label">Ảnh phim</label>
-                                    <input type="file" name="image" id="image" class="form-control @error('image') is-invalid @enderror" accept="image/jpeg,image/png,image/jpg,image/gif">
-                                    @error('image')
+                                    <input type="file" name="poster" id="poster" class="form-control @error('image') is-invalid @enderror" accept="image/jpeg,image/png,image/jpg,image/gif">
+                                    @error('poster')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                     <div id="imagePreviewContainer" class="mt-2" style="display: none;">
                                         <p class="text-muted">Ảnh xem trước:</p>
                                         <img id="imagePreviewSmall" class="img-thumbnail" style="max-width: 150px;">
                                     </div>
-                                    @if ($movie->image_path)
-                                        <div class="mt-2">
-                                            <p class="text-muted">Ảnh hiện tại: <a href="{{ Storage::url($movie->image_path) }}" target="_blank">Xem ảnh</a></p>
-                                            <img src="{{ Storage::url($movie->image_path) }}" alt="Current Image" class="img-thumbnail" style="max-width: 150px;">
-                                        </div>
-                                    @endif
                                 </div>
                             </div>
                             <div class="col-lg-6">
@@ -525,7 +489,7 @@ $(document).ready(function() {
 });
 
 // Xem trước ảnh
-document.getElementById('image').addEventListener('change', function(event) {
+document.getElementById('poster').addEventListener('change', function(event) {
     const file = event.target.files[0];
     const preview = document.getElementById('imagePreview');
     const previewSmall = document.getElementById('imagePreviewSmall');

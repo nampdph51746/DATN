@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -19,8 +20,34 @@ class Movie extends Model
         'release_date' => 'date',
         'end_date' => 'date',
         'average_rating' => 'decimal:1',
-        'status' => \App\Enums\MovieStatus::class,
     ];
+
+     protected $appends = ['status'];
+
+         /**
+     * Accessor status động theo ngày thực tế
+     */
+     public function getStatusAttribute($value)
+    {
+        $today = Carbon::today();
+
+        if ($this->release_date && $this->end_date) {
+            if ($today->lt(Carbon::parse($this->release_date))) {
+                return 'upcoming';
+            } elseif ($today->between(
+                Carbon::parse($this->release_date),
+                Carbon::parse($this->end_date)
+            )) {
+                return 'showing';
+            } else {
+                return 'ended';
+            }
+        }
+
+        // fallback: nếu DB đã có sẵn status thì dùng
+        return $value ?? 'upcoming';
+    }
+
 
     public function country()
     {
@@ -48,6 +75,7 @@ class Movie extends Model
     {
         return $this->belongsToMany(Genre::class, 'movie_genres');
     }
+
 
     public function reviews()
     {
@@ -127,4 +155,9 @@ class Movie extends Model
                     ->where('status', '!=', \App\Enums\MovieStatus::Ended)
                     ->update(['status' => \App\Enums\MovieStatus::Ended]);
     }
+
+    public function directors()
+{
+    return $this->belongsToMany(Director::class, 'movie_directors', 'movie_id', 'director_id');
+}
 }
