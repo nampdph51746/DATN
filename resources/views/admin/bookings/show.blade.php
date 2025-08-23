@@ -12,10 +12,16 @@
                                     <div>
                                         <h4 class="fw-medium text-dark d-flex align-items-center gap-2">
                                             {{ $booking->booking_code }}
-                                            @if ($booking->payments->first() && (is_object($booking->payments->first()->status) ? $booking->payments->first()->status->value : (string) $booking->payments->first()->status) === 'completed')
-                                                <span class="badge bg-success-subtle text-success px-2 py-1 fs-13">Đã thanh toán</span>
+                                            @if (
+                                                $booking->payments->first() &&
+                                                    (is_object($booking->payments->first()->status)
+                                                        ? $booking->payments->first()->status->value
+                                                        : (string) $booking->payments->first()->status) === 'completed')
+                                                <span class="badge bg-success-subtle text-success px-2 py-1 fs-13">Đã thanh
+                                                    toán</span>
                                             @else
-                                                <span class="badge bg-danger-subtle text-danger px-2 py-1 fs-13">Chưa thanh toán</span>
+                                                <span class="badge bg-danger-subtle text-danger px-2 py-1 fs-13">Chưa thanh
+                                                    toán</span>
                                             @endif
                                             <span class="border border-warning text-warning fs-13 px-2 py-1 rounded">
                                                 {{ ucfirst(is_object($booking->status) ? $booking->status->value : (string) $booking->status) }}
@@ -28,7 +34,8 @@
                                     </div>
                                     <div>
                                         <a href="#!" class="btn btn-outline-secondary">Refund</a>
-                                        <a href="{{ route('admin.bookings.index') }}" class="btn btn-outline-secondary">Return</a>
+                                        <a href="{{ route('admin.bookings.index') }}"
+                                            class="btn btn-outline-secondary">Return</a>
                                     </div>
                                 </div>
 
@@ -38,11 +45,22 @@
 
                                 <div class="row row-cols-xxl-4 row-cols-md-2 row-cols-1">
                                     @php
-                                        $statusValue = is_object($booking->status) ? $booking->status->value : (string) $booking->status;
-                                        $paymentCompleted = $booking->payments->first() && (is_object($booking->payments->first()->status) ? $booking->payments->first()->status->value : (string) $booking->payments->first()->status) === 'completed';
+                                        $statusValue = is_object($booking->status)
+                                            ? $booking->status->value
+                                            : (string) $booking->status;
+                                        $paymentCompleted =
+                                            $booking->payments->first() &&
+                                            (is_object($booking->payments->first()->status)
+                                                ? $booking->payments->first()->status->value
+                                                : (string) $booking->payments->first()->status) === 'completed';
                                         $progressWidths = [
                                             'pending' => [25, 0, 0, 0],
-                                            'confirmed' => [100, $paymentCompleted ? 100 : 50, 100, $paymentCompleted ? 100 : 0],
+                                            'confirmed' => [
+                                                100,
+                                                $paymentCompleted ? 100 : 50,
+                                                100,
+                                                $paymentCompleted ? 100 : 0,
+                                            ],
                                             'completed' => [100, 100, 100, 100],
                                         ];
                                         $widths = $progressWidths[$statusValue] ?? [25, 0, 0, 0];
@@ -50,28 +68,28 @@
                                     <div class="col">
                                         <div class="progress mt-3" style="height: 10px;">
                                             <div class="progress-bar progress-bar-striped progress-bar-animated bg-success"
-                                                 role="progressbar" style="width: {{ $widths[0] }}%"></div>
+                                                role="progressbar" style="width: {{ $widths[0] }}%"></div>
                                         </div>
                                         <p class="mb-0 mt-2">Đặt vé</p>
                                     </div>
                                     <div class="col">
                                         <div class="progress mt-3" style="height: 10px;">
                                             <div class="progress-bar progress-bar-striped progress-bar-animated {{ $widths[1] > 0 ? 'bg-success' : 'bg-warning' }}"
-                                                 role="progressbar" style="width: {{ $widths[1] }}%"></div>
+                                                role="progressbar" style="width: {{ $widths[1] }}%"></div>
                                         </div>
                                         <p class="mb-0 mt-2">Thanh toán</p>
                                     </div>
                                     <div class="col">
                                         <div class="progress mt-3" style="height: 10px;">
                                             <div class="progress-bar progress-bar-striped progress-bar-animated {{ $widths[2] > 0 ? 'bg-success' : 'bg-warning' }}"
-                                                 role="progressbar" style="width: {{ $widths[2] }}%"></div>
+                                                role="progressbar" style="width: {{ $widths[2] }}%"></div>
                                         </div>
                                         <p class="mb-0 mt-2">Xác nhận</p>
                                     </div>
                                     <div class="col">
                                         <div class="progress mt-3" style="height: 10px;">
                                             <div class="progress-bar progress-bar-striped progress-bar-animated {{ $widths[3] > 0 ? 'bg-success' : 'bg-primary' }}"
-                                                 role="progressbar" style="width: {{ $widths[3] }}%"></div>
+                                                role="progressbar" style="width: {{ $widths[3] }}%"></div>
                                         </div>
                                         <p class="mb-0 mt-2">Hoàn tất</p>
                                     </div>
@@ -87,7 +105,9 @@
                                         {{ number_format($booking->discount_amount, 0, ',', '.') }} đ</p>
                                     <p><strong>Tổng thanh toán:</strong>
                                         {{ number_format($booking->final_amount, 0, ',', '.') }} đ</p>
-                                    <p><strong>Trạng thái:</strong> {{ ucfirst(is_object($booking->status) ? $booking->status->value : (string) $booking->status) }}</p>
+                                    <p><strong>Trạng thái:</strong>
+                                        {{ ucfirst(is_object($booking->status) ? $booking->status->value : (string) $booking->status) }}
+                                    </p>
                                     <p><strong>Ghi chú:</strong> {{ $booking->notes ?? 'Không có' }}</p>
                                 </div>
                             </div>
@@ -118,6 +138,7 @@
                                                     <th>Giá tại thời điểm mua</th>
                                                     <th>Trạng thái</th>
                                                     <th>Ngày tạo</th>
+                                                    <th>Thao tác</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -145,16 +166,28 @@
                                                             $statusColors = [
                                                                 'pending' => 'bg-warning',
                                                                 'confirmed' => 'bg-success',
+                                                                'checked' => 'bg-info',
+                                                                'used' => 'bg-secondary',
                                                                 'cancelled' => 'bg-danger',
                                                             ];
-                                                            $statusValue = is_object($ticket->status) ? $ticket->status->value : (string) $ticket->status;
+                                                            $statusValue = is_object($ticket->status)
+                                                                ? $ticket->status->value
+                                                                : (string) $ticket->status;
                                                         @endphp
                                                         <td>
-                                                            <span class="badge {{ $statusColors[$statusValue] ?? 'bg-secondary' }}">
+                                                            <span
+                                                                class="badge {{ $statusColors[$statusValue] ?? 'bg-secondary' }}">
                                                                 {{ ucfirst($statusValue) }}
                                                             </span>
                                                         </td>
-                                                        <td>{{ $ticket->created_at ? $ticket->created_at->format('d/m/Y H:i') : '' }}</td>
+                                                        <td>{{ $ticket->created_at ? $ticket->created_at->format('d/m/Y H:i') : '' }}
+                                                        </td>
+                                                        <td>
+                                                            <a href="{{ route('admin.tickets.qr', ['ticket_id' => $ticket->id]) }}" target="_blank"
+                                                                @if (in_array($statusValue, ['used', 'cancelled'])) class="btn btn-sm btn-primary ms-2 disabled" style="opacity:0.6;cursor:not-allowed;" @else class="btn btn-sm btn-primary ms-2" @endif>
+                                                                In vé
+                                                            </a>
+                                                        </td>
                                                     </tr>
                                                 @endforeach
                                             </tbody>
@@ -185,6 +218,8 @@
                                                     <th>Mô tả</th>
                                                     <th>Ảnh</th>
                                                     <th>Loại sản phẩm</th>
+                                                    <th>Trạng thái</th>
+                                                    <th>Thao tác</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -208,15 +243,85 @@
                                                         </td>
                                                         <td>
                                                             @php
-                                                                $type = $item->productVariant->product->product_type;
+                                                                $type =
+                                                                    $item->productVariant->product->product_type ??
+                                                                    null;
                                                                 $typeStr = is_object($type) ? $type->value : $type;
                                                             @endphp
                                                             <span class="badge bg-info text-dark">
-                                                                {{ ucfirst($typeStr ?? 'Không rõ') }}
+                                                                {{ $typeStr ? ucfirst($typeStr) : 'Không rõ' }}
                                                             </span>
+                                                        </td>
+                                                        <td>
+                                                            @php
+                                                                $statusRaw = $item->product_status ?? 'valid';
+                                                                $statusValue = is_object($statusRaw) ? $statusRaw->value : (string) $statusRaw;
+                                                                $statusColors = [
+                                                                    'valid' => 'bg-success',
+                                                                    'checked' => 'bg-info',
+                                                                    'used' => 'bg-secondary',
+                                                                    'cancelled' => 'bg-danger',
+                                                                ];
+                                                            @endphp
+                                                            <span class="badge {{ $statusColors[$statusValue] ?? 'bg-secondary' }}">
+                                                                {{ ucfirst($statusValue) }}
+                                                            </span>
+                                                        </td>
+                                                        <td>
+                                                            <a href="{{ route('admin.foods.qr', ['item_id' => $item->id]) }}" target="_blank"
+                                                                @if (in_array($statusValue, ['used', 'cancelled'])) class="btn btn-sm btn-primary ms-2 disabled" style="opacity:0.6;cursor:not-allowed;" @else class="btn btn-sm btn-primary ms-2" @endif>
+                                                                In đồ ăn
+                                                            </a>
                                                         </td>
                                                     </tr>
                                                 @endforeach
+                                                @push('scripts')
+                                                    <script>
+                                                        function printTicketQR(ticketId) {
+                                                            fetch(`/api/ticket/print/${ticketId}`, {
+                                                                    method: 'POST'
+                                                                })
+                                                                .then(res => res.json())
+                                                                .then(data => {
+                                                                    if (data.success && data.qr) {
+                                                                        showQrModal(data.qr);
+                                                                    } else {
+                                                                        alert(data.message || 'Có lỗi xảy ra!');
+                                                                    }
+                                                                });
+                                                        }
+
+                                                        function printFoodQR(itemId) {
+                                                            fetch(`/api/food/print/${itemId}`, {
+                                                                    method: 'POST'
+                                                                })
+                                                                .then(res => res.json())
+                                                                .then(data => {
+                                                                    if (data.success && data.qr) {
+                                                                        showQrModal(data.qr);
+                                                                    } else {
+                                                                        alert(data.message || 'Có lỗi xảy ra!');
+                                                                    }
+                                                                });
+                                                        }
+
+                                                        function showQrModal(qrBase64) {
+                                                            const modal = document.createElement('div');
+                                                            modal.style.position = 'fixed';
+                                                            modal.style.top = '0';
+                                                            modal.style.left = '0';
+                                                            modal.style.width = '100vw';
+                                                            modal.style.height = '100vh';
+                                                            modal.style.background = 'rgba(0,0,0,0.5)';
+                                                            modal.style.display = 'flex';
+                                                            modal.style.alignItems = 'center';
+                                                            modal.style.justifyContent = 'center';
+                                                            modal.innerHTML =
+                                                                `<div style='background:#fff;padding:30px;border-radius:10px;text-align:center;'><img src='data:image/png;base64,${qrBase64}' style='max-width:300px;'><br><button onclick='this.parentNode.parentNode.remove()' style='margin-top:20px;'>Đóng</button></div>`;
+                                                            document.body.appendChild(modal);
+                                                        }
+                                                    </script>
+                                                @endpush
                                             </tbody>
                                         </table>
                                     </div>
@@ -263,7 +368,9 @@
                                                     'completed' => 'text-success',
                                                     'failed' => 'text-danger',
                                                 ];
-                                                $statusValue = is_object($payment->status) ? $payment->status->value : (string) $payment->status;
+                                                $statusValue = is_object($payment->status)
+                                                    ? $payment->status->value
+                                                    : (string) $payment->status;
                                                 $statusColor = $statusColors[$statusValue] ?? 'text-muted';
                                             @endphp
                                             <td class="text-end fw-medium px-0">

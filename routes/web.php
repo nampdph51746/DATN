@@ -233,6 +233,8 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
     Route::patch('rooms/{id}/update-percentages', [AdminRoomController::class, 'updateSeatPercentages'])->name('rooms.updatePercentages');
     Route::post('rooms/{room}/update-seat-percentages', [AdminRoomController::class, 'updateSeatPercentages'])->name('rooms.update-seat-percentages');
     Route::post('rooms/{room}/update-capacity', [AdminRoomController::class, 'updateCapacity'])->name('rooms.update-capacity');
+    Route::get('rooms/{room}/edit-status', [AdminRoomController::class, 'editStatus'])->name('rooms.editStatus');
+    Route::post('rooms/{room}/update-status', [AdminRoomController::class, 'updateStatus'])->name('rooms.updateStatus');
 
     //Son
     Route::get('countries', [CountryController::class, 'index'])->name('countries.index');
@@ -286,9 +288,6 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
         Route::get('/qr-scanner', function () {
             return view('admin.Qrcode-scanner'); // Nếu bạn đổi tên view thành qr-scanner thì sửa lại ở đây
         })->name('qr.scanner');
-
-        // Route in vé sau khi quét QR
-        Route::get('/print-tickets/{booking_code}', [QrCodeController::class, 'printTickets'])->name('qr.print');
         
         // Payment Methods routes
         Route::prefix('payment_methods')->name('payment_methods.')->group(function () {
@@ -374,7 +373,22 @@ Route::get('admin/bookingShow/{id}', [BookingController::class, 'show'])->name('
 Route::get('admin/bookings/{booking}/edit-status', [BookingController::class, 'editStatus'])->name('admin.bookings.editStatus');
 Route::put('admin/bookings/{booking}/update-status', [BookingController::class, 'updateStatus'])->name('admin.bookings.updateStatus');
 
+// API in vé và đồ ăn, chuyển trạng thái sang used và trả về mã QR
+Route::middleware(['auth'])->group(function () {
+    Route::post('/api/ticket/print/{ticketId}', [App\Http\Controllers\TicketPrintController::class, 'printTicketApi']);
+    Route::post('/api/food/print/{itemId}', [App\Http\Controllers\TicketPrintController::class, 'printFoodApi']);
+});
 
+// Hiển thị QR cho từng vé
+Route::get('admin/ticket/qr/{ticket_id}', [App\Http\Controllers\TicketPrintController::class, 'showTicketQr'])->name('admin.tickets.qr');
+// Hiển thị QR cho từng sản phẩm
+Route::get('admin/food/qr/{item_id}', [App\Http\Controllers\TicketPrintController::class, 'showFoodQr'])->name('admin.foods.qr');
+
+// Route tải PDF cho vé
+Route::get('admin/ticket/print/{ticket_id}', [App\Http\Controllers\TicketPrintController::class, 'printTicketPdf'])->name('admin.tickets.print');
+
+// Route tải PDF cho sản phẩm
+Route::get('admin/food/print/{item_id}', [App\Http\Controllers\TicketPrintController::class, 'printFoodPdf'])->name('admin.foods.print');
 
 Route::get('admin/payments', [PaymentController::class, 'index'])->name('admin.payments.index');
 Route::get('admin/payments/{payment}', [PaymentController::class, 'show'])->name('admin.payments.show');

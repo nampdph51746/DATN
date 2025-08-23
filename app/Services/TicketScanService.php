@@ -75,20 +75,20 @@ class TicketScanService
                 ];
             }
 
-            // Kiểm tra xem có vé nào đã được sử dụng chưa
-            $usedTickets = $tickets->where('status', TicketStatus::Used);
-            if ($usedTickets->isNotEmpty()) {
+            // Kiểm tra xem có vé nào đã được quét chưa
+            $checkedTickets = $tickets->where('status', TicketStatus::Checked);
+            if ($checkedTickets->isNotEmpty()) {
                 return [
                     'success' => false,
-                    'message' => 'Vé đã được sử dụng trước đó vào lúc: ' . $usedTickets->first()->used_at
+                    'message' => 'Vé đã được quét trước đó vào lúc: ' . $checkedTickets->first()->used_at
                 ];
             }
 
-            // Cập nhật trạng thái tất cả vé thành "used"
+            // Cập nhật trạng thái tất cả vé thành "checked"
             $updatedTickets = [];
             foreach ($tickets as $ticket) {
                 $ticket->update([
-                    'status' => TicketStatus::Used,
+                    'status' => TicketStatus::Checked,
                     'used_at' => now(),
                     'scanned_by' => Auth::user()->id ?? null // Nếu có hệ thống auth cho nhân viên
                 ]);
@@ -201,10 +201,10 @@ class TicketScanService
             }
 
             // Kiểm tra trạng thái vé
-            if ($ticket->status === TicketStatus::Used) {
+            if ($ticket->status === TicketStatus::Checked) {
                 return [
                     'success' => false,
-                    'message' => 'Vé đã được sử dụng trước đó vào lúc: ' . $ticket->used_at
+                    'message' => 'Vé đã được quét trước đó vào lúc: ' . $ticket->used_at
                 ];
             }
 
@@ -216,9 +216,9 @@ class TicketScanService
                 ];
             }
 
-            // Cập nhật trạng thái vé thành "used"
+            // Cập nhật trạng thái vé thành "checked"
             $ticket->update([
-                'status' => TicketStatus::Used,
+                'status' => TicketStatus::Checked,
                 'used_at' => now(),
                 'scanned_by' => Auth::user()->id ?? null
             ]);
