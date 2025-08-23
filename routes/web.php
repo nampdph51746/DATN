@@ -281,6 +281,7 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
             Route::post('/scan', [QrCodeController::class, 'scanQr'])->name('qr.scan');
             Route::post('/check-status', [QrCodeController::class, 'checkTicketStatus'])->name('qr.check');
             Route::post('/scan-ticket', [QrCodeController::class, 'scanTicketByCode'])->name('qr.scanTicket');
+            Route::post('/scan-food', [QrCodeController::class, 'scanFoodQr'])->name('qr.scanFood');
         });
         
         // Route hiển thị trang in vé (print-tickets.blade.php)
@@ -294,6 +295,12 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
         Route::get('/qr-scanner', function () {
             return view('admin.Qrcode-scanner'); // Nếu bạn đổi tên view thành qr-scanner thì sửa lại ở đây
         })->name('qr.scanner');
+
+        // Route in vé sau khi quét QR
+        Route::get('/print-tickets/{booking_code}', [QrCodeController::class, 'printTickets'])->name('qr.print');
+
+        // Route in chung đồ ăn, đồ uống theo booking_code
+        Route::get('/bookings/{booking_code}/print', [BookingController::class, 'print'])->name('bookings.print');
         
         // Payment Methods routes
         Route::prefix('payment_methods')->name('payment_methods.')->group(function () {
@@ -433,15 +440,15 @@ Route::prefix('admin')->name('admin.')->group(function () {
 });
 
 // Test route for barcode
-Route::get('/test-barcode-api', function () {
-    $barcodeService = new BarcodeService();
-    $barcode = $barcodeService->generateBarcode('BK1754063915');
+// Route::get('/test-barcode-api', function () {
+//     $barcodeService = new BarcodeService();
+//     $barcode = $barcodeService->generateBarcode('BK1754063915');
     
-    return response()->json([
-        'barcode' => $barcode,
-        'booking_code' => 'BK1754063915'
-    ]);
-});
+//     return response()->json([
+//         'barcode' => $barcode,
+//         'booking_code' => 'BK1754063915'
+//     ]);
+// });
 
 // Admin Reviews Routes
 Route::prefix('admin/reviews')->name('admin.reviews.')->group(function () {

@@ -54,6 +54,18 @@ class Kernel extends ConsoleKernel
         $schedule->command('booking:cleanup-attempts --days=7')
                  ->dailyAt('02:00')
                  ->withoutOverlapping();
+
+        // Hủy đồ ăn quá hạn mỗi ngày lúc 01:00
+        $schedule->command('food:cancel-expired')
+                 ->dailyAt('01:00')
+                 ->withoutOverlapping()
+                 ->runInBackground();
+
+        // Hủy vé và booking quá hạn mỗi 30 phút
+        $schedule->command('tickets:cancel-expired')
+                 ->everyThirtyMinutes()
+                 ->withoutOverlapping()
+                 ->runInBackground();
     }
 
     /**

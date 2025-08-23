@@ -77,10 +77,19 @@ class TicketScanService
 
             // Kiểm tra xem có vé nào đã được quét chưa
             $checkedTickets = $tickets->where('status', TicketStatus::Checked);
+            $usedTickets = $tickets->where('status', TicketStatus::Used);
+            
+            if ($usedTickets->isNotEmpty()) {
+                return [
+                    'success' => false,
+                    'message' => 'Vé đã được sử dụng trước đó vào lúc: ' . $usedTickets->first()->used_at
+                ];
+            }
+            
             if ($checkedTickets->isNotEmpty()) {
                 return [
                     'success' => false,
-                    'message' => 'Vé đã được quét trước đó vào lúc: ' . $checkedTickets->first()->used_at
+                    'message' => 'Vé đã được kiểm tra trước đó. Hãy quét từng vé để sử dụng.'
                 ];
             }
 
@@ -89,7 +98,6 @@ class TicketScanService
             foreach ($tickets as $ticket) {
                 $ticket->update([
                     'status' => TicketStatus::Checked,
-                    'used_at' => now(),
                     'scanned_by' => Auth::user()->id ?? null // Nếu có hệ thống auth cho nhân viên
                 ]);
 
@@ -200,14 +208,6 @@ class TicketScanService
                 ];
             }
 
-            // Kiểm tra trạng thái vé
-            if ($ticket->status === TicketStatus::Checked) {
-                return [
-                    'success' => false,
-                    'message' => 'Vé đã được quét trước đó vào lúc: ' . $ticket->used_at
-                ];
-            }
-
             // Kiểm tra trạng thái booking
             if ($ticket->booking->status !== BookingStatus::Confirmed) {
                 return [
@@ -216,19 +216,42 @@ class TicketScanService
                 ];
             }
 
-            // Cập nhật trạng thái vé thành "checked"
-            $ticket->update([
-                'status' => TicketStatus::Checked,
-                'used_at' => now(),
-                'scanned_by' => Auth::user()->id ?? null
-            ]);
+            // Kiểm tra trạng thái vé
+            $currentStatus = is_object($ticket->status) ? $ticket->status->value : $ticket->status;
+            
+            if ($currentStatus === 'valid') {
+                // Nếu trạng thái là valid -> chuyển sang checked
+                $ticket->update([
+                    'status' => TicketStatus::Checked,
+                    'scanned_by' => Auth::user()->id ?? null
+                ]);
+                $message = 'Quét vé thành công! Vé đã được kiểm tra.';
+            } elseif ($currentStatus === 'checked') {
+                // Nếu trạng thái là checked -> chuyển sang used
+                $ticket->update([
+                    'status' => TicketStatus::Used,
+                    'used_at' => now(),
+                    'scanned_by' => Auth::user()->id ?? null
+                ]);
+                $message = 'Quét vé thành công! Vé đã được sử dụng.';
+            } elseif ($currentStatus === 'used') {
+                return [
+                    'success' => false,
+                    'message' => 'Vé đã được sử dụng trước đó vào lúc: ' . $ticket->used_at
+                ];
+            } else {
+                return [
+                    'success' => false,
+                    'message' => 'Trạng thái vé không hợp lệ.'
+                ];
+            }
             $ticket->refresh();
 
             DB::commit();
 
             return [
                 'success' => true,
-                'message' => 'Quét vé thành công! Vé đã được cập nhật.',
+                'message' => $message,
                 'data' => [
                     'ticket_id' => $ticket->id,
                     'ticket_code' => $ticket->ticket_code,
