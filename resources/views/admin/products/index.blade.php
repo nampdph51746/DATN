@@ -47,6 +47,10 @@
                                             <iconify-icon icon="mdi:barcode"
                                                 class="align-middle fs-16 me-1"></iconify-icon>SKU
                                         </th>
+                                        <th>
+                                            <iconify-icon icon="solar:money-broken"
+                                                class="align-middle fs-16 me-1"></iconify-icon>Giá gốc
+                                        </th>
                                         <th><iconify-icon icon="solar:document-broken"
                                                 class="align-middle fs-16 me-1"></iconify-icon>Mô tả</th>
                                         <th><iconify-icon icon="solar:tag-broken"
@@ -77,6 +81,7 @@
                                             <td>
                                                 {{ $product->sku ?? 'Chưa có SKU' }}
                                             </td>
+                                            <td>{{ number_format($product->base_price, 0, ',', '.') }}₫</td>
                                             <td>{{ Str::limit($product->description, 50) }}</td>
                                             <td>{{ $product->category->name ?? 'Chưa có danh mục' }}</td>
                                             <td>

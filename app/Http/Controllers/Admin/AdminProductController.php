@@ -43,16 +43,17 @@ class AdminProductController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'sku' => 'nullable|string|max:100|unique:products,sku',
-            'image_url' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
             'product_type' => 'required|in:food,drink,combo',
             'is_active' => 'required|in:0,1',
+            'base_price' => 'required|numeric|min:0',
         ], [
             'category_id.required' => 'Danh mục sản phẩm là bắt buộc.',
             'category_id.exists' => 'Danh mục sản phẩm không tồn tại.',
             'name.required' => 'Tên sản phẩm là bắt buộc.',
             'name.string' => 'Tên sản phẩm phải là chuỗi ký tự.',
             'name.max' => 'Tên sản phẩm không được vượt quá 255 ký tự.',
-            'image_url.required' => 'Bạn phải tải lên ảnh sản phẩm.',
+            'image.required' => 'Bạn phải tải lên ảnh sản phẩm.',
             'product_type.required' => 'Loại sản phẩm là bắt buộc.',
             'product_type.in' => 'Loại sản phẩm không hợp lệ.',
             'is_active.required' => 'Trạng thái sản phẩm là bắt buộc.',
@@ -60,6 +61,9 @@ class AdminProductController extends Controller
             'sku.unique' => 'SKU đã tồn tại.',
             'sku.max' => 'SKU không được vượt quá 100 ký tự.',
             'sku.string' => 'SKU phải là chuỗi ký tự.',
+            'base_price.required' => 'Giá gốc sản phẩm là bắt buộc.',
+            'base_price.numeric' => 'Giá gốc phải là số.',
+            'base_price.min' => 'Giá gốc phải >= 0.',
         ]);
 
         $imageUrl = null;
@@ -75,6 +79,7 @@ class AdminProductController extends Controller
             'image_url' => $imageUrl,
             'product_type' => $request->product_type,
             'is_active' => $request->is_active ?? 1,
+            'base_price' => $request->base_price ?? 0, // Đảm bảo truyền đúng
             'created_at' => now(),
             'updated_at' => now(),
         ]);
@@ -106,6 +111,7 @@ class AdminProductController extends Controller
             'image' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
             'product_type' => 'required|in:food,drink,combo',
             'is_active' => 'required|in:0,1',
+            'base_price' => 'required|numeric|min:0',
         ], [
             'category_id.required' => 'Danh mục sản phẩm là bắt buộc.',
             'category_id.exists' => 'Danh mục sản phẩm không tồn tại.',
@@ -122,6 +128,9 @@ class AdminProductController extends Controller
             'sku.unique' => 'SKU đã tồn tại.',
             'sku.max' => 'SKU không được vượt quá 100 ký tự.',
             'sku.string' => 'SKU phải là chuỗi ký tự.',
+            'base_price.required' => 'Giá gốc sản phẩm là bắt buộc.',
+            'base_price.numeric' => 'Giá gốc phải là số.',
+            'base_price.min' => 'Giá gốc phải >= 0.',
         ]);
 
         $product = Product::findOrFail($id);
@@ -143,6 +152,7 @@ class AdminProductController extends Controller
             'image_url' => $imageUrl, // Đảm bảo trường này đúng tên trong DB
             'product_type' => $request->product_type,
             'is_active' => $request->is_active,
+            'base_price' => $request->base_price,
             'updated_at' => now(),
         ]);
 

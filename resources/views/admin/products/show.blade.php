@@ -104,6 +104,20 @@
                                 </p>
                             </div>
                         </div>
+                        <div class="row align-items-center g-2 mt-3">
+                            <div class="col-lg-6">
+                                <p class="mb-0 fw-medium text-dark fs-16">
+                                    <iconify-icon icon="solar:money-broken" class="align-middle fs-16 me-1"></iconify-icon>
+                                    Giá gốc: <span class="text-muted">{{ number_format($product->base_price, 0, ',', '.') }}₫</span>
+                                </p>
+                            </div>
+                            <div class="col-lg-6">
+                                <p class="mb-0 fw-medium text-dark fs-16">
+                                    <iconify-icon icon="solar:box-broken" class="align-middle fs-16 me-1"></iconify-icon>
+                                    Khối lượng: <span class="text-muted">{{ $product->weight }} kg</span>
+                                </p>
+                            </div>
+                        </div>
                         <div class="mt-3">
                             <p class="mb-0 fw-medium text-dark fs-16">
                                 <iconify-icon icon="solar:text-bold-broken" class="align-middle fs-16 me-1"></iconify-icon>

@@ -131,6 +131,18 @@
                                     </div>
                                 </div>
                             </div>
+                            <div class="row">
+                                <div class="col-lg-6">
+                                    <div class="mb-3">
+                                        <label for="base-price" class="form-label">Giá gốc sản phẩm</label>
+                                        <input type="number" min="0" step="0.01" id="base-price" name="base_price" class="form-control"
+                                            value="{{ old('base_price') }}" placeholder="Nhập giá gốc">
+                                        @error('base_price')
+                                            <span class="text-danger">{{ $message }}</span>
+                                        @enderror
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </form>
