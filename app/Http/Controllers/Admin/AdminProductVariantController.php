@@ -43,7 +43,6 @@ class AdminProductVariantController extends Controller
             'product_id' => 'required|exists:products,id',
             'default_stock_quantity' => 'required|integer|min:0',
             'image_url' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
-            'is_active' => 'required|in:0,1',
             'attribute_values' => 'required|array|min:1',
             'attribute_values.*.*' => 'exists:attribute_values,id',
             'price_modifiers' => 'array',
@@ -59,8 +58,6 @@ class AdminProductVariantController extends Controller
             'image_url.image' => 'File tải lên phải là ảnh.',
             'image_url.mimes' => 'Ảnh phải có định dạng jpg, jpeg, png hoặc gif.',
             'image_url.max' => 'Ảnh không được vượt quá 2MB.',
-            'is_active.required' => 'Trạng thái biến thể là bắt buộc.',
-            'is_active.in' => 'Trạng thái biến thể phải là Hoạt động hoặc Không hoạt động.',
             'attribute_values.required' => 'Vui lòng chọn ít nhất một giá trị thuộc tính.',
             'attribute_values.*.*.exists' => 'Giá trị thuộc tính không hợp lệ.',
             'variant_stocks.required' => 'Số lượng tồn kho cho các biến thể là bắt buộc.',
@@ -129,7 +126,7 @@ class AdminProductVariantController extends Controller
                 'price' => $price,
                 'stock_quantity' => $stock,
                 'image_url' => $imageUrl,
-                'is_active' => $request->is_active ?? 1,
+                'is_active' => 1, // luôn active khi tạo mới
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);

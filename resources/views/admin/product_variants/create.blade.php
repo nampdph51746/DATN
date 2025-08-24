@@ -88,7 +88,8 @@
                                     @enderror
                                 </div>
                             </div>
-                            <div class="col-lg-6">
+                            {{-- Xóa trường trạng thái biến thể --}}
+                            {{-- <div class="col-lg-6">
                                 <div class="mb-3">
                                     <label for="is_active" class="form-label">Trạng thái</label>
                                     <select id="is_active" name="is_active" class="form-control">
@@ -99,7 +100,7 @@
                                         <span class="text-danger">{{ $message }}</span>
                                     @enderror
                                 </div>
-                            </div>
+                            </div> --}}
                         </div>
                         <div class="row">
                             <div class="col-lg-6">
