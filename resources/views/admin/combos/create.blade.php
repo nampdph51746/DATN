@@ -84,13 +84,14 @@
                                         <span class="text-danger">{{ $message }}</span>
                                     @enderror
                                 </div>
-                                <div class="mb-3">
+                                {{-- Xóa trường tồn kho combo --}}
+                                {{-- <div class="mb-3">
                                     <label for="stock_quantity" class="form-label">Tồn kho combo</label>
                                     <input type="number" class="form-control" id="stock_quantity" name="stock_quantity" value="{{ old('stock_quantity', 1) }}" min="0" required>
                                     @error('stock_quantity')
                                         <span class="text-danger">{{ $message }}</span>
                                     @enderror
-                                </div>
+                                </div> --}}
                             </div>
                         </div>
                     </div>

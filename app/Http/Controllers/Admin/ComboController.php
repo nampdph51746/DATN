@@ -80,7 +80,6 @@ class ComboController extends Controller
                 'name' => 'required|string|max:255',
                 'combo_product_variant_id' => 'exists:product_variants,id',
                 'price' => 'required|numeric|min:0',
-                'stock_quantity' => 'required|integer|min:0',
                 'items' => 'required|array|min:1',
                 'items.*.item_product_variant_id' => 'exists:product_variants,id',
                 'items.*.quantity' => 'required|integer|min:1',
@@ -90,9 +89,6 @@ class ComboController extends Controller
                 'price.required' => 'Vui lòng nhập giá combo.',
                 'price.numeric' => 'Giá combo phải là số.',
                 'price.min' => 'Giá combo phải >= 0.',
-                'stock_quantity.required' => 'Vui lòng nhập số lượng tồn kho.',
-                'stock_quantity.integer' => 'Số lượng tồn kho phải là số nguyên.',
-                'stock_quantity.min' => 'Số lượng tồn kho phải >= 0.',
                 'items.required' => 'Vui lòng thêm ít nhất một mục vào combo.',
                 'items.min' => 'Vui lòng thêm ít nhất một mục vào combo.',
                 'items.*.item_product_variant_id.exists' => 'Biến thể không tồn tại.',
@@ -112,7 +108,7 @@ class ComboController extends Controller
             $items = $request->input('items');
             $comboName = $request->input('name');
             $comboPrice = $request->input('price');
-            $comboStock = $request->input('stock_quantity');
+            $comboStock = 1; // luôn là 1 khi tạo mới
 
             $comboVariant = ProductVariant::find($comboProductVariantId);
 
@@ -132,7 +128,7 @@ class ComboController extends Controller
                 'name' => $comboName ?? $comboVariant->sku,
                 'combo_product_variant_id' => $comboVariant->id, // Sử dụng $comboVariant->id đã kiểm tra tồn tại
                 'price' => $comboPrice,
-                'stock_quantity' => $comboStock ?? $comboVariant->stock_quantity,
+                'stock_quantity' => $comboStock,
             ]);
             Log::info('ComboController@store - Combo created', ['combo_id' => $combo->getKey()]);
 
@@ -241,7 +237,6 @@ class ComboController extends Controller
             'name' => 'required|string|max:255',
             'combo_product_variant_id' => 'required|exists:product_variants,id',
             'price' => 'required|numeric|min:0',
-            'stock_quantity' => 'required|integer|min:0',
             'items.*.item_product_variant_id' => 'required|exists:product_variants,id',
             'items.*.quantity' => 'required|integer|min:1',
         ]);
