@@ -113,4 +113,9 @@ class AdminProductCategoriesController extends Controller
         $category->forceDelete();
         return redirect()->route('admin.product-categories.trash')->with('success', 'Danh mục sản phẩm đã được xóa vĩnh viễn.');
     }
+    public function show($id)
+    {
+        $category = ProductCategory::findOrFail($id);
+        return view('admin.product_categories.show', compact('category'));
+    }
 }
