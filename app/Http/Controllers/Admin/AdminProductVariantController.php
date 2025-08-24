@@ -41,22 +41,18 @@ class AdminProductVariantController extends Controller
     {
         $request->validate([
             'product_id' => 'required|exists:products,id',
-            'default_price' => 'required|numeric|min:0',
             'default_stock_quantity' => 'required|integer|min:0',
             'image_url' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
             'is_active' => 'required|in:0,1',
             'attribute_values' => 'required|array|min:1',
             'attribute_values.*.*' => 'exists:attribute_values,id',
-            'variant_prices' => 'required|array',
-            'variant_prices.*' => 'required|numeric|min:0',
+            'price_modifiers' => 'array',
+            'price_modifiers.*' => 'array',
             'variant_stocks' => 'required|array',
             'variant_stocks.*' => 'required|integer|min:0',
         ], [
             'product_id.required' => 'Sản phẩm là bắt buộc.',
             'product_id.exists' => 'Sản phẩm không tồn tại.',
-            'default_price.required' => 'Giá mặc định là bắt buộc.',
-            'default_price.numeric' => 'Giá mặc định phải là số.',
-            'default_price.min' => 'Giá mặc định không được nhỏ hơn 0.',
             'default_stock_quantity.required' => 'Số lượng tồn kho mặc định là bắt buộc.',
             'default_stock_quantity.integer' => 'Số lượng tồn kho mặc định phải là số nguyên.',
             'default_stock_quantity.min' => 'Số lượng tồn kho mặc định không được nhỏ hơn 0.',
@@ -67,10 +63,6 @@ class AdminProductVariantController extends Controller
             'is_active.in' => 'Trạng thái biến thể phải là Hoạt động hoặc Không hoạt động.',
             'attribute_values.required' => 'Vui lòng chọn ít nhất một giá trị thuộc tính.',
             'attribute_values.*.*.exists' => 'Giá trị thuộc tính không hợp lệ.',
-            'variant_prices.required' => 'Giá cho các biến thể là bắt buộc.',
-            'variant_prices.*.required' => 'Giá cho biến thể là bắt buộc.',
-            'variant_prices.*.numeric' => 'Giá cho biến thể phải là số.',
-            'variant_prices.*.min' => 'Giá cho biến thể không được nhỏ hơn 0.',
             'variant_stocks.required' => 'Số lượng tồn kho cho các biến thể là bắt buộc.',
             'variant_stocks.*.required' => 'Số lượng tồn kho cho biến thể là bắt buộc.',
             'variant_stocks.*.integer' => 'Số lượng tồn kho cho biến thể phải là số nguyên.',
@@ -79,6 +71,7 @@ class AdminProductVariantController extends Controller
 
         $product = Product::findOrFail($request->product_id);
         $productSku = $product->sku ?? 'PRODUCT';
+        $basePrice = $product->base_price ?? 0;
 
         $imageUrl = null;
         if ($request->hasFile('image_url')) {
@@ -87,6 +80,7 @@ class AdminProductVariantController extends Controller
 
         // Tạo tổ hợp từ attribute_values
         $attributeValueGroups = $request->attribute_values;
+        $priceModifiersGroups = $request->price_modifiers ?? [];
         $combinations = $this->generateCombinations($attributeValueGroups);
 
         $createdVariants = [];
@@ -98,8 +92,18 @@ class AdminProductVariantController extends Controller
             // Loại bỏ các ID trùng lặp
             $attributeValueIds = array_unique($attributeValueIds);
 
-            // Lấy giá và tồn kho
-            $price = $request->variant_prices[$index] ?? $request->default_price;
+            // Tìm modifier cho thuộc tính size
+            $priceModifier = 1;
+            foreach ($attributeValueIds as $groupIdx => $attrValueId) {
+                $attribute = AttributeValue::find($attrValueId)?->attribute;
+                if ($attribute && strtolower($attribute->name) === 'size') {
+                    $priceModifier = isset($priceModifiersGroups[$groupIdx]) && isset($priceModifiersGroups[$groupIdx][$index])
+                        ? floatval($priceModifiersGroups[$groupIdx][$index]) : 1;
+                    break;
+                }
+            }
+
+            $price = round($basePrice * $priceModifier);
             $stock = $request->variant_stocks[$index] ?? $request->default_stock_quantity;
 
             // Lấy giá trị thuộc tính
