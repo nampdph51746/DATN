@@ -114,11 +114,31 @@ class ComboController extends Controller
                 return back()->withErrors(['combo_product_variant_id' => 'Vui lòng chọn biến thể đại diện hợp lệ.'])->withInput();
             }
 
+            // Tính tổng giá các biến thể trong combo (bao gồm cả biến thể đại diện)
+            $totalPrice = 0;
+            // Biến thể đại diện luôn có quantity = 1
+            $repVariant = ProductVariant::find($comboProductVariantId);
+            if ($repVariant) {
+                $totalPrice += $repVariant->price;
+            }
+            foreach ($items as $item) {
+                if (!isset($item['item_product_variant_id']) || !isset($item['quantity'])) continue;
+                // Bỏ qua biến thể đại diện vì đã cộng ở trên
+                if ($item['item_product_variant_id'] == $comboProductVariantId) continue;
+                $itemVariant = ProductVariant::find($item['item_product_variant_id']);
+                if ($itemVariant) {
+                    $totalPrice += $itemVariant->price * $item['quantity'];
+                }
+            }
+            // Áp dụng giảm giá 10%
+            $comboPrice = round($totalPrice * 0.9);
+
             // Tạo combo mới
             $combo = \App\Models\Combo::create([
                 'name' => $comboName ?? $comboVariant->sku,
                 'combo_product_variant_id' => $comboVariant->id,
                 'stock_quantity' => $comboStock,
+                'price' => $comboPrice,
             ]);
             Log::info('ComboController@store - Combo created', ['combo_id' => $combo->getKey()]);
 

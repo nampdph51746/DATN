@@ -10,6 +10,7 @@ class Combo extends Model
         'name',
         'combo_product_variant_id',
         'stock_quantity',
+        'price',
     ];
 
     public function comboProductVariant()
