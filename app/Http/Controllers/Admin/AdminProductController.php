@@ -22,7 +22,11 @@ class AdminProductController extends Controller
     }
     public function index()
     {
-        $products = Product::with('category')->paginate(10);
+        $query = Product::with('category');
+        if (request()->has('category_id') && request('category_id')) {
+            $query->where('category_id', request('category_id'));
+        }
+        $products = $query->paginate(10);
         return view('admin.products.index', compact('products'));
     }
 
