@@ -85,8 +85,8 @@
                                                     <span class="text-muted">Không có ảnh</span>
                                                 @endif
                                             </td>
-                                            <td>{{ $combo->sku }}</td>
-                                            <td>{{ $combo->product->name ?? 'Chưa có sản phẩm' }}</td>
+                                            <td>{{ $combo->comboProductVariant->sku ?? '-' }}</td>
+                                            <td>{{ $combo->comboProductVariant->product->name ?? '-' }}</td>
                                             <td>{{ $combo->comboPackageItems->sum('quantity') }}</td>
                                             <td>{{ $combo->created_at->format('d/m/Y H:i') }}</td>
                                             <td>

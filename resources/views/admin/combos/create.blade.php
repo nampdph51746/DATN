@@ -4,6 +4,11 @@
 <div class="container-xxl">
     @include('admin.partials.notifications')
 
+    @php
+        $selectedProductIdSafe = isset($selectedProduct) && $selectedProduct ? $selectedProduct->id : '';
+        $selectedVariantIdSafe = isset($selectedVariant) && $selectedVariant ? $selectedVariant->id : '';
+    @endphp
+
     <div class="row">
         <div class="col-xl-3 col-lg-4">
             <div class="card">
@@ -48,7 +53,8 @@
                                     <select class="form-control" id="product_id" name="product_id" required disabled>
                                         <option value="">Chọn sản phẩm</option>
                                         @foreach ($products as $product)
-                                            <option value="{{ $product->id }}" {{ $selectedProduct && $selectedProduct->id == $product->id ? 'selected' : '' }}>
+                                            <option value="{{ $product->id }}"
+                                                {{ $selectedProductIdSafe == $product->id ? 'selected' : '' }}>
                                                 {{ $product->name }}
                                             </option>
                                         @endforeach
@@ -61,8 +67,8 @@
                                     <label for="combo_product_variant_id" class="form-label">Biến thể đại diện Combo</label>
                                     <select class="form-control" id="combo_product_variant_id" name="combo_product_variant_id" required disabled>
                                         <option value="">Chọn biến thể</option>
-                                        @if ($selectedVariant)
-                                            <option value="{{ $selectedVariant->id }}" selected>{{ $selectedVariant->sku }}</option>
+                                        @if ($selectedVariantIdSafe)
+                                            <option value="{{ $selectedVariantIdSafe }}" selected>{{ $selectedVariant->sku ?? '' }}</option>
                                         @endif
                                     </select>
                                     @error('combo_product_variant_id')
@@ -109,10 +115,12 @@
                                     <tr class="item-row">
                                         <td>
                                             <select class="form-control product-select" name="items[0][product_id]" onchange="loadItemVariants(this)" required
-                                                @if($selectedVariant && $selectedProduct && $selectedProduct->id == $selectedVariant->product_id) disabled @endif>
+                                                @if($selectedProductIdSafe && $selectedVariantIdSafe && $selectedProductIdSafe == ($selectedVariant->product_id ?? null))
+                                                    disabled
+                                                @endif>
                                                 <option value="">Chọn sản phẩm</option>
                                                 @foreach ($products as $product)
-                                                    <option value="{{ $product->id }}" {{ $selectedProduct && $selectedProduct->id == $product->id ? 'selected' : '' }}>{{ $product->name }}</option>
+                                                    <option value="{{ $product->id }}" {{ $selectedProductIdSafe == $product->id ? 'selected' : '' }}>{{ $product->name }}</option>
                                                 @endforeach
                                             </select>
                                             @error('items.0.product_id')
@@ -121,10 +129,10 @@
                                         </td>
                                         <td>
                                             <select class="form-control variant-select" name="items[0][item_product_variant_id]" required
-                                                @if($selectedVariant) disabled @endif>
+                                                @if($selectedVariantIdSafe) disabled @endif>
                                                 <option value="">Chọn biến thể</option>
-                                                @if($selectedVariant)
-                                                    <option value="{{ $selectedVariant->id }}" selected>{{ $selectedVariant->sku }}</option>
+                                                @if($selectedVariantIdSafe)
+                                                    <option value="{{ $selectedVariantIdSafe }}" selected>{{ $selectedVariant->sku ?? '' }}</option>
                                                 @endif
                                             </select>
                                             @error('items.0.item_product_variant_id')
@@ -159,14 +167,13 @@
     <script>
         function submitForm() {
             const comboForm = document.getElementById('comboForm');
-            // Đảm bảo luôn set lại giá trị combo_product_variant_id đúng trước khi submit
             const comboProductVariantSelect = document.getElementById('combo_product_variant_id');
             if (comboProductVariantSelect.disabled) {
                 comboProductVariantSelect.disabled = false;
             }
             // Nếu không có giá trị, set lại bằng biến thể đại diện nếu có
-            if (!comboProductVariantSelect.value && '{{ $selectedVariant ? $selectedVariant->id : '' }}') {
-                comboProductVariantSelect.value = '{{ $selectedVariant->id }}';
+            if (!comboProductVariantSelect.value && "{{ $selectedVariantIdSafe }}") {
+                comboProductVariantSelect.value = "{{ $selectedVariantIdSafe }}";
             }
             // Validate: combo phải có ít nhất một sản phẩm khác ngoài sản phẩm đại diện
             const rows = document.getElementsByClassName('item-row');
@@ -177,7 +184,7 @@
                 const productId = row.querySelector('.product-select').value;
                 const quantity = row.querySelector('input[type="number"]').value;
                 comboItems.push({productId, variantId, quantity});
-                if (variantId != '{{ $selectedVariant ? $selectedVariant->id : '' }}') {
+                if (variantId != "{{ $selectedVariantIdSafe }}") {
                     hasNonRep = true;
                 }
             });
@@ -326,11 +333,10 @@
             Array.from(rows).forEach((row, idx) => {
                 const btn = row.querySelector('.btn-remove-item');
                 // Disable product/variant/quantity if is representative
-                @if ($selectedVariant && $selectedProduct)
-                    if (row.querySelector('.variant-select').value == '{{ $selectedVariant->id }}') {
+                @if ($selectedVariantIdSafe && $selectedProductIdSafe)
+                    if (row.querySelector('.variant-select').value == "{{ $selectedVariantIdSafe }}") {
                         row.querySelector('.product-select').disabled = true;
                         row.querySelector('.variant-select').disabled = true;
-                        // Cho phép chỉnh số lượng sản phẩm đại diện
                         row.querySelector('input[type="number"]').disabled = false;
                         btn.style.display = 'none';
                     } else {
@@ -381,17 +387,11 @@
             if (productSelect.value) {
                 loadVariants(productSelect);
             }
-
-            // Chỉ tự động set sản phẩm đại diện nếu không có lỗi validation (không có old('name'), old('price'), old('stock_quantity'))
-            @if ($selectedVariant && $selectedProduct && !old('name') && !old('price') && !old('stock_quantity'))
+            @if ($selectedVariantIdSafe && $selectedProductIdSafe && !old('name') && !old('price') && !old('stock_quantity'))
                 const container = document.getElementById('items-container');
                 const firstRow = container.querySelector('.item-row');
-
-                // Cập nhật hàng đầu tiên với sản phẩm đại diện
-                firstRow.querySelector('.product-select').value = '{{ $selectedProduct->id }}';
+                firstRow.querySelector('.product-select').value = "{{ $selectedProductIdSafe }}";
                 firstRow.querySelector('input[type="number"]').value = 1;
-
-                // Tải danh sách biến thể cho sản phẩm đại diện
                 const productSelectElement = firstRow.querySelector('.product-select');
                 fetch(`/admin/products/${productSelectElement.value}/variants`, {
                     headers: {
@@ -411,14 +411,13 @@
                             const option = document.createElement('option');
                             option.value = variant.id;
                             option.text = variant.sku;
-                            if (variant.id == '{{ $selectedVariant->id }}') {
+                            if (variant.id == "{{ $selectedVariantIdSafe }}") {
                                 option.selected = true;
                             }
                             variantSelect.appendChild(option);
                         });
                     }
-                    // Đảm bảo biến thể đại diện được chọn
-                    variantSelect.value = '{{ $selectedVariant->id }}';
+                    variantSelect.value = "{{ $selectedVariantIdSafe }}";
                 })
                 .catch(error => console.error('Error loading item variants:', error));
             @endif
