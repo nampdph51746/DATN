@@ -788,6 +788,9 @@
                                     <a class="sub-nav-link" href="{{ route('admin.product-variants.index') }}">Biến thể sản phẩm</a>
                                 </li>
                                 <li class="sub-nav-item">
+                                    <a class="sub-nav-link" href="{{ route('admin.attributes.index') }}">Thuộc tính</a>
+                                </li>
+                                <li class="sub-nav-item">
                                     <a class="sub-nav-link" href="{{ route('admin.combos.index') }}">Combo</a>
                                 </li>
                             </ul>

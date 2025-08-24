@@ -30,10 +30,12 @@ class AdminProductController extends Controller
         return view('admin.products.index', compact('products'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $categories = ProductCategory::all();
-        return view('admin.products.create', compact('categories'));
+        // Nhận category_id nếu truyền từ trang show category
+        $categoryId = $request->input('category_id');
+        return view('admin.products.create', compact('categories', 'categoryId'));
     }
 
     public function store(Request $request)
@@ -84,6 +86,13 @@ class AdminProductController extends Controller
             'updated_at' => now(),
         ]);
 
+        // Nếu có category_id thì chuyển về trang show của category đó
+        if ($request->filled('category_id') && $request->input('from_category_show')) {
+            return redirect()->route('admin.product-categories.show', $request->category_id)
+                ->with('success', 'Sản phẩm đã được tạo thành công.');
+        }
+
+        // Nếu không, chuyển về trang index của products
         return redirect()->route('admin.products.index')->with('success', 'Sản phẩm đã được tạo thành công.');
     }
 

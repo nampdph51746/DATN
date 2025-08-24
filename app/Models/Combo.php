@@ -9,7 +9,6 @@ class Combo extends Model
     protected $fillable = [
         'name',
         'combo_product_variant_id',
-        'price',
         'stock_quantity',
     ];
 

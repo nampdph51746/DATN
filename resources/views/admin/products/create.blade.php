@@ -73,9 +73,13 @@
                                         <select class="form-control" id="product-categories" name="category_id" data-choices data-choices-groups data-placeholder="Chọn danh mục">
                                             <option value="">Chọn danh mục</option>
                                             @foreach ($categories as $category)
-                                                <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
+                                                <option value="{{ $category->id }}"
+                                                    {{ old('category_id', $categoryId ?? '') == $category->id ? 'selected' : '' }}>
+                                                    {{ $category->name }}
+                                                </option>
                                             @endforeach
                                         </select>
+                                        <input type="hidden" name="from_category_show" value="{{ request('from_category_show') }}">
                                         @error('category_id')
                                             <span class="text-danger">{{ $message }}</span>
                                         @enderror

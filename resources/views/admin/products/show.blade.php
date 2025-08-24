@@ -131,7 +131,7 @@
                                 <iconify-icon icon="solar:list-broken" class="align-middle fs-18 me-1"></iconify-icon>
                                 Danh sách biến thể sản phẩm
                             </h4>
-                            <a href="{{ route('admin.product-variants.create', ['product_id' => $product->id]) }}" class="btn btn-sm btn-primary">
+                            <a href="{{ route('admin.product-variants.create', ['product_id' => $product->id, 'from_product_show' => 1]) }}" class="btn btn-sm btn-primary">
                                 <iconify-icon icon="solar:add-circle-broken" class="align-middle fs-18 me-1"></iconify-icon>
                                 Thêm biến thể
                             </a>

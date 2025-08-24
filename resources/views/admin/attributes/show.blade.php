@@ -68,9 +68,15 @@
                         </div>
                     </div>
 
-                    <h4 class="text-dark fw-medium mt-4">
-                        <iconify-icon icon="solar:list-broken" class="align-middle fs-18 me-1"></iconify-icon>
-                        Danh sách giá trị thuộc tính
+                    <h4 class="text-dark fw-medium mt-4 d-flex justify-content-between align-items-center">
+                        <span>
+                            <iconify-icon icon="solar:list-broken" class="align-middle fs-18 me-1"></iconify-icon>
+                            Danh sách giá trị thuộc tính
+                        </span>
+                        <a href="{{ route('admin.attributes.create') }}" class="btn btn-sm btn-primary">
+                            <iconify-icon icon="solar:add-circle-broken" class="align-middle fs-18 me-1"></iconify-icon>
+                            Thêm thuộc tính
+                        </a>
                     </h4>
                     <div class="table-responsive">
                         <table class="table align-middle mb-0 table-hover table-centered">

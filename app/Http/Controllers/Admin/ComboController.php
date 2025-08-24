@@ -64,7 +64,8 @@ class ComboController extends Controller
             $selectedProduct = \App\Models\Product::find($productId);
         }
 
-        return view('admin.combos.create', compact('products', 'selectedProduct', 'selectedVariant', 'comboProductVariantId', 'productId'));
+        $fromComboShow = $request->input('from_combo_show');
+        return view('admin.combos.create', compact('products', 'selectedProduct', 'selectedVariant', 'comboProductVariantId', 'productId', 'fromComboShow'));
     }
 
     public function store(Request $request)
@@ -79,16 +80,12 @@ class ComboController extends Controller
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
                 'combo_product_variant_id' => 'exists:product_variants,id',
-                'price' => 'required|numeric|min:0',
                 'items' => 'required|array|min:1',
                 'items.*.item_product_variant_id' => 'exists:product_variants,id',
                 'items.*.quantity' => 'required|integer|min:1',
             ], [
                 'name.required' => 'Vui lòng nhập tên combo.',
                 'name.max' => 'Tên combo không được vượt quá 255 ký tự.',
-                'price.required' => 'Vui lòng nhập giá combo.',
-                'price.numeric' => 'Giá combo phải là số.',
-                'price.min' => 'Giá combo phải >= 0.',
                 'items.required' => 'Vui lòng thêm ít nhất một mục vào combo.',
                 'items.min' => 'Vui lòng thêm ít nhất một mục vào combo.',
                 'items.*.item_product_variant_id.exists' => 'Biến thể không tồn tại.',
@@ -107,7 +104,6 @@ class ComboController extends Controller
             $comboProductVariantId = $request->input('combo_product_variant_id');
             $items = $request->input('items');
             $comboName = $request->input('name');
-            $comboPrice = $request->input('price');
             $comboStock = 1; // luôn là 1 khi tạo mới
 
             $comboVariant = ProductVariant::find($comboProductVariantId);
@@ -118,16 +114,10 @@ class ComboController extends Controller
                 return back()->withErrors(['combo_product_variant_id' => 'Vui lòng chọn biến thể đại diện hợp lệ.'])->withInput();
             }
 
-            // Tính giá combo bằng tổng giá của toàn bộ sản phẩm biến thể trong combo rồi giảm đi 10%
-            $variantIds = $request->combo_product_variant_ids ?? [];
-            $totalPrice = \App\Models\ProductVariant::whereIn('id', $variantIds)->sum('price');
-            $comboPrice = round($totalPrice * 0.9);
-
             // Tạo combo mới
             $combo = \App\Models\Combo::create([
                 'name' => $comboName ?? $comboVariant->sku,
-                'combo_product_variant_id' => $comboVariant->id, // Sử dụng $comboVariant->id đã kiểm tra tồn tại
-                'price' => $comboPrice,
+                'combo_product_variant_id' => $comboVariant->id,
                 'stock_quantity' => $comboStock,
             ]);
             Log::info('ComboController@store - Combo created', ['combo_id' => $combo->getKey()]);
@@ -190,6 +180,14 @@ class ComboController extends Controller
 
             DB::commit();
             \Log::info('ComboController@store - Combo created successfully for combo ID', ['id' => $combo->getKey()]);
+
+            // Luôn chuyển về trang show sản phẩm nếu có from_combo_show
+            if ($request->filled('from_combo_show') && $request->filled('product_id')) {
+                return redirect()->route('admin.products.show', $request->input('product_id'))
+                    ->with('success', 'Combo đã được tạo thành công.');
+            }
+
+            // Nếu không, chuyển về index combo
             return redirect()->route('admin.combos.index')->with('success', 'Combo đã được tạo thành công.');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -236,7 +234,6 @@ class ComboController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'combo_product_variant_id' => 'required|exists:product_variants,id',
-            'price' => 'required|numeric|min:0',
             'items.*.item_product_variant_id' => 'required|exists:product_variants,id',
             'items.*.quantity' => 'required|integer|min:1',
         ]);

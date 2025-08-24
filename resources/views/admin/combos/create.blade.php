@@ -34,6 +34,9 @@
         <div class="col-xl-9 col-lg-8">
             <form action="{{ route('admin.combos.store') }}" method="POST" id="comboForm">
                 @csrf
+                <input type="hidden" name="from_combo_show" value="{{ request('from_combo_show') }}">
+                <input type="hidden" name="product_id" value="{{ $selectedProductIdSafe }}">
+                <input type="hidden" name="combo_product_variant_id" value="{{ $selectedVariantIdSafe }}">
                 <div class="card">
                     <div class="card-header">
                         <h4 class="card-title">Thông tin Combo</h4>
@@ -77,13 +80,14 @@
                                 </div>
                             </div>
                             <div class="col-lg-6">
-                                <div class="mb-3">
+                                {{-- Xóa trường giá combo --}}
+                                {{-- <div class="mb-3">
                                     <label for="price" class="form-label">Giá combo</label>
                                     <input type="number" class="form-control" id="price" name="price" value="{{ old('price') }}" min="0" step="0.01" required>
                                     @error('price')
                                         <span class="text-danger">{{ $message }}</span>
                                     @enderror
-                                </div>
+                                </div> --}}
                                 {{-- Xóa trường tồn kho combo --}}
                                 {{-- <div class="mb-3">
                                     <label for="stock_quantity" class="form-label">Tồn kho combo</label>
@@ -168,6 +172,9 @@
     <script>
         function submitForm() {
             const comboForm = document.getElementById('comboForm');
+            // Đảm bảo hidden input luôn có giá trị mới nhất trước khi submit
+            document.querySelector('input[name="product_id"]').value = document.getElementById('product_id').value;
+            document.querySelector('input[name="combo_product_variant_id"]').value = document.getElementById('combo_product_variant_id').value;
             const comboProductVariantSelect = document.getElementById('combo_product_variant_id');
             if (comboProductVariantSelect.disabled) {
                 comboProductVariantSelect.disabled = false;

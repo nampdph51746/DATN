@@ -71,6 +71,7 @@
                                             $selectedProduct = $products->firstWhere('id', $selectedProductId);
                                         @endphp
                                         <input type="hidden" name="product_id" value="{{ $selectedProductId }}">
+                                        <input type="hidden" name="from_product_show" value="{{ $fromProductShow }}">
                                         <input type="text" class="form-control" value="{{ $selectedProduct ? $selectedProduct->name : 'Sản phẩm đã chọn' }}" disabled>
                                     @else
                                         <select class="form-control" id="product-id" name="product_id" data-choices data-choices-groups data-placeholder="Chọn sản phẩm">

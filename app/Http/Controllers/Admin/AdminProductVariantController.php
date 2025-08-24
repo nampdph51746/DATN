@@ -33,8 +33,8 @@ class AdminProductVariantController extends Controller
         $products = Product::all();
         $selectedProductId = $request->input('product_id');
         $attributes = Attribute::with('attributeValues')->get();
-
-        return view('admin.product_variants.create', compact('products', 'selectedProductId', 'attributes'));
+        $fromProductShow = $request->input('from_product_show');
+        return view('admin.product_variants.create', compact('products', 'selectedProductId', 'attributes', 'fromProductShow'));
     }
 
     public function store(Request $request)
@@ -157,6 +157,13 @@ class AdminProductVariantController extends Controller
                 ->withErrors(['attribute_values' => 'Tất cả biến thể với thuộc tính đã chọn đã tồn tại.']);
         }
 
+        // Nếu tạo từ trang show sản phẩm thì chuyển về show sản phẩm
+        if ($request->filled('product_id') && $request->input('from_product_show')) {
+            return redirect()->route('admin.products.show', $request->product_id)
+                ->with('success', 'Đã tạo thành công ' . count($createdVariants) . ' biến thể sản phẩm.');
+        }
+
+        // Nếu không, chuyển về index biến thể
         return redirect()->route('admin.product-variants.index')->with('success', 'Đã tạo thành công ' . count($createdVariants) . ' biến thể sản phẩm.');
     }
 

@@ -114,6 +114,10 @@
                                 <iconify-icon icon="solar:list-broken" class="align-middle fs-18 me-1"></iconify-icon>
                                 Danh sách các mục trong combo
                             </h4>
+                            <a href="{{ route('admin.combos.create', ['from_combo_show' => 1]) }}" class="btn btn-sm btn-primary">
+                                <iconify-icon icon="solar:add-circle-broken" class="align-middle fs-18 me-1"></iconify-icon>
+                                Thêm combo
+                            </a>
                         </div>
 
                         <div class="table-responsive">
