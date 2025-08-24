@@ -103,6 +103,9 @@ class AdminProductVariantController extends Controller
             $price = round($basePrice * $priceModifier);
             $stock = $request->variant_stocks[$index] ?? $request->default_stock_quantity;
 
+            // Tự động set trạng thái
+            $isActive = $stock > 0 ? 1 : 0;
+
             // Lấy giá trị thuộc tính
             $attributeValues = AttributeValue::whereIn('id', $attributeValueIds)
                 ->pluck('value')
@@ -126,7 +129,7 @@ class AdminProductVariantController extends Controller
                 'price' => $price,
                 'stock_quantity' => $stock,
                 'image_url' => $imageUrl,
-                'is_active' => 1, // luôn active khi tạo mới
+                'is_active' => $isActive,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -275,13 +278,16 @@ class AdminProductVariantController extends Controller
             $imageUrl = $request->file('image')->store('product_variants', 'public');
         }
 
+        $stock = $request->stock_quantity;
+        $isActive = $stock > 0 ? 1 : 0;
+
         $productVariant->update([
             'product_id' => $request->product_id,
             'sku' => $sku,
             'price' => $request->price,
-            'stock_quantity' => $request->stock_quantity,
+            'stock_quantity' => $stock,
             'image_url' => $imageUrl,
-            'is_active' => $request->is_active,
+            'is_active' => $isActive,
             'updated_at' => now(),
         ]);
 
