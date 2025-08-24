@@ -42,17 +42,8 @@ class RoleController extends Controller
     }
     public function create()
     {
-        $permissions = \Spatie\Permission\Models\Permission::all();
-
-        // Nhóm quyền theo tiền tố (group)
-        $groupedPermissions = [];
-        foreach ($permissions as $permission) {
-            $parts = explode('.', $permission->name);
-            $group = $parts[0] ?? 'Khác';
-            $groupedPermissions[$group][] = $permission;
-        }
-
-        return view('admin.roles.create', compact('permissions', 'groupedPermissions'));
+        $permissions = Permission::all();
+        return view('admin.roles.create', compact('permissions'));
     }
 
     public function show($id)
@@ -69,15 +60,7 @@ class RoleController extends Controller
         // Mảng tên quyền để đánh dấu checkbox
         $rolePermissions = $role->permissions->pluck('name')->toArray();
 
-        // Nhóm quyền theo tiền tố (group)
-        $groupedPermissions = [];
-        foreach ($permissions as $permission) {
-            $parts = explode('.', $permission->name);
-            $group = $parts[0] ?? 'Khác';
-            $groupedPermissions[$group][] = $permission;
-        }
-
-        return view('admin.roles.edit', compact('role', 'permissions', 'rolePermissions', 'groupedPermissions'));
+        return view('admin.roles.edit', compact('role', 'permissions', 'rolePermissions'));
     }
 
 

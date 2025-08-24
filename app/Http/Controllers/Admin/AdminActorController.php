@@ -16,13 +16,17 @@ class AdminActorController extends Controller
     {
         $query = $request->input('query');
         
-        $actors = Actor::query()
+        $actors = Actor::withCount('movies')
             ->when($query, function ($queryBuilder, $query) {
                 return $queryBuilder->where('name', 'like', '%' . $query . '%')
-                    ->orWhere('nationality', 'like', '%' . $query . '%');
+                    ->orWhere('nationality', 'like', '%' . $query . '%')
+                    ->orWhere('biography', 'like', '%' . $query . '%');
             })
             ->orderBy('created_at', 'desc')
             ->paginate(10);
+
+        // Append search parameter to pagination links
+        $actors->appends($request->query());
 
         return view('admin.actors.index', compact('actors'));
     }
@@ -138,5 +142,36 @@ class AdminActorController extends Controller
 
         return redirect()->route('admin.actors.index')
             ->with('success', 'Xóa diễn viên thành công!');
+    }
+
+    /**
+     * Bulk delete actors.
+     */
+    public function bulkDelete(Request $request)
+    {
+        $ids = explode(',', $request->ids);
+        $actors = Actor::whereIn('id', $ids)->get();
+        
+        // Kiểm tra xem có diễn viên nào đang có phim không
+        $actorsWithMovies = $actors->filter(function ($actor) {
+            return $actor->movies()->count() > 0;
+        });
+
+        if ($actorsWithMovies->count() > 0) {
+            return redirect()->route('admin.actors.index')
+                ->with('error', 'Không thể xóa một số diễn viên vì đang có phim!');
+        }
+
+        // Xóa ảnh của các diễn viên
+        foreach ($actors as $actor) {
+            if ($actor->image_path) {
+                Storage::disk('public')->delete($actor->image_path);
+            }
+        }
+
+        Actor::whereIn('id', $ids)->delete();
+        
+        return redirect()->route('admin.actors.index')
+            ->with('success', 'Đã xóa các diễn viên đã chọn!');
     }
 }

@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Client;
 
 use App\Models\Room;
-use App\Models\Banner;
 use App\Models\Movie;
 use App\Models\Product;
 use App\Models\SeatType;
 use App\Models\Showtime;
 use App\Models\Review;
+use App\Models\RoomType;
 use App\Enums\MovieStatus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -25,6 +25,7 @@ use App\Models\Point;
 use App\Models\PointHistory;
 use App\Models\CustomerRank;
 use App\Services\ShowtimeAvailabilityService;
+use App\Services\BookingAttemptService;
 use Illuminate\Support\Facades\Validator;
 
 class HomeController extends Controller
@@ -32,7 +33,9 @@ class HomeController extends Controller
     public function index()
     {
         $query = request('query');
-        $now = Carbon::now();
+
+        // Cập nhật trạng thái các phim đã kết thúc
+        Movie::updateExpiredMovies();
 
         // Truy vấn phim đang chiếu
         $showingMovies = Movie::query()
@@ -44,6 +47,11 @@ class HomeController extends Controller
                     });
             })
             ->where('status', MovieStatus::Showing)
+            ->where(function($q) {
+                // Chỉ lấy phim chưa kết thúc hoặc không có ngày kết thúc
+                $q->whereNull('end_date')
+                  ->orWhere('end_date', '>=', now());
+            })
             ->orderBy('release_date', 'desc')
             ->take(8)
             ->get();
@@ -58,22 +66,43 @@ class HomeController extends Controller
                     });
             })
             ->where('status', MovieStatus::Upcoming)
+            ->where(function($q) {
+                // Chỉ lấy phim chưa kết thúc hoặc không có ngày kết thúc
+                $q->whereNull('end_date')
+                  ->orWhere('end_date', '>=', now());
+            })
             ->orderBy('release_date', 'asc')
             ->take(6)
             ->get();
 
-        $banners = Banner::where('is_active', 1)
-            ->whereDate('start_date', '<=', $now)
-            ->whereDate('end_date', '>=', $now)
-            ->orderBy('display_order')
-            ->get();
+        // Kiểm tra trạng thái ban của user hiện tại
+        $isUserBanned = false;
+        $banInfo = null;
+        if (Auth::check()) {
+            $bookingAttemptService = new BookingAttemptService();
+            
+            // Không auto-cancel nếu đang ở bước thanh toán (session/payment flag)
+            if (!session()->has('is_checkout') || !session('is_checkout')) {
+                $cancelledCount = $bookingAttemptService->cancelAllActiveAttempts(Auth::id());
+                if ($cancelledCount > 0) {
+                    Log::info("Auto-cancelled {$cancelledCount} reserved attempts for user " . Auth::id() . " when accessing home page");
+                }
+            }
+            
+            $isUserBanned = $bookingAttemptService->isUserBanned(Auth::id());
+            if ($isUserBanned) {
+                $banInfo = $bookingAttemptService->getUserBanInfo(Auth::id());
+            }
+        }
 
-        return view('client.home', compact('showingMovies', 'upcomingMovies', 'query', 'banners'));
+        return view('client.home', compact('showingMovies', 'upcomingMovies', 'query', 'isUserBanned', 'banInfo'));
     }
 
-    // MovieController.php
-    public function filter(Request $request, $genreName = null)
+        public function filter(Request $request, $genreName = null)
     {
+        // Cập nhật trạng thái các phim đã kết thúc
+        Movie::updateExpiredMovies();
+        
         $data = $request->all();
 
         // Xử lý chuyển chuỗi rỗng thành null cho from_time và to_time
@@ -128,6 +157,15 @@ class HomeController extends Controller
 
         if (!empty($data['status'])) {
             $query->where('status', $data['status']);
+            
+            // Thêm điều kiện lọc theo ngày kết thúc
+            if ($data['status'] === 'showing' || $data['status'] === 'upcoming') {
+                $query->where(function($q) {
+                    $q->whereNull('end_date')
+                      ->orWhere('end_date', '>=', now());
+                });
+            }
+            
             if ($data['status'] === 'showing') {
                 $title = 'Phim đang chiếu';
                 $isShowing = true;
@@ -183,86 +221,105 @@ class HomeController extends Controller
         return view('client.filter', compact('movies', 'title', 'isShowing'));
     }
 
-
     public function show(Request $request, $id)
-{
-    // Lấy thông tin phim (kèm quốc gia, giới hạn độ tuổi, thể loại)
-    $movie = Movie::with(['country', 'ageLimit', 'genres'])
-        ->findOrFail($id);
+    {
+        // Lấy thông tin phim (kèm quốc gia, giới hạn độ tuổi)
+        $movie = Movie::with(['country', 'ageLimit', 'genres'])->findOrFail($id);
 
-    // Lấy 5 review mới nhất đã được duyệt
-    $reviews = Review::with('user')
-        ->where('movie_id', $id)
-        ->where('status', 'approved')
-        ->latest()
-        ->take(5)
-        ->get();
-
-    // Mặc định
-    $canReview = false;
-    $reviewMessage = '';
-
-    if (Auth::check()) {
-        $user = Auth::user();
-
-        // Kiểm tra user đã có vé phim này chưa
-        $hasWatchedMovie = Booking::where('user_id', $user->id)
-            ->where('status', 'confirmed')
-            ->whereHas('showtime', function ($q) use ($id) {
-                $q->where('movie_id', $id);
-            })
-            ->exists();
-
-        // Kiểm tra đã đánh giá chưa
-        $hasReviewed = Review::where('user_id', $user->id)
+        // Lấy reviews đã được duyệt
+        $reviews = Review::with('user')
             ->where('movie_id', $id)
-            ->exists();
+            ->where('status', 'approved')
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get();
 
-        if (!$hasWatchedMovie) {
-            $reviewMessage = 'Bạn cần xem phim này trước khi có thể đánh giá.';
-        } elseif ($hasReviewed) {
-            $reviewMessage = 'Bạn đã đánh giá phim này rồi.';
+        // Kiểm tra user hiện tại có thể review không
+        $canReview = false;
+        $reviewMessage = '';
+        
+        if (Auth::check()) {
+            $user = Auth::user();
+            
+            // Kiểm tra đã xem phim chưa
+            $hasWatchedMovie = Booking::where('user_id', $user->id)
+                ->whereHas('showtime', function ($query) use ($id) {
+                    $query->where('movie_id', $id);
+                })
+                ->where('status', 'confirmed')
+                ->exists();
+
+            // Kiểm tra đã đánh giá chưa
+            $hasReviewed = Review::where('user_id', $user->id)
+                ->where('movie_id', $id)
+                ->exists();
+
+            if (!$hasWatchedMovie) {
+                $reviewMessage = 'Bạn cần xem phim này trước khi có thể đánh giá.';
+            } elseif ($hasReviewed) {
+                $reviewMessage = 'Bạn đã đánh giá phim này rồi.';
+            } else {
+                $canReview = true;
+            }
         } else {
-            $canReview = true;
+            $reviewMessage = 'Vui lòng đăng nhập để đánh giá.';
         }
-    } else {
-        $reviewMessage = 'Vui lòng đăng nhập để đánh giá.';
+
+        // Lấy danh sách phòng
+        $rooms = Room::all();
+
+        // Tạo danh sách 15 ngày kế tiếp
+        $dates = collect(range(0, 14))->map(fn($i) => now()->addDays($i));
+
+        // Lấy ngày được chọn từ request (hoặc mặc định hôm nay)
+        $selectedDate = $request->input('date') ?? now()->format('Y-m-d');
+
+        // Truy vấn suất chiếu theo phim và ngày (chỉ lấy những suất chưa đầy)
+        $allShowtimes = $movie->showtimes()
+            ->with(['room.seats', 'showtimeSeatStates'])
+            ->whereDate('start_time', $selectedDate)
+            ->where('status', 'scheduled')
+            ->where('start_time', '>=', Carbon::now())
+            ->orderBy('start_time')
+            ->get();
+
+        // Lọc ra các suất chiếu chưa đầy
+        $availabilityService = new ShowtimeAvailabilityService();
+        $showtimes = $availabilityService->filterAvailableShowtimes($allShowtimes);
+
+        // Kiểm tra trạng thái ban của user hiện tại
+        $isUserBanned = false;
+        $banInfo = null;
+        if (Auth::check()) {
+            $bookingAttemptService = new BookingAttemptService();
+            
+            // Không auto-cancel nếu đang ở bước thanh toán (session/payment flag)
+            if (!session()->has('is_checkout') || !session('is_checkout')) {
+                $cancelledCount = $bookingAttemptService->cancelAllActiveAttempts(Auth::id());
+                if ($cancelledCount > 0) {
+                    Log::info("Auto-cancelled {$cancelledCount} reserved attempts for user " . Auth::id() . " when accessing movie detail page");
+                }
+            }
+            
+            $isUserBanned = $bookingAttemptService->isUserBanned(Auth::id());
+            if ($isUserBanned) {
+                $banInfo = $bookingAttemptService->getUserBanInfo(Auth::id());
+            }
+        }
+
+        return view('client.detailmovie', compact(
+            'movie',
+            'showtimes',
+            'rooms',
+            'dates',
+            'selectedDate',
+            'reviews',
+            'canReview',
+            'reviewMessage',
+            'isUserBanned',
+            'banInfo'
+        ));
     }
-
-    // Lấy danh sách phòng
-    $rooms = Room::all();
-
-    // Tạo danh sách 15 ngày kế tiếp
-    $dates = collect(range(0, 14))->map(fn($i) => now()->addDays($i));
-
-    // Ngày được chọn (mặc định hôm nay)
-    $selectedDate = $request->input('date') ?? now()->toDateString();
-
-    // Lấy suất chiếu theo phim & ngày (chỉ lấy suất sắp tới, chưa đầy)
-    $allShowtimes = $movie->showtimes()
-        ->with(['room.seats', 'showtimeSeatStates'])
-        ->where('status', 'scheduled')
-        ->whereDate('start_time', $selectedDate)
-        ->where('start_time', '>=', now())
-        ->orderBy('start_time')
-        ->get();
-
-    // Lọc suất còn trống
-    $availabilityService = new ShowtimeAvailabilityService();
-    $showtimes = $availabilityService->filterAvailableShowtimes($allShowtimes);
-
-    return view('client.detailmovie', compact(
-        'movie',
-        'showtimes',
-        'rooms',
-        'dates',
-        'selectedDate',
-        'reviews',
-        'canReview',
-        'reviewMessage'
-    ));
-}
-
 
     public function ticketBooking($id)
     {
@@ -275,6 +332,9 @@ class HomeController extends Controller
 
         $dates = $this->getDates($showtimes);
         $showtimesData = $this->getShowtimesData($showtimes);
+
+        // Get all room types for filtering
+        $roomTypes = RoomType::where('status', 'active')->get(['id', 'name', 'description']);
 
         $showtimeId = request()->input('showtime_id');
         $showtime = null;
@@ -336,32 +396,37 @@ class HomeController extends Controller
         $discount = 0;
         $pointsUsed = 0;
         $promotionId = null;
+        
+        // Tính toán điểm có thể sử dụng cho đơn hàng này
+        $maxDiscountPercentage = $userRank?->discount_percentage ?? 30; // mặc định 30%
+        $maxUsablePoints = 0; // sẽ được tính toán bằng JavaScript dựa trên tổng đơn hàng
 
         $bookingData = [
-            'movie_id' => $movie->id,
-            'movie_title' => $movie->title,
-            'showtime_id' => $showtime?->id,
-            'showtime_start' => $showtime?->start_time,
-            'room_name' => $room?->name,
-            'cinema_name' => $cinema?->name,
-            'user_id' => $user?->id,
-            'user_points' => $userPoints,
-            'user_rank' => $userRank?->name ?? null,
-            'products' => $products,
-            'promotion_status' => $promotionStatus,
-            'discount' => $discount,
-            'points_used' => $pointsUsed,
-            'promotion_id' => $promotionId,
-            'seat_types' => $seatTypes,
-        ];
+    'movie_id' => $movie->id,
+    'movie_title' => $movie->title,
+    'showtime_id' => $showtime?->id,
+    'showtime_start' => $showtime?->start_time,
+    'room_name' => $room?->name,
+    'cinema_name' => $cinema?->name,
+    'user_id' => $user?->id,
+    'user_points' => $userPoints,
+    'user_rank' => $userRank?->name ?? null,
+    'products' => $products,
+    'promotion_status' => $promotionStatus,
+    'discount' => $discount,
+    'points_used' => $pointsUsed,
+    'promotion_id' => $promotionId,
+    'seat_types' => $seatTypes,
+];
 
-        session(['booking_data' => $bookingData]);
-
+              session(['booking_data' => $bookingData]);
+              
 
         return view('client.ticket_booking', compact(
             'movie',
             'dates',
             'showtimesData',
+            'roomTypes',
             'showtimeId',
             'seatTypes',
             'products',
@@ -370,6 +435,7 @@ class HomeController extends Controller
             'cinemas',
             'userPoints',
             'userRank',
+            'maxDiscountPercentage',
             'promotionStatus',
             'discount',
             'pointsUsed',
@@ -384,7 +450,7 @@ class HomeController extends Controller
         $showtimes = Showtime::where('movie_id', $movieId)
             ->where('status', 'scheduled')
             ->where('start_time', '>=', Carbon::now())
-            ->with(['room.seats', 'showtimeSeatStates'])
+            ->with(['room.seats', 'room.roomType', 'showtimeSeatStates'])
             ->get();
 
         // Lọc ra các suất chiếu chưa đầy
@@ -417,7 +483,7 @@ class HomeController extends Controller
     private function getShowtimesData($showtimes)
     {
         $availabilityService = new ShowtimeAvailabilityService();
-
+        
         $showtimesByDate = $showtimes->groupBy(function ($showtime) {
             return Carbon::parse($showtime->start_time)->format('Y-m-d');
         });
@@ -428,9 +494,11 @@ class HomeController extends Controller
                 $room = $roomShowtimes->first()->room ?? (object)['name' => 'Unknown Room'];
                 return [
                     'room_name' => $room->name,
+                    'room_type_id' => $room->roomType->id ?? null,
+                    'room_type_name' => $room->roomType->name ?? 'Không xác định',
                     'times' => $roomShowtimes->map(function ($showtime) use ($availabilityService) {
                         $availabilityInfo = $availabilityService->getShowtimeAvailabilityInfo($showtime);
-
+                        
                         return [
                             'id' => $showtime->id,
                             'time' => Carbon::parse($showtime->start_time)->format('h:i A'),
@@ -488,7 +556,7 @@ class HomeController extends Controller
             ->where('status', MovieStatus::Showing)
             ->withCount(['showtimes as tickets_sold' => function ($q) {
                 $q->join('bookings', 'showtimes.id', '=', 'bookings.showtime_id')
-                    ->where('bookings.created_at', '>=', now()->subDays(30));
+                  ->where('bookings.created_at', '>=', now()->subDays(30));
             }])
             ->orderBy('tickets_sold', 'desc')
             ->take(8)
@@ -499,7 +567,7 @@ class HomeController extends Controller
             ->where('status', MovieStatus::Showing)
             ->withCount(['showtimes as tickets_sold_week' => function ($q) {
                 $q->join('bookings', 'showtimes.id', '=', 'bookings.showtime_id')
-                    ->where('bookings.created_at', '>=', now()->subDays(7));
+                  ->where('bookings.created_at', '>=', now()->subDays(7));
             }])
             ->orderBy('tickets_sold_week', 'desc')
             ->take(8)
@@ -567,7 +635,7 @@ class HomeController extends Controller
                     ->where('promotion_id', $promotion->id)
                     ->where('status', 'confirmed')
                     ->exists();
-
+                
                 if ($hasUsedPromotion) {
                     return response()->json(['error' => 'Mã giảm giá này đã được sử dụng trong đơn hàng trước đó.'], 400);
                 }
@@ -582,7 +650,7 @@ class HomeController extends Controller
             // 6. Tính toán giảm giá
             $discount = 0;
             $discountType = is_string($promotion->discount_type) ? $promotion->discount_type : $promotion->discount_type->value;
-
+            
             if ($discountType === 'percentage') {
                 $discount = $orderAmount * ((float)$promotion->discount_value / 100);
                 if ($promotion->max_discount_amount && $discount > (float)$promotion->max_discount_amount) {
@@ -661,17 +729,22 @@ class HomeController extends Controller
         // Tính tiền giảm từ điểm: 1 điểm = 1,000₫
         $pointDiscount = $pointsToUse * 1000;
 
-        // Kiểm tra tổng giảm giá không vượt quá 30% tổng đơn hàng
-        $maxTotalDiscount = $orderAmount * 0.3;
+        // Lấy phần trăm giảm giá tối đa từ hạng của user, mặc định 30%
+        $userRank = $user->customerRank;
+        $maxDiscountPercentage = $userRank ? $userRank->discount_percentage : 30;
+
+        // Kiểm tra tổng giảm giá không vượt quá phần trăm tối đa của đơn hàng
+        $maxTotalDiscount = $orderAmount * ($maxDiscountPercentage / 100);
         $totalDiscount = $currentDiscount + $pointDiscount;
 
         if ($totalDiscount > $maxTotalDiscount) {
             $maxPointsAllowed = floor(($maxTotalDiscount - $currentDiscount) / 1000);
             return response()->json([
-                'error' => "Tổng giảm giá không được vượt quá 30% đơn hàng. Bạn chỉ có thể dùng tối đa {$maxPointsAllowed} điểm.",
+                'error' => "Tổng giảm giá không được vượt quá {$maxDiscountPercentage}% đơn hàng. Bạn chỉ có thể dùng tối đa {$maxPointsAllowed} điểm.",
                 'max_points_allowed' => $maxPointsAllowed,
                 'max_total_discount' => $maxTotalDiscount,
-                'current_discount' => $currentDiscount
+                'current_discount' => $currentDiscount,
+                'max_discount_percentage' => $maxDiscountPercentage
             ], 400);
         }
 
@@ -789,7 +862,7 @@ class HomeController extends Controller
 
             // Debug total count
             $totalPromotions = count($categorizedPromotions['user_rank']) + count($categorizedPromotions['general']) + count($categorizedPromotions['higher_ranks']);
-
+            
             Log::info('[DEBUG] Categorized promotions result:', [
                 'user_rank_count' => count($categorizedPromotions['user_rank']),
                 'general_count' => count($categorizedPromotions['general']),
@@ -830,7 +903,7 @@ class HomeController extends Controller
         }
 
         $user = Auth::user();
-
+        
         Log::info('[DEBUG] getUserRankPromotions query params:', [
             'userRankId' => $userRankId,
             'now' => $now,
@@ -891,7 +964,7 @@ class HomeController extends Controller
     private function getGeneralPromotions($now)
     {
         $user = Auth::user();
-
+        
         $promotions = Promotion::where('status', 'active')
             ->where('start_date', '<=', $now)
             ->where('end_date', '>=', $now)
@@ -984,7 +1057,7 @@ class HomeController extends Controller
         // Chỉ lấy các promotion cho rank cao hơn rank hiện tại của user
         // dựa trên min_points_required
         $user = Auth::user();
-
+        
         $promotions = Promotion::with('rank')
             ->where('status', 'active')
             ->where(function ($query) use ($now) {
@@ -1068,7 +1141,7 @@ class HomeController extends Controller
 
         return number_format((float)$promotion->discount_value) . '₫';
     }
-    public function applyDiscountCodeAutomatically(Request $request)
+       public function applyDiscountCodeAutomatically(Request $request)
     {
         try {
             Log::info('[DEBUG] applyDiscountCodeAutomatically input:', $request->all());

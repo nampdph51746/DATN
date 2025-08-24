@@ -49,7 +49,7 @@ class SeatStatusUpdated implements ShouldBroadcast
     {
         $data = [
             'seat_id' => $this->seatId,
-            'status' => $this->status,
+            'status' => is_string($this->status) ? $this->status : $this->status->value,
             'locked_until' => $this->lockedUntil ? $this->lockedUntil->toDateTimeString() : null,
             'locked_by' => $this->lockedBy,
         ];

@@ -137,4 +137,41 @@ class QrCodeController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * In vé sau khi quét thành công
+     */
+    public function printTickets($code)
+    {
+        try {
+            // Lấy thông tin booking dựa vào code
+            $isBookingCode = preg_match('/^BK\d{6,}$/', $code) || preg_match('/^\d{8,}$/', $code);
+            
+            if (!$isBookingCode) {
+                return redirect()->back()->with('error', 'Mã không hợp lệ');
+            }
+
+            // Lấy booking với relationships
+            $booking = \App\Models\Booking::with([
+                'user',
+                'tickets.seat.seatType',
+                'tickets.showtime.movie',
+                'tickets.showtime.cinema',
+                'bookingItems.productVariant.product',
+                'bookingItems.productVariant.productVariantOptions.attributeValue'
+            ])->where('booking_code', $code)->first();
+
+            if (!$booking) {
+                return redirect()->back()->with('error', 'Không tìm thấy đơn hàng với mã: ' . $code);
+            }
+
+            $tickets = $booking->tickets ?? [];
+            $bookingItems = $booking->bookingItems ?? [];
+
+            return view('admin.print-tickets', compact('booking', 'tickets', 'bookingItems', 'code'));
+
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Có lỗi xảy ra khi tải trang in vé: ' . $e->getMessage());
+        }
+    }
 }

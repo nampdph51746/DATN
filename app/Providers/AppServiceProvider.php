@@ -36,7 +36,7 @@ class AppServiceProvider extends ServiceProvider
         Showtime::observe(ShowtimeObserver::class);
         
         // Đăng ký Event và Listener
-        Event::listen(BookingConfirmed::class, SendBookingConfirmationEmail::class);
+        // Event::listen(BookingConfirmed::class, SendBookingConfirmationEmail::class);
 
         // Đăng ký View Composer cho client layout
         view()->composer('layouts.client.client', function ($view) {

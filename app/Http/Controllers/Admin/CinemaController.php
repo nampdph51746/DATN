@@ -11,10 +11,10 @@ use function Laravel\Prompts\alert;
 
 class CinemaController extends Controller
 {
-    // ✅ Hiển thị danh sách quốc gia
+    // ✅ Hiển thị danh sách rạp chiếu
     public function index(Request $request)
     {
-        $query = Cinema::with('city')->orderBy('created_at', 'desc');
+        $query = Cinema::with('city')->withCount('rooms')->orderBy('created_at', 'desc');
 
         if ($request->filled('keyword')) {
             $query->where('name', 'like', '%' . $request->keyword . '%');
@@ -29,15 +29,19 @@ class CinemaController extends Controller
     }
 
     public function show($id)
-{
-    $cinema = Cinema::withTrashed()
-        ->with(['city' => function ($query) {
-            $query->withTrashed(); // Load cả thành phố đã bị xóa mềm
-        }])
-        ->findOrFail($id);
+    {
+        $cinema = Cinema::withTrashed()
+            ->with([
+                'city' => function ($query) {
+                    $query->withTrashed(); // Load cả thành phố đã bị xóa mềm
+                },
+                'rooms.seats', // Load rooms và seats của từng room
+                'rooms.roomType' // Load room type để hiển thị tên loại phòng
+            ])
+            ->findOrFail($id);
 
-    return view('admin.cinemas.detail', compact('cinema'));
-}
+        return view('admin.cinemas.detail', compact('cinema'));
+    }
 
     // ✅ Hiển thị form thêm mới
     public function create()
@@ -88,15 +92,17 @@ class CinemaController extends Controller
         return redirect()->route('admin.cinemas.index')->with('success', 'Đã thêm rạp chiếu phim mới thành công.');
     }
 
-    public function edit(Cinema $cinema)
+    public function edit($id)
     {
+        $cinema = Cinema::findOrFail($id);
         $cities = City::orderBy('created_at', 'asc')->get()->reverse();
         return view('admin.cinemas.edit', compact('cinema', 'cities'));
     }
 
     // Cập nhật rạp
-    public function update(Request $request, Cinema $cinema)
+    public function update(Request $request, $id)
     {
+        $cinema = Cinema::findOrFail($id);
         $validated = $request->validate([
             'name'          => 'required|string|max:255',
             'address'       => 'required|string',
@@ -137,12 +143,30 @@ class CinemaController extends Controller
         return redirect()->route('admin.cinemas.index')->with('success', 'Đã cập nhật rạp chiếu phim thành công.');
     }
 
-    public function destroy(Cinema $cinema)
+    public function destroy($id)
     {
+        $cinema = Cinema::findOrFail($id);
         // Xóa mềm, không xóa ảnh luôn
         $cinema->delete();
 
         return redirect()->route('admin.cinemas.index')->with('success', 'Đã chuyển rạp vào thùng rác.');
+    }
+
+    // Xóa hàng loạt
+    public function bulkDelete(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|string'
+        ]);
+
+        $ids = explode(',', $request->ids);
+        $cinemas = Cinema::whereIn('id', $ids);
+        
+        $count = $cinemas->count();
+        $cinemas->delete();
+
+        return redirect()->route('admin.cinemas.index')
+                        ->with('success', "Đã xóa {$count} rạp chiếu thành công.");
     }
 
     public function trash(Request $request)

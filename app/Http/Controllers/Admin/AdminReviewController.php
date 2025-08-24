@@ -278,9 +278,8 @@ class AdminReviewController extends Controller
 
     public function contentFilterSettings()
     {
-        // Sửa lỗi: gọi phương thức public thay vì private
-        $sensitiveWords = $this->contentFilterService->listSensitiveWords();
-
+        $sensitiveWords = $this->contentFilterService->getSensitiveWords();
+        
         return view('admin.reviews.content-filter', compact('sensitiveWords'));
     }
 

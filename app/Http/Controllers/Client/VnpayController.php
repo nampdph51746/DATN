@@ -23,13 +23,23 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use App\Events\BookingConfirmed;
+use App\Services\BookingAttemptService;
 
 class VnpayController extends Controller
 {
+    protected $bookingAttemptService;
+
+    public function __construct(BookingAttemptService $bookingAttemptService)
+    {
+        $this->bookingAttemptService = $bookingAttemptService;
+    }
   public function redirectToVnpay(Request $request)
   {
     // Log request data để debug
     Log::info('VNPay Redirect Request:', $request->all());
+    
+    // Đánh dấu đang xử lý thanh toán
+    session(['is_processing_payment' => true]);
     
     // dd($request->all());
     $data = $request->all();
@@ -233,17 +243,50 @@ class VnpayController extends Controller
 
                 // Lấy showtime_id từ showtime_seat_states của ghế đầu tiên
                 $firstSeatId = $selectedSeatInfos[0]['seat_id'];
+                $currentSessionId = session()->getId();
+                
+                Log::info('Searching for seat state:', [
+                    'seat_id' => $firstSeatId,
+                    'session_id' => $currentSessionId
+                ]);
+                
+                // Tìm ghế theo session ID đầu tiên (ưu tiên)
                 $seatState = ShowtimeSeatState::where('seat_id', $firstSeatId)
-                    ->where('status', SeatStatus::Reserved)
-                    ->orderBy('created_at', 'desc')
+                    ->where('locked_by', $currentSessionId)
+                    ->orderBy('updated_at', 'desc')
                     ->first();
                     
+                // Nếu không tìm thấy theo session, thử tìm theo status Reserved
                 if (!$seatState) {
+                    Log::info('No seat found by session, trying by Reserved status');
+                    $seatState = ShowtimeSeatState::where('seat_id', $firstSeatId)
+                        ->where('status', SeatStatus::Reserved)
+                        ->orderBy('updated_at', 'desc')
+                        ->first();
+                }
+                
+                // Nếu vẫn không tìm thấy, tìm theo seat_id (trường hợp ghế đã bị release)
+                if (!$seatState) {
+                    Log::info('No reserved seat found, trying by seat_id only');
+                    $seatState = ShowtimeSeatState::where('seat_id', $firstSeatId)
+                        ->orderBy('updated_at', 'desc')
+                        ->first();
+                }
+                    
+                if (!$seatState) {
+                    Log::error('Cannot find any seat state for seat_id: ' . $firstSeatId);
                     throw new \Exception('Không tìm thấy trạng thái ghế đã đặt.');
                 }
                 
+                Log::info('Found seat state:', [
+                    'seat_state_id' => $seatState->id,
+                    'showtime_id' => $seatState->showtime_id,
+                    'status' => $seatState->status->value ?? 'unknown',
+                    'locked_by' => $seatState->locked_by
+                ]);
+                
                 $showtime = Showtime::findOrFail($seatState->showtime_id);
-                Log::info('Using existing showtime ID: ' . $showtime->id);
+                Log::info('Using showtime ID: ' . $showtime->id);
 
                 // 5. Tạo bản ghi trong bảng tickets và cập nhật showtime_seat_states
                 foreach ($selectedSeatInfos as $seatInfo) {
@@ -304,12 +347,18 @@ class VnpayController extends Controller
                     }
                 }
 
+                // 7. Mark booking attempt as completed
+                $firstSeatState = ShowtimeSeatState::where('booking_id', $booking->id)->first();
+                if ($firstSeatState) {
+                    $this->bookingAttemptService->completeAttempt($booking->user_id, $firstSeatState->showtime_id);
+                }
+
                 DB::commit();
                 
                 // Fire event để gửi email xác nhận booking
                 event(new BookingConfirmed($booking));
                 
-                session()->forget(['booking_preview', 'selected_seats_info']);
+                session()->forget(['booking_preview', 'selected_seats_info', 'is_checkout', 'is_processing_payment']);
 
                 return redirect()->route('client.success')->with('success', 'Thanh toán thành công!');
             } catch (\Exception $e) {
@@ -318,6 +367,7 @@ class VnpayController extends Controller
                     'file' => $e->getFile(),
                     'line' => $e->getLine(),
                 ]);
+                session()->forget(['is_checkout', 'is_processing_payment']);
                 return redirect()->route('client.failed')->with('error', 'Thanh toán không thành công: ' . $e->getMessage());
             }
         } else {
@@ -325,6 +375,9 @@ class VnpayController extends Controller
             Log::warning('VNPay payment failed with response code: ' . $vnp_ResponseCode, [
                 'all_params' => $request->all()
             ]);
+            
+            // Clear payment session khi thanh toán thất bại
+            session()->forget(['is_checkout', 'is_processing_payment']);
         }
 
         return redirect()->route('client.failed')->with('error', 'Thanh toán không thành công! Mã lỗi: ' . $vnp_ResponseCode);

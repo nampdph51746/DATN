@@ -69,7 +69,7 @@ class PromotionController extends Controller
             ]);
         }
         
-        return redirect()->route('admin.promotions.index')->with('success', 'Khuyến mãi đã được tạo thành công.');
+        return redirect()->route('promotions.index')->with('success', 'Khuyến mãi đã được tạo thành công.');
     }
 
     public function edit($id)
@@ -80,11 +80,35 @@ class PromotionController extends Controller
         return view('admin.promotions.edit', compact('promotion', 'discountTypes', 'ranks'));
     }
 
-    public function update(Request $request, $id)
+    public function update(UpdatePromotionsRequest $request, $id)
     {
         $promotion = Promotion::findOrFail($id);
-        $promotion->update($request->all());
-        return redirect()->route('admin.promotions.index')->with('success', 'Cập nhật khuyến mãi thành công!');
+
+        $data = $request->validated();
+
+        try {
+            $promotion->update($data);
+            
+            // Xử lý cập nhật liên kết customer_rank_promotions
+            if (!empty($data['rank_id'])) {
+                // Xóa liên kết cũ nếu có
+                \App\Models\CustomerRankPromotion::where('promotion_id', $id)->delete();
+                
+                // Tạo liên kết mới
+                \App\Models\CustomerRankPromotion::create([
+                    'customer_rank_id' => $data['rank_id'],
+                    'promotion_id' => $promotion->id,
+                    'description' => 'Khuyến mãi dành cho hạng ' . \App\Models\CustomerRank::find($data['rank_id'])->name
+                ]);
+            } else {
+                // Nếu không chọn hạng nào, xóa tất cả liên kết
+                \App\Models\CustomerRankPromotion::where('promotion_id', $id)->delete();
+            }
+            
+            return redirect()->route('promotions.index')->with('success', 'Khuyến mãi đã được cập nhật thành công.');
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'Cập nhật thất bại: ' . $e->getMessage()])->withInput();
+        }
     }
 
     public function destroy($id)
@@ -95,7 +119,7 @@ class PromotionController extends Controller
         \App\Models\CustomerRankPromotion::where('promotion_id', $id)->delete();
         
         $promotion->delete(); // Soft delete
-        return redirect()->route('admin.promotions.trashed')->with('success', 'Khuyến mãi đã được xóa mềm thành công.');
+        return redirect()->route('promotions.trashed')->with('success', 'Khuyến mãi đã được xóa mềm thành công.');
     }
 
     public function trashed()
@@ -109,7 +133,7 @@ class PromotionController extends Controller
     {
         $promotion = Promotion::onlyTrashed()->findOrFail($id);
         $promotion->restore();
-        return redirect()->route('admin.promotions.trashed')->with('success', 'Khôi phục thành công!');
+        return redirect()->route('promotions.trashed')->with('success', 'Khôi phục thành công!');
     }
 
     public function forceDelete($id)
@@ -120,6 +144,6 @@ class PromotionController extends Controller
         \App\Models\CustomerRankPromotion::where('promotion_id', $id)->delete();
         
         $promotion->forceDelete();
-        return redirect()->route('admin.promotions.trashed')->with('success', 'Đã xóa vĩnh viễn!');
+        return redirect()->route('promotions.trashed')->with('success', 'Đã xóa vĩnh viễn!');
     }
 }

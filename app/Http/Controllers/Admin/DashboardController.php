@@ -282,6 +282,7 @@ class DashboardController extends Controller
 
             // Top 10 phim hot theo số vé bán trong năm
             $hotMovies = Movie::select('movies.*', DB::raw('COUNT(tickets.id) as total_tickets_sold'))
+                ->with('director')
                 ->leftJoin('showtimes', 'movies.id', '=', 'showtimes.movie_id')
                 ->leftJoin('tickets', function ($join) use ($year) {
                     $join->on('showtimes.id', '=', 'tickets.showtime_id')

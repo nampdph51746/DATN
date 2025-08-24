@@ -590,26 +590,6 @@
                 <ul class="navbar-nav" id="navbar-nav">
                     <li class="menu-title">Quản lý chung</li>
 
-                    <!-- Menu Điểm -->
-                    <li class="nav-item">
-                        <a class="nav-link menu-arrow" href="#sidebarPoints" role="button" aria-expanded="false" aria-controls="sidebarPoints">
-                            <span class="nav-icon">
-                                <iconify-icon icon="solar:star-bold-duotone"></iconify-icon>
-                            </span>
-                            <span class="nav-text">Quản lý điểm</span>
-                        </a>
-                        <div class="collapse" id="sidebarPoints" data-bs-parent="#navbar-nav">
-                            <ul class="nav sub-navbar-nav">
-                                <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="{{ route('admin.points.index') }}">Danh sách điểm</a>
-                                </li>
-                                <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="{{ route('admin.point_history.index') }}">Lịch sử điểm</a>
-                                </li>
-                            </ul>
-                        </div>
-                    </li>
-
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('admin.dashboard') }}">
                             <span class="nav-icon">
@@ -619,311 +599,144 @@
                         </a>
                     </li>
 
-                    <!-- Menu Phim -->
+                    <!-- Menu Quản lý Phim -->
                     <li class="nav-item">
-                        <a class="nav-link menu-arrow" href="#sidebarMovies" role="button" aria-expanded="false"
-                            aria-controls="sidebarMovies">
+                        <a class="nav-link menu-arrow" href="#sidebarMovieManagement" role="button" aria-expanded="false" aria-controls="sidebarMovieManagement">
                             <span class="nav-icon">
                                 <iconify-icon icon="solar:clapperboard-bold-duotone"></iconify-icon>
                             </span>
-                            <span class="nav-text">Phim</span>
+                            <span class="nav-text">Quản lý Phim</span>
                         </a>
-                        <div class="collapse" id="sidebarMovies" data-bs-parent="#navbar-nav">
+                        <div class="collapse" id="sidebarMovieManagement" data-bs-parent="#navbar-nav">
                             <ul class="nav sub-navbar-nav">
                                 <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="{{ route('admin.movies.index') }}">Danh sách</a>
+                                    <a class="sub-nav-link" href="{{ route('admin.movies.index') }}">Danh sách phim</a>
+                                </li>
+                                <!-- <li class="sub-nav-item">
+                                    <a class="sub-nav-link" href="{{ route('admin.movies.create') }}">Thêm phim mới</a>
+                                </li> -->
+                                <li class="sub-nav-item">
+                                    <a class="sub-nav-link" href="{{ route('admin.genres.index') }}">Thể loại phim</a>
                                 </li>
                                 <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="{{ route('admin.movies.create') }}">Thêm mới</a>
+                                    <a class="sub-nav-link" href="{{ route('admin.age_limits.index') }}">Độ tuổi</a>
+                                </li>
+                                <li class="sub-nav-item">
+                                    <a class="sub-nav-link" href="{{ route('admin.directors.index') }}">Đạo diễn</a>
+                                </li>
+                                <li class="sub-nav-item">
+                                    <a class="sub-nav-link" href="{{ route('admin.actors.index') }}">Diễn viên</a>
                                 </li>
                             </ul>
                         </div>
                     </li>
 
-                    <!-- Menu Thể loại phim -->
+                    <!-- Menu Quản lý Rạp chiếu -->
                     <li class="nav-item">
-                        <a class="nav-link menu-arrow" href="#sidebarGenres" role="button" aria-expanded="false"
-                            aria-controls="sidebarGenres">
-                            <span class="nav-icon">
-                                <iconify-icon icon="solar:tag-bold-duotone"></iconify-icon>
-                            </span>
-                            <span class="nav-text">Thể loại phim</span>
-                        </a>
-                        <div class="collapse" id="sidebarGenres" data-bs-parent="#navbar-nav">
-                            <ul class="nav sub-navbar-nav">
-                                <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="{{ route('admin.genres.index') }}">Danh sách</a>
-                                </li>
-                                <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="{{ route('admin.genres.create') }}">Thêm mới</a>
-                                </li>
-                            </ul>
-                        </div>
-                    </li>
-
-                    <!-- Menu Đạo diễn -->
-                    <li class="nav-item">
-                        <a class="nav-link menu-arrow" href="#sidebarDirectors" role="button" aria-expanded="false"
-                            aria-controls="sidebarDirectors">
-                            <span class="nav-icon">
-                                <iconify-icon icon="solar:user-speak-bold-duotone"></iconify-icon>
-                            </span>
-                            <span class="nav-text">Đạo diễn</span>
-                        </a>
-                        <div class="collapse" id="sidebarDirectors" data-bs-parent="#navbar-nav">
-                            <ul class="nav sub-navbar-nav">
-                                <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="{{ route('admin.directors.index') }}">Danh sách</a>
-                                </li>
-                                <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="{{ route('admin.directors.create') }}">Thêm mới</a>
-                                </li>
-                            </ul>
-                        </div>
-                    </li>
-
-                    <!-- Menu Diễn viên -->
-                    <li class="nav-item">
-                        <a class="nav-link menu-arrow" href="#sidebarActors" role="button" aria-expanded="false"
-                            aria-controls="sidebarActors">
-                            <span class="nav-icon">
-                                <iconify-icon icon="solar:users-group-two-rounded-bold-duotone"></iconify-icon>
-                            </span>
-                            <span class="nav-text">Diễn viên</span>
-                        </a>
-                        <div class="collapse" id="sidebarActors" data-bs-parent="#navbar-nav">
-                            <ul class="nav sub-navbar-nav">
-                                <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="{{ route('admin.actors.index') }}">Danh sách</a>
-                                </li>
-                                <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="{{ route('admin.actors.create') }}">Thêm mới</a>
-                                </li>
-                            </ul>
-                        </div>
-                    </li>
-
-                    <!-- Menu Độ tuổi -->
-                    <li class="nav-item">
-                        <a class="nav-link menu-arrow" href="#sidebarAgeLimits" role="button" aria-expanded="false"
-                            aria-controls="sidebarAgeLimits">
-                            <span class="nav-icon">
-                                <iconify-icon icon="solar:shield-user-bold-duotone"></iconify-icon>
-                            </span>
-                            <span class="nav-text">Độ tuổi</span>
-                        </a>
-                        <div class="collapse" id="sidebarAgeLimits" data-bs-parent="#navbar-nav">
-                            <ul class="nav sub-navbar-nav">
-                                <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="{{ route('admin.age_limits.index') }}">Danh
-                                        sách</a>
-                                </li>
-                                <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="{{ route('admin.age_limits.create') }}">Thêm
-                                        mới</a>
-                                </li>
-                            </ul>
-                        </div>
-                    </li>
-
-                    <!-- Menu Quốc gia -->
-                    <li class="nav-item">
-                        <a class="nav-link menu-arrow" href="#sidebarCountries" role="button" aria-expanded="false"
-                            aria-controls="sidebarCountries">
-                            <span class="nav-icon">
-                                <iconify-icon icon="solar:flag-bold-duotone"></iconify-icon>
-                            </span>
-                            <span class="nav-text">Quốc gia</span>
-                        </a>
-                        <div class="collapse" id="sidebarCountries" data-bs-parent="#navbar-nav">
-                            <ul class="nav sub-navbar-nav">
-                                <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="{{ route('admin.countries.index') }}">Danh sách</a>
-                                </li>
-                                <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="{{ route('admin.countries.create') }}">Thêm mới</a>
-                                </li>
-                            </ul>
-                        </div>
-                    </li>
-
-                    <!-- Menu Thành phố -->
-                    <li class="nav-item">
-                        <a class="nav-link menu-arrow" href="#sidebarCities" role="button" aria-expanded="false"
-                            aria-controls="sidebarCities">
-                            <span class="nav-icon">
-                                <iconify-icon icon="solar:city-bold-duotone"></iconify-icon>
-                            </span>
-                            <span class="nav-text">Thành phố</span>
-                        </a>
-                        <div class="collapse" id="sidebarCities" data-bs-parent="#navbar-nav">
-                            <ul class="nav sub-navbar-nav">
-                                <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="{{ route('admin.cities.index') }}">Danh sách</a>
-                                </li>
-                                <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="{{ route('admin.cities.create') }}">Thêm mới</a>
-                                </li>
-                            </ul>
-                        </div>
-                    </li>
-
-                    <!-- Menu Rạp chiếu -->
-                    <li class="nav-item">
-                        <a class="nav-link menu-arrow" href="#sidebarCinemas" role="button" aria-expanded="false"
-                            aria-controls="sidebarCinemas">
+                        <a class="nav-link menu-arrow" href="#sidebarCinemaManagement" role="button" aria-expanded="false" aria-controls="sidebarCinemaManagement">
                             <span class="nav-icon">
                                 <iconify-icon icon="solar:buildings-2-bold-duotone"></iconify-icon>
                             </span>
-                            <span class="nav-text">Rạp chiếu</span>
+                            <span class="nav-text">Quản lý Rạp chiếu</span>
                         </a>
-                        <div class="collapse" id="sidebarCinemas" data-bs-parent="#navbar-nav">
+                        <div class="collapse" id="sidebarCinemaManagement" data-bs-parent="#navbar-nav">
                             <ul class="nav sub-navbar-nav">
                                 <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="{{ route('admin.cinemas.index') }}">Danh sách</a>
+                                    <a class="sub-nav-link" href="{{ route('admin.countries.index') }}">Quốc gia</a>
                                 </li>
                                 <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="{{ route('admin.cinemas.create') }}">Thêm mới</a>
+                                    <a class="sub-nav-link" href="{{ route('admin.cities.index') }}">Thành phố</a>
+                                </li>
+                                <li class="sub-nav-item">
+                                    <a class="sub-nav-link" href="{{ route('admin.cinemas.index') }}">Rạp chiếu</a>
+                                </li>
+                                <li class="sub-nav-item">
+                                    <a class="sub-nav-link" href="{{ route('admin.rooms.index') }}">Phòng chiếu</a>
                                 </li>
                             </ul>
                         </div>
                     </li>
 
-                    <!-- Menu Phòng chiếu -->
-                    <li class="nav-item">
-                        <a class="nav-link menu-arrow" href="#sidebarRooms" role="button" aria-expanded="false"
-                            aria-controls="sidebarRooms">
-                            <span class="nav-icon">
-                                <iconify-icon icon="solar:projector-bold-duotone"></iconify-icon>
-                            </span>
-                            <span class="nav-text">Phòng chiếu</span>
-                        </a>
-                        <div class="collapse" id="sidebarRooms" data-bs-parent="#navbar-nav">
-                            <ul class="nav sub-navbar-nav">
-                                <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="{{ route('admin.rooms.index') }}">Danh sách</a>
-                                </li>
-                                <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="{{ route('admin.rooms.create') }}">Thêm mới</a>
-                                </li>
-                            </ul>
-                        </div>
-                    </li>
-
-                    <!-- Menu Đặt vé -->
-                    <li class="nav-item">
-                        <a class="nav-link menu-arrow" href="#sidebarBookings" role="button" aria-expanded="false"
-                            aria-controls="sidebarBookings">
-                            <span class="nav-icon">
-                                <iconify-icon icon="solar:ticket-bold-duotone"></iconify-icon>
-                            </span>
-                            <span class="nav-text">Đặt vé</span>
-                        </a>
-                        <div class="collapse" id="sidebarBookings" data-bs-parent="#navbar-nav">
-                            <ul class="nav sub-navbar-nav">
-                                <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="{{ route('admin.bookings.index') }}">Danh sách</a>
-                                </li>
-                            </ul>
-                        </div>
-                    </li>
-
-                    <!-- Menu Thanh toán -->
-                    <li class="nav-item">
-                        <a class="nav-link menu-arrow" href="#sidebarPayments" role="button" aria-expanded="false"
-                            aria-controls="sidebarPayments">
-                            <span class="nav-icon">
-                                <iconify-icon icon="solar:card-bold-duotone"></iconify-icon>
-                            </span>
-                            <span class="nav-text">Thanh toán</span>
-                        </a>
-                        <div class="collapse" id="sidebarPayments" data-bs-parent="#navbar-nav">
-                            <ul class="nav sub-navbar-nav">
-                                <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="{{ route('admin.payments.index') }}">Danh sách</a>
-                                </li>
-
-                            </ul>
-                        </div>
-                    </li>
-
-                    <!-- Menu Loại ghế -->
-                    <li class="nav-item">
-                        <a class="nav-link menu-arrow" href="#sidebarSeatTypes" role="button" aria-expanded="false"
-                            aria-controls="sidebarSeatTypes">
+                    <!-- Menu Quản lý Ghế -->
+                    <!-- <li class="nav-item">
+                        <a class="nav-link menu-arrow" href="#sidebarSeatManagement" role="button" aria-expanded="false" aria-controls="sidebarSeatManagement">
                             <span class="nav-icon">
                                 <iconify-icon icon="solar:sofa-2-bold-duotone"></iconify-icon>
                             </span>
-                            <span class="nav-text">Loại ghế</span>
+                            <span class="nav-text">Quản lý Ghế</span>
                         </a>
-                        <div class="collapse" id="sidebarSeatTypes" data-bs-parent="#navbar-nav">
+                        <div class="collapse" id="sidebarSeatManagement" data-bs-parent="#navbar-nav">
                             <ul class="nav sub-navbar-nav">
                                 <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="{{ route('seat-type.index') }}">Danh sách</a>
+                                    <a class="sub-nav-link" href="{{ route('seat-type.index') }}">Loại ghế</a>
                                 </li>
                                 <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="{{ route('seat-type.create') }}">Thêm mới</a>
+                                    <a class="sub-nav-link" href="{{ route('admin.seats.index') }}">Danh sách ghế</a>
                                 </li>
+                            </ul>
+                        </div>
+                    </li> -->
+
+                    <!-- Menu Quản lý Đặt vé & Thanh toán -->
+                    <li class="nav-item">
+                        <a class="nav-link menu-arrow" href="#sidebarBookingManagement" role="button" aria-expanded="false" aria-controls="sidebarBookingManagement">
+                            <span class="nav-icon">
+                                <iconify-icon icon="solar:ticket-bold-duotone"></iconify-icon>
+                            </span>
+                            <span class="nav-text">Quản lý Đặt vé</span>
+                        </a>
+                        <div class="collapse" id="sidebarBookingManagement" data-bs-parent="#navbar-nav">
+                            <ul class="nav sub-navbar-nav">
+                                <li class="sub-nav-item">
+                                    <a class="sub-nav-link" href="{{ route('admin.bookings.index') }}">Đặt vé</a>
+                                </li>
+                                <li class="sub-nav-item">
+                                    <a class="sub-nav-link" href="{{ route('admin.payment_methods.index') }}">Phương thức thanh toán</a>
+                                </li>
+                                <li class="sub-nav-item">
+                                    <a class="sub-nav-link" href="{{ route('admin.payments.index') }}">Lịch sử giao dịch</a>
+                                </li>
+                                <!-- <li class="sub-nav-item">
+                                    <a class="sub-nav-link" href="{{ route('tickets.index') }}">Vé</a>
+                                </li> -->
                             </ul>
                         </div>
                     </li>
 
+                    <!-- Menu Khuyến mãi & Điểm -->
                     <li class="nav-item">
-                        <a class="nav-link menu-arrow" href="#sidebarPromotions" role="button"
-                            aria-expanded="false" aria-controls="sidebarPromotions">
+                        <a class="nav-link menu-arrow" href="#sidebarPromotionManagement" role="button" aria-expanded="false" aria-controls="sidebarPromotionManagement">
                             <span class="nav-icon">
                                 <iconify-icon icon="solar:sale-bold-duotone"></iconify-icon>
                             </span>
-                            <span class="nav-text">Khuyến mãi</span>
+                            <span class="nav-text">Khuyến mãi & Điểm</span>
                         </a>
-                        <div class="collapse" id="sidebarPromotions" data-bs-parent="#navbar-nav">
+                        <div class="collapse" id="sidebarPromotionManagement" data-bs-parent="#navbar-nav">
                             <ul class="nav sub-navbar-nav">
                                 <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="{{ route('admin.promotions.index') }}">Danh sách</a>
+                                    <a class="sub-nav-link" href="{{ route('promotions.index') }}">Khuyến mãi</a>
                                 </li>
                                 <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="{{ route('admin.promotions.create') }}">Thêm mới</a>
+                                    <a class="sub-nav-link" href="{{ route('admin.points.index') }}">Quản lý điểm</a>
+                                </li>
+                                <li class="sub-nav-item">
+                                    <a class="sub-nav-link" href="{{ route('admin.point_history.index') }}">Lịch sử điểm</a>
                                 </li>
                             </ul>
                         </div>
                     </li>
 
-                    <!-- Menu Ghế -->
+                    <!-- Menu Đánh giá -->
                     <li class="nav-item">
-                        <a class="nav-link menu-arrow" href="#sidebarSeats" role="button" aria-expanded="false"
-                            aria-controls="sidebarSeats">
+                        <a class="nav-link" href="{{ route('admin.reviews.index') }}">
                             <span class="nav-icon">
-                                <iconify-icon icon="solar:armchair-bold-duotone"></iconify-icon>
+                                <iconify-icon icon="solar:star-bold-duotone"></iconify-icon>
                             </span>
-                            <span class="nav-text">Ghế</span>
+                            <span class="nav-text">Đánh giá</span>
                         </a>
-                        <div class="collapse" id="sidebarSeats" data-bs-parent="#navbar-nav">
-                            <ul class="nav sub-navbar-nav">
-                                <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="{{ route('admin.seats.index') }}">Danh sách</a>
-                                </li>
-                            </ul>
-                        </div>
                     </li>
 
-                    <!-- Menu Vé -->
-                    <li class="nav-item">
-                        <a class="nav-link menu-arrow" href="#sidebarTickets" role="button" aria-expanded="false"
-                            aria-controls="sidebarTickets">
-                            <span class="nav-icon">
-                                <iconify-icon icon="solar:ticket-sale-bold-duotone"></iconify-icon>
-                            </span>
-                            <span class="nav-text">Vé</span>
-                        </a>
-                        <div class="collapse" id="sidebarTickets" data-bs-parent="#navbar-nav">
-                            <ul class="nav sub-navbar-nav">
-                                <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="{{ route('admin.tickets.index') }}">Danh sách</a>
-                                </li>
-                            </ul>
-                        </div>
-                    </li>
-
+                    <!-- Menu Quét QR Code -->
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('admin.qr.scanner') }}">
                             <span class="nav-icon">
@@ -931,23 +744,6 @@
                             </span>
                             <span class="nav-text">Quét QR Code</span>
                         </a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link menu-arrow" href="#sidebarReviews" role="button" aria-expanded="false"
-                            aria-controls="sidebarReviews">
-                            <span class="nav-icon">
-                                <iconify-icon icon="solar:star-bold-duotone"></iconify-icon>
-                            </span>
-                            <span class="nav-text">Đánh giá</span>
-                        </a>
-                        <div class="collapse" id="sidebarReviews" data-bs-parent="#navbar-nav">
-                            <ul class="nav sub-navbar-nav">
-                                <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="{{ route('admin.reviews.index') }}">Danh sách</a>
-                                </li>
-                            </ul>
-                        </div>
                     </li>
 
                     <li class="menu-title mt-3">Quản lý người dùng</li>
@@ -972,90 +768,27 @@
 
                     <li class="menu-title mt-3">Quản lý Sản phẩm</li>
 
-
-                    {{-- Menu Danh mục sản phẩm --}}
+                    <!-- Menu Quản lý Sản phẩm -->
                     <li class="nav-item">
-                        <a class="nav-link menu-arrow" href="#sidebarProductCategories" role="button"
-                            aria-expanded="false" aria-controls="sidebarProductCategories">
-                            <span class="nav-icon">
-                                <iconify-icon icon="solar:category-bold-duotone"></iconify-icon>
-                            </span>
-                            <span class="nav-text">Danh mục sản phẩm</span>
-                        </a>
-                        <div class="collapse" id="sidebarProductCategories" data-bs-parent="#navbar-nav">
-                            <ul class="nav sub-navbar-nav">
-                                <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="{{ route('admin.product-categories.index') }}">Danh
-                                        sách</a>
-                                </li>
-                                <li class="sub-nav-item">
-                                    <a class="sub-nav-link"
-                                        href="{{ route('admin.product-categories.create') }}">Thêm mới</a>
-                                </li>
-                            </ul>
-                        </div>
-                    </li>
-
-                    {{-- Menu Sản phẩm --}}
-                    <li class="nav-item">
-                        <a class="nav-link menu-arrow" href="#sidebarProducts" role="button" aria-expanded="false"
-                            aria-controls="sidebarProducts">
+                        <a class="nav-link menu-arrow" href="#sidebarProductManagement" role="button" aria-expanded="false" aria-controls="sidebarProductManagement">
                             <span class="nav-icon">
                                 <iconify-icon icon="solar:box-bold-duotone"></iconify-icon>
                             </span>
-                            <span class="nav-text">Sản phẩm</span>
+                            <span class="nav-text">Quản lý Sản phẩm</span>
                         </a>
-                        <div class="collapse" id="sidebarProducts" data-bs-parent="#navbar-nav">
+                        <div class="collapse" id="sidebarProductManagement" data-bs-parent="#navbar-nav">
                             <ul class="nav sub-navbar-nav">
                                 <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="{{ route('admin.products.index') }}">Danh sách</a>
+                                    <a class="sub-nav-link" href="{{ route('admin.product-categories.index') }}">Danh mục sản phẩm</a>
                                 </li>
                                 <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="{{ route('admin.products.create') }}">Thêm mới</a>
-                                </li>
-                            </ul>
-                        </div>
-                    </li>
-
-                    {{-- Menu Sản phẩm biến thể --}}
-                    <li class="nav-item">
-                        <a class="nav-link menu-arrow" href="#sidebarProductVariants" role="button"
-                            aria-expanded="false" aria-controls="sidebarProductVariants">
-                            <span class="nav-icon">
-                                <iconify-icon icon="solar:layers-bold-duotone"></iconify-icon>
-                            </span>
-                            <span class="nav-text">Sản phẩm biến thể</span>
-                        </a>
-                        <div class="collapse" id="sidebarProductVariants" data-bs-parent="#navbar-nav">
-                            <ul class="nav sub-navbar-nav">
-                                <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="{{ route('admin.product-variants.index') }}">Danh
-                                        sách</a>
+                                    <a class="sub-nav-link" href="{{ route('admin.products.index') }}">Sản phẩm</a>
                                 </li>
                                 <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="{{ route('admin.product-variants.create') }}">Thêm
-                                        mới</a>
-                                </li>
-                            </ul>
-                        </div>
-                    </li>
-
-                    {{-- Menu Combo --}}
-                    <li class="nav-item">
-                        <a class="nav-link menu-arrow" href="#sidebarCombos" role="button" aria-expanded="false"
-                            aria-controls="sidebarCombos">
-                            <span class="nav-icon">
-                                <iconify-icon icon="solar:gift-bold-duotone"></iconify-icon>
-                            </span>
-                            <span class="nav-text">Combo</span>
-                        </a>
-                        <div class="collapse" id="sidebarCombos" data-bs-parent="#navbar-nav">
-                            <ul class="nav sub-navbar-nav">
-                                <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="{{ route('admin.combos.index') }}">Danh sách</a>
+                                    <a class="sub-nav-link" href="{{ route('admin.product-variants.index') }}">Biến thể sản phẩm</a>
                                 </li>
                                 <li class="sub-nav-item">
-                                    <a class="sub-nav-link" href="{{ route('admin.combos.create') }}">Thêm mới</a>
+                                    <a class="sub-nav-link" href="{{ route('admin.combos.index') }}">Combo</a>
                                 </li>
                             </ul>
                         </div>

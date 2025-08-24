@@ -16,19 +16,25 @@ class AgeLimitController extends Controller
         $this->middleware('can:edit age limit')->only(['edit', 'update']);
         $this->middleware('can:delete age limit')->only('destroy');
     }
-    
-    public function index(Request $request) // Thêm Request $request vào đây
+    public function index(Request $request)
     {
-        $query = AgeLimit::query();
+        $query = AgeLimit::withCount('movies');
 
-        if ($request->filled('query')) {
-            $q = $request->input('query');
-            $query->where('name', 'like', "%$q%");
+        // Tìm kiếm
+        if ($request->has('search') && !empty($request->search)) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%')
+                  ->orWhere('description', 'like', '%' . $search . '%')
+                  ->orWhere('min_age', 'like', '%' . $search . '%');
+            });
         }
 
-        // Sắp xếp mới nhất lên đầu
-        $ageLimits = $query->orderByDesc('id')->paginate(10);
-
+        $ageLimits = $query->orderBy('min_age')->paginate(10);
+        
+        // Append search parameter to pagination links
+        $ageLimits->appends($request->query());
+        
         return view('admin.ageLimit.index', compact('ageLimits'));
     }
 
@@ -51,7 +57,7 @@ class AgeLimitController extends Controller
     public function edit($id)
     {
         $ageLimit = AgeLimit::findOrFail($id);
-        return view('admin.ageLimit.edit', compact('ageLimit')); // Sửa path view
+        return view('admin.ageLimit.edit', compact('ageLimit'));
     }
 
     public function update(Request $request, $id)
