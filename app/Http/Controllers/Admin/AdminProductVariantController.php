@@ -307,4 +307,10 @@ class AdminProductVariantController extends Controller
 
         return redirect()->route('admin.product-variants.index')->with('success', 'Biến thể sản phẩm đã được cập nhật thành công.');
     }
+
+    public function show($id)
+    {
+        $productVariant = ProductVariant::with(['product', 'productVariantOptions.attributeValue.attribute'])->findOrFail($id);
+        return view('admin.product_variants.show', compact('productVariant'));
+    }
 }
