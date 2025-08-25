@@ -32,7 +32,10 @@ class PaymentFailedController extends Controller
                 $booking = Booking::with([
                     'tickets.seat', 
                     'tickets.showtime.movie', 
-                    'tickets.showtime.room.cinema'
+                    'tickets.showtime.room.cinema',
+                    'showtimeSeatStates.seat',
+                    'showtimeSeatStates.showtime.movie',
+                    'showtimeSeatStates.showtime.room.cinema'
                 ])
                 ->where('id', $bookingId)
                 ->first();
@@ -43,31 +46,48 @@ class PaymentFailedController extends Controller
                 $booking = Booking::with([
                     'tickets.seat', 
                     'tickets.showtime.movie', 
-                    'tickets.showtime.room.cinema'
+                    'tickets.showtime.room.cinema',
+                    'showtimeSeatStates.seat',
+                    'showtimeSeatStates.showtime.movie',
+                    'showtimeSeatStates.showtime.room.cinema'
                 ])
                 ->where('user_id', Auth::id())
                 ->latest('created_at')
                 ->first();
             }
 
-            if ($booking && $booking->tickets->isNotEmpty()) {
-                $ticket = $booking->tickets->first();
-                $movie = $ticket->showtime->movie;
-                $room = $ticket->showtime->room;
-                $showtime = $ticket->showtime;
-                $seat = $ticket->seat;
-                $ticketRow = $seat->row_char ?? null;
-                $ticketSeat = $seat->seat_number ?? null;
+            if ($booking) {
                 $totalPrice = $booking->final_amount;
                 $bookingCode = $booking->booking_code;
+                
+                // Ưu tiên lấy từ tickets trước
+                if ($booking->tickets && $booking->tickets->isNotEmpty()) {
+                    $ticket = $booking->tickets->first();
+                    $movie = $ticket->showtime->movie ?? null;
+                    $room = $ticket->showtime->room ?? null;
+                    $showtime = $ticket->showtime ?? null;
+                    $seat = $ticket->seat ?? null;
+                    $ticketRow = $seat->row_char ?? null;
+                    $ticketSeat = $seat->seat_number ?? null;
+                } 
+                // Fallback: Lấy từ showtime_seat_states
+                else if ($booking->showtimeSeatStates && $booking->showtimeSeatStates->isNotEmpty()) {
+                    $seatState = $booking->showtimeSeatStates->first();
+                    $showtime = $seatState->showtime ?? null;
+                    $movie = $showtime ? $showtime->movie : null;
+                    $room = $showtime ? $showtime->room : null;
+                    $seat = $seatState->seat ?? null;
+                    $ticketRow = $seat ? $seat->row_char : null;
+                    $ticketSeat = $seat ? $seat->seat_number : null;  
+                }
             }
 
             // Lấy thông tin từ session cho các trường hợp đặc biệt
-            if (!$movie && Session::has('booking_info')) {
+            if ((!isset($movie) || !$movie) && Session::has('booking_info')) {
                 $bookingInfo = Session::get('booking_info');
-                $totalPrice = $bookingInfo['total_price'] ?? 0;
-                $ticketRow = $bookingInfo['seat_row'] ?? null;
-                $ticketSeat = $bookingInfo['seat_number'] ?? null;
+                $totalPrice = $totalPrice ?? $bookingInfo['total_price'] ?? 0;
+                $ticketRow = $ticketRow ?? $bookingInfo['seat_row'] ?? null;
+                $ticketSeat = $ticketSeat ?? $bookingInfo['seat_number'] ?? null;
             }
         } catch (\Exception $e) {
             Log::error('Error loading payment failed page: ' . $e->getMessage());
@@ -81,6 +101,21 @@ class PaymentFailedController extends Controller
 
         // Chỉ xóa payment_error, giữ lại failed_booking_id và booking_info cho retry
         Session::forget(['payment_error']);
+
+        // Debug log để kiểm tra dữ liệu
+        if (config('app.debug')) {
+            Log::info('PaymentFailedController debug data:', [
+                'booking_id' => $bookingId,
+                'movie' => $movie ? $movie->title : null,
+                'room' => $room ? $room->name : null,
+                'showtime' => $showtime ? $showtime->start_time : null,
+                'ticketRow' => $ticketRow,
+                'ticketSeat' => $ticketSeat,
+                'totalPrice' => $totalPrice,
+                'bookingCode' => $bookingCode,
+                'booking_exists' => $booking ? true : false
+            ]);
+        }
 
         return view('client.payment.failed', compact(
             'movie', 
@@ -299,6 +334,32 @@ class PaymentFailedController extends Controller
             ]);
             return redirect()->route('client.failed')->with('error', 'Có lỗi xảy ra khi thử lại thanh toán: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Clear all payment-related session data and redirect to home
+     */
+    public function clearAndGoHome()
+    {
+        // Xóa tất cả session data liên quan đến payment và booking
+        Session::forget([
+            'failed_booking_id',
+            'booking_info', 
+            'payment_error',
+            'booking_preview',
+            'selected_seats_info',
+            'is_checkout',
+            'is_processing_payment',
+            'checkout_data',
+            'payment_method_id'
+        ]);
+        
+        // Xóa tất cả flash messages
+        Session::forget(['success', 'error', 'info', 'warning']);
+        
+        Log::info('Cleared all payment-related session data and redirecting to home');
+        
+        return redirect()->route('client.home');
     }
 
     /**

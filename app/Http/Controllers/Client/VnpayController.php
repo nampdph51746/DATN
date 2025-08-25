@@ -126,6 +126,26 @@ class VnpayController extends Controller
                         );
                     }
                 }
+
+                // Tạo booking_items ngay khi tạo booking để đảm bảo data có sẵn kể cả khi thanh toán thất bại
+                $booking = Booking::find($bookingId);
+                if ($booking && !$booking->bookingItems()->exists()) {
+                    $items = is_string($bookingData['items'] ?? '')
+                        ? json_decode($bookingData['items'], true)
+                        : ($bookingData['items'] ?? []);
+                    
+                    if (is_array($items) && !empty($items)) {
+                        foreach ($items as $item) {
+                            BookingItem::create([
+                                'booking_id' => $booking->id,
+                                'product_variant_id' => $item['product_variant_id'],
+                                'quantity' => $item['quantity'],
+                                'price_at_purchase' => $item['price_at_purchase'],
+                            ]);
+                        }
+                        Log::info('Created booking items for pending booking: ' . $booking->id);
+                    }
+                }
             }
         } catch (\Exception $e) {
             Log::error('Error processing booking: ' . $e->getMessage());
@@ -416,7 +436,7 @@ class VnpayController extends Controller
                     }
                 }
 
-                                // Fallback cuối cùng: lấy từ tickets nếu có
+                // Fallback cuối cùng: lấy từ tickets nếu có
                 if (empty($selectedSeatInfos) && $existingBookingId) {
                     $existingBooking = Booking::with(['tickets.seat', 'tickets.showtime'])->find($existingBookingId);
                     if ($existingBooking && $existingBooking->tickets->isNotEmpty()) {
@@ -522,9 +542,10 @@ class VnpayController extends Controller
                     Log::info('Updated existing tickets and seat states for booking: ' . $booking->id);
                 }
 
-                // 6. Tạo bản ghi trong bảng booking_items (chỉ khi chưa có booking items)
+                // 6. Tạo bản ghi trong bảng booking_items (chỉ khi chưa có booking items) và cập nhật stock khi thanh toán thành công
                 $hasBookingItems = $booking->bookingItems()->exists();
                 if (!$hasBookingItems) {
+                    // Tạo booking items nếu chưa có (trường hợp fallback)
                     $items = is_string($bookingData['items'])
                         ? json_decode($bookingData['items'], true)
                         : ($bookingData['items'] ?? []);
@@ -536,14 +557,18 @@ class VnpayController extends Controller
                                 'quantity' => $item['quantity'],
                                 'price_at_purchase' => $item['price_at_purchase'],
                             ]);
-
-                            $variant = ProductVariant::find($item['product_variant_id']);
-                            if ($variant) {
-                                $variant->stock_quantity = max(0, $variant->stock_quantity - (int)$item['quantity']);
-                                $variant->save();
-                            }
                         }
                         Log::info('Created booking items for booking: ' . $booking->id);
+                    }
+                }
+
+                // Cập nhật stock quantity chỉ khi thanh toán thành công
+                foreach ($booking->bookingItems as $bookingItem) {
+                    $variant = ProductVariant::find($bookingItem->product_variant_id);
+                    if ($variant) {
+                        $variant->stock_quantity = max(0, $variant->stock_quantity - (int)$bookingItem->quantity);
+                        $variant->save();
+                        Log::info('Updated stock for product variant: ' . $variant->id);
                     }
                 }
 

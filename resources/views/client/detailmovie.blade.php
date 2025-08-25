@@ -641,7 +641,7 @@
 </div>
 
                 {{-- Nút đặt vé --}}
-                @if($movie->status->value === 'showing')
+                @if($movie->status === 'showing')
                 @auth
                     @if(isset($isUserBanned) && $isUserBanned)
                         <a href="#" class="btn btn-primary px-4 py-2 mt-4"

@@ -16,6 +16,7 @@ class BookingItem extends Model
         'quantity', 
         'price_at_purchase',
         'ticket_status',
+        'product_status',
         'used_at',
         'scanned_by'
     ];
@@ -23,6 +24,7 @@ class BookingItem extends Model
     protected $casts = [
         'price_at_purchase' => 'decimal:2',
         'ticket_status' => TicketStatus::class,
+        'product_status' => \App\Enums\ProductStatus::class,
         'used_at' => 'datetime',
     ];
 

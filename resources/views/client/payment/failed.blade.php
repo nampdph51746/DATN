@@ -30,18 +30,17 @@
         </div>
     @endif
 
-    @if(isset($movie) && isset($showtime) && isset($room))
     <div class="flex justify-center">
         <div class="w-full max-w-md bg-white rounded-2xl shadow-lg overflow-hidden border-l-4 border-red-500">
             <div class="h-4 bg-gradient-to-r from-red-100 via-white to-red-100" style="background: repeating-linear-gradient(90deg, #fef2f2, #fef2f2 8px, #fff 8px, #fff 16px);"></div>
             <div class="p-6">
                 <div class="text-center mb-4">
                     <p class="text-lg font-semibold text-pink-600">{{ $room->cinema->name ?? 'Rạp chiếu phim' }}</p>
-                    <p class="text-xl font-bold text-gray-800">{{ $movie->title ?? 'Tên phim' }}</p>
+                    <p class="text-xl font-bold text-gray-800">{{ $movie->name ?? 'Tên phim' }}</p>
                 </div>
                 <div class="flex justify-center mb-4">
-                    <img src="{{ $movie->image_path ? asset('storage/' . $movie->image_path) : asset('images/default-poster.jpg') }}" 
-                         alt="{{ $movie->title ?? 'Poster' }}" 
+                    <img src="{{ ($movie && $movie->image_path) ? asset('storage/' . $movie->image_path) : asset('images/default-poster.jpg') }}" 
+                         alt="{{ $movie->name ?? 'Poster' }}" 
                          class="w-32 rounded-lg shadow-md opacity-75">
                 </div>  
                 <div class="grid grid-cols-3 gap-4 text-center mb-4">
@@ -76,13 +75,12 @@
             <div class="h-4 bg-gradient-to-r from-red-100 via-white to-red-100" style="background: repeating-linear-gradient(90deg, #fef2f2, #fef2f2 8px, #fff 8px, #fff 16px);"></div>
             <div class="text-center py-4 bg-red-50">
                 <p class="text-sm text-red-600 font-medium">❌ Giao dịch không thành công</p>
-                @if(isset($bookingCode))
+                @if(isset($bookingCode) && $bookingCode)
                 <p class="text-sm text-gray-600">Mã đặt vé: <span class="font-semibold">{{ $bookingCode }}</span></p>
                 @endif
             </div>
         </div>
     </div>
-    @endif
     
     <div class="text-center mt-8 space-y-4">
         <div class="flex flex-col sm:flex-row gap-4 justify-center">
@@ -103,7 +101,7 @@
                 Quay lại
             </a>
             @endif
-            <a href="{{ route('client.home') }}" 
+            <a href="{{ route('client.failed.clear-home') }}" 
                class="inline-block bg-gray-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-gray-700 transition-colors">
                 Về trang chủ
             </a>

@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Booking;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Log;
 class PaymentSuccessController extends Controller
 {
     public function show(Request $request)
@@ -31,5 +33,31 @@ class PaymentSuccessController extends Controller
         $bookingCode = $booking->booking_code;
 
         return view('client.payment.success', compact('movie', 'room', 'showtime', 'ticketRow', 'ticketSeat', 'totalPrice', 'bookingCode'));
+    }
+
+    /**
+     * Clear all payment-related session data and redirect to home
+     */
+    public function clearAndGoHome()
+    {
+        // Xóa tất cả session data liên quan đến payment và booking
+        Session::forget([
+            'failed_booking_id',
+            'booking_info', 
+            'payment_error',
+            'booking_preview',
+            'selected_seats_info',
+            'is_checkout',
+            'is_processing_payment',
+            'checkout_data',
+            'payment_method_id'
+        ]);
+        
+        // Xóa tất cả flash messages
+        Session::forget(['success', 'error', 'info', 'warning']);
+        
+        Log::info('Cleared all payment-related session data and redirecting to home from success page');
+        
+        return redirect()->route('client.home');
     }
 }

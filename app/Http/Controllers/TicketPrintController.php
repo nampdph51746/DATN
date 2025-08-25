@@ -3,14 +3,86 @@
 namespace App\Http\Controllers;
 
 use App\Models\Ticket;
-
 use App\Models\Booking;
 use App\Services\QrcodeService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Services\TicketPrintService;
+use App\Models\BookingItem;
 
 class TicketPrintController extends Controller
 {
+    // Hiển thị QR cho từng vé
+    public function showTicketQr($ticket_id)
+    {
+        $ticket = Ticket::findOrFail($ticket_id);
+        $qrService = app(QrcodeService::class);
+        $qrRaw = $qrService->generateQrCode($ticket->ticket_code, 240);
+        $qrCodeBase64 = $qrRaw ? 'data:image/png;base64,' . $qrRaw : null;
+        return view('admin.tickets.qr', [
+            'ticket' => $ticket,
+            'qrCodeBase64' => $qrCodeBase64
+        ]);
+    }
+
+    // Hiển thị QR cho từng sản phẩm
+    public function showFoodQr($item_id)
+    {
+        $item = BookingItem::findOrFail($item_id);
+        $qrService = app(QrcodeService::class);
+        // Chỉ sử dụng ID của booking item để tạo QR, không phải JSON
+        $qrRaw = $qrService->generateQrCode((string)$item->id, 240);
+        $qrCodeBase64 = $qrRaw ? 'data:image/png;base64,' . $qrRaw : null;
+        return view('admin.foods.qr', [
+            'item' => $item,
+            'qrCodeBase64' => $qrCodeBase64
+        ]);
+    }
+    // API in vé: chỉ trả về mã QR, không thay đổi trạng thái
+    public function printTicketApi($ticketId)
+    {
+        $ticket = Ticket::findOrFail($ticketId);
+        
+        // Kiểm tra trạng thái vé
+        if ($ticket->status === 'cancelled') {
+            return response()->json(['success' => false, 'message' => 'Vé đã bị huỷ!']);
+        }
+        
+        if ($ticket->status === 'valid') {
+            return response()->json(['success' => false, 'message' => 'Vé chưa được kiểm tra!']);
+        }
+        
+        $qrService = app(QrcodeService::class);
+        $qrRaw = $qrService->generateQrCode($ticket->ticket_code, 180);
+        return response()->json([
+            'success' => true,
+            'qr' => $qrRaw,
+            'message' => 'Tạo QR vé thành công!'
+        ]);
+    }
+
+    // API in đồ ăn: chỉ trả về mã QR, không thay đổi trạng thái
+    public function printFoodApi($itemId)
+    {
+        $item = BookingItem::findOrFail($itemId);
+        
+        // Kiểm tra trạng thái
+        if ($item->product_status === 'cancelled') {
+            return response()->json(['success' => false, 'message' => 'Đồ ăn đã bị huỷ!']);
+        }
+        
+        if ($item->product_status === 'valid') {
+            return response()->json(['success' => false, 'message' => 'Đồ ăn chưa được kiểm tra!']);
+        }
+        
+        $qrService = app(QrcodeService::class);
+        // Chỉ sử dụng ID của booking item để tạo QR
+        $qrRaw = $qrService->generateQrCode((string)$item->id, 180);
+        return response()->json([
+            'success' => true,
+            'qr' => $qrRaw,
+            'message' => 'Tạo QR đồ ăn thành công!'
+        ]);
+    }
     // In vé riêng theo ticket_code
     public function printTicket($ticket_code)
     {
@@ -50,6 +122,20 @@ class TicketPrintController extends Controller
 
         $bookingItems = $booking->bookingItems;
 
+        // Cập nhật trạng thái của tất cả các đồ ăn sang checked
+        foreach ($bookingItems as $item) {
+            // Kiểm tra cả giá trị enum và string
+            $currentStatus = is_object($item->product_status) ? $item->product_status->value : $item->product_status;
+            if ($currentStatus === 'valid') {
+                $item->product_status = 'checked';
+                $item->checked_at = now();
+                $item->save();
+            }
+        }
+        
+        // Refresh để lấy dữ liệu mới nhất
+        $bookingItems = $booking->bookingItems()->get();
+
         // Sinh QR code cho booking items
         $qrCodeBase64 = null;
         if ($booking && $bookingItems->count() > 0) {
@@ -70,6 +156,37 @@ class TicketPrintController extends Controller
         return $pdf->download('do-an-do-uong-' . $booking_code . '.pdf');
     }
 
+    // Tải PDF cho vé
+    public function printTicketPdf($ticket_id)
+    {
+        $ticket = Ticket::findOrFail($ticket_id);
+        $qrService = app(QrcodeService::class);
+        $qrRaw = $qrService->generateQrCode($ticket->ticket_code, 180);
+        $qrCodeBase64 = $qrRaw ? 'data:image/png;base64,' . $qrRaw : null;
+        $pdf = Pdf::loadView('admin.tickets.print', [
+            'ticket' => $ticket,
+            'qrCodeBase64' => $qrCodeBase64
+        ]);
+        return $pdf->download('ve-' . $ticket->ticket_code . '.pdf');
+    }
+
+    // Tải PDF cho sản phẩm
+    public function printFoodPdf($item_id)
+    {
+        $item = BookingItem::findOrFail($item_id);
+        $qrService = app(QrcodeService::class);
+        // Chỉ sử dụng ID của booking item để tạo QR
+        $qrRaw = $qrService->generateQrCode((string)$item->id, 180);
+        $qrCodeBase64 = $qrRaw ? 'data:image/png;base64,' . $qrRaw : null;
+        $pdf = Pdf::loadView('admin.foods.print', [
+            'item' => $item,
+            'qrCodeBase64' => $qrCodeBase64
+        ]);
+        return $pdf->download('san-pham-' . $item->id . '.pdf');
+    }
+
+
+
     /**
      * Validate thời gian in vé
      * Vé chỉ được in trước suất chiếu 1 tiếng và không được in sau khi suất chiếu đã bắt đầu
@@ -79,12 +196,12 @@ class TicketPrintController extends Controller
         $showtime = $ticket->showtime;
         $currentTime = now();
         $showtimeStart = $showtime->start_time;
-        
+
         // Kiểm tra nếu suất chiếu đã bắt đầu
         if ($currentTime >= $showtimeStart) {
             abort(403, 'Không thể in vé sau khi suất chiếu đã bắt đầu. Suất chiếu: ' . $showtimeStart->format('d/m/Y H:i'));
         }
-        
+
         // Kiểm tra nếu còn ít hơn 1 tiếng trước suất chiếu
         $oneHourBeforeShowtime = $showtimeStart->copy()->subHour();
         if ($currentTime > $oneHourBeforeShowtime) {
@@ -92,4 +209,3 @@ class TicketPrintController extends Controller
         }
     }
 }
-?>

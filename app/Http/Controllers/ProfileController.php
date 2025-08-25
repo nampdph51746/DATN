@@ -129,7 +129,7 @@ class ProfileController extends Controller
         $user = Auth::user();
 
         // Lấy thông tin rank qua quan hệ
-        $rank = \DB::table('customer_ranks')
+        $rank = DB::table('customer_ranks')
             ->where('id', $user->customer_rank_id)
             ->value('name');
         $totalSpent = Booking::where('user_id', $user->id)
@@ -221,9 +221,12 @@ public function detail($id)
 
             $booking = Booking::with([
             'tickets.showtime.movie',
-            'tickets.showtime.room',
+            'tickets.showtime.room.cinema',
             'tickets.seat.seatType',
-            'bookingItems.productVariant.product'
+            'bookingItems.productVariant.product',
+            'bookingItems.productVariant.productVariantOptions.attributeValue.attribute',
+            'user',
+            'paymentMethod'
         ])
         ->where('user_id', $user->id)
         ->findOrFail($id);
@@ -236,10 +239,10 @@ public function membership()
     $user = Auth::user();
 
     // Lấy danh sách hạng theo số điểm tối thiểu tăng dần
-    $ranks = \App\Models\CustomerRank::orderBy('min_points_required', 'asc')->get();
+    $ranks = CustomerRank::orderBy('min_points_required', 'asc')->get();
 
     // Lấy số điểm hiện tại (nếu không có thì mặc định là 0)
-    $currentPoints = \App\Models\Point::where('user_id', $user->id)->value('total_points') ?? 0;
+    $currentPoints = Point::where('user_id', $user->id)->value('total_points') ?? 0;
 
     // Lấy hạng hiện tại từ quan hệ
     $currentRank = $user->customerRank ?? null;
@@ -275,7 +278,7 @@ public function voucher()
 {
     $user = Auth::user();
 
-    $vouchers = \App\Models\Promotion::where('status', 'active')
+    $vouchers = Promotion::where('status', 'active')
         ->where(function ($query) {
             $now = now();
             $query->where(function ($q) use ($now) {
@@ -293,7 +296,4 @@ public function voucher()
 
     return view('client.profile.voucher', compact('vouchers', 'user'));
 }
-
-
-
 }

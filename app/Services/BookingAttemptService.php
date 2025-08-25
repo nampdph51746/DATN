@@ -19,6 +19,8 @@ class BookingAttemptService
      */
     public function createAttempt(int $userId, int $showtimeId, array $seatIds): BookingAttempt
     {
+        Log::info("createAttempt called for user {$userId}, showtime {$showtimeId}, seats: " . json_encode($seatIds));
+        
         // Kiểm tra xem có attempt đang active cho cùng user và showtime không
         $existingAttempt = BookingAttempt::where('user_id', $userId)
             ->where('showtime_id', $showtimeId)
@@ -33,11 +35,14 @@ class BookingAttemptService
                 'expired_at' => now()->addMinutes(self::ATTEMPT_TIMEOUT_MINUTES),
             ]);
             
-            Log::info("Đã cập nhật booking attempt hiện tại {$existingAttempt->id} cho user {$userId} với ghế mới");
+            Log::info("Đã cập nhật booking attempt hiện tại {$existingAttempt->id} cho user {$userId} với ghế mới từ " . json_encode($existingAttempt->getOriginal('seat_ids')) . " thành " . json_encode($seatIds));
             return $existingAttempt;
         }
 
+        Log::info("Không tìm thấy existing attempt cho user {$userId}, showtime {$showtimeId} - tạo attempt mới");
+        
         // Hủy các attempt đang active của user cho cùng showtime (từ sessions khác)
+        $this->cancelActiveAttempts($userId, $showtimeId, false); // false = không check ban
         $this->cancelActiveAttempts($userId, $showtimeId, false); // false = không check ban
 
         $attempt = BookingAttempt::create([

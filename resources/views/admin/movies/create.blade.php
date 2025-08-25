@@ -57,7 +57,7 @@
                                         <i class="bx bx-user-voice me-2 text-primary"></i>Đạo diễn 
                                         <span class="text-danger">*</span>
                                     </label>
-                                    <select name="director_id" id="director_id" class="form-select @error('director_id') is-invalid @enderror" required>
+                                    <select name="director_id[]" id="director_id" class="form-select @error('director_id') is-invalid @enderror" multiple required>
                                         <option value="">🎬 Chọn đạo diễn</option>
                                         @foreach ($directors as $director)
                                             <option value="{{ $director->id }}" {{ old('director_id') == $director->id ? 'selected' : '' }}>
@@ -108,7 +108,7 @@
                         <div class="row">
                             <div class="col-lg-6">
                                 <div class="mb-3">
-                                    <label for="release_date" class="form-label">Ngày phát hành <span class="text-danger">*</span></label>
+                                    <label for="release_date" class="form-label">Ngày bắt đầu <span class="text-danger">*</span></label>
                                     <input type="date" name="release_date" id="release_date" class="form-control @error('release_date') is-invalid @enderror" value="{{ old('release_date', now()->format('Y-m-d')) }}" required>
                                     @error('release_date')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -165,7 +165,7 @@
                                     @enderror
                                 </div>
                             </div>
-                            <div class="col-lg-6">
+                            {{-- <div class="col-lg-6">
                                 <div class="mb-3">
                                     <label for="status" class="form-label">Trạng thái <span class="text-danger">*</span></label>
                                     <select name="status" id="status" class="form-control @error('status') is-invalid @enderror" required>
@@ -178,7 +178,7 @@
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
-                            </div>
+                            </div> --}}
                         </div>
                         <!-- <div class="row">
                             <div class="col-lg-6">
@@ -559,12 +559,7 @@ $(document).ready(function() {
             isValid = false;
         }
 
-        // Validate trạng thái
-        const status = $('#status').val();
-        if (!status) {
-            showFieldError('#status', 'Vui lòng chọn trạng thái phim');
-            isValid = false;
-        }
+
 
         // Validate thể loại
         const genreIds = $('#genre_ids').val();

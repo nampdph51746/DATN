@@ -160,8 +160,7 @@
                                     <th style="width: 80px;">Thời lượng</th>
                                     <th style="width: 120px;">Ngày chiếu</th>
                                     <th style="width: 100px;">Trạng thái</th>
-                                    <th style="width: 80px;">Đánh giá</th>
-                                    <th class="text-center" style="width: 120px;">Hành động</th>
+                                    <th style="width: 120px;">Hành động</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -240,7 +239,11 @@
                                                 @endif
                                             </div>
                                         </td>
-                                        <td>{{ $movie->director?->name ?? 'N/A' }}</td>
+                                        <td> @forelse($movie->directors as $director)
+                                                {{ $director->name }}{{ !$loop->last ? ', ' : '' }}
+                                            @empty
+                                                N/A
+                                            @endforelse</td>
                                         <td>
                                             @if($movie->genres->isNotEmpty())
                                                 <div class="d-flex flex-wrap gap-1">
@@ -292,26 +295,6 @@
                                                     <i class="bi bi-clock-history ms-1" title="Tự động cập nhật do đã quá ngày kết thúc"></i>
                                                 @endif
                                             </span>
-                                        </td>
-                                        <td>
-                                            @if($movie->average_rating)
-                                                <div class="d-flex align-items-center">
-                                                    <span class="fw-medium text-warning">{{ number_format($movie->average_rating, 1) }}</span>
-                                                    <i class="bi bi-star-fill text-warning ms-1" style="font-size: 0.8rem;"></i>
-                                                    @if($movie->reviews_count > 0)
-                                                        <small class="text-muted ms-1">({{ $movie->reviews_count }})</small>
-                                                    @endif
-                                                </div>
-                                                @if($movie->average_rating >= 4.5)
-                                                    <small class="badge bg-warning-subtle text-warning mt-1" style="font-size: 0.6rem;">Xuất sắc</small>
-                                                @elseif($movie->average_rating >= 4.0)
-                                                    <small class="badge bg-success-subtle text-success mt-1" style="font-size: 0.6rem;">Rất tốt</small>
-                                                @elseif($movie->average_rating >= 3.0)
-                                                    <small class="badge bg-info-subtle text-info mt-1" style="font-size: 0.6rem;">Tốt</small>
-                                                @endif
-                                            @else
-                                                <span class="text-muted">Chưa có</span>
-                                            @endif
                                         </td>
                                         <td>
                                             <div class="d-flex gap-2">
