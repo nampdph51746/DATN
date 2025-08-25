@@ -62,7 +62,7 @@ class AdminAttributeValueController extends Controller
             'updated_at' => now(),
         ]);
 
-        return redirect()->route('admin.attribute-values.index')->with('success', 'Giá trị thuộc tính đã được tạo thành công.');
+        return redirect()->route('admin.attributes.show', $request->attribute_id)->with('success', 'Giá trị thuộc tính đã được tạo thành công.');
     }
 
     public function show($id)
@@ -99,6 +99,6 @@ class AdminAttributeValueController extends Controller
             'updated_at' => now(),
         ]);
 
-        return redirect()->route('admin.attribute-values.index')->with('success', 'Giá trị thuộc tính đã được cập nhật thành công.');
+        return redirect()->route('admin.attributes.show', $request->attribute_id)->with('success', 'Giá trị thuộc tính đã được cập nhật thành công.');
     }
 }

@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use App\Models\Booking;
 use App\Models\Promotion;
+use App\Models\ProductVariant;
+use App\Models\Combo;
 
 class CheckoutController extends Controller
 {
@@ -55,6 +57,33 @@ class CheckoutController extends Controller
             $promotion = Promotion::find($promotionId);
             if (!$promotion || $promotion->status !== 'active' || $promotion->quantity <= 0) {
                 return redirect()->back()->with('error', 'Mã giảm giá không hợp lệ hoặc đã hết lượt sử dụng.');
+            }
+        }
+        
+        // Validate stock cho items (bao gồm combo)
+        $items = is_string($request->input('items'))
+            ? (json_decode($request->input('items', '[]'), true) ?? [])
+            : ($request->input('items') ?? []);
+            
+        if (!empty($items)) {
+            foreach ($items as $item) {
+                $variant = ProductVariant::find($item['product_variant_id']);
+                if (!$variant) {
+                    return redirect()->back()->with('error', 'Sản phẩm không tồn tại.');
+                }
+                
+                // Kiểm tra stock cho variant (sản phẩm thường)
+                if ($variant->stock_quantity < $item['quantity']) {
+                    return redirect()->back()->with('error', "Sản phẩm {$variant->product->name} chỉ còn {$variant->stock_quantity} trong kho.");
+                }
+                
+                // Kiểm tra stock combo nếu có combo_id
+                if (isset($item['combo_id']) && $item['combo_id']) {
+                    $combo = Combo::find($item['combo_id']);
+                    if ($combo && $combo->stock_quantity < $item['quantity']) {
+                        return redirect()->back()->with('error', "Combo {$combo->name} chỉ còn {$combo->stock_quantity} trong kho.");
+                    }
+                }
             }
         }
         

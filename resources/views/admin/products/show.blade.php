@@ -104,6 +104,20 @@
                                 </p>
                             </div>
                         </div>
+                        <div class="row align-items-center g-2 mt-3">
+                            <div class="col-lg-6">
+                                <p class="mb-0 fw-medium text-dark fs-16">
+                                    <iconify-icon icon="solar:money-broken" class="align-middle fs-16 me-1"></iconify-icon>
+                                    Giá gốc: <span class="text-muted">{{ number_format($product->base_price, 0, ',', '.') }}₫</span>
+                                </p>
+                            </div>
+                            <div class="col-lg-6">
+                                <p class="mb-0 fw-medium text-dark fs-16">
+                                    <iconify-icon icon="solar:box-broken" class="align-middle fs-16 me-1"></iconify-icon>
+                                    Khối lượng: <span class="text-muted">{{ $product->weight }} kg</span>
+                                </p>
+                            </div>
+                        </div>
                         <div class="mt-3">
                             <p class="mb-0 fw-medium text-dark fs-16">
                                 <iconify-icon icon="solar:text-bold-broken" class="align-middle fs-16 me-1"></iconify-icon>
@@ -117,7 +131,7 @@
                                 <iconify-icon icon="solar:list-broken" class="align-middle fs-18 me-1"></iconify-icon>
                                 Danh sách biến thể sản phẩm
                             </h4>
-                            <a href="{{ route('admin.product-variants.create', ['product_id' => $product->id]) }}" class="btn btn-sm btn-primary">
+                            <a href="{{ route('admin.product-variants.create', ['product_id' => $product->id, 'from_product_show' => 1]) }}" class="btn btn-sm btn-primary">
                                 <iconify-icon icon="solar:add-circle-broken" class="align-middle fs-18 me-1"></iconify-icon>
                                 Thêm biến thể
                             </a>
@@ -129,6 +143,8 @@
                                     <tr>
                                         <th>#</th>
                                         <th>SKU</th>
+                                        <th>Giá biến thể</th>
+                                        <th>Tồn kho</th>
                                         <th>Thời gian tạo</th>
                                         <th>Thời gian cập nhật</th>
                                         <th>Trạng thái</th>
@@ -140,6 +156,29 @@
                                         <tr>
                                             <td>{{ $key + 1 }}</td>
                                             <td>{{ $variant->sku }}</td>
+                                            <td>
+                                                <span class="fw-bold text-success">{{ number_format($variant->price, 0, ',', '.') }}₫</span>
+                                                @if($variant->price != $product->base_price)
+                                                    <br>
+                                                    <small class="text-muted">
+                                                        Base: {{ number_format($product->base_price, 0, ',', '.') }}₫
+                                                        @php
+                                                            $modifier = round($variant->price / $product->base_price, 2);
+                                                            $percentage = round(($modifier - 1) * 100);
+                                                        @endphp
+                                                        ({{ $modifier }}x
+                                                        @if($percentage != 0)
+                                                            {{ $percentage > 0 ? '+' : '' }}{{ $percentage }}%
+                                                        @endif
+                                                        )
+                                                    </small>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                <span class="badge {{ $variant->stock_quantity > 0 ? 'bg-success' : 'bg-danger' }}">
+                                                    {{ $variant->stock_quantity }}
+                                                </span>
+                                            </td>
                                             <td>{{ $variant->created_at ? $variant->created_at->format('d/m/Y H:i') : 'Không xác định' }}</td>
                                             <td>{{ $variant->updated_at ? $variant->updated_at->format('d/m/Y H:i') : 'Không xác định' }}</td>
                                             <td>
@@ -158,7 +197,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="6" class="text-center text-muted">Không có biến thể sản phẩm nào.</td>
+                                            <td colspan="8" class="text-center text-muted">Không có biến thể sản phẩm nào.</td>
                                         </tr>
                                     @endforelse
                                 </tbody>

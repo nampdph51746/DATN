@@ -11,20 +11,20 @@
                     <div class="text-center">
                         <iconify-icon icon="solar:tag-broken" class="fs-64 text-primary"></iconify-icon>
                         <div class="mt-3">
-                            <h4>Thuộc tính #{{ $attribute->id }}</h4>
-                            <p class="text-muted">Thông tin chi tiết về thuộc tính <strong>{{ $attribute->name }}</strong>.</p>
+                            <h4>Danh mục #{{ $category->id }}</h4>
+                            <p class="text-muted">Thông tin chi tiết về danh mục <strong>{{ $category->name }}</strong>.</p>
                         </div>
                     </div>
                 </div>
                 <div class="card-footer border-top">
                     <div class="row g-2">
                         <div class="col-lg-6">
-                            <a href="{{ route('admin.attributes.edit', $attribute->id) }}" class="btn btn-primary d-flex align-items-center justify-content-center gap-2 w-100">
+                            <a href="{{ route('admin.product-categories.edit', $category->id) }}" class="btn btn-primary d-flex align-items-center justify-content-center gap-2 w-100">
                                 <iconify-icon icon="solar:pen-2-broken" class="fs-18"></iconify-icon> Sửa
                             </a>
                         </div>
                         <div class="col-lg-6">
-                            <a href="{{ route('admin.attributes.index') }}" class="btn btn-outline-secondary d-flex align-items-center justify-content-center gap-2 w-100">
+                            <a href="{{ route('admin.product-categories.index') }}" class="btn btn-outline-secondary d-flex align-items-center justify-content-center gap-2 w-100">
                                 <iconify-icon icon="solar:arrow-left-broken" class="fs-18"></iconify-icon> Quay lại
                             </a>
                         </div>
@@ -35,21 +35,21 @@
         <div class="col-lg-8">
             <div class="card">
                 <div class="card-body">
-                    <h4 class="badge bg-info text-light fs-14 py-1 px-2">Chi tiết thuộc tính</h4>
+                    <h4 class="badge bg-info text-light fs-14 py-1 px-2">Chi tiết danh mục sản phẩm</h4>
                     <p class="mb-1">
-                        <span class="fs-24 text-dark fw-medium">{{ $attribute->name }}</span>
+                        <span class="fs-24 text-dark fw-medium">{{ $category->name }}</span>
                     </p>
                     <div class="row align-items-center g-2 mt-3">
                         <div class="col-lg-6">
                             <p class="mb-0 fw-medium text-dark fs-16">
                                 <iconify-icon icon="solar:hashtag-broken" class="align-middle fs-16 me-1"></iconify-icon>
-                                ID: <span class="text-muted">{{ $attribute->id }}</span>
+                                ID: <span class="text-muted">{{ $category->id }}</span>
                             </p>
                         </div>
                         <div class="col-lg-6">
                             <p class="mb-0 fw-medium text-dark fs-16">
                                 <iconify-icon icon="solar:text-field-broken" class="align-middle fs-16 me-1"></iconify-icon>
-                                Tên thuộc tính: <span class="text-muted">{{ $attribute->name }}</span>
+                                Tên danh mục: <span class="text-muted">{{ $category->name }}</span>
                             </p>
                         </div>
                     </div>
@@ -57,25 +57,31 @@
                         <div class="col-lg-6">
                             <p class="mb-0 fw-medium text-dark fs-16">
                                 <iconify-icon icon="solar:calendar-add-broken" class="align-middle fs-16 me-1"></iconify-icon>
-                                Thời gian tạo: <span class="text-muted">{{ $attribute->created_at ? $attribute->created_at->format('d/m/Y H:i') : 'Không xác định' }}</span>
+                                Thời gian tạo: <span class="text-muted">{{ $category->created_at ? $category->created_at->format('d/m/Y H:i') : 'Không xác định' }}</span>
                             </p>
                         </div>
                         <div class="col-lg-6">
                             <p class="mb-0 fw-medium text-dark fs-16">
                                 <iconify-icon icon="solar:calendar-mark-broken" class="align-middle fs-16 me-1"></iconify-icon>
-                                Thời gian cập nhật: <span class="text-muted">{{ $attribute->updated_at ? $attribute->updated_at->format('d/m/Y H:i') : 'Không xác định' }}</span>
+                                Thời gian cập nhật: <span class="text-muted">{{ $category->updated_at ? $category->updated_at->format('d/m/Y H:i') : 'Không xác định' }}</span>
                             </p>
                         </div>
                     </div>
-
+                    <div class="mt-3">
+                        <p class="mb-0 fw-medium text-dark fs-16">
+                            <iconify-icon icon="solar:text-bold-broken" class="align-middle fs-16 me-1"></iconify-icon>
+                            Mô tả:
+                        </p>
+                        <p class="text-muted mt-2">{{ $category->description ?: 'Không có mô tả' }}</p>
+                    </div>
                     <h4 class="text-dark fw-medium mt-4 d-flex justify-content-between align-items-center">
                         <span>
                             <iconify-icon icon="solar:list-broken" class="align-middle fs-18 me-1"></iconify-icon>
-                            Danh sách giá trị thuộc tính
+                            Danh sách sản phẩm thuộc danh mục này
                         </span>
-                        <a href="{{ route('admin.attribute-values.create', ['attribute_id' => $attribute->id]) }}" class="btn btn-sm btn-primary">
+                        <a href="{{ route('admin.products.create', ['category_id' => $category->id, 'from_category_show' => 1]) }}" class="btn btn-sm btn-primary">
                             <iconify-icon icon="solar:add-circle-broken" class="align-middle fs-18 me-1"></iconify-icon>
-                            Thêm giá trị thuộc tính
+                            Thêm sản phẩm
                         </a>
                     </h4>
                     <div class="table-responsive">
@@ -88,49 +94,58 @@
                                     </th>
                                     <th>
                                         <iconify-icon icon="solar:text-field-broken" class="align-middle fs-16 me-1"></iconify-icon>
-                                        Giá trị
+                                        Tên sản phẩm
                                     </th>
                                     <th>
-                                        <iconify-icon icon="solar:percentage-broken" class="align-middle fs-16 me-1"></iconify-icon>
-                                        Price Modifier
+                                        <iconify-icon icon="solar:barcode-broken" class="align-middle fs-16 me-1"></iconify-icon>
+                                        SKU
+                                    </th>
+                                    <th>
+                                        <iconify-icon icon="solar:money-broken" class="align-middle fs-16 me-1"></iconify-icon>
+                                        Giá gốc
                                     </th>
                                     <th>
                                         <iconify-icon icon="solar:calendar-add-broken" class="align-middle fs-16 me-1"></iconify-icon>
                                         Thời gian tạo
                                     </th>
                                     <th>
-                                        <iconify-icon icon="solar:calendar-mark-broken" class="align-middle fs-16 me-1"></iconify-icon>
-                                        Thời gian cập nhật
+                                        <iconify-icon icon="solar:settings-broken" class="align-middle fs-16 me-1"></iconify-icon>
+                                        Hành động
                                     </th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($attribute->attributeValues as $key => $attributeValue)
+                                @php
+                                    $products = \App\Models\Product::where('category_id', $category->id)->get();
+                                @endphp
+                                @forelse($products as $key => $product)
                                 <tr>
                                     <td>{{ $key + 1 }}</td>
-                                    <td>{{ $attributeValue->value }}</td>
+                                    <td>{{ $product->name }}</td>
+                                    <td>{{ $product->sku }}</td>
+                                    <td>{{ number_format($product->base_price, 0, ',', '.') }}₫</td>
+                                    <td>{{ $product->created_at ? $product->created_at->format('d/m/Y H:i') : 'Không xác định' }}</td>
                                     <td>
-                                        <span class="badge {{ $attributeValue->price_modifier == 1 ? 'bg-secondary' : 'bg-success' }}">
-                                            {{ $attributeValue->price_modifier }}x
-                                            @if($attributeValue->price_modifier != 1)
-                                                ({{ ($attributeValue->price_modifier - 1) * 100 > 0 ? '+' : '' }}{{ round(($attributeValue->price_modifier - 1) * 100) }}%)
-                                            @endif
-                                        </span>
+                                        <a href="{{ route('admin.products.show', $product->id) }}" class="btn btn-sm btn-primary">
+                                            <iconify-icon icon="solar:eye-broken" class="fs-16"></iconify-icon> Xem
+                                        </a>
+                                        <a href="{{ route('admin.products.edit', $product->id) }}" class="btn btn-sm btn-warning">
+                                            <iconify-icon icon="solar:pen-2-broken" class="fs-16"></iconify-icon> Sửa
+                                        </a>
                                     </td>
-                                    <td>{{ $attributeValue->created_at ? $attributeValue->created_at->format('d/m/Y H:i') : 'Không xác định' }}</td>
-                                    <td>{{ $attributeValue->updated_at ? $attributeValue->updated_at->format('d/m/Y H:i') : 'Không xác định' }}</td>
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="5" class="text-center text-muted">Không có giá trị thuộc tính nào.</td>
+                                    <td colspan="6" class="text-center text-muted">Không có sản phẩm nào thuộc danh mục này.</td>
                                 </tr>
                                 @endforelse
                             </tbody>
                         </table>
                     </div>
-
                     <h4 class="text-dark fw-medium mt-4">Ghi chú:</h4>
-                    <p class="text-muted">Thuộc tính <strong>{{ $attribute->name }}</strong> được sử dụng để định nghĩa các đặc tính của sản phẩm trong hệ thống. Hiện có <strong>{{ $attribute->attributeValues->count() }}</strong> giá trị thuộc tính liên quan.</p>
+                    <p class="text-muted">
+                        Danh mục <strong>{{ $category->name }}</strong> dùng để phân loại sản phẩm trong hệ thống.
+                    </p>
                 </div>
             </div>
         </div>

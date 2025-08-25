@@ -4,11 +4,11 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Payment;
-use App\Models\Showtime;
+use App\Models\Showtime; 
 use App\Models\Ticket;
 use App\Models\Booking;
 use App\Models\Movie;
-use App\Models\Review;
+use App\Models\Comment;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -102,7 +102,6 @@ class DashboardController extends Controller
             $ended = Movie::where('status', 'ended')->whereDate('created_at', $today)->count();
 
             $averageDuration = Movie::whereDate('created_at', $today)->avg('duration_minutes');
-            $averageRating = Movie::whereDate('created_at', $today)->avg('average_rating');
 
             $moviesByStatus = [
                 'showing' => $nowShowing,
@@ -191,9 +190,6 @@ class DashboardController extends Controller
             $averageDuration = Movie::whereYear('created_at', $year)
                 ->whereMonth('created_at', $month)
                 ->avg('duration_minutes');
-            $averageRating = Movie::whereYear('created_at', $year)
-                ->whereMonth('created_at', $month)
-                ->avg('average_rating');
             $moviesByStatus = [
                 'showing' => $nowShowing,
                 'upcoming' => $upcoming,
@@ -272,7 +268,6 @@ class DashboardController extends Controller
             $upcoming = Movie::where('status', 'upcoming')->whereYear('created_at', $year)->count();
             $ended = Movie::where('status', 'ended')->whereYear('created_at', $year)->count();
             $averageDuration = Movie::whereYear('created_at', $year)->avg('duration_minutes');
-            $averageRating = Movie::whereYear('created_at', $year)->avg('average_rating');
 
             $moviesByStatus = [
                 'showing' => $nowShowing,
@@ -318,27 +313,19 @@ class DashboardController extends Controller
         $selectedYear = $request->get('year', Carbon::now()->year);
         $yearlyAmount = Payment::whereYear('paid_at', $selectedYear)->sum('amount');
 
-        // ===== THỐNG KÊ ĐÁNH GIÁ =====
+        // ===== THỐNG KÊ BÌNH LUẬN =====
         
-        // Thống kê tổng quan đánh giá
-        $totalReviews = Review::count();
-        $approvedReviews = Review::where('status', 'approved')->count();
-        $pendingReviews = Review::where('status', 'pending')->count();
-        $rejectedReviews = Review::where('status', 'rejected')->count();
+        // Thống kê tổng quan bình luận
+        $totalReviews = Comment::count();
+        $approvedReviews = Comment::where('status', 'approved')->count();
+        $pendingReviews = Comment::where('status', 'pending')->count();
+        $rejectedReviews = Comment::where('status', 'rejected')->count();
         
-        // Phân bố rating
-        $ratingDistribution = Review::select('rating_star', DB::raw('COUNT(*) as count'))
-            ->where('status', 'approved')
-            ->groupBy('rating_star')
-            ->orderBy('rating_star')
-            ->get();
-            
-        // Thống kê đánh giá theo tháng (12 tháng gần nhất)
-        $reviewMonthlyStats = Review::select(
+        // Thống kê bình luận theo tháng (12 tháng gần nhất)
+        $reviewMonthlyStats = Comment::select(
             DB::raw('MONTH(created_at) as month'),
             DB::raw('YEAR(created_at) as year'),
-            DB::raw('COUNT(*) as total'),
-            DB::raw('AVG(rating_star) as avg_rating')
+            DB::raw('COUNT(*) as total')
         )
         ->where('status', 'approved')
         ->where('created_at', '>=', now()->subYear())
@@ -347,20 +334,13 @@ class DashboardController extends Controller
         ->orderBy('month', 'asc')
         ->get();
         
-        // Top 5 phim có nhiều đánh giá nhất
+        // Top 5 phim có nhiều bình luận nhất
         $topReviewedMovies = Movie::select('movies.*')
-            ->withCount(['reviews' => function ($query) {
+            ->withCount(['comments' => function ($query) {
                 $query->where('status', 'approved');
             }])
-            ->having('reviews_count', '>', 0)
-            ->orderBy('reviews_count', 'desc')
-            ->take(5)
-            ->get();
-            
-        // Top 5 phim có rating cao nhất
-        $topRatedMovies = Movie::select('movies.*')
-            ->where('average_rating', '>', 0)
-            ->orderBy('average_rating', 'desc')
+            ->having('comments_count', '>', 0)
+            ->orderBy('comments_count', 'desc')
             ->take(5)
             ->get();
 
@@ -386,20 +366,17 @@ class DashboardController extends Controller
             'upcoming',
             'ended',
             'averageDuration',
-            'averageRating',
             'moviesByStatus',
             'hotMovies',
             'movieStats',
             'yearlyAmount',
-            // Review statistics
+            // Comment statistics
             'totalReviews',
             'approvedReviews',
             'pendingReviews', 
             'rejectedReviews',
-            'ratingDistribution',
             'reviewMonthlyStats',
-            'topReviewedMovies',
-            'topRatedMovies'
+            'topReviewedMovies'
         ));
     }
 }

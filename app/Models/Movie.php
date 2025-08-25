@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use Carbon\Carbon;
+use App\Enums\MovieStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -20,39 +20,20 @@ class Movie extends Model
         'release_date' => 'date',
         'end_date' => 'date',
         'average_rating' => 'decimal:1',
+        'status' => MovieStatus::class
     ];
 
-     protected $appends = ['status'];
 
          /**
      * Accessor status động theo ngày thực tế
      */
-     public function getStatusAttribute($value)
-    {
-        $today = Carbon::today();
-
-        if ($this->release_date && $this->end_date) {
-            if ($today->lt(Carbon::parse($this->release_date))) {
-                return 'upcoming';
-            } elseif ($today->between(
-                Carbon::parse($this->release_date),
-                Carbon::parse($this->end_date)
-            )) {
-                return 'showing';
-            } else {
-                return 'ended';
-            }
-        }
-
-        // fallback: nếu DB đã có sẵn status thì dùng
-        return $value ?? 'upcoming';
-    }
 
 
     public function country()
     {
         return $this->belongsTo(Country::class);
     }
+
 
     public function director()
     {
@@ -77,9 +58,9 @@ class Movie extends Model
     }
 
 
-    public function reviews()
+    public function comments()
     {
-        return $this->hasMany(Review::class);
+        return $this->hasMany(Comment::class);
     }
 
     public function showtimes()
@@ -124,36 +105,82 @@ class Movie extends Model
     }
 
     /**
-     * Tự động cập nhật trạng thái phim dựa trên ngày kết thúc
+     * Tự động cập nhật trạng thái phim dựa trên thời gian hệ thống
      */
-    public function updateStatusBasedOnEndDate()
+    public static function updateAllMovieStatuses()
     {
-        if ($this->end_date && $this->end_date < now()) {
-            if ($this->status !== \App\Enums\MovieStatus::Ended) {
-                $this->update(['status' => \App\Enums\MovieStatus::Ended]);
-            }
+        $today = now()->toDateString();
+        
+        // Cập nhật phim sắp chiếu -> đang chiếu
+        static::where('status', 'upcoming')
+            ->where('release_date', '<=', $today)
+            ->update(['status' => 'showing']);
+            
+        // Cập nhật phim đang chiếu -> đã kết thúc (nếu có ngày kết thúc)
+        static::where('status', 'showing')
+            ->whereNotNull('end_date')
+            ->where('end_date', '<', $today)
+            ->update(['status' => 'ended']);
+    }
+
+    /**
+     * Cập nhật trạng thái của phim hiện tại dựa trên thời gian hệ thống
+     */
+    public function updateStatusBasedOnTime()
+    {
+        $today = now()->toDateString();
+        $currentStatus = $this->status;
+        
+        if ($this->end_date && $this->end_date < $today) {
+            $newStatus = 'ended';
+        } elseif ($this->release_date > $today) {
+            $newStatus = 'upcoming';
+        } elseif ($this->release_date <= $today && (!$this->end_date || $this->end_date >= $today)) {
+            $newStatus = 'showing';
+        } else {
+            $newStatus = 'showing';
+        }
+        
+        if ($currentStatus !== $newStatus) {
+            $this->update(['status' => $newStatus]);
         }
     }
 
     /**
-     * Lấy trạng thái thực tế của phim (bao gồm kiểm tra ngày kết thúc)
+     * Lấy trạng thái thực tế của phim dựa trên thời gian hệ thống
      */
-    public function getRealStatusAttribute()
+    public function getRealTimeStatusAttribute()
     {
-        if ($this->end_date && $this->end_date < now()) {
-            return \App\Enums\MovieStatus::Ended;
+        $today = now()->toDateString();
+        
+        if ($this->end_date && $this->end_date < $today) {
+            return 'ended';
+        } elseif ($this->release_date > $today) {
+            return 'upcoming';
+        } elseif ($this->release_date <= $today && (!$this->end_date || $this->end_date >= $today)) {
+            return 'showing';
+        } else {
+            return 'showing';
         }
-        return $this->status;
     }
 
     /**
-     * Scope để tự động cập nhật trạng thái các phim đã kết thúc
+     * Scope để tự động cập nhật trạng thái các phim
      */
     public function scopeUpdateExpiredMovies($query)
     {
-        return $query->where('end_date', '<', now())
-                    ->where('status', '!=', \App\Enums\MovieStatus::Ended)
-                    ->update(['status' => \App\Enums\MovieStatus::Ended]);
+        $today = now()->toDateString();
+        
+        // Cập nhật phim sắp chiếu -> đang chiếu
+        static::where('status', 'upcoming')
+            ->where('release_date', '<=', $today)
+            ->update(['status' => 'showing']);
+            
+        // Cập nhật phim đang chiếu -> đã kết thúc
+        return $query->whereNotNull('end_date')
+                    ->where('end_date', '<', $today)
+                    ->where('status', '!=', 'ended')
+                    ->update(['status' => 'ended']);
     }
 
     public function directors()

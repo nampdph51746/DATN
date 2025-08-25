@@ -12,13 +12,24 @@
                             <iconify-icon icon="solar:box-broken" class="align-middle fs-18 me-2"></iconify-icon>
                             Danh sách sản phẩm
                         </h4>
-                        <div class="d-flex gap-2">
-                           @can('create product')
+                        <div class="d-flex gap-2 align-items-center">
+                            {{-- Form lọc sản phẩm theo danh mục --}}
+                            <form method="GET" action="{{ route('admin.products.index') }}" class="d-flex align-items-center">
+                                <select name="category_id" class="form-select form-select-sm me-2" onchange="this.form.submit()">
+                                    <option value="">Tất cả danh mục</option>
+                                    @foreach(\App\Models\ProductCategory::all() as $cat)
+                                        <option value="{{ $cat->id }}" {{ request('category_id') == $cat->id ? 'selected' : '' }}>
+                                            {{ $cat->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </form>
+                            @can('create product')
                                 <a href="{{ route('admin.products.create') }}" class="btn btn-sm btn-primary">
-                                <iconify-icon icon="solar:add-circle-broken" class="align-middle fs-18 me-1"></iconify-icon>
-                                Thêm sản phẩm
+                                    <iconify-icon icon="solar:add-circle-broken" class="align-middle fs-18 me-1"></iconify-icon>
+                                    Thêm sản phẩm
                                 </a>
-                           @endcan
+                            @endcan
                         </div>
                     </div>
                     <div>
@@ -35,6 +46,10 @@
                                         <th>
                                             <iconify-icon icon="mdi:barcode"
                                                 class="align-middle fs-16 me-1"></iconify-icon>SKU
+                                        </th>
+                                        <th>
+                                            <iconify-icon icon="solar:money-broken"
+                                                class="align-middle fs-16 me-1"></iconify-icon>Giá gốc
                                         </th>
                                         <th><iconify-icon icon="solar:document-broken"
                                                 class="align-middle fs-16 me-1"></iconify-icon>Mô tả</th>
@@ -66,6 +81,7 @@
                                             <td>
                                                 {{ $product->sku ?? 'Chưa có SKU' }}
                                             </td>
+                                            <td>{{ number_format($product->base_price, 0, ',', '.') }}₫</td>
                                             <td>{{ Str::limit($product->description, 50) }}</td>
                                             <td>{{ $product->category->name ?? 'Chưa có danh mục' }}</td>
                                             <td>

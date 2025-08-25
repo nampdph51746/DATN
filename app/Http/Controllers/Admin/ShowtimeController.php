@@ -272,7 +272,7 @@ class ShowtimeController extends Controller
                 'exists:movies,id',
                 function ($attribute, $value, $fail) {
                     $movie = Movie::find($value);
-                    if ($movie && $movie->status->value === 'ended') {
+                    if ($movie && $movie->status === 'ended') {
                         $fail('Không thể tạo suất chiếu cho phim đã kết thúc.');
                     }
                 }

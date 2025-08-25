@@ -71,6 +71,13 @@
                                                         </a>
                                                     @endcan
 
+                                                    {{-- Thêm nút Chi tiết --}}
+                                                    <a href="{{ route('admin.product-categories.show', $category->id) }}"
+                                                        class="btn btn-soft-info btn-sm" title="Chi tiết">
+                                                        <iconify-icon icon="solar:info-circle-broken"
+                                                            class="align-middle fs-18"></iconify-icon>
+                                                    </a>
+
                                                     @can('delete product category')
                                                         <form
                                                             action="{{ route('admin.product-categories.destroy', $category->id) }}"

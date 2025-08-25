@@ -1,6 +1,22 @@
 @extends('layouts.admin.admin')
 
 @section('content')
+    <style>
+        .combo-highlight {
+            background-color: #ffffff !important;
+            border-left: 4px solid #007bff;
+        }
+        .combo-items-detail {
+            background-color: #f8f9fa;
+            padding: 8px;
+            border-radius: 4px;
+            margin-top: 5px;
+        }
+        .product-image {
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+    </style>
     <div class="container-xxl">
         <div class="row">
             <div class="col-xl-9 col-lg-8">
@@ -169,6 +185,7 @@
                                                                 'checked' => 'bg-info',
                                                                 'used' => 'bg-secondary',
                                                                 'cancelled' => 'bg-danger',
+                                                                'valid' => 'bg-success',
                                                             ];
                                                             $statusValue = is_object($ticket->status)
                                                                 ? $ticket->status->value
@@ -184,7 +201,7 @@
                                                         </td>
                                                         <td>
                                                             <a href="{{ route('tickets.qr', ['ticket_id' => $ticket->id]) }}" target="_blank"
-                                                                @if (in_array($statusValue, ['used', 'cancelled'])) class="btn btn-sm btn-primary ms-2 disabled" style="opacity:0.6;cursor:not-allowed;" @else class="btn btn-sm btn-primary ms-2" @endif>
+                                                                @if (in_array($statusValue, ['used', 'cancelled', 'valid'])) class="btn btn-sm btn-primary ms-2 disabled" style="opacity:0.6;cursor:not-allowed;" @else class="btn btn-sm btn-primary ms-2" @endif>
                                                                 In vé
                                                             </a>
                                                         </td>
@@ -197,60 +214,147 @@
                             </div>
                         </div>
 
-                        <!-- Danh sách sản phẩm đã đặt -->
+                        <!-- Danh sách sản phẩm và combo đã đặt -->
                         <div class="card mt-4">
-                            <div class="card-header bg-primary text-white">
-                                <strong>Danh sách sản phẩm đã đặt</strong>
+                            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                                <strong>Danh sách sản phẩm và combo đã đặt</strong>
+                                <small class="badge bg-light text-dark">
+                                    Tổng: {{ $booking->bookingItems->count() }} item(s)
+                                </small>
                             </div>
                             <div class="card-body p-0">
                                 @if ($booking->bookingItems->isEmpty())
                                     <p class="p-3">Không có sản phẩm nào trong đơn này.</p>
                                 @else
+                                    <!-- Thống kê nhanh -->
+                                    @php
+                                        $comboCount = $booking->bookingItems->whereNotNull('combo_id')->count();
+                                        $productCount = $booking->bookingItems->whereNull('combo_id')->count();
+                                    @endphp
+                                    <div class="p-3 bg-light border-bottom">
+                                        <div class="row text-center">
+                                            <div class="col-md-4">
+                                                <div class="d-flex align-items-center justify-content-center gap-2">
+                                                    <i class="fas fa-box text-primary"></i>
+                                                    <span><strong>Sản phẩm:</strong> {{ $productCount }}</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="d-flex align-items-center justify-content-center gap-2">
+                                                    <span class="text-warning">🍿</span>
+                                                    <span><strong>Combo:</strong> {{ $comboCount }}</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="d-flex align-items-center justify-content-center gap-2">
+                                                    <i class="fas fa-shopping-cart text-success"></i>
+                                                    <span><strong>Tổng cộng:</strong> {{ $booking->bookingItems->count() }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                     <div class="table-responsive">
                                         <table class="table table-striped mb-0">
                                             <thead class="table-light">
                                                 <tr>
                                                     <th>#</th>
-                                                    <th>Tên sản phẩm</th>
-                                                    <th>Biến thể</th>
+                                                    <th>Tên sản phẩm/Combo</th>
+                                                    <th>Biến thể/Chi tiết</th>
                                                     <th>Số lượng</th>
                                                     <th>Giá tại thời điểm mua</th>
                                                     <th>Mô tả</th>
                                                     <th>Ảnh</th>
-                                                    <th>Loại sản phẩm</th>
+                                                    <th>Loại</th>
                                                     <th>Trạng thái</th>
                                                     <th>Thao tác</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 @foreach ($booking->bookingItems as $index => $item)
-                                                    <tr>
+                                                    <tr class="{{ $item->combo_id ? 'combo-highlight' : '' }}">
                                                         <td>{{ $index + 1 }}</td>
-                                                        <td>{{ $item->productVariant->product->name ?? 'N/A' }}</td>
-                                                        <td>{{ $item->productVariant->sku ?? 'N/A' }}</td>
-                                                        <td>{{ $item->quantity }}</td>
-                                                        <td>{{ number_format($item->price_at_purchase, 0, ',', '.') }} đ
-                                                        </td>
-                                                        <td>{{ $item->productVariant->product->description ?? 'Không có mô tả' }}
-                                                        </td>
                                                         <td>
-                                                            @if ($item->productVariant->product->image_url)
-                                                                <img src="{{ asset($item->productVariant->product->image_url) }}"
-                                                                    alt="Ảnh sản phẩm" width="50">
+                                                            @if($item->combo_id)
+                                                                <!-- Đây là combo -->
+                                                                <strong class="text-primary">🍿 {{ $item->combo->name }}</strong>
+                                                                <div class="combo-items-detail">
+                                                                    <strong class="text-muted">Combo bao gồm:</strong>
+                                                                    @foreach($item->combo->comboPackageItems as $comboItem)
+                                                                        <div class="ms-2">
+                                                                            • {{ $comboItem->quantity }}x {{ $comboItem->itemProductVariant->product->name ?? 'N/A' }}
+                                                                            @if($comboItem->itemProductVariant->productVariantOptions->isNotEmpty())
+                                                                                <small class="text-muted">({{ $comboItem->itemProductVariant->productVariantOptions->pluck('attributeValue.value')->join(' - ') }})</small>
+                                                                            @endif
+                                                                        </div>
+                                                                    @endforeach
+                                                                </div>
                                                             @else
-                                                                <span class="text-muted">Không có ảnh</span>
+                                                                <!-- Đây là sản phẩm thường -->
+                                                                {{ $item->productVariant->product->name ?? 'N/A' }}
                                                             @endif
                                                         </td>
                                                         <td>
-                                                            @php
-                                                                $type =
-                                                                    $item->productVariant->product->product_type ??
-                                                                    null;
-                                                                $typeStr = is_object($type) ? $type->value : $type;
-                                                            @endphp
-                                                            <span class="badge bg-info text-dark">
-                                                                {{ $typeStr ? ucfirst($typeStr) : 'Không rõ' }}
-                                                            </span>
+                                                            @if($item->combo_id)
+                                                                <span class="badge bg-warning">Combo</span><br>
+                                                                <small>SKU: {{ $item->productVariant->sku ?? 'N/A' }}</small>
+                                                            @else
+                                                                {{ $item->productVariant->sku ?? 'N/A' }}
+                                                                @if($item->productVariant->productVariantOptions->isNotEmpty())
+                                                                    <br><small class="text-muted">
+                                                                        {{ $item->productVariant->productVariantOptions->pluck('attributeValue.value')->join(' - ') }}
+                                                                    </small>
+                                                                @endif
+                                                            @endif
+                                                        </td>
+                                                        <td>{{ $item->quantity }}</td>
+                                                        <td>{{ number_format($item->price_at_purchase, 0, ',', '.') }} đ</td>
+                                                        <td>
+                                                            @if($item->combo_id)
+                                                                {{ $item->combo->description ?? 'Combo đặc biệt' }}
+                                                            @else
+                                                                {{ $item->productVariant->product->description ?? 'Không có mô tả' }}
+                                                            @endif
+                                                        </td>
+                                                        <td>
+                                                            @if($item->combo_id)
+                                                                <!-- Hiển thị ảnh combo -->
+                                                                @php
+                                                                    $comboImage = null;
+                                                                    if ($item->combo && $item->combo->combo_url) {
+                                                                        $comboImage = 'storage/' . $item->combo->combo_url;
+                                                                    } elseif ($item->combo && $item->combo->comboPackageItems->first() && $item->combo->comboPackageItems->first()->itemProductVariant && $item->combo->comboPackageItems->first()->itemProductVariant->product && $item->combo->comboPackageItems->first()->itemProductVariant->product->image_url) {
+                                                                        $comboImage = $item->combo->comboPackageItems->first()->itemProductVariant->product->image_url;
+                                                                    }
+                                                                @endphp
+                                                                @if($comboImage)
+                                                                    <img src="{{ asset($comboImage) }}" alt="Ảnh combo" width="50" class="product-image">
+                                                                @else
+                                                                    <div class="text-center p-2 bg-warning text-white rounded" style="width:50px; height:50px; display:flex; align-items:center; justify-content:center;">
+                                                                        🍿
+                                                                    </div>
+                                                                @endif
+                                                            @else
+                                                                @if ($item->productVariant->product->image_url)
+                                                                    <img src="{{ asset($item->productVariant->product->image_url) }}" alt="Ảnh sản phẩm" width="50" class="product-image">
+                                                                @else
+                                                                    <span class="text-muted">Không có ảnh</span>
+                                                                @endif
+                                                            @endif
+                                                        </td>
+                                                        <td>
+                                                            @if($item->combo_id)
+                                                                <span class="badge bg-warning text-dark">
+                                                                    🍿 COMBO
+                                                                </span>
+                                                            @else
+                                                                @php
+                                                                    $type = $item->productVariant->product->product_type ?? null;
+                                                                    $typeStr = is_object($type) ? $type->value : $type;
+                                                                @endphp
+                                                                <span class="badge bg-info text-dark">
+                                                                    {{ $typeStr ? ucfirst($typeStr) : 'Không rõ' }}
+                                                                </span>
+                                                            @endif
                                                         </td>
                                                         <td>
                                                             @php
@@ -269,8 +373,12 @@
                                                         </td>
                                                         <td>
                                                             <a href="{{ route('foods.qr', ['item_id' => $item->id]) }}" target="_blank"
-                                                                @if (in_array($statusValue, ['used', 'cancelled'])) class="btn btn-sm btn-primary ms-2 disabled" style="opacity:0.6;cursor:not-allowed;" @else class="btn btn-sm btn-primary ms-2" @endif>
-                                                                In đồ ăn
+                                                                @if (in_array($statusValue, ['used', 'cancelled', 'valid'])) class="btn btn-sm btn-primary ms-2 disabled" style="opacity:0.6;cursor:not-allowed;" @else class="btn btn-sm btn-primary ms-2" @endif>
+                                                                @if($item->combo_id)
+                                                                    In QR Combo
+                                                                @else  
+                                                                    In QR Đồ ăn
+                                                                @endif
                                                             </a>
                                                         </td>
                                                     </tr>

@@ -196,7 +196,9 @@ class QrCodeController extends Controller
                 'tickets.showtime.movie',
                 'tickets.showtime.cinema',
                 'bookingItems.productVariant.product',
-                'bookingItems.productVariant.productVariantOptions.attributeValue'
+                'bookingItems.productVariant.productVariantOptions.attributeValue',
+                'bookingItems.combo.comboPackageItems.itemProductVariant.product',
+                'bookingItems.combo.comboPackageItems.itemProductVariant.productVariantOptions.attributeValue'
             ])->where('booking_code', $code)->first();
 
             if (!$booking) {

@@ -73,9 +73,13 @@
                                         <select class="form-control" id="product-categories" name="category_id" data-choices data-choices-groups data-placeholder="Chọn danh mục">
                                             <option value="">Chọn danh mục</option>
                                             @foreach ($categories as $category)
-                                                <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
+                                                <option value="{{ $category->id }}"
+                                                    {{ old('category_id', $categoryId ?? '') == $category->id ? 'selected' : '' }}>
+                                                    {{ $category->name }}
+                                                </option>
                                             @endforeach
                                         </select>
+                                        <input type="hidden" name="from_category_show" value="{{ request('from_category_show') }}">
                                         @error('category_id')
                                             <span class="text-danger">{{ $message }}</span>
                                         @enderror
@@ -126,6 +130,18 @@
                                         <label for="product-description" class="form-label">Mô tả</label>
                                         <textarea class="form-control bg-light-subtle" id="product-description" name="description" rows="3" placeholder="Mô tả ngắn về sản phẩm">{{ old('description') }}</textarea>
                                         @error('description')
+                                            <span class="text-danger">{{ $message }}</span>
+                                        @enderror
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-6">
+                                    <div class="mb-3">
+                                        <label for="base-price" class="form-label">Giá gốc sản phẩm</label>
+                                        <input type="number" min="0" step="0.01" id="base-price" name="base_price" class="form-control"
+                                            value="{{ old('base_price') }}" placeholder="Nhập giá gốc">
+                                        @error('base_price')
                                             <span class="text-danger">{{ $message }}</span>
                                         @enderror
                                     </div>

@@ -30,14 +30,30 @@ class UpdateMovieStatus extends Command
     {
         $this->info('Đang cập nhật trạng thái phim...');
         
-        // Cập nhật phim đã kết thúc
-        $updatedCount = Movie::where('end_date', '<', now())
-                             ->where('status', '!=', MovieStatus::Ended)
-                             ->update(['status' => MovieStatus::Ended]);
+        $today = now()->toDateString();
         
-        if ($updatedCount > 0) {
-            $this->info("Đã cập nhật {$updatedCount} phim sang trạng thái 'Đã kết thúc'");
-            Log::info("Auto-updated {$updatedCount} movies to 'ended' status");
+        // Cập nhật phim sắp chiếu -> đang chiếu
+        $upcomingToShowing = Movie::where('status', MovieStatus::Upcoming)
+                                  ->where('release_date', '<=', $today)
+                                  ->update(['status' => MovieStatus::Showing]);
+                                  
+        // Cập nhật phim đang chiếu -> đã kết thúc (nếu có ngày kết thúc)
+        $showingToEnded = Movie::where('status', MovieStatus::Showing)
+                               ->whereNotNull('end_date')
+                               ->where('end_date', '<', $today)
+                               ->update(['status' => MovieStatus::Ended]);
+        
+        $totalUpdated = $upcomingToShowing + $showingToEnded;
+        
+        if ($totalUpdated > 0) {
+            $this->info("Đã cập nhật trạng thái cho {$totalUpdated} phim:");
+            if ($upcomingToShowing > 0) {
+                $this->info("- {$upcomingToShowing} phim từ 'Sắp chiếu' -> 'Đang chiếu'");
+            }
+            if ($showingToEnded > 0) {
+                $this->info("- {$showingToEnded} phim từ 'Đang chiếu' -> 'Đã kết thúc'");
+            }
+            Log::info("Auto-updated {$totalUpdated} movies status");
         } else {
             $this->info('Không có phim nào cần cập nhật trạng thái');
         }

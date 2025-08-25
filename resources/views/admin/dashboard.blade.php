@@ -354,10 +354,6 @@
                                                     <td><strong>Thời lượng trung bình</strong></td>
                                                     <td>{{ number_format($averageDuration, 1) }} phút</td>
                                                 </tr>
-                                                <tr>
-                                                    <td><strong>Đánh giá trung bình</strong></td>
-                                                    <td>{{ number_format($averageRating, 1) }}/5</td>
-                                                </tr>
                                             </tbody>
                                         </table>
 
@@ -417,25 +413,15 @@
                             </div>
                         </div>
 
-                        {{-- Biểu đồ Reviews --}}
+                        {{-- Biểu đồ Comments --}}
                         <div class="row mb-4">
                             <div class="col-lg-6">
                                 <div class="card">
                                     <div class="card-header">
-                                        <h5 class="card-title">📊 Thống kê đánh giá theo tháng</h5>
+                                        <h5 class="card-title">📊 Thống kê bình luận theo tháng</h5>
                                     </div>
                                     <div class="card-body">
                                         <div id="review-monthly-chart"></div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-lg-6">
-                                <div class="card">
-                                    <div class="card-header">
-                                        <h5 class="card-title">🍰 Phân bố đánh giá theo sao</h5>
-                                    </div>
-                                    <div class="card-body">
-                                        <div id="rating-distribution-chart"></div>
                                     </div>
                                 </div>
                             </div>
@@ -444,29 +430,29 @@
                 </div>
             </div>
 
-            {{-- 3. Thống kê Đánh giá --}}
+            {{-- 3. Thống kê Bình luận --}}
             <div class="accordion-item mb-3">
                 <h2 class="accordion-header" id="headingReviews">
                     <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseReviews" aria-expanded="false" aria-controls="collapseReviews">
-                        <i class="fas fa-star me-2"></i>
-                        <strong>⭐ Thống kê Đánh giá</strong>
-                        <span class="badge bg-warning ms-2">4 thống kê</span>
+                        <i class="fas fa-comment me-2"></i>
+                        <strong>💬 Thống kê Bình luận</strong>
+                        <span class="badge bg-warning ms-2">2 thống kê</span>
                     </button>
                 </h2>
                 <div id="collapseReviews" class="accordion-collapse collapse" aria-labelledby="headingReviews" data-bs-parent="#dashboardAccordion" data-open="false">
                     <div class="accordion-body">
                         <div class="row g-4">
-                            <div class="col-xl-3">
+                            <div class="col-xl-6">
                                 <div class="card card-height-100">
                                     <div class="card-header d-flex align-items-center justify-content-between gap-2">
-                                        <h4 class="card-title flex-grow-1">⭐ Thống kê Đánh giá</h4>
+                                        <h4 class="card-title flex-grow-1">💬 Thống kê Bình luận</h4>
                                         <span class="text-muted small">Tổng quan</span>
                                     </div>
                                     <div class="card-body">
                                         <table class="table table-hover table-nowrap table-centered m-0">
                                             <tbody>
                                                 <tr>
-                                                    <td>Tổng số đánh giá</td>
+                                                    <td>Tổng số bình luận</td>
                                                     <td><strong>{{ number_format($totalReviews) }}</strong></td>
                                                 </tr>
                                                 <tr>
@@ -487,38 +473,12 @@
                                 </div>
                             </div>
 
-                            {{-- Phân bố Rating --}}
-                            <div class="col-xl-3">
+                            {{-- Top Movies by Comments --}}
+                            <div class="col-xl-6">
                                 <div class="card card-height-100">
                                     <div class="card-header d-flex align-items-center justify-content-between gap-2">
-                                        <h4 class="card-title flex-grow-1">🌟 Phân bố Rating</h4>
-                                        <span class="text-muted small">Theo số sao</span>
-                                    </div>
-                                    <div class="card-body">
-                                        @foreach($ratingDistribution as $rating)
-                                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                                <div class="d-flex align-items-center">
-                                                    @for($i = 1; $i <= 5; $i++)
-                                                        @if($i <= $rating->rating_star)
-                                                            <i class="fas fa-star text-warning"></i>
-                                                        @else
-                                                            <i class="far fa-star text-muted"></i>
-                                                        @endif
-                                                    @endfor
-                                                </div>
-                                                <span class="badge bg-primary">{{ $rating->count }}</span>
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                </div>
-                            </div>
-
-                            {{-- Top Movies by Reviews --}}
-                            <div class="col-xl-3">
-                                <div class="card card-height-100">
-                                    <div class="card-header d-flex align-items-center justify-content-between gap-2">
-                                        <h4 class="card-title flex-grow-1">🏆 Top Đánh giá</h4>
-                                        <span class="text-muted small">Nhiều review</span>
+                                        <h4 class="card-title flex-grow-1">🏆 Top Phim Nhiều Bình luận Nhất</h4>
+                                        <span class="text-muted small">Nhiều comment</span>
                                     </div>
                                     <div class="card-body">
                                         @foreach($topReviewedMovies as $index => $movie)
@@ -526,37 +486,7 @@
                                                 <span class="badge bg-info me-2">#{{ $index + 1 }}</span>
                                                 <div class="flex-grow-1">
                                                     <div class="fw-semibold">{{ Str::limit($movie->name, 20) }}</div>
-                                                    <small class="text-muted">{{ $movie->reviews_count }} đánh giá</small>
-                                                </div>
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                </div>
-                            </div>
-
-                            {{-- Top Rated Movies --}}
-                            <div class="col-xl-3">
-                                <div class="card card-height-100">
-                                    <div class="card-header d-flex align-items-center justify-content-between gap-2">
-                                        <h4 class="card-title flex-grow-1">🎯 Top Rating</h4>
-                                        <span class="text-muted small">Chất lượng cao</span>
-                                    </div>
-                                    <div class="card-body">
-                                        @foreach($topRatedMovies as $index => $movie)
-                                            <div class="d-flex align-items-center mb-3">
-                                                <span class="badge bg-warning me-2">#{{ $index + 1 }}</span>
-                                                <div class="flex-grow-1">
-                                                    <div class="fw-semibold">{{ Str::limit($movie->name, 20) }}</div>
-                                                    <div class="d-flex align-items-center">
-                                                        @for($i = 1; $i <= 5; $i++)
-                                                            @if($i <= $movie->average_rating)
-                                                                <i class="fas fa-star text-warning"></i>
-                                                            @else
-                                                                <i class="far fa-star text-muted"></i>
-                                                            @endif
-                                                        @endfor
-                                                        <small class="text-muted ms-1">{{ $movie->average_rating }}/5</small>
-                                                    </div>
+                                                    <small class="text-muted">{{ $movie->comments_count }} bình luận</small>
                                                 </div>
                                             </div>
                                         @endforeach
@@ -597,7 +527,6 @@
                                                         <th>Thời lượng</th>
                                                         <th>Ngày phát hành</th>
                                                         <th>Ngôn ngữ</th>
-                                                        <th>Đánh giá</th>
                                                         <th>Vé đã bán</th>
                                                         <th>Trạng thái</th>
                                                     </tr>
@@ -624,11 +553,6 @@
                                                             <td>{{ $movie->duration_minutes }} phút</td>
                                                             <td>{{ \Carbon\Carbon::parse($movie->release_date)->format('d/m/Y') }}</td>
                                                             <td>{{ $movie->language }}</td>
-                                                            <td>
-                                                                <span class="badge bg-warning text-dark">
-                                                                    {{ $movie->average_rating ?? 'N/A' }}/10
-                                                                </span>
-                                                            </td>
                                                             <td>
                                                                 <span class="fw-semibold text-success">{{ $movie->total_tickets_sold }}</span>
                                                             </td>
@@ -843,11 +767,8 @@
                                         height: 350
                                     },
                                     series: [{
-                                        name: 'Số lượng đánh giá',
+                                        name: 'Số lượng bình luận',
                                         data: reviewMonthlyData.map(item => item.total)
-                                    }, {
-                                        name: 'Rating trung bình',
-                                        data: reviewMonthlyData.map(item => parseFloat(item.avg_rating).toFixed(1))
                                     }],
                                     xaxis: {
                                         categories: reviewMonthlyData.map(item => `${item.month}/${item.year}`)
@@ -855,18 +776,11 @@
                                     stroke: {
                                         curve: 'smooth'
                                     },
-                                    colors: ['#00bcd4', '#ff9800'],
+                                    colors: ['#00bcd4'],
                                     yaxis: [{
                                         title: {
-                                            text: 'Số lượng đánh giá'
+                                            text: 'Số lượng bình luận'
                                         }
-                                    }, {
-                                        opposite: true,
-                                        title: {
-                                            text: 'Rating trung bình'
-                                        },
-                                        min: 0,
-                                        max: 5
                                     }]
                                 };
                                 window.reviewMonthlyChart = new ApexCharts(document.querySelector("#review-monthly-chart"), reviewMonthlyOptions);
@@ -874,45 +788,6 @@
                             }
                         }
 
-                        // Rating distribution chart
-                        if (document.querySelector("#rating-distribution-chart") && !window.ratingChart) {
-                            console.log('Rendering rating distribution chart');
-                            var ratingData = @json($ratingDistribution ?? []);
-                            if (ratingData.length > 0) {
-                                var ratingOptions = {
-                                    chart: {
-                                        type: 'donut',
-                                        height: 350
-                                    },
-                                    series: ratingData.map(item => item.count),
-                                    labels: ratingData.map(item => `${item.rating_star} sao`),
-                                    colors: ['#ff6384', '#ff9f40', '#ffcd56', '#4bc0c0', '#36a2eb'],
-                                    plotOptions: {
-                                        pie: {
-                                            donut: {
-                                                labels: {
-                                                    show: true,
-                                                    total: {
-                                                        show: true,
-                                                        label: 'Tổng',
-                                                        formatter: function (w) {
-                                                            return w.globals.seriesTotals.reduce((a, b) => {
-                                                                return a + b
-                                                            }, 0)
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    },
-                                    legend: {
-                                        position: 'bottom'
-                                    }
-                                };
-                                window.ratingChart = new ApexCharts(document.querySelector("#rating-distribution-chart"), ratingOptions);
-                                window.ratingChart.render();
-                            }
-                        }
                     }
 
                     // Initial render for visible charts

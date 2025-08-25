@@ -215,7 +215,7 @@ body {
     @foreach($bookingItems as $index => $item)
     <div class="ticket food-voucher page-break">
         <div class="ticket-header">
-            <h3 class="ticket-title">🍿 VOUCHER ĐỒ ĂN</h3>
+            <h3 class="ticket-title">{{ $item->combo_id ? '🍿 VOUCHER COMBO' : '🍿 VOUCHER ĐỒ ĂN' }}</h3>
             <div class="cinema-info">
                 {{ $booking->showtime->cinema->name ?? 'N/A' }}
             </div>
@@ -223,27 +223,63 @@ body {
         
         <div class="ticket-body">
             <div class="text-center mb-3">
-                <h5 class="fw-bold text-danger">{{ $item->productVariant->product->name ?? 'N/A' }}</h5>
-                <small class="text-muted">{{ $booking->booking_code }}</small>
+                @if($item->combo_id)
+                    <!-- Hiển thị thông tin combo -->
+                    <h5 class="fw-bold text-danger">{{ $item->combo->name ?? 'N/A' }}</h5>
+                    <small class="text-success fw-medium">🍿 COMBO PACKAGE</small>
+                @else
+                    <!-- Hiển thị thông tin sản phẩm thường -->
+                    <h5 class="fw-bold text-danger">{{ $item->productVariant->product->name ?? 'N/A' }}</h5>
+                @endif
+                <small class="text-muted d-block">{{ $booking->booking_code }}</small>
             </div>
             
             <div class="row g-2 ticket-info">
-                <div class="col-6">
-                    <strong>Size:</strong><br>
-                    <span class="badge bg-warning text-dark">
-                        @if($item->productVariant && $item->productVariant->productVariantOptions->isNotEmpty())
-                            @foreach($item->productVariant->productVariantOptions as $option)
-                                {{ $option->attributeValue->value ?? '' }}{{ !$loop->last ? ', ' : '' }}
+                @if($item->combo_id)
+                    <!-- Thông tin combo -->
+                    <div class="col-12 mb-2">
+                        <strong>Combo bao gồm:</strong>
+                        <div style="background: #f8f9fa; padding: 8px; border-radius: 4px; margin-top: 5px; font-size: 11px;">
+                            @foreach($item->combo->comboPackageItems as $comboItem)
+                                <div class="d-flex justify-content-between align-items-center" style="border-bottom: 1px solid #eee; padding: 2px 0;">
+                                    <span>
+                                        • {{ $comboItem->quantity }}x {{ $comboItem->itemProductVariant->product->name ?? 'N/A' }}
+                                        @if($comboItem->itemProductVariant->productVariantOptions->isNotEmpty())
+                                            <small class="text-muted">({{ $comboItem->itemProductVariant->productVariantOptions->pluck('attributeValue.value')->join(' - ') }})</small>
+                                        @endif
+                                    </span>
+                                </div>
                             @endforeach
-                        @else
-                            {{ $item->productVariant->sku ?? 'Standard' }}
-                        @endif
-                    </span>
-                </div>
-                <div class="col-6">
-                    <strong>Số lượng:</strong><br>
-                    <span class="badge bg-info">{{ $item->quantity ?? 1 }}</span>
-                </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <strong>Số lượng combo:</strong><br>
+                        <span class="badge bg-info">{{ $item->quantity ?? 1 }}</span>
+                    </div>
+                    <div class="col-6">
+                        <strong>SKU:</strong><br>
+                        <span class="badge bg-secondary">{{ $item->productVariant->sku ?? 'COMBO' }}</span>
+                    </div>
+                @else
+                    <!-- Thông tin sản phẩm thường -->
+                    <div class="col-6">
+                        <strong>Size/Loại:</strong><br>
+                        <span class="badge bg-warning text-dark">
+                            @if($item->productVariant && $item->productVariant->productVariantOptions->isNotEmpty())
+                                @foreach($item->productVariant->productVariantOptions as $option)
+                                    {{ $option->attributeValue->value ?? '' }}{{ !$loop->last ? ', ' : '' }}
+                                @endforeach
+                            @else
+                                {{ $item->productVariant->sku ?? 'Standard' }}
+                            @endif
+                        </span>
+                    </div>
+                    <div class="col-6">
+                        <strong>Số lượng:</strong><br>
+                        <span class="badge bg-info">{{ $item->quantity ?? 1 }}</span>
+                    </div>
+                @endif
+                
                 <div class="col-6">
                     <strong>Đơn giá:</strong><br>
                     {{ number_format($item->price_at_purchase ?? 0) }}đ
@@ -265,7 +301,7 @@ body {
             
             <div class="qr-code">
                 <canvas id="qr-food-{{ $item->id }}" width="100" height="100"></canvas>
-                <small class="text-muted d-block mt-2 fw-medium">FOOD{{ $item->id }}</small>
+                <small class="text-muted d-block mt-2 fw-medium">{{ $item->combo_id ? 'COMBO' : 'FOOD' }}{{ $item->id }}</small>
             </div>
         </div>
     </div>
@@ -319,7 +355,7 @@ body {
                 const foodCanvas{{ $item->id }} = document.getElementById('qr-food-{{ $item->id }}');
                 console.log('Food canvas {{ $item->id }}:', foodCanvas{{ $item->id }});
                 if (foodCanvas{{ $item->id }}) {
-                    const foodCode = 'FOOD{{ $item->id }}';
+                    const foodCode = '{{ $item->combo_id ? "COMBO" : "FOOD" }}{{ $item->id }}';
                     console.log('Generating QR for food code:', foodCode);
                     QRCode.toCanvas(foodCanvas{{ $item->id }}, foodCode, {
                         width: 120,
@@ -343,7 +379,7 @@ body {
             @endforeach
         });
 
-setTimeout(function() {
+        setTimeout(function() {
             console.log('Testing QR generation...');
             @foreach($tickets as $ticket)
             const testCanvas{{ $ticket->id }} = document.getElementById('qr-ticket-{{ $ticket->id }}');
@@ -362,6 +398,29 @@ setTimeout(function() {
                     testCanvas{{ $ticket->id }}.style.alignItems = 'center';
                     testCanvas{{ $ticket->id }}.style.justifyContent = 'center';
                     testCanvas{{ $ticket->id }}.innerHTML = '<small>{{ $ticket->ticket_code ?? "TICKET".$ticket->id }}</small>';
+                }
+            }
+            @endforeach
+            
+            // Test food QR codes
+            @foreach($bookingItems as $item)
+            const testFoodCanvas{{ $item->id }} = document.getElementById('qr-food-{{ $item->id }}');
+            if (testFoodCanvas{{ $item->id }}) {
+                console.log('Found canvas for food {{ $item->id }}, generating...');
+                const foodCode = '{{ $item->combo_id ? "COMBO" : "FOOD" }}{{ $item->id }}';
+                if (typeof QRCode !== 'undefined') {
+                    QRCode.toCanvas(testFoodCanvas{{ $item->id }}, foodCode, function (error) {
+                        if (error) console.error('Error:', error);
+                        else console.log('Success for food {{ $item->id }}');
+                    });
+                } else {
+                    console.error('QRCode library not available');
+                    // Fallback: hiển thị text
+                    testFoodCanvas{{ $item->id }}.style.border = '2px solid #ddd';
+                    testFoodCanvas{{ $item->id }}.style.display = 'flex';
+                    testFoodCanvas{{ $item->id }}.style.alignItems = 'center';
+                    testFoodCanvas{{ $item->id }}.style.justifyContent = 'center';
+                    testFoodCanvas{{ $item->id }}.innerHTML = '<small>' + foodCode + '</small>';
                 }
             }
             @endforeach
@@ -405,7 +464,7 @@ setTimeout(function() {
             setTimeout(function() {
                 const foodCanvas = document.getElementById('qr-food-{{ $item->id }}');
                 if (foodCanvas) {
-                    const foodCode = 'FOOD{{ $item->id }}';
+                    const foodCode = '{{ $item->combo_id ? "COMBO" : "FOOD" }}{{ $item->id }}';
                     console.log('Generating food QR:', foodCode);
                     
                     new QRious({

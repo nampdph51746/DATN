@@ -64,7 +64,8 @@ class ComboController extends Controller
             $selectedProduct = \App\Models\Product::find($productId);
         }
 
-        return view('admin.combos.create', compact('products', 'selectedProduct', 'selectedVariant', 'comboProductVariantId', 'productId'));
+        $fromComboShow = $request->input('from_combo_show');
+        return view('admin.combos.create', compact('products', 'selectedProduct', 'selectedVariant', 'comboProductVariantId', 'productId', 'fromComboShow'));
     }
 
     public function store(Request $request)
@@ -79,20 +80,12 @@ class ComboController extends Controller
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
                 'combo_product_variant_id' => 'exists:product_variants,id',
-                'price' => 'required|numeric|min:0',
-                'stock_quantity' => 'required|integer|min:0',
                 'items' => 'required|array|min:1',
                 'items.*.item_product_variant_id' => 'exists:product_variants,id',
                 'items.*.quantity' => 'required|integer|min:1',
             ], [
                 'name.required' => 'Vui lòng nhập tên combo.',
                 'name.max' => 'Tên combo không được vượt quá 255 ký tự.',
-                'price.required' => 'Vui lòng nhập giá combo.',
-                'price.numeric' => 'Giá combo phải là số.',
-                'price.min' => 'Giá combo phải >= 0.',
-                'stock_quantity.required' => 'Vui lòng nhập số lượng tồn kho.',
-                'stock_quantity.integer' => 'Số lượng tồn kho phải là số nguyên.',
-                'stock_quantity.min' => 'Số lượng tồn kho phải >= 0.',
                 'items.required' => 'Vui lòng thêm ít nhất một mục vào combo.',
                 'items.min' => 'Vui lòng thêm ít nhất một mục vào combo.',
                 'items.*.item_product_variant_id.exists' => 'Biến thể không tồn tại.',
@@ -111,31 +104,48 @@ class ComboController extends Controller
             $comboProductVariantId = $request->input('combo_product_variant_id');
             $items = $request->input('items');
             $comboName = $request->input('name');
-            $comboPrice = $request->input('price');
-            $comboStock = $request->input('stock_quantity');
+            $comboStock = 1; // luôn là 1 khi tạo mới
 
-            \Log::debug('ComboController@store - comboProductVariantId', ['comboProductVariantId' => $comboProductVariantId]);
-            \Log::debug('ComboController@store - items', ['items' => $items]);
             $comboVariant = ProductVariant::find($comboProductVariantId);
-            \Log::debug('ComboController@store - comboVariant', ['comboVariant' => $comboVariant]);
 
+            // Thêm kiểm tra tồn tại biến thể đại diện
             if (!$comboVariant) {
                 Log::error('ComboController@store - Không tìm thấy comboVariant');
-                throw new \Exception('Không tìm thấy biến thể đại diện cho combo');
+                return back()->withErrors(['combo_product_variant_id' => 'Vui lòng chọn biến thể đại diện hợp lệ.'])->withInput();
             }
 
-            Log::debug('ComboController@store - comboVariant->is_active', ['is_active' => $comboVariant->is_active]);
-            if (!$comboVariant->is_active) {
-                Log::error('ComboController@store - Biến thể không ở trạng thái hoạt động');
-                return back()->withErrors(['combo_product_variant_id' => 'Biến thể không ở trạng thái hoạt động.'])->withInput();
+            // Xử lý upload ảnh
+            $comboImagePath = null;
+            if ($request->hasFile('combo_url')) {
+                $comboImagePath = $request->file('combo_url')->store('combos', 'public');
             }
+
+            // Tính tổng giá các biến thể trong combo (bao gồm cả biến thể đại diện)
+            $totalPrice = 0;
+            // Biến thể đại diện luôn có quantity = 1
+            $repVariant = ProductVariant::find($comboProductVariantId);
+            if ($repVariant) {
+                $totalPrice += $repVariant->price;
+            }
+            foreach ($items as $item) {
+                if (!isset($item['item_product_variant_id']) || !isset($item['quantity'])) continue;
+                // Bỏ qua biến thể đại diện vì đã cộng ở trên
+                if ($item['item_product_variant_id'] == $comboProductVariantId) continue;
+                $itemVariant = ProductVariant::find($item['item_product_variant_id']);
+                if ($itemVariant) {
+                    $totalPrice += $itemVariant->price * $item['quantity'];
+                }
+            }
+            // Áp dụng giảm giá 10%
+            $comboPrice = round($totalPrice * 0.9);
 
             // Tạo combo mới
             $combo = \App\Models\Combo::create([
                 'name' => $comboName ?? $comboVariant->sku,
-                'combo_product_variant_id' => $comboProductVariantId,
-                'price' => $comboPrice ?? $comboVariant->price,
-                'stock_quantity' => $comboStock ?? $comboVariant->stock_quantity,
+                'combo_product_variant_id' => $comboVariant->id,
+                'stock_quantity' => $comboStock,
+                'price' => $comboPrice,
+                'combo_url' => $comboImagePath
             ]);
             Log::info('ComboController@store - Combo created', ['combo_id' => $combo->getKey()]);
 
@@ -172,8 +182,8 @@ class ComboController extends Controller
             // Luôn thêm biến thể đại diện vào ComboPackageItem
             \App\Models\ComboPackageItem::create([
                 'combo_id' => $combo->getKey(),
-                'combo_product_variant_id' => $comboProductVariantId,
-                'item_product_variant_id' => $comboProductVariantId,
+                'combo_product_variant_id' => $comboVariant->id,
+                'item_product_variant_id' => $comboVariant->id,
                 'quantity' => 1,
             ]);
 
@@ -189,7 +199,7 @@ class ComboController extends Controller
                 if (!$itemVariant) continue;
                 \App\Models\ComboPackageItem::create([
                     'combo_id' => $combo->getKey(),
-                    'combo_product_variant_id' => $comboProductVariantId,
+                    'combo_product_variant_id' => $comboVariant->id,
                     'item_product_variant_id' => $item['item_product_variant_id'],
                     'quantity' => $item['quantity'],
                 ]);
@@ -197,6 +207,14 @@ class ComboController extends Controller
 
             DB::commit();
             \Log::info('ComboController@store - Combo created successfully for combo ID', ['id' => $combo->getKey()]);
+
+            // Luôn chuyển về trang show sản phẩm nếu có from_combo_show
+            if ($request->filled('from_combo_show') && $request->filled('product_id')) {
+                return redirect()->route('admin.products.show', $request->input('product_id'))
+                    ->with('success', 'Combo đã được tạo thành công.');
+            }
+
+            // Nếu không, chuyển về index combo
             return redirect()->route('admin.combos.index')->with('success', 'Combo đã được tạo thành công.');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -243,8 +261,6 @@ class ComboController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'combo_product_variant_id' => 'required|exists:product_variants,id',
-            'price' => 'required|numeric|min:0',
-            'stock_quantity' => 'required|integer|min:0',
             'items.*.item_product_variant_id' => 'required|exists:product_variants,id',
             'items.*.quantity' => 'required|integer|min:1',
         ]);
@@ -254,11 +270,24 @@ class ComboController extends Controller
 
             $combo = \App\Models\Combo::findOrFail($id);
 
+            // Xử lý upload ảnh mới
+            $comboImagePath = $combo->combo_url; // Giữ ảnh cũ
+            if ($request->hasFile('combo_url')) {
+                // Xóa ảnh cũ nếu có
+                if ($combo->combo_url && \Storage::disk('public')->exists($combo->combo_url)) {
+                    \Storage::disk('public')->delete($combo->combo_url);
+                }
+                // Upload ảnh mới
+                $comboImagePath = $request->file('combo_url')->store('combos', 'public');
+                \Log::debug('ComboController@update - Image uploaded', ['path' => $comboImagePath]);
+            }
+
             $combo->update([
                 'name' => $request->input('name'),
                 'combo_product_variant_id' => $request->input('combo_product_variant_id'),
                 'price' => $request->input('price'),
                 'stock_quantity' => $request->input('stock_quantity'),
+                'combo_url' => $comboImagePath,
             ]);
 
             // Xóa các mục cũ
@@ -273,6 +302,15 @@ class ComboController extends Controller
                     'quantity' => $item['quantity'],
                 ]);
             }
+
+            // Tính giá combo bằng tổng giá của toàn bộ sản phẩm biến thể trong combo rồi giảm đi 10%
+            $variantIds = $request->combo_product_variant_ids ?? [];
+            $totalPrice = \App\Models\ProductVariant::whereIn('id', $variantIds)->sum('price');
+            $comboPrice = round($totalPrice * 0.9);
+
+            $combo->update([
+                'price' => $comboPrice,
+            ]);
 
             DB::commit();
             return redirect()->route('admin.combos.index')->with('success', 'Combo đã được cập nhật thành công.');

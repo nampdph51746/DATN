@@ -27,7 +27,12 @@ class TicketPrintController extends Controller
     // Hiển thị QR cho từng sản phẩm
     public function showFoodQr($item_id)
     {
-        $item = BookingItem::findOrFail($item_id);
+        $item = BookingItem::with([
+            'combo.comboPackageItems.itemProductVariant.product',
+            'combo.comboPackageItems.itemProductVariant.productVariantOptions.attributeValue',
+            'productVariant.product'
+        ])->findOrFail($item_id);
+        
         $qrService = app(QrcodeService::class);
         // Chỉ sử dụng ID của booking item để tạo QR, không phải JSON
         $qrRaw = $qrService->generateQrCode((string)$item->id, 240);
@@ -173,7 +178,12 @@ class TicketPrintController extends Controller
     // Tải PDF cho sản phẩm
     public function printFoodPdf($item_id)
     {
-        $item = BookingItem::findOrFail($item_id);
+        $item = BookingItem::with([
+            'combo.comboPackageItems.itemProductVariant.product',
+            'combo.comboPackageItems.itemProductVariant.productVariantOptions.attributeValue',
+            'productVariant.product'
+        ])->findOrFail($item_id);
+        
         $qrService = app(QrcodeService::class);
         // Chỉ sử dụng ID của booking item để tạo QR
         $qrRaw = $qrService->generateQrCode((string)$item->id, 180);
@@ -182,7 +192,12 @@ class TicketPrintController extends Controller
             'item' => $item,
             'qrCodeBase64' => $qrCodeBase64
         ]);
-        return $pdf->download('san-pham-' . $item->id . '.pdf');
+        
+        $fileName = $item->combo_id 
+            ? 'combo-' . $item->combo->name . '-' . $item->id . '.pdf'
+            : 'san-pham-' . $item->id . '.pdf';
+            
+        return $pdf->download($fileName);
     }
 
 

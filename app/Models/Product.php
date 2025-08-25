@@ -17,6 +17,7 @@ class Product extends Model
         'image_url',
         'product_type',
         'is_active',
+        'base_price',
         'created_at',
         'updated_at'
     ];

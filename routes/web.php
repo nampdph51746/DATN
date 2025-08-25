@@ -44,20 +44,27 @@ use App\Http\Controllers\Admin\AdminProductCategoriesController;
 
 
 Route::get('/', [HomeController::class, 'index'])->name('client.home');
-Route::get('/movies', [HomeController::class, 'filter'])->name('movies.filter');
+Route::get('/movies', [HomeController::class, 'movies'])->name('movies.page');
+Route::get('/movies-filter', [HomeController::class, 'filter'])->name('movies.filter');
 Route::get('/movies/filter/{genreName?}', [HomeController::class, 'filter'])
     ->where('genreName', '.*') // Cho phép dấu cách, ký tự đặc biệt
     ->name('movies.filter.genre');
 Route::get('/movies/{id}', [HomeController::class, 'show'])->name('movies.show');
 Route::get('/movies/{id}/ticket-booking', [HomeController::class, 'ticketBooking'])->name('client.movies.ticketBooking');
 
-// Review routes
+// Comment routes
 Route::middleware('auth')->group(function () {
-    Route::post('/movies/{movie}/reviews', [App\Http\Controllers\Client\ReviewController::class, 'store'])->name('reviews.store');
-    Route::get('/movies/{movie}/reviews/check', [App\Http\Controllers\Client\ReviewController::class, 'checkUserCanReview'])->name('reviews.check');
+    Route::post('/movies/{movie}/comments', [App\Http\Controllers\Client\CommentController::class, 'store'])->name('comments.store');
+    Route::get('/movies/{movie}/comments/check', [App\Http\Controllers\Client\CommentController::class, 'checkUserCanComment'])->name('comments.check');
 });
 
-Route::get('/movies/{movie}/reviews', [App\Http\Controllers\Client\ReviewController::class, 'getReviews'])->name('reviews.get');
+Route::get('/movies/{movie}/comments', [App\Http\Controllers\Client\CommentController::class, 'getComments'])->name('comments.get');
+
+// Comment routes
+Route::middleware('auth')->group(function () {
+    Route::post('/movies/{movie}/comments', [App\Http\Controllers\Client\CommentController::class, 'store'])->name('comments.store');
+    Route::get('/movies/{movie}/comments/check', [App\Http\Controllers\Client\CommentController::class, 'checkUserCanComment'])->name('comments.check');
+});
 Route::get('/showtimes/{showtimeId}/seat-map', [SeatController::class, 'showSeatMap'])->name('client.seats.map');
 
 // Routes liên quan đến booking - áp dụng middleware check ban
@@ -450,21 +457,19 @@ Route::prefix('admin')->name('admin.')->group(function () {
 //     ]);
 // });
 
-// Admin Reviews Routes
-Route::prefix('admin/reviews')->name('admin.reviews.')->group(function () {
-    Route::get('/', [App\Http\Controllers\Admin\AdminReviewController::class, 'index'])->name('index');
-    Route::get('/content-filter', [App\Http\Controllers\Admin\AdminReviewController::class, 'contentFilterSettings'])->name('content-filter');
-    Route::post('/add-sensitive-word', [App\Http\Controllers\Admin\AdminReviewController::class, 'addSensitiveWord'])->name('add-sensitive-word');
-    Route::delete('/remove-sensitive-word', [App\Http\Controllers\Admin\AdminReviewController::class, 'removeSensitiveWord'])->name('remove-sensitive-word');
-    Route::post('/{review}/recheck', [App\Http\Controllers\Admin\AdminReviewController::class, 'recheckReview'])->name('recheck');
-    Route::post('/{review}/force-approve', [App\Http\Controllers\Admin\AdminReviewController::class, 'forceApprove'])->name('force-approve');
-    Route::get('/{review}', [App\Http\Controllers\Admin\AdminReviewController::class, 'show'])->name('show');
-    Route::patch('/{review}/status', [App\Http\Controllers\Admin\AdminReviewController::class, 'updateStatus'])->name('update-status');
-    Route::post('/bulk-status', [App\Http\Controllers\Admin\AdminReviewController::class, 'bulkUpdateStatus'])->name('bulk-status');
-    Route::delete('/{review}', [App\Http\Controllers\Admin\AdminReviewController::class, 'destroy'])->name('destroy');
-    Route::delete('/bulk-delete', [App\Http\Controllers\Admin\AdminReviewController::class, 'bulkDelete'])->name('bulk-delete');
-    Route::get('/recalculate-ratings/all', [App\Http\Controllers\Admin\AdminReviewController::class, 'recalculateAllRatings'])->name('recalculate-all');
-    Route::get('/reset-stats/all', [App\Http\Controllers\Admin\AdminReviewController::class, 'resetAllStats'])->name('reset-stats');
+// Admin Comments Routes
+Route::prefix('admin/comments')->name('admin.comments.')->group(function () {
+    Route::get('/', [App\Http\Controllers\Admin\AdminCommentController::class, 'index'])->name('index');
+    Route::get('/content-filter', [App\Http\Controllers\Admin\AdminCommentController::class, 'contentFilterSettings'])->name('content-filter');
+    Route::post('/add-sensitive-word', [App\Http\Controllers\Admin\AdminCommentController::class, 'addSensitiveWord'])->name('add-sensitive-word');
+    Route::delete('/remove-sensitive-word', [App\Http\Controllers\Admin\AdminCommentController::class, 'removeSensitiveWord'])->name('remove-sensitive-word');
+    Route::post('/{comment}/recheck', [App\Http\Controllers\Admin\AdminCommentController::class, 'recheckComment'])->name('recheck');
+    Route::post('/{comment}/force-approve', [App\Http\Controllers\Admin\AdminCommentController::class, 'forceApprove'])->name('force-approve');
+    Route::get('/{comment}', [App\Http\Controllers\Admin\AdminCommentController::class, 'show'])->name('show');
+    Route::patch('/{comment}/status', [App\Http\Controllers\Admin\AdminCommentController::class, 'updateStatus'])->name('update-status');
+    Route::post('/bulk-status', [App\Http\Controllers\Admin\AdminCommentController::class, 'bulkUpdateStatus'])->name('bulk-status');
+    Route::delete('/{comment}', [App\Http\Controllers\Admin\AdminCommentController::class, 'destroy'])->name('destroy');
+    Route::delete('/bulk-delete', [App\Http\Controllers\Admin\AdminCommentController::class, 'bulkDelete'])->name('bulk-delete');
 });
 
 require __DIR__.'/auth.php';

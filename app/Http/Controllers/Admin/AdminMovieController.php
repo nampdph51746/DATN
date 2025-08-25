@@ -206,6 +206,17 @@ class AdminMovieController extends Controller
 
         $data = $request->except(['image', 'genre_ids', 'actor_ids', 'director_id']);
 
+        // Tự động set status dựa trên release_date
+        $releaseDate = Carbon::parse($request->release_date);
+        $today = Carbon::today();
+        
+        if ($releaseDate->eq($today)) {
+            $data['status'] = 'showing';
+        } elseif ($releaseDate->gt($today)) {
+            $data['status'] = 'upcoming';
+        } else {
+            $data['status'] = 'ended';
+        }
 
         // Đảm bảo thư mục tồn tại
         $posterDir = storage_path('app/public/posters');
@@ -356,6 +367,18 @@ class AdminMovieController extends Controller
             ]);
 
         $data = $request->except(['poster', 'genre_ids', 'actor_ids', 'director_id']);
+
+        // Tự động set status dựa trên release_date
+        $releaseDate = Carbon::parse($request->release_date);
+        $today = Carbon::today();
+        
+        if ($releaseDate->eq($today)) {
+            $data['status'] = 'showing';
+        } elseif ($releaseDate->gt($today)) {
+            $data['status'] = 'upcoming';
+        } else {
+            $data['status'] = 'ended';
+        }
 
         // Đảm bảo thư mục tồn tại
         $posterDir = storage_path('app/public/posters');

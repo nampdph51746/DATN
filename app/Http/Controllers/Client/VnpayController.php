@@ -11,6 +11,7 @@ use App\Models\Booking;
 use App\Models\Payment;
 use App\Models\SeatType;
 use App\Models\Showtime;
+use App\Models\Combo;
 use App\Enums\SeatStatus;
 use App\Enums\TicketStatus;
 use App\Models\BookingItem;
@@ -141,6 +142,7 @@ class VnpayController extends Controller
                                 'product_variant_id' => $item['product_variant_id'],
                                 'quantity' => $item['quantity'],
                                 'price_at_purchase' => $item['price_at_purchase'],
+                                'combo_id' => isset($item['combo_id']) ? $item['combo_id'] : null, // Thêm combo_id cho pending booking
                             ]);
                         }
                         Log::info('Created booking items for pending booking: ' . $booking->id);
@@ -551,12 +553,18 @@ class VnpayController extends Controller
                         : ($bookingData['items'] ?? []);
                     if (is_array($items)) {
                         foreach ($items as $item) {
-                            BookingItem::create([
+                            $bookingItem = BookingItem::create([
                                 'booking_id' => $booking->id,
                                 'product_variant_id' => $item['product_variant_id'],
                                 'quantity' => $item['quantity'],
                                 'price_at_purchase' => $item['price_at_purchase'],
+                                'combo_id' => isset($item['combo_id']) ? $item['combo_id'] : null, // Thêm combo_id
                             ]);
+                            
+                            // Log chi tiết item được tạo
+                            Log::info('Created booking item for booking: ' . $booking->id . 
+                                     ', variant: ' . $item['product_variant_id'] . 
+                                     ', combo_id: ' . ($item['combo_id'] ?? 'null'));
                         }
                         Log::info('Created booking items for booking: ' . $booking->id);
                     }
@@ -564,11 +572,34 @@ class VnpayController extends Controller
 
                 // Cập nhật stock quantity chỉ khi thanh toán thành công
                 foreach ($booking->bookingItems as $bookingItem) {
-                    $variant = ProductVariant::find($bookingItem->product_variant_id);
-                    if ($variant) {
-                        $variant->stock_quantity = max(0, $variant->stock_quantity - (int)$bookingItem->quantity);
-                        $variant->save();
-                        Log::info('Updated stock for product variant: ' . $variant->id);
+                    if ($bookingItem->isCombo()) {
+                        // Đây là combo - cập nhật stock combo
+                        $combo = Combo::find($bookingItem->combo_id);
+                        if ($combo) {
+                            $combo->stock_quantity = max(0, $combo->stock_quantity - (int)$bookingItem->quantity);
+                            $combo->save();
+                            Log::info('Updated stock for combo: ' . $combo->id . ' (' . $combo->name . ')');
+                        }
+                        
+                        // Cũng cập nhật combo's product variant (nếu cần thiết cho báo cáo)
+                        if ($bookingItem->product_variant_id) {
+                            $variant = ProductVariant::find($bookingItem->product_variant_id);
+                            if ($variant) {
+                                $variant->stock_quantity = max(0, $variant->stock_quantity - (int)$bookingItem->quantity);
+                                $variant->save();
+                                Log::info('Updated stock for combo product variant: ' . $variant->id);
+                            }
+                        }
+                    } else {
+                        // Đây là sản phẩm thường - chỉ cập nhật product variant
+                        if ($bookingItem->product_variant_id) {
+                            $variant = ProductVariant::find($bookingItem->product_variant_id);
+                            if ($variant) {
+                                $variant->stock_quantity = max(0, $variant->stock_quantity - (int)$bookingItem->quantity);
+                                $variant->save();
+                                Log::info('Updated stock for regular product variant: ' . $variant->id);
+                            }
+                        }
                     }
                 }
 

@@ -5,9 +5,10 @@ namespace App\Http\Controllers\Client;
 use App\Models\Room;
 use App\Models\Movie;
 use App\Models\Product;
+use App\Models\Combo;
 use App\Models\SeatType;
 use App\Models\Showtime;
-use App\Models\Review;
+use App\Models\Comment;
 use App\Models\RoomType;
 use App\Enums\MovieStatus;
 use Illuminate\Http\Request;
@@ -209,19 +210,19 @@ class HomeController extends Controller
     public function show(Request $request, $id)
     {
         // Lấy thông tin phim (kèm quốc gia, giới hạn độ tuổi)
-        $movie = Movie::with(['country', 'ageLimit', 'genres'])->findOrFail($id);
+        $movie = Movie::with(['country', 'ageLimit', 'genres', 'director', 'actors'])->findOrFail($id);
 
-        // Lấy reviews đã được duyệt
-        $reviews = Review::with('user')
+        // Lấy comments đã được duyệt
+        $comments = \App\Models\Comment::with('user')
             ->where('movie_id', $id)
             ->where('status', 'approved')
             ->orderBy('created_at', 'desc')
             ->take(5)
             ->get();
 
-        // Kiểm tra user hiện tại có thể review không
-        $canReview = false;
-        $reviewMessage = '';
+        // Kiểm tra user hiện tại có thể comment không
+        $canComment = false;
+        $commentMessage = '';
         
         if (Auth::check()) {
             $user = Auth::user();
@@ -234,20 +235,20 @@ class HomeController extends Controller
                 ->where('status', 'confirmed')
                 ->exists();
 
-            // Kiểm tra đã đánh giá chưa
-            $hasReviewed = Review::where('user_id', $user->id)
+            // Kiểm tra đã comment chưa
+            $hasCommented = \App\Models\Comment::where('user_id', $user->id)
                 ->where('movie_id', $id)
                 ->exists();
 
             if (!$hasWatchedMovie) {
-                $reviewMessage = 'Bạn cần xem phim này trước khi có thể đánh giá.';
-            } elseif ($hasReviewed) {
-                $reviewMessage = 'Bạn đã đánh giá phim này rồi.';
+                $commentMessage = 'Bạn cần xem phim này trước khi có thể bình luận.';
+            } elseif ($hasCommented) {
+                $commentMessage = 'Bạn đã bình luận về phim này rồi.';
             } else {
-                $canReview = true;
+                $canComment = true;
             }
         } else {
-            $reviewMessage = 'Vui lòng đăng nhập để đánh giá.';
+            $commentMessage = 'Vui lòng đăng nhập để bình luận.';
         }
 
         // Lấy danh sách phòng
@@ -298,9 +299,9 @@ class HomeController extends Controller
             'rooms',
             'dates',
             'selectedDate',
-            'reviews',
-            'canReview',
-            'reviewMessage',
+            'comments',
+            'canComment',
+            'commentMessage',
             'isUserBanned',
             'banInfo'
         ));
@@ -337,16 +338,34 @@ class HomeController extends Controller
         }
 
         $seatTypes = SeatType::all();
+        
+        // Load products (food & drinks) grouped by category
         $products = Product::where('is_active', true)
+            ->whereIn('product_type', ['food', 'drink']) // Exclude combo products
             ->with([
                 'category',
                 'productVariants' => function ($query) {
                     $query->where('is_active', true)
+                        ->where('stock_quantity', '>', 0)
                         ->with(['productVariantOptions.attributeValue.attribute']);
                 }
             ])
             ->get()
             ->groupBy('category.name'); // Group by category name
+            
+        // Load combos with their items
+        $combos = Combo::with([
+            'comboProductVariant' => function ($query) {
+                $query->where('is_active', true)
+                    ->where('stock_quantity', '>', 0)
+                    ->with(['product', 'productVariantOptions.attributeValue.attribute']);
+            },
+            'comboPackageItems.itemProductVariant' => function ($query) {
+                $query->with(['product', 'productVariantOptions.attributeValue.attribute']);
+            }
+        ])
+        ->where('stock_quantity', '>', 0)
+        ->get();
         $roomIds = $showtimes->pluck('room_id')->unique()->toArray();
         $roomsData = Room::query()
             ->with(['cinema' => function ($query) {
@@ -419,6 +438,7 @@ class HomeController extends Controller
             'showtimeId',
             'seatTypes',
             'products',
+            'combos',
             'showtime',
             'roomsData',
             'cinemas',

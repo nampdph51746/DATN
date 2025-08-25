@@ -257,16 +257,16 @@
                                 @auth
                                     @if(isset($isUserBanned) && $isUserBanned)
                                         <a href="#" class="ticket-btn" onclick="showBanAlert(event, '{{ $banInfo->banned_until->format('d/m/Y H:i') }}', {{ $banInfo->failed_attempts_count }})">
-                                            <i class="fa fa-ticket" aria-hidden="true"></i> Đặt vé
+                                            <i class="fa fa-shopping-cart" aria-hidden="true"></i> Đặt vé
                                         </a>
                                     @else
                                         <a href="{{ route('client.movies.ticketBooking', ['id' => $movie->id]) }}" class="ticket-btn">
-                                            <i class="fa fa-ticket" aria-hidden="true"></i> Đặt vé
+                                            <i class="fa fa-shopping-cart" aria-hidden="true"></i> Đặt vé
                                         </a>
                                     @endif
                                 @else
                                     <a href="#" class="ticket-btn" onclick="showLoginPrompt(event, '{{ route('client.movies.ticketBooking', ['id' => $movie->id]) }}')">
-                                        <i class="fa fa-ticket" aria-hidden="true"></i> Đặt vé
+                                        <i class="fa fa-shopping-cart" aria-hidden="true"></i> Đặt vé
                                     </a>
                                 @endauth
                             </div>
@@ -319,16 +319,16 @@
                                 @auth
                                     @if(isset($isUserBanned) && $isUserBanned)
                                         <a href="#" class="ticket-btn" onclick="showBanAlert(event, '{{ $banInfo->banned_until->format('d/m/Y H:i') }}', {{ $banInfo->failed_attempts_count }})">
-                                            <i class="fa fa-ticket" aria-hidden="true"></i> Đặt vé
+                                            <i class="fa fa-shopping-cart" aria-hidden="true"></i> Đặt vé
                                         </a>
                                     @else
                                         <a href="{{ route('client.movies.ticketBooking', ['id' => $movie->id]) }}" class="ticket-btn">
-                                            <i class="fa fa-ticket" aria-hidden="true"></i> Đặt vé
+                                            <i class="fa fa-shopping-cart" aria-hidden="true"></i> Đặt vé
                                         </a>
                                     @endif
                                 @else
                                     <a href="#" class="ticket-btn" onclick="showLoginPrompt(event, '{{ route('client.movies.ticketBooking', ['id' => $movie->id]) }}')">
-                                        <i class="fa fa-ticket" aria-hidden="true"></i> Đặt vé
+                                        <i class="fa fa-shopping-cart" aria-hidden="true"></i> Đặt vé
                                     </a>
                                 @endauth
                             </div>
