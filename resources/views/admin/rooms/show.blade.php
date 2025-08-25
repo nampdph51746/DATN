@@ -512,8 +512,8 @@
                             <!-- Bước 1: Thiết lập số hàng -->
                             <div class="mb-3">
                                 <label for="total_rows" class="form-label">Số hàng muốn tạo</label>
-                                <input type="number" id="total_rows" class="form-control" min="1" max="26" value="5">
-                                <small class="text-muted">Tối đa 26 hàng (A-Z)</small>
+                                <input type="number" id="total_rows" class="form-control" min="1" max="26" value="1">
+                                <small class="text-muted" id="total_rows_help">Tối đa 26 hàng (A-Z)</small>
                             </div>
 
                             <!-- Bước 2: Thiết lập số ghế mỗi hàng -->
@@ -667,7 +667,7 @@
                                                     <option value="{{ chr(64 + $i) }}">{{ chr(64 + $i) }}</option>
                                                 @endfor
                                             </select>
-                                            <div class="form-text">Ví dụ: A, B, C...</div>
+                                            <div class="form-text" id="rowCharHelp">Dropdown sẽ được cập nhật tự động...</div>
                                         </div>
                                     </div>
                                     <div class="col-6">
@@ -702,6 +702,16 @@
                                     </ul>
                                 </div>
 
+                                <!-- Thông báo khi phòng đầy -->
+                                <div id="roomFullWarning" class="alert alert-warning" style="display: none;">
+                                    <h6><i class="fas fa-exclamation-triangle me-2"></i>Phòng đã đầy ghế!</h6>
+                                    <p class="mb-2">Phòng hiện tại đã có <strong><span id="currentSeatsCount">{{ $seats->count() }}</span></strong> ghế, đạt tối đa sức chứa.</p>
+                                    <p class="mb-0">
+                                        <strong>Để thêm ghế mới:</strong> Hãy xóa một số ghế hiện có hoặc 
+                                        <a href="javascript:void(0)" onclick="editCapacity()" class="alert-link">tăng sức chứa phòng</a>.
+                                    </p>
+                                </div>
+
                                 <button type="submit" class="btn btn-success w-100">
                                     <i class="fas fa-plus me-2"></i> Thêm ghế
                                 </button>
@@ -715,19 +725,19 @@
                                 <div class="row text-center">
                                     <div class="col-4">
                                         <div class="bg-light p-2 rounded">
-                                            <div class="fw-bold text-primary">{{ $seats->count() }}</div>
+                                            <div class="fw-bold text-primary" id="existingSeatsDisplay">{{ $seats->count() }}</div>
                                             <small>Đã có</small>
                                         </div>
                                     </div>
                                     <div class="col-4">
                                         <div class="bg-light p-2 rounded">
-                                            <div class="fw-bold text-success">{{ $room->capacity - $seats->count() }}</div>
+                                            <div class="fw-bold text-success" id="remainingSeatsDisplay">{{ $room->capacity - $seats->count() }}</div>
                                             <small>Còn lại</small>
                                         </div>
                                     </div>
                                     <div class="col-4">
                                         <div class="bg-light p-2 rounded">
-                                            <div class="fw-bold text-info">{{ $room->capacity }}</div>
+                                            <div class="fw-bold text-info" id="totalCapacityDisplay">{{ $room->capacity }}</div>
                                             <small>Tổng cộng</small>
                                         </div>
                                     </div>
@@ -945,6 +955,20 @@
     .btn-danger {
         transition: all 0.2s ease;
     }
+    
+    /* Styling for smart row dropdown */
+    #single_row_char option[data-existing="false"] {
+        background-color: #d4edda !important;
+        font-weight: bold;
+    }
+    
+    #single_row_char option[data-existing="true"] {
+        background-color: #e7f3ff !important;
+    }
+    
+    #rowCharHelp .fas {
+        margin-right: 5px;
+    }
 </style>
 
 <script>
@@ -978,17 +1002,108 @@ const allowedSeatTypes = {!! json_encode($room->allowedSeatTypes()->map(function
     ];
 })) !!};
 
+// Dữ liệu về các hàng ghế hiện có
+const existingRowsData = {!! json_encode($seats->groupBy('row_char')->map(function($rowSeats, $rowChar) {
+    return [
+        'row_char' => $rowChar,
+        'seat_count' => $rowSeats->count(),
+        'seat_numbers' => $rowSeats->pluck('seat_number')->sort()->values()->toArray(),
+        'max_seat_number' => $rowSeats->max('seat_number'),
+        'seat_types' => $rowSeats->groupBy('seat_type_id')->map(function($typeSeats, $typeId) {
+            $seatType = $typeSeats->first()->seatType;
+            return [
+                'type_id' => $typeId,
+                'type_name' => $seatType->name,
+                'count' => $typeSeats->count()
+            ];
+        })->values()->toArray()
+    ];
+})->values()) !!};
+
 let seatConfiguration = []; // Lưu cấu hình ghế theo hàng
 
+// Đồng bộ dữ liệu roomData với DOM thực tế
+function syncDataWithDOM() {
+    // Đếm số ghế thực tế từ DOM
+    const actualSeatsCount = document.querySelectorAll('.seat[data-seat-id]').length;
+    
+    // Cập nhật roomData.existingSeats nếu khác với dữ liệu từ server
+    if (actualSeatsCount !== roomData.existingSeats) {
+        console.log('Syncing seat count:', {
+            serverCount: roomData.existingSeats,
+            actualCount: actualSeatsCount
+        });
+        roomData.existingSeats = actualSeatsCount;
+    }
+    
+    // Đồng bộ dữ liệu hàng ghế từ DOM
+    syncExistingRowsData();
+}
+
+// Đồng bộ dữ liệu các hàng ghế từ DOM
+function syncExistingRowsData() {
+    const seats = document.querySelectorAll('.seat[data-seat-id]');
+    const rowsMap = new Map();
+    
+    seats.forEach(seatElement => {
+        const rowChar = seatElement.getAttribute('data-row-char');
+        const seatNumber = parseInt(seatElement.getAttribute('data-seat-number'));
+        
+        if (rowChar && seatNumber) {
+            if (!rowsMap.has(rowChar)) {
+                rowsMap.set(rowChar, {
+                    row_char: rowChar,
+                    seat_count: 0,
+                    seat_numbers: [],
+                    max_seat_number: 0,
+                    seat_types: []
+                });
+            }
+            
+            const rowData = rowsMap.get(rowChar);
+            rowData.seat_count++;
+            rowData.seat_numbers.push(seatNumber);
+            rowData.max_seat_number = Math.max(rowData.max_seat_number, seatNumber);
+        }
+    });
+    
+    // Sắp xếp seat_numbers và cập nhật existingRowsData
+    const newExistingRowsData = Array.from(rowsMap.values()).map(row => {
+        row.seat_numbers.sort((a, b) => a - b);
+        return row;
+    });
+    
+    // Cập nhật global variable
+    existingRowsData.length = 0;
+    existingRowsData.push(...newExistingRowsData);
+    
+    console.log('Synced existing rows data:', existingRowsData);
+}
+
 document.addEventListener('DOMContentLoaded', function() {
+    // Đồng bộ dữ liệu với DOM để đảm bảo chính xác
+    syncDataWithDOM();
+    
     // Đồng bộ hiển thị sức chứa
     syncCapacityDisplay();
     
     // Khởi tạo interface
     updateRowSeatTypes();
     
+    // Kiểm tra và cập nhật trạng thái các button thêm ghế
+    updateAddSeatButtonsState();
+    
+    // Cập nhật dropdown hàng ghế cho thêm ghế đơn
+    updateRowCharDropdown();
+    
+    // Cập nhật help text cho input số hàng
+    updateTotalRowsHelp();
+    
     // Event listeners
-    document.getElementById('total_rows').addEventListener('input', updateRowSeatTypes);
+    document.getElementById('total_rows').addEventListener('input', function() {
+        updateRowSeatTypes();
+        updateTotalRowsHelp();
+    });
     document.getElementById('seats_per_row').addEventListener('input', updateRowSeatTypes);
 });
 
@@ -997,12 +1112,300 @@ function syncCapacityDisplay() {
     const capacity = roomData.capacity;
     const capacityDisplay = document.getElementById('capacity-display');
     const roomCapacityElement = document.getElementById('room-capacity');
+    const totalCapacityDisplay = document.getElementById('totalCapacityDisplay');
     
     if (capacityDisplay) {
         capacityDisplay.textContent = capacity;
     }
     if (roomCapacityElement) {
         roomCapacityElement.textContent = capacity;
+    }
+    if (totalCapacityDisplay) {
+        totalCapacityDisplay.textContent = capacity;
+    }
+}
+
+// Kiểm tra và cập nhật trạng thái các button thêm ghế
+function updateAddSeatButtonsState() {
+    const currentSeats = roomData.existingSeats;
+    const capacity = roomData.capacity;
+    const hasSpace = currentSeats < capacity;
+    
+    console.log('Updating add seat buttons state:', {
+        currentSeats,
+        capacity,
+        hasSpace
+    });
+    
+    // Cập nhật button Import ghế
+    const importBtn = document.getElementById('importSeatsBtn');
+    if (importBtn) {
+        importBtn.disabled = !hasSpace;
+        if (hasSpace) {
+            importBtn.title = '';
+        } else {
+            importBtn.title = 'Phòng đã đầy ghế, không thể import thêm';
+        }
+    }
+    
+    // Cập nhật button thêm ghế đơn
+    const addSingleForm = document.getElementById('addSingleSeatForm');
+    if (addSingleForm) {
+        const submitBtn = addSingleForm.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.disabled = !hasSpace;
+            if (hasSpace) {
+                submitBtn.innerHTML = '<i class="fas fa-plus me-2"></i> Thêm ghế';
+                submitBtn.className = 'btn btn-success w-100';
+                submitBtn.title = '';
+            } else {
+                submitBtn.innerHTML = '<i class="fas fa-ban me-2"></i> Phòng đã đầy';
+                submitBtn.className = 'btn btn-secondary w-100';
+                submitBtn.title = 'Phòng đã đầy ghế, không thể thêm ghế mới';
+            }
+        }
+    }
+    
+    // Hiển thị/ẩn thông báo phòng đầy
+    const roomFullWarning = document.getElementById('roomFullWarning');
+    const currentSeatsCountSpan = document.getElementById('currentSeatsCount');
+    if (roomFullWarning && currentSeatsCountSpan) {
+        if (!hasSpace) {
+            currentSeatsCountSpan.textContent = currentSeats;
+            roomFullWarning.style.display = 'block';
+        } else {
+            roomFullWarning.style.display = 'none';
+        }
+    }
+    
+    // Cập nhật thông tin số ghế còn lại và các thống kê
+    const remaining = capacity - currentSeats;
+    
+    // Cập nhật phần thống kê ghế hiện có
+    const existingSeatsDisplay = document.getElementById('existingSeatsDisplay');
+    const remainingSeatsDisplay = document.getElementById('remainingSeatsDisplay');
+    const totalCapacityDisplay = document.getElementById('totalCapacityDisplay');
+    
+    if (existingSeatsDisplay) {
+        existingSeatsDisplay.textContent = currentSeats;
+    }
+    
+    if (remainingSeatsDisplay) {
+        remainingSeatsDisplay.textContent = remaining;
+        // Thay đổi màu nếu hết chỗ
+        if (remaining <= 0) {
+            remainingSeatsDisplay.className = 'fw-bold text-danger';
+        } else {
+            remainingSeatsDisplay.className = 'fw-bold text-success';
+        }
+    }
+    
+    if (totalCapacityDisplay) {
+        totalCapacityDisplay.textContent = capacity;
+    }
+    
+    // Cập nhật dropdown hàng ghế khi có thay đổi
+    updateRowCharDropdown();
+    
+    // Cập nhật help text cho input số hàng
+    updateTotalRowsHelp();
+    
+    // Cập nhật thông tin số ghế còn lại trong selector cũ (fallback)
+    const remainingElement = document.querySelector('.fw-bold.text-success');
+    if (remainingElement && !remainingSeatsDisplay) {
+        remainingElement.textContent = remaining;
+        
+        // Thay đổi màu nếu hết chỗ
+        if (remaining <= 0) {
+            remainingElement.className = 'fw-bold text-danger';
+        } else {
+            remainingElement.className = 'fw-bold text-success';
+        }
+    }
+}
+
+// Cập nhật dropdown hàng ghế thông minh
+function updateRowCharDropdown() {
+    const dropdown = document.getElementById('single_row_char');
+    const helpText = document.getElementById('rowCharHelp');
+    if (!dropdown) return;
+    
+    // Lấy danh sách các hàng đã có ghế
+    const existingRows = existingRowsData.map(row => row.row_char).sort();
+    const lastExistingRow = existingRows.length > 0 ? existingRows[existingRows.length - 1] : null;
+    
+    // Tìm hàng tiếp theo có thể thêm (hàng tiếp theo sau hàng cuối)
+    let nextAvailableRow = null;
+    if (lastExistingRow) {
+        const nextRowCode = lastExistingRow.charCodeAt(0) + 1;
+        if (nextRowCode <= 90) { // Z = 90
+            nextAvailableRow = String.fromCharCode(nextRowCode);
+        }
+    } else {
+        nextAvailableRow = 'A'; // Nếu chưa có hàng nào
+    }
+    
+    // Clear dropdown
+    dropdown.innerHTML = '<option value="">Chọn hàng</option>';
+    
+    // Thêm các hàng đã có ghế (có thể thêm ghế vào)
+    existingRows.forEach(rowChar => {
+        const rowData = existingRowsData.find(r => r.row_char === rowChar);
+        const option = document.createElement('option');
+        option.value = rowChar;
+        option.textContent = `${rowChar} (${rowData.seat_count} ghế hiện có)`;
+        option.setAttribute('data-existing', 'true');
+        option.setAttribute('data-seat-count', rowData.seat_count);
+        option.setAttribute('data-max-seat', rowData.max_seat_number);
+        dropdown.appendChild(option);
+    });
+    
+    // Thêm hàng tiếp theo (hàng mới)
+    if (nextAvailableRow) {
+        const option = document.createElement('option');
+        option.value = nextAvailableRow;
+        option.textContent = `${nextAvailableRow} (hàng mới)`;
+        option.setAttribute('data-existing', 'false');
+        option.setAttribute('data-seat-count', '0');
+        option.setAttribute('data-max-seat', '0');
+        option.style.fontWeight = 'bold';
+        option.style.color = '#28a745';
+        dropdown.appendChild(option);
+    }
+    
+    // Cập nhật help text
+    if (helpText) {
+        if (existingRows.length > 0) {
+            helpText.innerHTML = `
+                <i class="fas fa-info-circle text-info"></i> 
+                Hàng có ghế: <strong>${existingRows.join(', ')}</strong>
+                ${nextAvailableRow ? ` | Hàng mới: <strong class="text-success">${nextAvailableRow}</strong>` : ''}
+            `;
+        } else {
+            helpText.innerHTML = `
+                <i class="fas fa-plus-circle text-success"></i> 
+                Phòng chưa có ghế. Bắt đầu với hàng <strong>A</strong>.
+            `;
+        }
+    }
+    
+    // Thêm event listener để cập nhật gợi ý số ghế (chỉ thêm một lần)
+    dropdown.removeEventListener('change', updateSeatNumberSuggestion);
+    dropdown.addEventListener('change', updateSeatNumberSuggestion);
+}
+
+// Cập nhật gợi ý số ghế dựa trên hàng đã chọn
+function updateSeatNumberSuggestion() {
+    const rowDropdown = document.getElementById('single_row_char');
+    const seatNumberInput = document.getElementById('single_seat_number');
+    const seatNumberFormText = seatNumberInput.nextElementSibling;
+    
+    if (!rowDropdown.value) {
+        seatNumberFormText.textContent = 'Ví dụ: 1, 2, 3...';
+        seatNumberInput.placeholder = '';
+        return;
+    }
+    
+    const selectedOption = rowDropdown.selectedOptions[0];
+    const isExisting = selectedOption.getAttribute('data-existing') === 'true';
+    const seatCount = parseInt(selectedOption.getAttribute('data-seat-count'));
+    const maxSeat = parseInt(selectedOption.getAttribute('data-max-seat'));
+    
+    if (isExisting) {
+        // Hàng đã có ghế - gợi ý số ghế tiếp theo
+        const rowData = existingRowsData.find(r => r.row_char === rowDropdown.value);
+        const existingNumbers = rowData.seat_numbers;
+        
+        // Tìm số ghế tiếp theo có thể thêm
+        let suggestedNumber = maxSeat + 1;
+        
+        // Tìm gaps trong dãy số ghế hiện có
+        const gaps = [];
+        for (let i = 1; i < maxSeat; i++) {
+            if (!existingNumbers.includes(i)) {
+                gaps.push(i);
+            }
+        }
+        
+        if (gaps.length > 0) {
+            seatNumberFormText.innerHTML = `
+                <strong>Gợi ý:</strong> 
+                <span class="text-success">${suggestedNumber}</span> (ghế mới) hoặc 
+                <span class="text-info">${gaps.slice(0, 3).join(', ')}</span> (lấp chỗ trống)
+                ${gaps.length > 3 ? '...' : ''}
+            `;
+        } else {
+            seatNumberFormText.innerHTML = `
+                <strong>Gợi ý:</strong> 
+                <span class="text-success">${suggestedNumber}</span> (ghế tiếp theo)
+            `;
+        }
+        
+        seatNumberInput.placeholder = suggestedNumber.toString();
+    } else {
+        // Hàng mới - bắt đầu từ số 1
+        seatNumberFormText.innerHTML = `
+            <strong>Hàng mới:</strong> 
+            <span class="text-success">Bắt đầu từ số 1</span>
+        `;
+        seatNumberInput.placeholder = '1';
+    }
+}
+
+// Cập nhật help text cho input số hàng
+function updateTotalRowsHelp() {
+    const helpElement = document.getElementById('total_rows_help');
+    const totalRowsInput = document.getElementById('total_rows');
+    
+    if (!helpElement || !totalRowsInput) return;
+    
+    const existingRows = existingRowsData.map(row => row.row_char).sort();
+    const currentValue = parseInt(totalRowsInput.value) || 0;
+    
+    if (existingRows.length > 0) {
+        const lastRow = existingRows[existingRows.length - 1];
+        const startRowCode = lastRow.charCodeAt(0) + 1;
+        const maxPossible = 90 - startRowCode + 1; // Z = 90
+        
+        if (maxPossible <= 0) {
+            helpElement.innerHTML = `
+                <span class="text-danger">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Không thể tạo thêm hàng (đã đến hàng Z)
+                </span>
+            `;
+            totalRowsInput.max = 0;
+        } else {
+            const nextRow = String.fromCharCode(startRowCode);
+            const maxRow = 'Z';
+            
+            helpElement.innerHTML = `
+                <span class="text-info">
+                    <i class="fas fa-info-circle"></i>
+                    Có thể tạo ${maxPossible} hàng nữa (${nextRow} - ${maxRow})
+                </span>
+            `;
+            totalRowsInput.max = maxPossible;
+            
+            // Validate current value
+            if (currentValue > maxPossible) {
+                totalRowsInput.value = maxPossible;
+                helpElement.innerHTML += `
+                    <br><span class="text-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Đã điều chỉnh về ${maxPossible} hàng
+                    </span>
+                `;
+            }
+        }
+    } else {
+        helpElement.innerHTML = `
+            <span class="text-success">
+                <i class="fas fa-plus-circle"></i>
+                Có thể tạo tối đa 26 hàng (A-Z)
+            </span>
+        `;
+        totalRowsInput.max = 26;
     }
 }
 
@@ -1020,8 +1423,55 @@ function updateRowSeatTypes() {
         return;
     }
     
+    // Tìm hàng bắt đầu thông minh
+    const existingRows = existingRowsData.map(row => row.row_char).sort();
+    let startRowCode = 65; // Mặc định bắt đầu từ A
+    
+    if (existingRows.length > 0) {
+        // Nếu đã có ghế, bắt đầu từ hàng tiếp theo sau hàng cuối
+        const lastRow = existingRows[existingRows.length - 1];
+        startRowCode = lastRow.charCodeAt(0) + 1;
+    }
+    
+    // Kiểm tra không vượt quá Z (90 là mã ASCII của Z)
+    if (startRowCode + totalRows - 1 > 90) {
+        const maxRowsCanCreate = 90 - startRowCode + 1;
+        container.innerHTML = `
+            <div class="alert alert-danger p-2">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Không thể tạo ${totalRows} hàng!</strong><br>
+                Chỉ có thể tạo tối đa <strong>${maxRowsCanCreate}</strong> hàng nữa 
+                (từ hàng <strong>${String.fromCharCode(startRowCode)}</strong> đến hàng <strong>Z</strong>)
+            </div>
+        `;
+        updateSummary();
+        return;
+    }
+    
+    // Hiển thị thông tin hàng bắt đầu
+    const startRowChar = String.fromCharCode(startRowCode);
+    const endRowChar = String.fromCharCode(startRowCode + totalRows - 1);
+    
+    // Thêm thông báo về hàng sẽ tạo
+    if (existingRows.length > 0) {
+        container.innerHTML = `
+            <div class="alert alert-info p-2 mb-3">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>Hàng hiện có:</strong> ${existingRows.join(', ')} | 
+                <strong>Hàng mới sẽ tạo:</strong> ${startRowChar}${totalRows > 1 ? ` - ${endRowChar}` : ''}
+            </div>
+        `;
+    } else {
+        container.innerHTML = `
+            <div class="alert alert-success p-2 mb-3">
+                <i class="fas fa-plus-circle me-2"></i>
+                <strong>Phòng chưa có ghế.</strong> Sẽ tạo hàng ${startRowChar}${totalRows > 1 ? ` - ${endRowChar}` : ''}
+            </div>
+        `;
+    }
+    
     for (let i = 0; i < totalRows; i++) {
-        const rowChar = String.fromCharCode(65 + i); // A, B, C...
+        const rowChar = String.fromCharCode(startRowCode + i);
         const rowConfig = {
             row: rowChar,
             seatType: allowedSeatTypes[0]?.id || null,
@@ -1145,6 +1595,9 @@ function updateSummary() {
         createBtn.textContent = 'Tạo ghế';
         createBtn.className = 'btn btn-primary';
     }
+    
+    // Cập nhật trạng thái các button thêm ghế khác
+    updateAddSeatButtonsState();
 }
 
 // Kiểm tra capacity và đưa ra đề xuất
@@ -2117,6 +2570,7 @@ function updateCapacity(event) {
             roomData.capacity = parseInt(newCapacity);
             cancelEditCapacity();
             updateSummary(); // Cập nhật lại tóm tắt
+            updateAddSeatButtonsState(); // Cập nhật trạng thái button thêm ghế
             alert('Cập nhật sức chứa thành công!');
         } else {
             alert('Lỗi: ' + (data.message || 'Không thể cập nhật sức chứa'));
