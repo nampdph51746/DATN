@@ -88,7 +88,6 @@ Route::post('/checkout/preview', [CheckoutController::class, 'previewBooking'])-
 Route::get('/debug/booking-attempts', [App\Http\Controllers\Client\DebugController::class, 'bookingAttempts'])->name('debug.booking-attempts');
 
 Route::get('/payment-success', [PaymentSuccessController::class, 'show'])->name('client.success');
-Route::get('/payment-success/clear-and-home', [PaymentSuccessController::class, 'clearAndGoHome'])->name('client.success.clear-home');
 
 // Payment Failed Routes
 Route::get('/payment-failed', [PaymentFailedController::class, 'show'])->name('client.failed');

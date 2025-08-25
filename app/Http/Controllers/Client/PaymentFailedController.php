@@ -5,10 +5,13 @@ namespace App\Http\Controllers\Client;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Booking;
+use App\Models\ShowtimeSeatState;
 use App\Enums\BookingStatus;
+use App\Enums\SeatStatus;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class PaymentFailedController extends Controller
 {
@@ -341,23 +344,113 @@ class PaymentFailedController extends Controller
      */
     public function clearAndGoHome()
     {
-        // Xóa tất cả session data liên quan đến payment và booking
-        Session::forget([
-            'failed_booking_id',
-            'booking_info', 
-            'payment_error',
-            'booking_preview',
-            'selected_seats_info',
-            'is_checkout',
-            'is_processing_payment',
-            'checkout_data',
-            'payment_method_id'
-        ]);
+        try {
+            // Lấy booking ID từ session
+            $bookingId = Session::get('failed_booking_id');
+            
+            if ($bookingId && Auth::check()) {
+                Log::info('Attempting to delete failed booking', ['booking_id' => $bookingId]);
+                
+                // Lấy thông tin booking
+                $booking = Booking::with([
+                    'tickets',
+                    'bookingItems', 
+                    'showtimeSeatStates',
+                    'payments',
+                    'pointHistory'
+                ])->find($bookingId);
+                
+                if ($booking) {
+                    // Kiểm tra quyền sở hữu booking
+                    if ($booking->user_id === Auth::id()) {
+                        DB::beginTransaction();
+                        
+                        try {
+                            // 1. Xóa các tickets liên quan
+                            if ($booking->tickets()->exists()) {
+                                $booking->tickets()->delete();
+                                Log::info('Deleted tickets for booking', ['booking_id' => $bookingId]);
+                            }
+                            
+                            // 2. Xóa các booking items (đồ ăn/đồ uống)
+                            if ($booking->bookingItems()->exists()) {
+                                $booking->bookingItems()->delete();
+                                Log::info('Deleted booking items for booking', ['booking_id' => $bookingId]);
+                            }
+                            
+                            // 3. Cập nhật trạng thái ghế về available trong showtime_seat_states
+                            ShowtimeSeatState::where('booking_id', $bookingId)
+                                ->update([
+                                    'status' => SeatStatus::Available,
+                                    'booking_id' => null,
+                                    'locked_until' => null,
+                                    'locked_by' => null
+                                ]);
+                            
+                            // 4. Xóa lịch sử điểm nếu có
+                            if ($booking->pointHistory()->exists()) {
+                                $booking->pointHistory()->delete();
+                                Log::info('Deleted point history for booking', ['booking_id' => $bookingId]);
+                            }
+                            
+                            // 5. Xóa payments liên quan
+                            if ($booking->payments()->exists()) {
+                                $booking->payments()->delete();
+                                Log::info('Deleted payments for booking', ['booking_id' => $bookingId]);
+                            }
+                            
+                            // 6. Cuối cùng xóa booking
+                            $booking->delete();
+                            
+                            DB::commit();
+                            
+                            // Xóa booking attempts nếu có
+                            if (class_exists('\App\Services\BookingAttemptService')) {
+                                $bookingAttemptService = app(\App\Services\BookingAttemptService::class);
+                                $bookingAttemptService->cancelAllActiveAttempts(Auth::id());
+                            }
+                            
+                        } catch (\Exception $e) {
+                            DB::rollBack();
+                            Log::error('Error deleting booking data: ' . $e->getMessage(), [
+                                'booking_id' => $bookingId,
+                                'error' => $e->getTraceAsString()
+                            ]);
+                        }
+                    } else {
+                        Log::warning('User trying to delete booking not owned by them', [
+                            'user_id' => Auth::id(),
+                            'booking_user_id' => $booking->user_id,
+                            'booking_id' => $bookingId
+                        ]);
+                    }
+                }
+            }
+            
+            // Xóa tất cả session data liên quan đến payment và booking
+            Session::forget([
+                'failed_booking_id',
+                'booking_info', 
+                'payment_error',
+                'booking_preview',
+                'selected_seats_info',
+                'is_checkout',
+                'is_processing_payment',
+                'checkout_data',
+                'payment_method_id',
+                'current_booking_id'
+            ]);
+            
+            // Xóa tất cả flash messages
+            Session::forget(['success', 'error', 'info', 'warning']);
+            
+        } catch (\Exception $e) {
+            Log::error('Error in clearAndGoHome: ' . $e->getMessage(), [
+                'error' => $e->getTraceAsString()
+            ]);
+        }
         
-        // Xóa tất cả flash messages
-        Session::forget(['success', 'error', 'info', 'warning']);
-        
-        Log::info('Cleared all payment-related session data and redirecting to home');
+        Log::info('Cleared all payment-related session data and deleted failed booking, redirecting to home');
         
         return redirect()->route('client.home');
     }
