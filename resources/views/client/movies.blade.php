@@ -92,6 +92,9 @@
             background-color: #f1c40f;
             color: #fff;
         }
+        .movie-card {
+            background-color: transparent !important;
+        }
     </style>
 
     <!-- Thêm CDN SweetAlert2 -->
@@ -238,11 +241,11 @@
                             <div class="text-center mt-3">
                                 @auth
                                     <a href="{{ route('client.movies.ticketBooking', ['id' => $movie->id]) }}" class="ticket-btn">
-                                        <i class="fa fa-ticket" aria-hidden="true"></i> Đặt vé
+                                        <i class="fa fa-shopping-cart" aria-hidden="true"></i> Đặt vé
                                     </a>
                                 @else
                                     <a href="#" class="ticket-btn" onclick="showLoginPrompt(event, '{{ route('client.movies.ticketBooking', ['id' => $movie->id]) }}')">
-                                        <i class="fa fa-ticket" aria-hidden="true"></i> Đặt vé
+                                        <i class="fa fa-shopping-cart" aria-hidden="true"></i> Đặt vé
                                     </a>
                                 @endauth
                             </div>
@@ -294,11 +297,11 @@
                             <div class="text-center mt-3">
                                 @auth
                                     <a href="{{ route('client.movies.ticketBooking', ['id' => $movie->id]) }}" class="ticket-btn">
-                                        <i class="fa fa-ticket" aria-hidden="true"></i> Đặt vé
+                                        <i class="fa fa-shopping-cart" aria-hidden="true"></i> Đặt vé
                                     </a>
                                 @else
                                     <a href="#" class="ticket-btn" onclick="showLoginPrompt(event, '{{ route('client.movies.ticketBooking', ['id' => $movie->id]) }}')">
-                                        <i class="fa fa-ticket" aria-hidden="true"></i> Đặt vé
+                                        <i class="fa fa-shopping-cart" aria-hidden="true"></i> Đặt vé
                                     </a>
                                 @endauth
                             </div>

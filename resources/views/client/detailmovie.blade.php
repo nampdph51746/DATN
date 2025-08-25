@@ -605,19 +605,19 @@
 </div>
 
                 {{-- Nút đặt vé --}}
-                @if($movie->status === 'showing')
+                @if($movie->status->value === 'showing' || $movie->status->value === 'upcoming')
                 @auth
                     @if(isset($isUserBanned) && $isUserBanned)
                         <a href="#" class="btn btn-primary px-4 py-2 mt-4"
                             style="font-size: 16px; font-weight: 500;"
                             onclick="showBanAlert(event, '{{ $banInfo->banned_until->format('d/m/Y H:i') }}', {{ $banInfo->failed_attempts_count }})">
-                            <i class="fa fa-ticket-alt" style="color: #fff;"></i> Đặt vé ngay
+                            <i class="fa fa-shopping-cart" style="color: #fff;"></i> Đặt vé ngay
                         </a>
                     @else
                         <a href="{{ route('client.movies.ticketBooking', ['id' => $movie->id]) }}"
                             class="btn btn-primary px-4 py-2 mt-4"
                             style="font-size: 16px; font-weight: 500;">
-                            <i class="fa fa-ticket-alt" style="color: #fff;"></i> Đặt vé ngay
+                            <i class="fa fa-shopping-cart" style="color: #fff;"></i> Đặt vé ngay
                         </a>
                     @endif
                 @else
@@ -625,7 +625,7 @@
                     class="btn btn-primary px-4 py-2 mt-4"
                     style="font-size: 16px; font-weight: 500;"
                     onclick="showLoginPrompt(event, '{{ route('client.movies.ticketBooking', ['id' => $movie->id]) }}')">
-                    <i class="fa fa-ticket-alt" style="color: #fff;"></i> Đặt vé ngay
+                    <i class="fa fa-shopping-cart" style="color: #fff;"></i> Đặt vé ngay
                 </a>
                 @endauth
                 @endif

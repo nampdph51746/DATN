@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Enums\MovieStatus;
 use App\Models\Payment;
 use App\Models\Showtime; 
 use App\Models\Ticket;
@@ -97,9 +98,9 @@ class DashboardController extends Controller
             // ==== Thống kê phim ====
             $totalMovies = Movie::whereDate('created_at', $today)->count();
 
-            $nowShowing = Movie::where('status', 'showing')->whereDate('created_at', $today)->count();
-            $upcoming = Movie::where('status', 'upcoming')->whereDate('created_at', $today)->count();
-            $ended = Movie::where('status', 'ended')->whereDate('created_at', $today)->count();
+            $nowShowing = Movie::where('status', MovieStatus::Showing)->whereDate('created_at', $today)->count();
+            $upcoming = Movie::where('status', MovieStatus::Upcoming)->whereDate('created_at', $today)->count();
+            $ended = Movie::where('status', MovieStatus::Ended)->whereDate('created_at', $today)->count();
 
             $averageDuration = Movie::whereDate('created_at', $today)->avg('duration_minutes');
 
@@ -175,15 +176,15 @@ class DashboardController extends Controller
             $totalMovies = Movie::whereYear('created_at', $year)
                 ->whereMonth('created_at', $month)
                 ->count();
-            $nowShowing = Movie::where('status', 'showing')
+            $nowShowing = Movie::where('status', MovieStatus::Showing)
                 ->whereYear('created_at', $year)
                 ->whereMonth('created_at', $month)
                 ->count();
-            $upcoming = Movie::where('status', 'upcoming')
+            $upcoming = Movie::where('status', MovieStatus::Upcoming)
                 ->whereYear('created_at', $year)
                 ->whereMonth('created_at', $month)
                 ->count();
-            $ended = Movie::where('status', 'ended')
+            $ended = Movie::where('status', MovieStatus::Ended)
                 ->whereYear('created_at', $year)
                 ->whereMonth('created_at', $month)
                 ->count();
@@ -264,9 +265,9 @@ class DashboardController extends Controller
 
             // Thống kê phim
             $totalMovies = Movie::whereYear('created_at', $year)->count();
-            $nowShowing = Movie::where('status', 'showing')->whereYear('created_at', $year)->count();
-            $upcoming = Movie::where('status', 'upcoming')->whereYear('created_at', $year)->count();
-            $ended = Movie::where('status', 'ended')->whereYear('created_at', $year)->count();
+            $nowShowing = Movie::where('status', MovieStatus::Showing)->whereYear('created_at', $year)->count();
+            $upcoming = Movie::where('status', MovieStatus::Upcoming)->whereYear('created_at', $year)->count();
+            $ended = Movie::where('status', MovieStatus::Ended)->whereYear('created_at', $year)->count();
             $averageDuration = Movie::whereYear('created_at', $year)->avg('duration_minutes');
 
             $moviesByStatus = [

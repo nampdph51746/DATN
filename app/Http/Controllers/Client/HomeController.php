@@ -54,7 +54,7 @@ class HomeController extends Controller
                   ->orWhere('end_date', '>=', now());
             })
             ->orderBy('release_date', 'desc')
-            ->take(8)
+            ->take(4)
             ->get();
 
         // Truy vấn phim sắp chiếu
@@ -73,7 +73,7 @@ class HomeController extends Controller
                   ->orWhere('end_date', '>=', now());
             })
             ->orderBy('release_date', 'asc')
-            ->take(6)
+            ->take(4)
             ->get();
 
         // Kiểm tra trạng thái ban của user hiện tại
@@ -125,10 +125,20 @@ class HomeController extends Controller
         // Mặc định title
         $title = 'Danh sách phim';
 
-        // Query cho từng trạng thái
-        $showingQuery = Movie::query()->with('genres', 'showtimes')->where('status', 'showing');
-        $upcomingQuery = Movie::query()->with('genres', 'showtimes')->where('status', 'upcoming');
-        $endedQuery = Movie::query()->with('genres', 'showtimes')->where('status', 'ended');
+        // Xử lý query dựa trên status filter
+        if (!empty($data['status'])) {
+            // Nếu có filter status cụ thể
+            $status = match ($data['status']) {
+                'showing' => MovieStatus::Showing,
+                'upcoming' => MovieStatus::Upcoming,
+                'ended' => MovieStatus::Ended,
+                default => MovieStatus::Showing
+            };
+            $query = Movie::query()->with('genres', 'showtimes')->where('status', $status);
+        } else {
+            // Nếu không có filter status, chỉ hiển thị phim đang chiếu
+            $query = Movie::query()->with('genres', 'showtimes')->where('status', MovieStatus::Showing);
+        }
 
         // Hàm apply filter chung
         $applyFilters = function ($query) use ($data) {
@@ -149,9 +159,7 @@ class HomeController extends Controller
         };
 
         // Áp dụng filter
-        $applyFilters($showingQuery);
-        $applyFilters($upcomingQuery);
-        $applyFilters($endedQuery);
+        $applyFilters($query);
 
         // ✅ Thiết lập title
         if ($filterCount > 1) {
@@ -171,23 +179,24 @@ class HomeController extends Controller
                 $title = 'Thể loại: ' . implode(', ', $genreNames);
             } elseif (!empty($data['date'])) {
                 $title = 'Ngày: ' . \Carbon\Carbon::parse($data['date'])->format('d/m/Y');
+            } else {
+                $title = 'Phim đang chiếu'; // Mặc định hiển thị phim đang chiếu
             }
         }
 
-        // Sắp xếp
-        $showingQuery->withCount(['showtimes as tickets_sold' => function ($q) {
-            $q->join('tickets', 'showtimes.id', '=', 'tickets.showtime_id')
-            ->join('bookings', 'tickets.booking_id', '=', 'bookings.id')
-            ->where('bookings.status', 'confirmed');
-        }])->orderByDesc('tickets_sold')->orderByDesc('release_date');
+        // Sắp xếp dựa trên status
+        if (!empty($data['status']) && $data['status'] === 'showing') {
+            $query->withCount(['showtimes as tickets_sold' => function ($q) {
+                $q->join('tickets', 'showtimes.id', '=', 'tickets.showtime_id')
+                ->join('bookings', 'tickets.booking_id', '=', 'bookings.id')
+                ->where('bookings.status', 'confirmed');
+            }])->orderByDesc('tickets_sold')->orderByDesc('release_date');
+        } else {
+            $query->orderBy('release_date', 'desc');
+        }
 
-        $upcomingQuery->orderBy('release_date', 'desc');
-        $endedQuery->orderBy('release_date', 'desc');
-
-        // Lấy tất cả dữ liệu và merge
-        $movies = $showingQuery->get()
-            ->concat($upcomingQuery->get())
-            ->concat($endedQuery->get());
+        // Lấy dữ liệu
+        $movies = $query->get();
 
         // ✅ Phân trang 12 phim
         $perPage = 12;

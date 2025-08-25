@@ -334,7 +334,7 @@
                                 </h6>
                             </div>
                             <div class="card-body p-4">
-                                @if($movie->status === 'ended')
+                                @if($movie->status->value === 'ended')
                                     <div class="alert alert-warning d-flex align-items-center" role="alert">
                                         <i class="bx bx-info-circle fs-5 me-2"></i>
                                         <div>
@@ -394,7 +394,7 @@
                                         
                                         <div class="col-md-2">
                                             <div class="d-flex gap-2">
-                                                @if($movie->status === 'ended')
+                                                @if($movie->status->value === 'ended')
                                                     <button type="button" 
                                                             class="btn btn-secondary btn-lg flex-fill rounded-3 shadow-sm" 
                                                             disabled
@@ -1097,7 +1097,7 @@ document.querySelector('[data-bs-target="#confirmShowtimeModal"]').addEventListe
 // Xử lý xác nhận tạo suất chiếu
 document.getElementById('confirmCreateShowtime').addEventListener('click', function() {
     // Kiểm tra trạng thái phim trước khi submit
-    @if($movie->status === 'ended')
+    @if($movie->status->value === 'ended')
         alert('Không thể tạo suất chiếu cho phim đã kết thúc!');
         return false;
     @else

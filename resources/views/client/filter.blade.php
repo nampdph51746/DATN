@@ -85,7 +85,7 @@
         margin: 30px 0;
     }
     .movie-card {
-        background: #fff;
+        background-color: transparent !important;
         border-radius: 10px;
         overflow: hidden;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
@@ -101,6 +101,58 @@
         color: #fff;
         font-size: 2.5rem;
         font-weight: bold;
+    }
+    .top-rank-badge {
+        position: absolute;
+        top: 15px;
+        left: 15px;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 20px;
+        color: white;
+        z-index: 10;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+        border: 3px solid rgba(255, 255, 255, 0.9);
+        transition: all 0.3s ease;
+        animation: glow 2s ease-in-out infinite alternate;
+    }
+    .top-rank-badge:hover {
+        transform: scale(1.15);
+        box-shadow: 0 6px 25px rgba(0, 0, 0, 0.6);
+    }
+    .top-1 {
+        background: linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FF8C00 100%);
+        box-shadow: 0 4px 20px rgba(255, 215, 0, 0.7);
+    }
+    .top-1:hover {
+        box-shadow: 0 6px 30px rgba(255, 215, 0, 0.9);
+    }
+    .top-2 {
+        background: linear-gradient(135deg, #E6E6FA 0%, #C0C0C0 50%, #A9A9A9 100%);
+        box-shadow: 0 4px 20px rgba(192, 192, 192, 0.7);
+    }
+    .top-2:hover {
+        box-shadow: 0 6px 30px rgba(192, 192, 192, 0.9);
+    }
+    .top-3 {
+        background: linear-gradient(135deg, #DAA520 0%, #CD7F32 50%, #B8860B 100%);
+        box-shadow: 0 4px 20px rgba(205, 127, 50, 0.7);
+    }
+    .top-3:hover {
+        box-shadow: 0 6px 30px rgba(205, 127, 50, 0.9);
+    }
+    @keyframes glow {
+        0% {
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+        }
+        100% {
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.6);
+        }
     }
 </style>
 
@@ -128,9 +180,20 @@
 
                 @if($movies->count() > 0)
                     <div class="movie-grid-container">
-                        @foreach ($movies as $movie)
+                        @foreach ($movies as $index => $movie)
                             <div class="movie-card">
                                 <div class="box16">
+                                    @if($loop->iteration <= 3 && (!request('status') || request('status') === 'showing'))
+                                        <div class="top-rank-badge top-{{ $loop->iteration }}">
+                                            @if($loop->iteration === 1)
+                                                🥇
+                                            @elseif($loop->iteration === 2)
+                                                🥈
+                                            @else
+                                                🥉
+                                            @endif
+                                        </div>
+                                    @endif
                                     <a href="{{ route('movies.show', ['id' => $movie->id]) }}">
                                         <figure>
                                             <img class="movie-img"
@@ -153,12 +216,14 @@
                                     @endforeach
                                 </div>
                                 <div class="text-center mt-3 mb-3">
-                                    @if($movie->status === 'showing')
+                                    @if($movie->status->value === 'showing')
                                         <a href="{{ route('client.movies.ticketBooking', ['id' => $movie->id]) }}" class="ticket-btn">
-                                            <i class="fa fa-ticket" aria-hidden="true"></i> Đặt vé
+                                            <i class="fa fa-shopping-cart" aria-hidden="true"></i> Đặt vé
                                         </a>
-                                    @elseif($movie->status === 'upcoming')
-                                        <span class="badge badge-info">Sắp chiếu</span>
+                                    @elseif($movie->status->value === 'upcoming')
+                                        <a href="{{ route('client.movies.ticketBooking', ['id' => $movie->id]) }}" class="ticket-btn">
+                                            <i class="fa fa-shopping-cart" aria-hidden="true"></i> Đặt vé
+                                        </a>
                                     @else
                                         <span class="badge badge-secondary">Đã kết thúc</span>
                                     @endif
