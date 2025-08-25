@@ -158,6 +158,13 @@ class BookingController extends Controller
                         'created_at' => now(),
                     ]);
 
+                    // Refresh user object để có điểm mới nhất trước khi cập nhật rank
+                    $user->refresh();
+                    $user->load('points');
+                    
+                    // Cập nhật hạng người dùng sau khi cộng điểm
+                    $user->updateRankByTotalSpent();
+
                 } catch (\Exception $e) {
                     return redirect()->route('admin.bookings.index')->with('error', 'Lỗi khi cộng điểm thưởng: ' . $e->getMessage());
                 }

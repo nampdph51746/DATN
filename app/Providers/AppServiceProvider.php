@@ -3,7 +3,9 @@
 namespace App\Providers;
 
 use App\Models\Role;
+use App\Models\Booking;
 use App\Models\Showtime;
+use App\Observers\BookingObserver;
 use App\Observers\ShowtimeObserver;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\ServiceProvider;
@@ -34,6 +36,9 @@ class AppServiceProvider extends ServiceProvider
         
         // Đăng ký Observer cho Showtime
         Showtime::observe(ShowtimeObserver::class);
+        
+        // Đăng ký Observer cho Booking để cập nhật hạng người dùng
+        Booking::observe(BookingObserver::class);
         
         // Đăng ký Event và Listener
         // Event::listen(BookingConfirmed::class, SendBookingConfirmationEmail::class);

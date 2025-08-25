@@ -122,6 +122,11 @@ Route::post('/apply-promotion', [App\Http\Controllers\Client\HomeController::cla
 
 
 Route::post('/apply-points', [App\Http\Controllers\Client\HomeController::class, 'applyPoints'])->name('client.applyPoints');
+
+// Include test routes for development
+if (app()->environment('local')) {
+    include __DIR__ . '/test.php';
+}
 Route::get('/available-promotions', [App\Http\Controllers\Client\HomeController::class, 'getAvailablePromotions'])->name('client.getAvailablePromotions');
 Route::get('/user-rank', [App\Http\Controllers\Client\HomeController::class, 'getUserRank'])->name('client.getUserRank');
 Route::get('/user-points', [App\Http\Controllers\Client\HomeController::class, 'getUserPoints'])->name('client.getUserPoints');

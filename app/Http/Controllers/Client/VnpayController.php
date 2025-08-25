@@ -395,6 +395,13 @@ class VnpayController extends Controller
                         ]);
 
                         Log::info("Points added for user ID: {$user->id}, Booking ID: {$booking->id}, Points: {$pointsToAdd}");
+                        
+                        // Refresh user object để có điểm mới nhất trước khi cập nhật rank
+                        $user->refresh();
+                        $user->load('points');
+                        
+                        // Cập nhật hạng người dùng sau khi cộng điểm
+                        $user->updateRankByTotalSpent();
                     }
                 } else {
                     Log::info("Skipped adding points for booking with existing point history: {$booking->id}");

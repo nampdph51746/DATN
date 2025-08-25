@@ -13,19 +13,18 @@ class User extends Authenticatable
     use HasFactory, HasRoles;
 
     /**
-     * Cập nhật hạng của user dựa trên tổng số tiền đã tiêu (booking thành công)
+     * Cập nhật hạng của user dựa trên tổng điểm hiện có
      */
     public function updateRankByTotalSpent()
     {
-        $totalSpent = $this->bookings()
-            ->where('status', 'confirmed')
-            ->sum('final_amount');
+        // Lấy tổng điểm hiện tại của user
+        $totalPoints = $this->points ? $this->points->total_points : 0;
 
         $ranks = \App\Models\CustomerRank::orderBy('min_points_required')->get();
         $newRank = null;
 
         foreach ($ranks as $rank) {
-            if ($totalSpent >= $rank->min_points_required) {
+            if ($totalPoints >= $rank->min_points_required) {
                 $newRank = $rank;
             } else {
                 break;
@@ -33,7 +32,7 @@ class User extends Authenticatable
         }
 
         // Debug: Log thông tin
-        Log::info("User {$this->id} - Total spent: $totalSpent, Current rank: {$this->customer_rank_id}, New rank: " . ($newRank ? $newRank->id : 'null'));
+        Log::info("User {$this->id} - Total points: $totalPoints, Current rank: {$this->customer_rank_id}, New rank: " . ($newRank ? $newRank->id : 'null'));
 
         $this->refresh(); // Đảm bảo lấy dữ liệu mới nhất từ DB
         if ($newRank && (int)$this->customer_rank_id !== (int)$newRank->id) {
