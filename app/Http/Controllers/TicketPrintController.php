@@ -29,64 +29,58 @@ class TicketPrintController extends Controller
     {
         $item = BookingItem::findOrFail($item_id);
         $qrService = app(QrcodeService::class);
-        $qrRaw = $qrService->generateQrCode(json_encode([
-            'id' => $item->id,
-            'name' => $item->productVariant?->product?->name,
-            'quantity' => $item->quantity
-        ]), 240);
+        // Chỉ sử dụng ID của booking item để tạo QR, không phải JSON
+        $qrRaw = $qrService->generateQrCode((string)$item->id, 240);
         $qrCodeBase64 = $qrRaw ? 'data:image/png;base64,' . $qrRaw : null;
         return view('admin.foods.qr', [
             'item' => $item,
             'qrCodeBase64' => $qrCodeBase64
         ]);
     }
-    // API in vé: chuyển trạng thái sang used và trả về mã QR
+    // API in vé: chỉ trả về mã QR, không thay đổi trạng thái
     public function printTicketApi($ticketId)
     {
         $ticket = Ticket::findOrFail($ticketId);
-        if (in_array($ticket->status, ['used', 'cancelled'])) {
-            return response()->json(['success' => false, 'message' => 'Vé đã được in hoặc huỷ!']);
+        
+        // Kiểm tra trạng thái vé
+        if ($ticket->status === 'cancelled') {
+            return response()->json(['success' => false, 'message' => 'Vé đã bị huỷ!']);
         }
-        // Chỉ cho phép in vé có trạng thái checked
-        if ($ticket->status !== 'checked') {
+        
+        if ($ticket->status === 'valid') {
             return response()->json(['success' => false, 'message' => 'Vé chưa được kiểm tra!']);
         }
-        $ticket->status = 'used';
-        $ticket->used_at = now();
-        $ticket->save();
+        
         $qrService = app(QrcodeService::class);
         $qrRaw = $qrService->generateQrCode($ticket->ticket_code, 180);
         return response()->json([
             'success' => true,
             'qr' => $qrRaw,
-            'message' => 'In vé thành công!'
+            'message' => 'Tạo QR vé thành công!'
         ]);
     }
 
-    // API in đồ ăn: chuyển trạng thái sang used và trả về mã QR
+    // API in đồ ăn: chỉ trả về mã QR, không thay đổi trạng thái
     public function printFoodApi($itemId)
     {
         $item = BookingItem::findOrFail($itemId);
-        if (in_array($item->product_status, ['used', 'cancelled'])) {
-            return response()->json(['success' => false, 'message' => 'Đồ ăn đã được in hoặc huỷ!']);
+        
+        // Kiểm tra trạng thái
+        if ($item->product_status === 'cancelled') {
+            return response()->json(['success' => false, 'message' => 'Đồ ăn đã bị huỷ!']);
         }
-        // Chỉ cho phép in đồ ăn có trạng thái checked
-        if ($item->product_status !== 'checked') {
+        
+        if ($item->product_status === 'valid') {
             return response()->json(['success' => false, 'message' => 'Đồ ăn chưa được kiểm tra!']);
         }
-        $item->product_status = 'used';
-        $item->used_at = now();
-        $item->save();
+        
         $qrService = app(QrcodeService::class);
-        $qrRaw = $qrService->generateQrCode(json_encode([
-            'id' => $item->id,
-            'name' => $item->productVariant?->product?->name,
-            'quantity' => $item->quantity
-        ]), 180);
+        // Chỉ sử dụng ID của booking item để tạo QR
+        $qrRaw = $qrService->generateQrCode((string)$item->id, 180);
         return response()->json([
             'success' => true,
             'qr' => $qrRaw,
-            'message' => 'In đồ ăn thành công!'
+            'message' => 'Tạo QR đồ ăn thành công!'
         ]);
     }
     // In vé riêng theo ticket_code
@@ -166,11 +160,6 @@ class TicketPrintController extends Controller
     public function printTicketPdf($ticket_id)
     {
         $ticket = Ticket::findOrFail($ticket_id);
-        if ($ticket->status !== 'used') {
-            $ticket->status = 'used';
-            $ticket->used_at = now();
-            $ticket->save();
-        }
         $qrService = app(QrcodeService::class);
         $qrRaw = $qrService->generateQrCode($ticket->ticket_code, 180);
         $qrCodeBase64 = $qrRaw ? 'data:image/png;base64,' . $qrRaw : null;
@@ -185,17 +174,9 @@ class TicketPrintController extends Controller
     public function printFoodPdf($item_id)
     {
         $item = BookingItem::findOrFail($item_id);
-        if ($item->product_status !== 'used') {
-            $item->product_status = 'used';
-            $item->used_at = now();
-            $item->save();
-        }
         $qrService = app(QrcodeService::class);
-        $qrRaw = $qrService->generateQrCode(json_encode([
-            'id' => $item->id,
-            'name' => $item->productVariant?->product?->name,
-            'quantity' => $item->quantity
-        ]), 180);
+        // Chỉ sử dụng ID của booking item để tạo QR
+        $qrRaw = $qrService->generateQrCode((string)$item->id, 180);
         $qrCodeBase64 = $qrRaw ? 'data:image/png;base64,' . $qrRaw : null;
         $pdf = Pdf::loadView('admin.foods.print', [
             'item' => $item,

@@ -1,5 +1,4 @@
 <?php
-
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\QrCodeController;
 use App\Http\Controllers\ProfileController;
@@ -259,18 +258,19 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
             Route::post('/scan', [QrCodeController::class, 'scanQr'])->name('qr.scan');
             Route::post('/check-status', [QrCodeController::class, 'checkTicketStatus'])->name('qr.check');
             Route::post('/scan-ticket', [QrCodeController::class, 'scanTicketByCode'])->name('qr.scanTicket');
+            Route::post('/scan-food', [QrCodeController::class, 'scanFoodQr'])->name('qr.scanFood');
         });
-        // Route in vé riêng theo ticket_code
-        // Route::get('/tickets/{ticket_code}/print', [TicketPrintController::class, 'printTicket'])->name('tickets.print');
-        // Route in chung đồ ăn, đồ uống theo booking_code
-        Route::get('admin/bookings/{booking_code}/print', [BookingController::class, 'print'])->name('bookings.print');
+        
         // Trang quét QR code cho nhân viên
         Route::get('/qr-scanner', function () {
-            return view('admin.Qrcode-scanner'); // Nếu bạn đổi tên view thành qr-scanner thì sửa lại ở đây
+            return view('admin.Qrcode-scanner');
         })->name('qr.scanner');
 
         // Route in vé sau khi quét QR
         Route::get('/print-tickets/{booking_code}', [QrCodeController::class, 'printTickets'])->name('qr.print');
+        
+        // Route in chung đồ ăn, đồ uống theo booking_code
+        Route::get('/bookings/{booking_code}/print', [BookingController::class, 'print'])->name('bookings.print');
         
         // Payment Methods routes
         Route::prefix('payment_methods')->name('payment_methods.')->group(function () {
@@ -407,17 +407,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('products/{id}/variants', [AdminProductController::class, 'getVariants'])->name('products.variants');
 });
 
-});
-
-// Test route for barcode
-Route::get('/test-barcode-api', function () {
-    $barcodeService = new \App\Services\BarcodeService();
-    $barcode = $barcodeService->generateBarcode('BK1754063915');
-    
-    return response()->json([
-        'barcode' => $barcode,
-        'booking_code' => 'BK1754063915'
-    ]);
 });
 
 // Admin Reviews Routes

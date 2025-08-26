@@ -154,7 +154,10 @@
                 <div class="modal-body p-4">
                     <div id="qr-reader" class="rounded-3 mx-auto d-flex align-items-center justify-content-center"
                         style="width: 100%; max-width: 400px; height: 400px; background: #ffffff; border: 3px solid #4f46e5;">
-                        <span class="text-muted">Camera sẽ hiển thị tại đây...</span>
+                        <div class="text-center text-muted">
+                            <i class="bi bi-camera-fill fs-1 mb-2 d-block"></i>
+                            <span>Đang khởi động camera...</span>
+                        </div>
                     </div>
                     <p class="mt-3 text-center text-muted small">
                         Đưa mã QR vào khung camera để quét tự động.<br>
@@ -309,9 +312,40 @@
         $('#result').removeClass('d-none').find('#resultContent').html(
             '<div class="loading-content"><div class="spinner-border text-primary" role="status"></div><div class="mt-2 text-muted">Đang xử lý...</div></div>'
         );
+        
+        // Phân biệt các loại mã
         let isBookingCode = /^BK\d{6,}$/.test(code) || /^\d{8,}$/.test(code);
-        let url = isBookingCode ? '/admin/api/qr/scan' : '/admin/api/qr/scan-ticket';
-        let data = isBookingCode ? { booking_code: code } : { ticket_code: code };
+        let isFoodId = /^\d{1,5}$/.test(code) && !isBookingCode; // Số nguyên 1-5 ký tự
+        
+        // Debug log
+        console.log('Code:', code);
+        console.log('Code length:', code.length);
+        console.log('Is numeric:', /^\d+$/.test(code));
+        console.log('8+ digits test:', /^\d{8,}$/.test(code));
+        console.log('1-5 digits test:', /^\d{1,5}$/.test(code));
+        console.log('isBookingCode:', isBookingCode);
+        console.log('isFoodId:', isFoodId);
+        
+        // Đảm bảo logic đúng: nếu là số 1-5 ký tự thì chắc chắn là food
+        if (/^\d{1,5}$/.test(code) && !/^\d{8,}$/.test(code)) {
+            isFoodId = true;
+            isBookingCode = false;
+        }
+        
+        let url, data;
+        if (isBookingCode) {
+            url = '/admin/api/qr/scan';
+            data = { booking_code: code };
+        } else if (isFoodId) {
+            url = '/admin/api/qr/scan-food';
+            data = { booking_item_id: code };
+        } else {
+            url = '/admin/api/qr/scan-ticket';
+            data = { ticket_code: code };
+        }
+        
+        console.log('Final URL:', url);
+        console.log('Final Data:', data);
 
         $.ajax({
             url: url,
@@ -319,7 +353,13 @@
             data: data,
             success: function(response) {
                 if (response.success) {
-                    isBookingCode ? showSuccess(response) : showTicketResultByTicketCode(response);
+                    if (isBookingCode) {
+                        showSuccess(response);
+                    } else if (isFoodId) {
+                        showFoodResult(response);
+                    } else {
+                        showTicketResultByTicketCode(response);
+                    }
                 } else {
                     showError(response.message);
                 }
@@ -573,9 +613,14 @@
                                         <h6 class="card-title text-warning fw-bold mb-1">
                                             <i class="bi bi-box me-1"></i>${item.product_variant?.product?.name || 'N/A'}
                                         </h6>
-                                        <span class="badge bg-warning text-dark small">
-                                            <i class="bi bi-cup me-1"></i>Size ${item.product_variant?.size || 'N/A'}
-                                        </span>
+                                        <div class="d-flex gap-2 mb-2">
+                                            <span class="badge bg-warning text-dark small">
+                                                <i class="bi bi-cup me-1"></i>Size ${item.product_variant?.size || 'N/A'}
+                                            </span>
+                                            <span class="badge ${getProductStatusClass(item.product_status)} small">
+                                                ${getProductStatusText(item.product_status)}
+                                            </span>
+                                        </div>
                                     </div>
                                     <span class="badge bg-info text-white">x${item.quantity}</span>
                                 </div>
@@ -842,9 +887,57 @@
                 </div>
             </div>
             <div class="text-center mt-4">
-                <button type="button" class="btn btn-success btn-lg" onclick="printTickets('${data?.booking_id || ''}')">
+                <button type="button" class="btn btn-success btn-lg" onclick="printTickets('${data?.booking_code || ''}')">
                     <i class="fas fa-print"></i> In Vé
                 </button>
+            </div>
+        `;
+        $('#result').removeClass('d-none').find('#resultContent').html(html);
+    }
+
+    function showFoodResult(response) {
+        const data = response.data;
+        let html = `
+            <div class="alert alert-success rounded-3 shadow-sm mb-4 text-center animate__animated animate__fadeInDown">
+                <h3 class="h5 fw-bold mb-0"><i class="fa-solid fa-circle-check"></i> ${response.message}</h3>
+            </div>
+            <div class="row g-3">
+                <div class="col-md-8 mx-auto">
+                    <div class="card border-0 shadow-sm rounded-3">
+                        <div class="card-header bg-warning text-dark text-center fw-medium d-flex align-items-center justify-content-center gap-2">
+                            <i class="fa-solid fa-utensils"></i>
+                            <h5 class="mb-0">Thông Tin Đồ Ăn/Uống</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-2">
+                                <div class="col-6"><strong>Tên sản phẩm:</strong></div>
+                                <div class="col-6">${data?.product_name || ''}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-6"><strong>Số lượng:</strong></div>
+                                <div class="col-6">${data?.quantity || ''}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-6"><strong>Giá:</strong></div>
+                                <div class="col-6">${formatCurrency(data?.price || 0)}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-6"><strong>Trạng thái:</strong></div>
+                                <div class="col-6">
+                                    <span class="badge ${getProductStatusClass(data?.product_status)} px-2 py-1">
+                                        ${getProductStatusText(data?.product_status)}
+                                    </span>
+                                </div>
+                            </div>
+                            ${data?.used_at ? `
+                            <div class="row mb-2">
+                                <div class="col-6"><strong>Thời gian sử dụng:</strong></div>
+                                <div class="col-6">${new Date(data.used_at).toLocaleString('vi-VN')}</div>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
             </div>
         `;
         $('#result').removeClass('d-none').find('#resultContent').html(html);
@@ -888,8 +981,36 @@
         }[status] || status;
     }
 
+    // Product status helpers for food items
+    function getProductStatusClass(status) {
+        return {
+            'valid': 'bg-success',
+            'checked': 'bg-warning',
+            'used': 'bg-secondary',
+            'cancelled': 'bg-danger'
+        }[status] || 'bg-secondary';
+    }
+
+    function getProductStatusText(status) {
+        return {
+            'valid': 'Chưa sử dụng',
+            'checked': 'Đã kiểm tra', 
+            'used': 'Đã sử dụng',
+            'cancelled': 'Hết hạn'
+        }[status] || status;
+    }
+
     $('#codeInput').keypress(function(e) {
         if (e.which == 13) scanCode();
+    });
+
+    // Clean up QR scanner when modal is closed by any means
+    $('#qrModal').on('hidden.bs.modal', function () {
+        if (window.html5QrCode) {
+            window.html5QrCode.stop().catch(() => {}).finally(() => {
+                window.html5QrCode = null;
+            });
+        }
     });
 
     function showToast(message, color = 'bg-success') {
@@ -901,40 +1022,159 @@
 
     function openQrModal() {
         $('#qrModal').modal('show');
-        if (!window.html5QrCode) {
-            window.html5QrCode = new Html5Qrcode("qr-reader");
+        
+        // Check camera permissions first
+        checkCameraPermissions().then(() => {
+            // Reset and initialize QR scanner
+            if (window.html5QrCode) {
+                window.html5QrCode.stop().catch(() => {}).then(() => {
+                    initializeQrScanner();
+                });
+            } else {
+                initializeQrScanner();
+            }
+        }).catch((error) => {
+            console.error('Camera permission denied:', error);
+            showToast('Vui lòng cấp quyền truy cập camera để sử dụng tính năng quét QR', 'bg-warning');
+        });
+    }
+
+    async function checkCameraPermissions() {
+        try {
+            // Request camera permissions
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            // Stop the stream immediately, we just need to check permissions
+            stream.getTracks().forEach(track => track.stop());
+            return Promise.resolve();
+        } catch (error) {
+            return Promise.reject(error);
         }
-        window.html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 },
-            qrCodeMessage => {
-                showToast('Đã quét QR thành công!');
-                $('#codeInput').val(qrCodeMessage);
-                setTimeout(() => {
-                    closeQrModal();
-                    scanCode();
-                }, 900);
-            },
-            () => {}
-        );
+    }
+
+    function initializeQrScanner() {
+        try {
+            window.html5QrCode = new Html5Qrcode("qr-reader");
+            
+            // Configuration for better QR detection
+            const config = {
+                fps: 15,
+                qrbox: { width: 300, height: 300 },
+                aspectRatio: 1.0,
+                disableFlip: false
+            };
+
+            // Try to use back camera first
+            const constraints = {
+                facingMode: "environment" // Back camera
+            };
+
+            window.html5QrCode.start(
+                constraints,
+                config,
+                (qrCodeMessage) => {
+                    showToast('Đã quét QR thành công!');
+                    $('#codeInput').val(qrCodeMessage);
+                    setTimeout(() => {
+                        closeQrModal();
+                        scanCode();
+                    }, 900);
+                },
+                (errorMessage) => {
+                    // Optional: Handle scan errors silently
+                    console.log('QR scan error:', errorMessage);
+                }
+            ).catch((err) => {
+                console.error('Failed to start QR scanner:', err);
+                
+                // Fallback: Try with different constraints
+                const fallbackConstraints = { facingMode: "user" }; // Front camera
+                
+                window.html5QrCode.start(
+                    fallbackConstraints,
+                    config,
+                    (qrCodeMessage) => {
+                        showToast('Đã quét QR thành công!');
+                        $('#codeInput').val(qrCodeMessage);
+                        setTimeout(() => {
+                            closeQrModal();
+                            scanCode();
+                        }, 900);
+                    },
+                    (errorMessage) => {
+                        console.log('QR scan error:', errorMessage);
+                    }
+                ).catch((fallbackErr) => {
+                    console.error('Failed to start QR scanner with fallback:', fallbackErr);
+                    showToast('Không thể khởi động camera. Vui lòng kiểm tra quyền truy cập camera.', 'bg-danger');
+                });
+            });
+            
+        } catch (error) {
+            console.error('Error initializing QR scanner:', error);
+            showToast('Lỗi khởi tạo scanner QR', 'bg-danger');
+        }
     }
 
     function closeQrModal() {
         $('#qrModal').modal('hide');
         if (window.html5QrCode) {
-            window.html5QrCode.stop().catch(() => {});
+            window.html5QrCode.stop().catch((err) => {
+                console.log('Error stopping QR scanner:', err);
+            }).finally(() => {
+                // Clear the scanner instance
+                window.html5QrCode = null;
+            });
         }
     }
 
     // Print tickets function
-    function printTickets() {
-        const codeInput = $('#codeInput').val().trim();
-        if (!codeInput) {
-            showError('Vui lòng nhập mã vé hoặc booking code');
+    function printTickets(bookingCode = null) {
+        let code = bookingCode;
+        
+        // If no booking code provided, try to get from input or stored data
+        if (!code) {
+            code = $('#codeInput').val().trim();
+        }
+        
+        // If still no code, try to get from stored booking data
+        if (!code && window.currentBookingData) {
+            code = window.currentBookingData.booking_code;
+        }
+        
+        if (!code) {
+            showError('Không tìm thấy mã vé hoặc booking code để in');
             return;
         }
         
+        // Show loading toast
+        showToast('Đang tải trang in vé...', 'bg-info');
+        
         // Open print page in new window
-        const printUrl = `/admin/print-tickets/${encodeURIComponent(codeInput)}`;
-        window.open(printUrl, '_blank');
+        const printUrl = `/admin/print-tickets/${encodeURIComponent(code)}`;
+        
+        try {
+            const printWindow = window.open(printUrl, '_blank');
+            
+            // Check if popup was blocked
+            if (!printWindow) {
+                showToast('Popup bị chặn! Vui lòng cho phép popup và thử lại.', 'bg-warning');
+                return;
+            }
+            
+            // Optional: Check if window opened successfully after a delay
+            setTimeout(() => {
+                if (printWindow.closed) {
+                    // Window was closed immediately, might be an error
+                    console.log('Print window was closed immediately');
+                } else {
+                    showToast('Trang in vé đã được mở thành công', 'bg-success');
+                }
+            }, 1000);
+            
+        } catch (error) {
+            console.error('Error opening print window:', error);
+            showToast('Lỗi khi mở trang in vé: ' + error.message, 'bg-danger');
+        }
     }
 
     // Store booking data for print
