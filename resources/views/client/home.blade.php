@@ -195,13 +195,31 @@
     <section class="w3l-grids">
         <div class="grids-main py-5">
             <div class="container py-lg-3">
+                {{-- Thông báo tài khoản bị khóa --}}
+                <!-- @if(Auth::check() && isset($isUserBanned) && $isUserBanned)
+                <div class="alert alert-danger mb-4" role="alert">
+                    <h5 class="alert-heading">
+                        <i class="fa fa-ban me-2"></i>Tài khoản bị tạm khóa đặt vé
+                    </h5>
+                    <p class="mb-1">
+                        Tài khoản của bạn đã bị tạm khóa chức năng đặt vé do vi phạm quy định (đặt ghế nhiều lần mà không thanh toán).
+                    </p>
+                    <hr>
+                    <p class="mb-0">
+                        <strong>Thời gian khóa:</strong> Đến {{ $banInfo->banned_until->format('d/m/Y H:i') }}<br>
+                        <strong>Số lần vi phạm:</strong> {{ $banInfo->failed_attempts_count }} lần<br>
+                        <small class="text-muted">Vui lòng liên hệ admin nếu bạn cho rằng đây là nhầm lẫn.</small>
+                    </p>
+                </div>
+                @endif -->
+
                 <div class="headerhny-title">
                     <div class="w3l-title-grids">
                         <div class="headerhny-left">
                             <h3 class="hny-title">Phim Đang Chiếu</h3>
                         </div>
                         <div class="headerhny-right text-lg-right">
-                            <h4><a class="show-title" href="{{ route('movies.show', ['id' => $showingMovies->first()->id ?? 1]) }}">Xem tất cả</a></h4>
+                            <h4><a class="show-title" href="{{ route('movies.filter', ['status' => 'showing']) }}">Xem thêm</a></h4>
                         </div>
                     </div>
                 </div>
@@ -221,7 +239,7 @@
                                              alt="{{ $movie->name }}">
                                     </figure>
                                     <div class="box-content">
-                                        <h3 class="title">{{ $movie->name }}</h3>
+                                        <h2 class="title">{{ $movie->name }}</h3>
                                         <h4>
                                             <span class="post"><span class="fa fa-clock-o"></span> {{ $movie->duration_minutes }} phút</span>
                                             <span class="post fa fa-heart text-right"></span>
@@ -237,12 +255,18 @@
                             </div>
                             <div class="text-center mt-3">
                                 @auth
-                                    <a href="{{ route('client.movies.ticketBooking', ['id' => $movie->id]) }}" class="ticket-btn">
-                                        <i class="fa fa-ticket" aria-hidden="true"></i> Đặt vé
-                                    </a>
+                                    @if(isset($isUserBanned) && $isUserBanned)
+                                        <a href="#" class="ticket-btn" onclick="showBanAlert(event, '{{ $banInfo->banned_until->format('d/m/Y H:i') }}', {{ $banInfo->failed_attempts_count }})">
+                                            <i class="fa fa-shopping-cart" aria-hidden="true"></i> Đặt vé
+                                        </a>
+                                    @else
+                                        <a href="{{ route('client.movies.ticketBooking', ['id' => $movie->id]) }}" class="ticket-btn">
+                                            <i class="fa fa-shopping-cart" aria-hidden="true"></i> Đặt vé
+                                        </a>
+                                    @endif
                                 @else
                                     <a href="#" class="ticket-btn" onclick="showLoginPrompt(event, '{{ route('client.movies.ticketBooking', ['id' => $movie->id]) }}')">
-                                        <i class="fa fa-ticket" aria-hidden="true"></i> Đặt vé
+                                        <i class="fa fa-shopping-cart" aria-hidden="true"></i> Đặt vé
                                     </a>
                                 @endauth
                             </div>
@@ -262,7 +286,7 @@
                             <h3 class="hny-title">Phim Sắp Chiếu</h3>
                         </div>
                         <div class="headerhny-right text-lg-right">
-                            <h4><a class="show-title" href="{{ route('movies.show', ['id' => $upcomingMovies->first()->id ?? 1]) }}">Xem tất cả</a></h4>
+                            <h4><a class="show-title" href="{{ route('movies.filter', ['status' => 'upcoming']) }}">Xem thêm</a></h4>
                         </div>
                     </div>
                 </div>
@@ -277,7 +301,7 @@
                                              alt="{{ $movie->name }}">
                                     </figure>
                                     <div class="box-content">
-                                        <h3 class="title">{{ $movie->name }}</h3>
+                                        <h2 class="title">{{ $movie->name }}</h3>
                                         <h4>
                                             <span class="post"><span class="fa fa-clock-o"></span> {{ $movie->duration_minutes }} phút</span>
                                             <span class="post fa fa-heart text-right"></span>
@@ -293,12 +317,18 @@
                             </div>
                             <div class="text-center mt-3">
                                 @auth
-                                    <a href="{{ route('client.movies.ticketBooking', ['id' => $movie->id]) }}" class="ticket-btn">
-                                        <i class="fa fa-ticket" aria-hidden="true"></i> Đặt vé
-                                    </a>
+                                    @if(isset($isUserBanned) && $isUserBanned)
+                                        <a href="#" class="ticket-btn" onclick="showBanAlert(event, '{{ $banInfo->banned_until->format('d/m/Y H:i') }}', {{ $banInfo->failed_attempts_count }})">
+                                            <i class="fa fa-shopping-cart" aria-hidden="true"></i> Đặt vé
+                                        </a>
+                                    @else
+                                        <a href="{{ route('client.movies.ticketBooking', ['id' => $movie->id]) }}" class="ticket-btn">
+                                            <i class="fa fa-shopping-cart" aria-hidden="true"></i> Đặt vé
+                                        </a>
+                                    @endif
                                 @else
                                     <a href="#" class="ticket-btn" onclick="showLoginPrompt(event, '{{ route('client.movies.ticketBooking', ['id' => $movie->id]) }}')">
-                                        <i class="fa fa-ticket" aria-hidden="true"></i> Đặt vé
+                                        <i class="fa fa-shopping-cart" aria-hidden="true"></i> Đặt vé
                                     </a>
                                 @endauth
                             </div>
@@ -365,4 +395,49 @@
         </div>
     </section>
     @include('client.footer.footer')
+
+    <script>
+        function showBanAlert(event, bannedUntil, failedAttempts) {
+            event.preventDefault();
+            
+            Swal.fire({
+                icon: 'error',
+                title: 'Tài khoản bị tạm khóa',
+                html: `
+                    <div style="text-align: left; padding: 10px;">
+                        <p><strong>Lý do:</strong> Vi phạm quy định đặt ghế (đặt ghế nhiều lần mà không thanh toán)</p>
+                        <p><strong>Số lần vi phạm:</strong> ${failedAttempts} lần</p>
+                        <p><strong>Thời gian khóa:</strong> Đến ${bannedUntil}</p>
+                        <hr>
+                        <p style="color: #666; font-size: 14px;"><i class="fa fa-info-circle"></i> Vui lòng liên hệ admin nếu bạn cho rằng đây là nhầm lẫn.</p>
+                    </div>
+                `,
+                confirmButtonText: 'Đã hiểu',
+                confirmButtonColor: '#dc3545',
+                width: 500,
+                customClass: {
+                    popup: 'ban-alert-popup'
+                }
+            });
+        }
+
+        // Function để show login prompt (nếu chưa có)
+        function showLoginPrompt(event, redirectUrl) {
+            event.preventDefault();
+            
+            Swal.fire({
+                icon: 'warning',
+                title: 'Cần đăng nhập',
+                text: 'Bạn cần đăng nhập để đặt vé xem phim.',
+                showCancelButton: true,
+                confirmButtonText: 'Đăng nhập',
+                cancelButtonText: 'Hủy',
+                confirmButtonColor: '#dc3545',
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = '/login?redirect=' + encodeURIComponent(redirectUrl);
+                }
+            });
+        }
+    </script>
 @endsection

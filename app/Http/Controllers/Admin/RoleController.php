@@ -2,15 +2,12 @@
 
 namespace App\Http\Controllers\Admin;
 
-use \App\Enums\NotificationType;
 use App\Http\Controllers\Controller;
-use \Illuminate\Support\Facades\Auth;
-use Spatie\Permission\Models\Permission;
 use App\Http\Requests\Admin\Roles\StoreRoleRequest;
 use App\Http\Requests\Admin\Roles\UpdateRoleRequest;
 use App\Models\Role;
-use App\Models\Notification;
 use Illuminate\Http\Request;
+use Spatie\Permission\Models\Permission;
 
 class RoleController extends Controller
 {
@@ -79,29 +76,12 @@ class RoleController extends Controller
             $role->syncPermissions($request->input('permissions'));
         }
 
-        // Thông báo khi thêm vai trò
-        Notification::create([
-            'user_id' => Auth::id(),
-            'entity_type' => Role::class,
-            'entity_id' => $role->id,
-            'title' => 'Thêm vai trò',
-            'message' => 'Vai trò #' . $role->id . ' đã được tạo.',
-            'type' => NotificationType::System,
-            'priority' => 'high',
-            'old_status' => null,
-            'new_status' => null,
-            'event_details' => json_encode([
-                'new' => $role->getAttributes(),
-            ]),
-        ]);
-
         return redirect()->route('roles.index')->with('success', 'Role created successfully.');
     }
 
     public function update(Request $request, $id)
     {
         $role = Role::findById($id); // dùng Spatie
-        $oldData = $role->getOriginal();
 
         // Nếu là vai trò admin thì không cho sửa quyền
         if ($role->name === 'admin' && auth()->user()->hasRole('admin')) {
@@ -110,23 +90,6 @@ class RoleController extends Controller
             ]);
             $role->name = $request->name;
             $role->save();
-
-            // Thông báo khi cập nhật tên admin
-            Notification::create([
-                'user_id' => Auth::id(),
-                'entity_type' => Role::class,
-                'entity_id' => $role->id,
-                'title' => 'Cập nhật vai trò',
-                'message' => 'Tên vai trò admin đã được cập nhật.',
-                'type' => NotificationType::System,
-                'priority' => 'high',
-                'old_status' => null,
-                'new_status' => null,
-                'event_details' => json_encode([
-                    'old' => $oldData,
-                    'new' => $role->getAttributes(),
-                ]),
-            ]);
 
             return redirect()->route('roles.index')->with('success', 'Không thể sửa quyền admin. Đã cập nhật tên.');
         }
@@ -143,53 +106,18 @@ class RoleController extends Controller
         // Đồng bộ permission
         $role->syncPermissions($request->permissions ?? []);
 
-        // Thông báo khi cập nhật vai trò
-        Notification::create([
-            'user_id' => Auth::id(),
-            'entity_type' => Role::class,
-            'entity_id' => $role->id,
-            'title' => 'Cập nhật vai trò',
-            'message' => 'Vai trò #' . $role->id . ' đã được cập nhật.',
-            'type' => NotificationType::System,
-            'priority' => 'high',
-            'old_status' => null,
-            'new_status' => null,
-            'event_details' => json_encode([
-                'old' => $oldData,
-                'new' => $role->getAttributes(),
-            ]),
-        ]);
-
         return redirect()->route('roles.index')->with('success', 'Cập nhật vai trò thành công.');
     }
 
     public function softDelete(Role $role, $id)
     {
         $role = Role::findOrFail($id);
-        $oldData = $role->getOriginal();
 
         if ($role->users()->count() > 0) {
             return redirect()->back()->with('error', 'Không thể xóa vai trò này vì vai trò này đang được sử dụng.');
         }
 
         $role->delete();
-
-        // Thông báo khi xóa mềm vai trò
-        Notification::create([
-            'user_id' => Auth::id(),
-            'entity_type' => Role::class,
-            'entity_id' => $role->id,
-            'title' => 'Xóa vai trò',
-            'message' => 'Vai trò #' . $role->id . ' đã bị xóa mềm.',
-            'type' => NotificationType::System,
-            'priority' => 'high',
-            'old_status' => null,
-            'new_status' => null,
-            'event_details' => json_encode([
-                'old' => $oldData,
-            ]),
-        ]);
-
         return redirect()->route('roles.index')->with('success', 'Vai trò được xóa thành công.');
     }
 
@@ -217,7 +145,6 @@ class RoleController extends Controller
     public function restore($id)
     {
         $role = Role::withTrashed()->findOrFail($id);
-        $oldData = $role->getOriginal();
 
         if (!$role->trashed()) {
             return redirect()->back()->with('info', 'Vai trò này không bị xóa.');
@@ -225,30 +152,12 @@ class RoleController extends Controller
 
         $role->restore();
 
-        // Thông báo khi khôi phục vai trò
-        Notification::create([
-            'user_id' => Auth::id(),
-            'entity_type' => Role::class,
-            'entity_id' => $role->id,
-            'title' => 'Khôi phục vai trò',
-            'message' => 'Vai trò #' . $role->id . ' đã được khôi phục.',
-            'type' => NotificationType::System,
-            'priority' => 'high',
-            'old_status' => null,
-            'new_status' => null,
-            'event_details' => json_encode([
-                'old' => $oldData,
-                'new' => $role->getAttributes(),
-            ]),
-        ]);
-
         return redirect()->route('roles.deleted')->with('success', 'Khôi phục vai trò thành công.');
     }
 
     public function forceDelete($id)
     {
         $role = Role::withTrashed()->findOrFail($id);
-        $oldData = $role->getOriginal();
 
         if (!$role->trashed()) {
             return redirect()->back()->with('info', 'Vai trò này chưa bị xóa.');
@@ -259,24 +168,7 @@ class RoleController extends Controller
             return redirect()->back()->with('error', 'Không thể xóa vĩnh viễn vai trò này vì đang được sử dụng.');
         }
 
-        $roleId = $role->id;
         $role->forceDelete();
-
-        // Thông báo khi xóa vĩnh viễn vai trò
-        Notification::create([
-            'user_id' => Auth::id(),
-            'entity_type' => Role::class,
-            'entity_id' => $roleId,
-            'title' => 'Xóa vĩnh viễn vai trò',
-            'message' => 'Vai trò #' . $roleId . ' đã bị xóa vĩnh viễn.',
-            'type' => NotificationType::System,
-            'priority' => 'high',
-            'old_status' => null,
-            'new_status' => null,
-            'event_details' => json_encode([
-                'old' => $oldData,
-            ]),
-        ]);
 
         return redirect()->route('roles.deleted')->with('success', 'Xóa vĩnh viễn vai trò thành công.');
     }

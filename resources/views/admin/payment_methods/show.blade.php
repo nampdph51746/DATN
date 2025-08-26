@@ -23,7 +23,7 @@
                     Không có logo
                 @endif
             </p>
-            <a href="{{ route('payment_methods.index') }}" class="btn btn-secondary">Quay lại danh sách</a>
+            <a href="{{ route('admin.payment_methods.index') }}" class="btn btn-secondary">Quay lại danh sách</a>
         </div>
     </div>
 </div>

@@ -2,6 +2,7 @@
 
 @section('content')
     <div class="container-fluid">
+        @include('admin.partials.notifications')
 
         <div class="row">
             <div class="col-lg-4">
@@ -10,16 +11,17 @@
                         <div class="text-center">
                             <iconify-icon icon="solar:box-broken" class="fs-64 text-primary"></iconify-icon>
                             <div class="mt-3">
-                                @if ($combo->image_url)
-                                    <img src="{{ $combo->image_url ? asset('storage/' . $combo->image_url) : asset('assets/images/default.png') }}"
-                                        alt="{{ $combo->sku }}" class="img-fluid mt-2" style="max-width: 200px;">
+                                @if ($combo->combo_url)
+                                    <img src="{{ asset('storage/' . $combo->combo_url) }}"
+                                        alt="{{ $combo->sku }}" class="img-fluid mt-2 img-thumbnail" style="max-width: 200px;">
                                 @else
-                                    <span class="text-muted">Không có ảnh</span>
+                                    <img src="{{ asset('assets/images/default.png') }}" alt="No image" 
+                                        class="img-fluid mt-2 img-thumbnail" style="max-width: 200px;">
                                 @endif
                             </div>
                             <div class="mt-3">
                                 <h4>Combo #{{ $combo->id }}</h4>
-                                <p class="text-muted">Thông tin chi tiết về combo <strong>{{ $combo->sku }}</strong>.
+                                <p class="text-muted">Thông tin chi tiết về combo <strong>{{ $combo->name }}</strong>.
                                 </p>
                             </div>
                         </div>
@@ -47,7 +49,7 @@
                     <div class="card-body">
                         <h4 class="badge bg-info text-light fs-14 py-1 px-2">Chi tiết combo</h4>
                         <p class="mb-1">
-                            <span class="fs-24 text-dark fw-medium">{{ $combo->sku }}</span>
+                            <span class="fs-24 text-dark fw-medium">{{ $combo->name }}</span>
                         </p>
                         <div class="row align-items-center g-2 mt-3">
                             <div class="col-lg-6">
@@ -61,7 +63,7 @@
                                 <p class="mb-0 fw-medium text-dark fs-16">
                                     <iconify-icon icon="solar:tag-broken" class="align-middle fs-16 me-1"></iconify-icon>
                                     Sản phẩm: <span
-                                        class="text-muted">{{ $combo->product ? $combo->product->name : 'Không xác định' }}</span>
+                                        class="text-muted">{{ $combo->comboProductVariant->product->name ?? 'Không xác định' }}</span>
                                 </p>
                             </div>
                         </div>
@@ -84,14 +86,6 @@
                             </div>
                         </div>
                         <div class="row align-items-center g-2 mt-3">
-                            <div class="col-lg-6">
-                                <p class="mb-0 fw-medium text-dark fs-16">
-                                    <iconify-icon icon="solar:check-circle-broken"
-                                        class="align-middle fs-16 me-1"></iconify-icon>
-                                    Trạng thái: <span
-                                        class="text-muted">{{ $combo->is_active ? 'Hoạt động' : 'Không hoạt động' }}</span>
-                                </p>
-                            </div>
                             <div class="col-lg-6">
                                 <p class="mb-0 fw-medium text-dark fs-16">
                                     <iconify-icon icon="solar:box-minimalistic-broken"
@@ -160,8 +154,8 @@
 
                         <h4 class="text-dark fw-medium mt-4">Ghi chú:</h4>
                         <p class="text-muted">
-                            Combo <strong>{{ $combo->sku }}</strong> thuộc sản phẩm
-                            <strong>{{ $combo->product ? $combo->product->name : 'Không xác định' }}</strong>.
+                            Combo <strong>{{ $combo->name }}</strong> thuộc sản phẩm
+                            <strong>{{ $combo->comboProductVariant->product->name ?? 'Không xác định' }}</strong>.
                             Hiện có
                             <strong>{{ $combo->comboPackageItems->count() }}</strong> mục trong combo.
                         </p>

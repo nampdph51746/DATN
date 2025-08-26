@@ -14,9 +14,6 @@ use App\Http\Requests\Admin\User\StoreUserRequest;
 use App\Http\Requests\Admin\User\UpdateUserRequest;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
-use App\Models\Notification;
-use App\Enums\NotificationType;
-use Illuminate\Support\Facades\Auth;
 use Symfony\Component\Mailer\Test\Constraint\EmailCount;
 
 class UserController extends Controller
@@ -142,7 +139,6 @@ class UserController extends Controller
     {
         $user = User::findOrFail($id); // tự lấy model
 
-        $oldData = $user->getOriginal();
         $user->update([
             'customer_rank_id' => $request->customer_rank_id,
             'status' => $request->status,
@@ -150,52 +146,7 @@ class UserController extends Controller
 
         $user->syncRoles($request->role);
 
-        // Tạo thông báo mức độ cao khi cập nhật user
-        Notification::create([
-            'user_id' => Auth::id(), // Lấy id của user đang đăng nhập
-            'entity_type' => User::class,
-            'entity_id' => $user->id,
-            'title' => 'Cập nhật thông tin người dùng',
-            'message' => 'Thông tin người dùng #' . $user->id . ' đã được cập nhật.',
-            'type' => NotificationType::System,
-            'priority' => 'high',
-            'old_status' => $oldData['status'] ?? null,
-            'new_status' => $user->status,
-            'event_details' => json_encode([
-                'old' => $oldData,
-                'new' => $user->getAttributes(),
-            ]),
-        ]);
-
         return redirect()->route('users.index')->with('success', 'Cập nhật người dùng thành công.');
     }
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy($id)
-    {
-        $user = User::findOrFail($id);
-        $oldData = $user->getOriginal();
-        $user->delete();
 
-        // Tạo thông báo mức độ cao khi xóa user
-        Notification::create([
-            'user_id' => Auth::id(),
-            'entity_type' => User::class,
-            'entity_id' => $user->id,
-            'title' => 'Xóa người dùng',
-            'message' => 'Người dùng #' . $user->id . ' đã bị xóa.',
-            'type' => NotificationType::System,
-            'priority' => 'high',
-            'old_status' => $oldData['status'] ?? null,
-            'new_status' => null,
-            'is_global' => true,
-            'link_url' => null,
-            'event_details' => json_encode([
-                'old' => $oldData,
-            ]),
-        ]);
-
-        return redirect()->route('users.index')->with('success', 'Xóa người dùng thành công.');
-    }
 }

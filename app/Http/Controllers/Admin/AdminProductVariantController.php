@@ -4,17 +4,13 @@ namespace App\Http\Controllers\Admin;
 
 use App\Models\Product;
 use App\Models\Attribute;
-use Illuminate\Support\Str;
-use Illuminate\Http\Request;
 use App\Models\AttributeValue;
 use App\Models\ProductVariant;
-use App\Http\Controllers\Controller;
 use App\Models\ProductVariantOption;
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-
-use App\Models\Notification;
-use App\Enums\NotificationType;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class AdminProductVariantController extends Controller
 {
@@ -37,44 +33,33 @@ class AdminProductVariantController extends Controller
         $products = Product::all();
         $selectedProductId = $request->input('product_id');
         $attributes = Attribute::with('attributeValues')->get();
-
-        return view('admin.product_variants.create', compact('products', 'selectedProductId', 'attributes'));
+        $fromProductShow = $request->input('from_product_show');
+        return view('admin.product_variants.create', compact('products', 'selectedProductId', 'attributes', 'fromProductShow'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
             'product_id' => 'required|exists:products,id',
-            'default_price' => 'required|numeric|min:0',
             'default_stock_quantity' => 'required|integer|min:0',
             'image_url' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
-            'is_active' => 'required|in:0,1',
             'attribute_values' => 'required|array|min:1',
             'attribute_values.*.*' => 'exists:attribute_values,id',
-            'variant_prices' => 'required|array',
-            'variant_prices.*' => 'required|numeric|min:0',
+            'price_modifiers' => 'array',
+            'price_modifiers.*' => 'array',
             'variant_stocks' => 'required|array',
             'variant_stocks.*' => 'required|integer|min:0',
         ], [
             'product_id.required' => 'Sản phẩm là bắt buộc.',
             'product_id.exists' => 'Sản phẩm không tồn tại.',
-            'default_price.required' => 'Giá mặc định là bắt buộc.',
-            'default_price.numeric' => 'Giá mặc định phải là số.',
-            'default_price.min' => 'Giá mặc định không được nhỏ hơn 0.',
             'default_stock_quantity.required' => 'Số lượng tồn kho mặc định là bắt buộc.',
             'default_stock_quantity.integer' => 'Số lượng tồn kho mặc định phải là số nguyên.',
             'default_stock_quantity.min' => 'Số lượng tồn kho mặc định không được nhỏ hơn 0.',
             'image_url.image' => 'File tải lên phải là ảnh.',
             'image_url.mimes' => 'Ảnh phải có định dạng jpg, jpeg, png hoặc gif.',
             'image_url.max' => 'Ảnh không được vượt quá 2MB.',
-            'is_active.required' => 'Trạng thái biến thể là bắt buộc.',
-            'is_active.in' => 'Trạng thái biến thể phải là Hoạt động hoặc Không hoạt động.',
             'attribute_values.required' => 'Vui lòng chọn ít nhất một giá trị thuộc tính.',
             'attribute_values.*.*.exists' => 'Giá trị thuộc tính không hợp lệ.',
-            'variant_prices.required' => 'Giá cho các biến thể là bắt buộc.',
-            'variant_prices.*.required' => 'Giá cho biến thể là bắt buộc.',
-            'variant_prices.*.numeric' => 'Giá cho biến thể phải là số.',
-            'variant_prices.*.min' => 'Giá cho biến thể không được nhỏ hơn 0.',
             'variant_stocks.required' => 'Số lượng tồn kho cho các biến thể là bắt buộc.',
             'variant_stocks.*.required' => 'Số lượng tồn kho cho biến thể là bắt buộc.',
             'variant_stocks.*.integer' => 'Số lượng tồn kho cho biến thể phải là số nguyên.',
@@ -83,6 +68,7 @@ class AdminProductVariantController extends Controller
 
         $product = Product::findOrFail($request->product_id);
         $productSku = $product->sku ?? 'PRODUCT';
+        $basePrice = $product->base_price ?? 0;
 
         $imageUrl = null;
         if ($request->hasFile('image_url')) {
@@ -91,7 +77,15 @@ class AdminProductVariantController extends Controller
 
         // Tạo tổ hợp từ attribute_values
         $attributeValueGroups = $request->attribute_values;
+        $priceModifiersGroups = $request->price_modifiers ?? [];
         $combinations = $this->generateCombinations($attributeValueGroups);
+
+        // DEBUG: Kiểm tra dữ liệu
+        \Log::info('=== DEBUG PRICE MODIFIER ===');
+        \Log::info('Attribute Value Groups:', ['data' => $attributeValueGroups]);
+        \Log::info('Price Modifiers Groups:', ['data' => $priceModifiersGroups]);
+        \Log::info('Base Price: ' . $basePrice);
+        \Log::info('Combinations:', ['data' => $combinations]);
 
         $createdVariants = [];
         foreach ($combinations as $index => $attributeValueIds) {
@@ -102,9 +96,29 @@ class AdminProductVariantController extends Controller
             // Loại bỏ các ID trùng lặp
             $attributeValueIds = array_unique($attributeValueIds);
 
-            // Lấy giá và tồn kho
-            $price = $request->variant_prices[$index] ?? $request->default_price;
+            // Tính price modifier từ attribute values trong database
+            $priceModifier = 1;
+            foreach ($attributeValueIds as $attrValueId) {
+                $attributeValue = AttributeValue::with('attribute')->find($attrValueId);
+                
+                if ($attributeValue) {
+                    \Log::info("Checking attribute: " . $attributeValue->attribute->name . " for value: " . $attributeValue->value . " (ID: $attrValueId)");
+                    
+                    // Nếu có price_modifier trong database thì sử dụng
+                    if ($attributeValue->price_modifier && $attributeValue->price_modifier != 1) {
+                        $priceModifier *= floatval($attributeValue->price_modifier);
+                        \Log::info("Found price modifier: " . $attributeValue->price_modifier . " for " . $attributeValue->attribute->name . ":" . $attributeValue->value);
+                    }
+                }
+            }
+
+            $price = round($basePrice * $priceModifier);
             $stock = $request->variant_stocks[$index] ?? $request->default_stock_quantity;
+
+            \Log::info("Variant $index: Base: $basePrice, Modifier: $priceModifier, Final: $price");
+
+            // Tự động set trạng thái
+            $isActive = $stock > 0 ? 1 : 0;
 
             // Lấy giá trị thuộc tính
             $attributeValues = AttributeValue::whereIn('id', $attributeValueIds)
@@ -129,7 +143,7 @@ class AdminProductVariantController extends Controller
                 'price' => $price,
                 'stock_quantity' => $stock,
                 'image_url' => $imageUrl,
-                'is_active' => $request->is_active ?? 1,
+                'is_active' => $isActive,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -148,22 +162,6 @@ class AdminProductVariantController extends Controller
                 }
             }
 
-            // Tạo thông báo khi tạo mới biến thể sản phẩm
-            Notification::create([
-                'user_id' => Auth::id(),
-                'entity_type' => ProductVariant::class,
-                'entity_id' => $productVariant->id,
-                'title' => 'Tạo mới biến thể sản phẩm',
-                'message' => 'Biến thể sản phẩm #' . $productVariant->id . ' đã được tạo mới.',
-                'type' => NotificationType::System,
-                'priority' => 'low',
-                'old_status' => null,
-                'new_status' => $productVariant->sku,
-                'event_details' => json_encode([
-                    'new' => $productVariant->getAttributes(),
-                ]),
-            ]);
-
             $createdVariants[] = $productVariant;
         }
 
@@ -173,6 +171,13 @@ class AdminProductVariantController extends Controller
                 ->withErrors(['attribute_values' => 'Tất cả biến thể với thuộc tính đã chọn đã tồn tại.']);
         }
 
+        // Nếu tạo từ trang show sản phẩm thì chuyển về show sản phẩm
+        if ($request->filled('product_id') && $request->input('from_product_show')) {
+            return redirect()->route('admin.products.show', $request->product_id)
+                ->with('success', 'Đã tạo thành công ' . count($createdVariants) . ' biến thể sản phẩm.');
+        }
+
+        // Nếu không, chuyển về index biến thể
         return redirect()->route('admin.product-variants.index')->with('success', 'Đã tạo thành công ' . count($createdVariants) . ' biến thể sản phẩm.');
     }
 
@@ -294,14 +299,16 @@ class AdminProductVariantController extends Controller
             $imageUrl = $request->file('image')->store('product_variants', 'public');
         }
 
-        $oldData = $productVariant->getOriginal();
+        $stock = $request->stock_quantity;
+        $isActive = $stock > 0 ? 1 : 0;
+
         $productVariant->update([
             'product_id' => $request->product_id,
             'sku' => $sku,
             'price' => $request->price,
-            'stock_quantity' => $request->stock_quantity,
+            'stock_quantity' => $stock,
             'image_url' => $imageUrl,
-            'is_active' => $request->is_active,
+            'is_active' => $isActive,
             'updated_at' => now(),
         ]);
 
@@ -322,23 +329,12 @@ class AdminProductVariantController extends Controller
             ]);
         }
 
-        // Tạo thông báo khi cập nhật biến thể sản phẩm
-        Notification::create([
-            'user_id' => Auth::id(),
-            'entity_type' => ProductVariant::class,
-            'entity_id' => $productVariant->id,
-            'title' => 'Cập nhật biến thể sản phẩm',
-            'message' => 'Biến thể sản phẩm #' . $productVariant->id . ' đã được cập nhật.',
-            'type' => NotificationType::System,
-            'priority' => 'low',
-            'old_status' => $oldData['sku'] ?? null,
-            'new_status' => $productVariant->sku,
-            'event_details' => json_encode([
-                'old' => $oldData,
-                'new' => $productVariant->getAttributes(),
-            ]),
-        ]);
-
         return redirect()->route('admin.product-variants.index')->with('success', 'Biến thể sản phẩm đã được cập nhật thành công.');
+    }
+
+    public function show($id)
+    {
+        $productVariant = ProductVariant::with(['product', 'productVariantOptions.attributeValue.attribute'])->findOrFail($id);
+        return view('admin.product_variants.show', compact('productVariant'));
     }
 }

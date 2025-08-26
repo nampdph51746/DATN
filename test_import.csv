@@ -1,0 +1,4 @@
+row_char,seat_number,seat_type,status
+F,01,Couple Sofa,available
+F,02,Couple Sofa,available
+F,03,Couple Bed,available

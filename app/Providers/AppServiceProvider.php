@@ -3,20 +3,18 @@
 namespace App\Providers;
 
 use App\Models\Role;
-use App\Models\Showtime;
 use App\Models\Booking;
-use App\Observers\ShowtimeObserver;
+use App\Models\Showtime;
 use App\Observers\BookingObserver;
+use App\Observers\ShowtimeObserver;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\ServiceProvider;
 use Spatie\Permission\PermissionRegistrar;
-<<<<<<< Updated upstream
-use Illuminate\Database\Eloquent\Relations\Relation;
-=======
 use Illuminate\Support\Facades\Event;
 use App\Events\BookingConfirmed;
 use App\Listeners\SendBookingConfirmationEmail;
->>>>>>> Stashed changes
+use Illuminate\Database\Eloquent\Relations\Relation;
+
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -38,9 +36,20 @@ class AppServiceProvider extends ServiceProvider
         
         // Đăng ký Observer cho Showtime
         Showtime::observe(ShowtimeObserver::class);
-<<<<<<< Updated upstream
+        
+        // Đăng ký Observer cho Booking để cập nhật hạng người dùng
+        Booking::observe(BookingObserver::class);
+        
+        // Đăng ký Event và Listener
+        // Event::listen(BookingConfirmed::class, SendBookingConfirmationEmail::class);
 
-        // Morph map cho tất cả các model
+        // Đăng ký View Composer cho client layout
+        view()->composer('layouts.client.client', function ($view) {
+            $genres = \App\Models\Genre::all();
+            $view->with('genres', $genres);
+        });
+
+         // Morph map cho tất cả các model
         Relation::morphMap([
             'age_limit' => \App\Models\AgeLimit::class,
             'attribute' => \App\Models\Attribute::class,
@@ -81,13 +90,5 @@ class AppServiceProvider extends ServiceProvider
             'ticket' => \App\Models\Ticket::class,
             'user' => \App\Models\User::class,
         ]);
-=======
-        
-        // Đăng ký Observer cho Booking
-        Booking::observe(BookingObserver::class);
-        
-        // Đăng ký Event và Listener
-        Event::listen(BookingConfirmed::class, SendBookingConfirmationEmail::class);
->>>>>>> Stashed changes
     }
 }

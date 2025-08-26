@@ -2,11 +2,18 @@
 
 @section('content')
     <div class="container-xxl">
+        @if(session('error'))
+            <div class="alert alert-danger">{{ session('error') }}</div>
+        @endif
+        
+        @if(session('success'))
+            <div class="alert alert-success">{{ session('success') }}</div>
+        @endif
 
         <div class="card overflow-hiddenCoupons shadow-sm border-0">
             <div class="card-header bg-light-subtle p-3">
                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                    <h5 class="card-title mb-0">Quản lý Vai trò</h5>
+                    <h5 class="card-title mb-0">👤 Quản lý Vai trò</h5>
                     <form method="GET" action="{{ route('roles.index') }}" class="mb-3">
                         <div class="row g-2 align-items-end">
                             <div class="col-md-3">
@@ -25,13 +32,15 @@
                             </div>
 
                             <div class="col-md-5 d-flex gap-2">
-                                <button type="submit" class="btn btn-primary w-100">
-                                    <i class="bi bi-funnel-fill me-1"></i> Lọc
-                                </button>
-                                <a href="{{ route('roles.index') }}" class="btn btn-secondary w-100">
+                                    <button type="submit" class="btn btn-sm btn-primary">
+                                        <i class="bx bx-search"></i>
+                                    </button>
+                                <!-- <a href="{{ route('roles.index') }}" class="btn btn-secondary w-20">
                                     <i class="bi bi-arrow-counterclockwise me-1"></i> Đặt lại
+                                </a> -->
+                                <a href="{{ route('roles.create') }}" class="btn btn-success w-200">
+                                    <i class="bi bi-arrow-counterclockwise me-1"></i> Thêm vai trò
                                 </a>
-
                             </div>
                         </div>
                     </form>
@@ -122,11 +131,6 @@
                                 <iconify-icon icon="tabler:trash-x" width="24" height="24" title="Vai trò đã xóa"></iconify-icon>
                              </a>
                              @endcan
-                        </div>
-                        <div>
-                                <a href="{{ route('roles.create') }}" class="btn btn-primary w-100">
-                                    <i class="bi bi-arrow-counterclockwise me-1"></i> Thêm vai trò
-                                </a>
                         </div>
                     </div>
             </div>

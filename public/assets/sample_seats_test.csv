@@ -1,0 +1,7 @@
+row_char,seat_number,seat_type,status
+B,01,VIP,available
+B,02,VIP,available
+B,03,Thường,available
+B,04,Thường,available
+C,01,Đôi,available
+C,02,Đôi,available

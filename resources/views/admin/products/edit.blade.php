@@ -2,6 +2,7 @@
 
 @section('content')
     <div class="container-xxl">
+        @include('admin.partials.notifications')
         <div class="row">
             <div class="col-xl-3 col-lg-4">
                 <div class="card">
@@ -135,6 +136,18 @@
                                             <option value="0" @selected(old('is_active', $product->is_active) == '0')>Không hoạt động</option>
                                         </select>
                                         @error('is_active')
+                                            <span class="text-danger">{{ $message }}</span>
+                                        @enderror
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-6">
+                                    <div class="mb-3">
+                                        <label for="base-price" class="form-label">Giá gốc sản phẩm</label>
+                                        <input type="number" min="0" step="0.01" id="base-price" name="base_price" class="form-control"
+                                            value="{{ old('base_price', $product->base_price) }}" placeholder="Nhập giá gốc">
+                                        @error('base_price')
                                             <span class="text-danger">{{ $message }}</span>
                                         @enderror
                                     </div>

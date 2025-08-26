@@ -2,6 +2,7 @@
 
 @section('content')
 <div class="container-fluid">
+    @include('admin.partials.notifications')
 
     <div class="row">
         <div class="col-lg-4">
@@ -67,9 +68,15 @@
                         </div>
                     </div>
 
-                    <h4 class="text-dark fw-medium mt-4">
-                        <iconify-icon icon="solar:list-broken" class="align-middle fs-18 me-1"></iconify-icon>
-                        Danh sách giá trị thuộc tính
+                    <h4 class="text-dark fw-medium mt-4 d-flex justify-content-between align-items-center">
+                        <span>
+                            <iconify-icon icon="solar:list-broken" class="align-middle fs-18 me-1"></iconify-icon>
+                            Danh sách giá trị thuộc tính
+                        </span>
+                        <a href="{{ route('admin.attribute-values.create', ['attribute_id' => $attribute->id]) }}" class="btn btn-sm btn-primary">
+                            <iconify-icon icon="solar:add-circle-broken" class="align-middle fs-18 me-1"></iconify-icon>
+                            Thêm giá trị thuộc tính
+                        </a>
                     </h4>
                     <div class="table-responsive">
                         <table class="table align-middle mb-0 table-hover table-centered">
@@ -82,6 +89,10 @@
                                     <th>
                                         <iconify-icon icon="solar:text-field-broken" class="align-middle fs-16 me-1"></iconify-icon>
                                         Giá trị
+                                    </th>
+                                    <th>
+                                        <iconify-icon icon="solar:percentage-broken" class="align-middle fs-16 me-1"></iconify-icon>
+                                        Price Modifier
                                     </th>
                                     <th>
                                         <iconify-icon icon="solar:calendar-add-broken" class="align-middle fs-16 me-1"></iconify-icon>
@@ -98,12 +109,20 @@
                                 <tr>
                                     <td>{{ $key + 1 }}</td>
                                     <td>{{ $attributeValue->value }}</td>
+                                    <td>
+                                        <span class="badge {{ $attributeValue->price_modifier == 1 ? 'bg-secondary' : 'bg-success' }}">
+                                            {{ $attributeValue->price_modifier }}x
+                                            @if($attributeValue->price_modifier != 1)
+                                                ({{ ($attributeValue->price_modifier - 1) * 100 > 0 ? '+' : '' }}{{ round(($attributeValue->price_modifier - 1) * 100) }}%)
+                                            @endif
+                                        </span>
+                                    </td>
                                     <td>{{ $attributeValue->created_at ? $attributeValue->created_at->format('d/m/Y H:i') : 'Không xác định' }}</td>
                                     <td>{{ $attributeValue->updated_at ? $attributeValue->updated_at->format('d/m/Y H:i') : 'Không xác định' }}</td>
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="4" class="text-center text-muted">Không có giá trị thuộc tính nào.</td>
+                                    <td colspan="5" class="text-center text-muted">Không có giá trị thuộc tính nào.</td>
                                 </tr>
                                 @endforelse
                             </tbody>

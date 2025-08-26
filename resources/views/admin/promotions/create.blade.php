@@ -61,20 +61,6 @@
 
                             <div class="col-lg-6">
                                 <div class="mb-3">
-                                    <label for="rank_id" class="form-label">Hạng khách hàng</label>
-                                    <select name="rank_id" id="rank_id" class="form-control">
-                                        <option value="">-- Chọn hạng --</option>
-                                        @foreach ($ranks as $id => $name)
-                                            <option value="{{ $id }}" {{ old('rank_id') == $id ? 'selected' : '' }}>{{ $name }}</option>
-                                        @endforeach
-                                    </select>
-                                    @error('rank_id')
-                                        <span class="text-danger fs-13">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                            </div>
-                            <div class="col-lg-6">
-                                <div class="mb-3">
                                     <label for="promotion-discount-type" class="form-label">Loại giảm giá</label>
                                     <select class="form-control" id="promotion-discount-type" name="discount_type" data-choices data-choices-groups data-placeholder="Chọn loại giảm giá">
                                         @foreach($discountTypes as $type)

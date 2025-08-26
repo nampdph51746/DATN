@@ -1,3 +1,4 @@
+
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -13,7 +14,7 @@ return new class extends Migration
             $table->foreignId('cinema_id')->constrained()->comment('ID rạp chiếu');
             $table->foreignId('room_type_id')->nullable()->constrained()->comment('ID loại phòng');
             $table->string('name', 100)->comment('Tên phòng');
-            $table->integer('capacity')->comment('Sức chứa');
+            $table->integer('capacity')->default(0)->comment('Sức chứa');
             $table->string('status', 20)->nullable()->comment('Trạng thái phòng (active, maintenance)');
             $table->timestamp('created_at')->nullable()->comment('Thời gian tạo');
             $table->timestamp('updated_at')->nullable()->comment('Thời gian cập nhật');

@@ -34,8 +34,6 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
-<<<<<<< Updated upstream
-=======
 
     'google' => [
     'client_id' => env('GOOGLE_CLIENT_ID'),
@@ -48,17 +46,5 @@ return [
 //     'hash_secret' => env('VNPAY_HASH_SECRET', 'NX3ZCRHQUHCZZO6CYTWKQG1URUCNBFXW'),
 //     'url' => env('VNPAY_URL', 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html'),
 // ],
->>>>>>> Stashed changes
-
-    'google' => [
-        'client_id' => env('GOOGLE_CLIENT_ID'),
-        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
-        'redirect' => env('GOOGLE_REDIRECT_URI'),
-    ],
-    // 'vnpay' => [
-    //     'tmncode' => env('VNPAY_TMN_CODE', 'MIXLC4YW'),
-    //     'hash_secret' => env('VNPAY_HASH_SECRET', 'NX3ZCRHQUHCZZO6CYTWKQG1URUCNBFXW'),
-    //     'url' => env('VNPAY_URL', 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html'),
-    // ],
 
 ];

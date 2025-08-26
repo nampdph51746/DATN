@@ -14,6 +14,12 @@
                     </div>
                 </div>
                 <div class="card-body">
+                    @if (session('success'))
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            {{ session('success') }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    @endif
                     <form method="POST" action="{{ route('customer_rank_promotions.update', [$item->customer_rank_id, $item->promotion_id]) }}">
                         @csrf
                         @method('PUT')

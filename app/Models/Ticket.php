@@ -45,4 +45,16 @@ class Ticket extends Model
     {
         return $this->belongsTo(User::class, 'scanned_by');
     }
+
+    //Lấy attribute của movie
+    public function getMovieAttribute()
+    {
+        return $this->showtime?->movie;
+    }
+
+    //Lấy attribute của seat type
+    public function getSeatTypeAttribute()
+    {
+        return $this->seat?->seatType;
+    }
 }

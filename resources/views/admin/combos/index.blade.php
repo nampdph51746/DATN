@@ -78,15 +78,16 @@
                                         <tr>
                                             <td>{{ $loop->iteration + ($combos->currentPage() - 1) * $combos->perPage() }}</td>
                                             <td>
-                                                @if ($combo->image_url)
-                                                    <img src="{{ asset('storage/' . $combo->image_url) }}" alt="{{ $combo->sku }}"
-                                                        style="max-width: 100px; max-height: 50px;">
+                                                @if ($combo->combo_url)
+                                                    <img src="{{ asset('storage/' . $combo->combo_url) }}" alt="{{ $combo->sku }}"
+                                                        style="max-width: 100px; max-height: 50px;" class="img-thumbnail">
                                                 @else
-                                                    <span class="text-muted">Không có ảnh</span>
+                                                    <img src="{{ asset('assets/images/default.png') }}" alt="No image"
+                                                        style="max-width: 100px; max-height: 50px;" class="img-thumbnail">
                                                 @endif
                                             </td>
                                             <td>{{ $combo->sku }}</td>
-                                            <td>{{ $combo->product->name ?? 'Chưa có sản phẩm' }}</td>
+                                            <td>{{ $combo->comboProductVariant->product->name ?? 'Chưa có sản phẩm' }}</td>
                                             <td>{{ $combo->comboPackageItems->sum('quantity') }}</td>
                                             <td>{{ $combo->created_at->format('d/m/Y H:i') }}</td>
                                             <td>

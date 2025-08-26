@@ -83,6 +83,24 @@
                             booking_code: document.querySelector('input[name="booking_code"]').value,
                         });
 
+                        // Set session để đánh dấu form đã submit khi form được submit
+                        const form = document.getElementById('autoSubmitForm');
+                        if (form) {
+                            form.addEventListener('submit', function() {
+                                // Gọi API để set session trước khi submit
+                                fetch('{{ route("checkout.setSession") }}', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                    },
+                                    body: JSON.stringify({
+                                        checkout_form_submitted: true
+                                    })
+                                });
+                            });
+                        }
+
                         setTimeout(function() {
                             const form = document.getElementById('autoSubmitForm');
                             if (form) {

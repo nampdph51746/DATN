@@ -68,16 +68,11 @@
           @endif
           <li class="mb-3">
             <strong>Trạng thái:</strong>
-            @php
-                use App\Enums\CinemaStatus;
-                $status = is_string($cinema->status) ? trim($cinema->status) : ($cinema->status instanceof CinemaStatus ? $cinema->status->value : '');
-            @endphp
-            @if($status == CinemaStatus::Active->value)
-                <span class="badge bg-success">Hoạt động</span>
-            @elseif($status == CinemaStatus::Inactive->value)
-                <span class="badge bg-secondary">Không hoạt động</span>
+            {{-- Debug: {{ dd($cinema->status, get_class($cinema->status), $cinema->status->value ?? 'no value') }} --}}
+            @if($cinema->status === \App\Enums\CinemaStatus::Active || $cinema->status === 'active')
+            <span class="badge bg-success">Hoạt động</span>
             @else
-                <span class="badge bg-warning">Không xác định</span>
+            <span class="badge bg-secondary">Không hoạt động ({{ $cinema->status }})</span>
             @endif
           </li>
         </ul>
@@ -93,8 +88,154 @@
           </div>
         </div>
         @endif
+
+        <div class="mt-4">
+          <div class="card">
+            <div class="card-header" style="cursor: pointer;" id="accordionHeader">
+              <h5 class="card-title mb-0 d-flex align-items-center justify-content-between">
+                <span>
+                  <i class="bx bx-door-open me-2"></i>
+                  Danh sách phòng chiếu ({{ $cinema->rooms->count() }})
+                </span>
+                <i class="bx bx-chevron-right" id="customChevron"></i>
+              </h5>
+            </div>
+            <div id="customAccordionContent" style="display: none;">
+              <div class="card-body">
+                  @if($cinema->rooms->count() > 0)
+                    <div class="row g-3">
+                      @foreach($cinema->rooms as $index => $room)
+                        <div class="col-md-6">
+                          <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body">
+                              <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h5 class="card-title mb-0 text-primary">{{ $room->name }}</h5>
+                                @if($room->status === 'active')
+                                  <span class="badge bg-success">Hoạt động</span>
+                                @elseif($room->status === 'maintenance')
+                                  <span class="badge bg-warning text-dark">Bảo trì</span>
+                                @else
+                                  <span class="badge bg-danger">Không hoạt động</span>
+                                @endif
+                              </div>
+                              
+                              <div class="row text-muted mb-3">
+                                <div class="col-6">
+                                  <i class="bx bx-category me-1"></i>
+                                  <small>{{ $room->roomType->name ?? 'Chưa xác định' }}</small>
+                                </div>
+                                <div class="col-6">
+                                  <i class="bx bx-chair me-1"></i>
+                                  <small>{{ $room->capacity }} ghế ({{ $room->seats->count() }} đã tạo)</small>
+                                </div>
+                              </div>
+                              
+                              <div class="d-flex gap-2">
+                                <a href="{{ route('admin.rooms.show', $room->id) }}" class="btn btn-sm btn-outline-primary flex-fill">
+                                  <i class="bx bx-show me-1"></i>
+                                  Xem chi tiết
+                                </a>
+                                <a href="{{ route('admin.rooms.edit', $room->id) }}" class="btn btn-sm btn-outline-secondary">
+                                  <i class="bx bx-edit me-1"></i>
+                                  Sửa
+                                </a>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      @endforeach
+                    </div>
+                  @else
+                    <div class="text-center py-4">
+                      <i class="bx bx-door-open display-4 text-muted mb-3"></i>
+                      <h5 class="text-muted">Chưa có phòng chiếu nào</h5>
+                      <p class="text-muted mb-3">Rạp này chưa có phòng chiếu nào được tạo.</p>
+                      <a href="{{ route('admin.rooms.create') }}?cinema_id={{ $cinema->id }}" class="btn btn-primary">
+                        <i class="bx bx-plus me-1"></i>
+                        Thêm phòng mới
+                      </a>
+                    </div>
+                  @endif
+                </div>
+              </div>
+            </div>
+        </div>
       </div>
     </div>
   </div>
 </div>
+
+<script>
+console.log('🚀 Inline script starting...');
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🎬 DOM loaded - Setting up custom accordion');
+    
+    // Debug: Check if we're in the right page
+    console.log('Current URL:', window.location.href);
+    console.log('Document title:', document.title);
+    
+    const header = document.getElementById('accordionHeader');
+    const content = document.getElementById('customAccordionContent');
+    const chevron = document.getElementById('customChevron');
+    
+    console.log('🔍 Looking for elements:', {
+        header: header,
+        content: content, 
+        chevron: chevron
+    });
+    
+    if (!header) {
+        console.error('❌ accordionHeader not found!');
+        return;
+    }
+    if (!content) {
+        console.error('❌ customAccordionContent not found!');
+        return;
+    }
+    if (!chevron) {
+        console.error('❌ customChevron not found!');
+        return;
+    }
+    
+    console.log('✅ All accordion elements found successfully');
+    
+    // Add click event listener
+    header.addEventListener('click', function(event) {
+        console.log('🖱️ CLICK DETECTED on accordion header!');
+        
+        // Prevent event bubbling
+        event.stopPropagation();
+        event.preventDefault();
+        
+        console.log('Before toggle - display:', content.style.display);
+        
+        if (content.style.display === 'none' || content.style.display === '') {
+            console.log('🔄 Opening accordion...');
+            content.style.display = 'block';
+            chevron.classList.remove('bx-chevron-right');
+            chevron.classList.add('bx-chevron-down');
+            console.log('📂 Accordion OPENED! Display is now:', content.style.display);
+        } else {
+            console.log('🔄 Closing accordion...');
+            content.style.display = 'none';
+            chevron.classList.remove('bx-chevron-down');
+            chevron.classList.add('bx-chevron-right');
+            console.log('📁 Accordion CLOSED! Display is now:', content.style.display);
+        }
+    });
+    
+    console.log('✅ Event listener attached successfully');
+    
+    // Test: Try to click programmatically after 2 seconds
+    setTimeout(function() {
+        console.log('🧪 Test: Simulating click after 2 seconds...');
+        if (header) {
+            header.click();
+        }
+    }, 2000);
+});
+
+console.log('🏁 Inline script completed');
+</script>
 @endsection

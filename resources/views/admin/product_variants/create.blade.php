@@ -2,6 +2,8 @@
 
 @section('content')
 <div class="container-xxl">
+    @include('admin.partials.notifications')
+
     <div class="row">
         <div class="col-xl-3 col-lg-4">
             <div class="card">
@@ -69,6 +71,7 @@
                                             $selectedProduct = $products->firstWhere('id', $selectedProductId);
                                         @endphp
                                         <input type="hidden" name="product_id" value="{{ $selectedProductId }}">
+                                        <input type="hidden" name="from_product_show" value="{{ $fromProductShow }}">
                                         <input type="text" class="form-control" value="{{ $selectedProduct ? $selectedProduct->name : 'Sản phẩm đã chọn' }}" disabled>
                                     @else
                                         <select class="form-control" id="product-id" name="product_id" data-choices data-choices-groups data-placeholder="Chọn sản phẩm">
@@ -86,7 +89,8 @@
                                     @enderror
                                 </div>
                             </div>
-                            <div class="col-lg-6">
+                            {{-- Xóa trường trạng thái biến thể --}}
+                            {{-- <div class="col-lg-6">
                                 <div class="mb-3">
                                     <label for="is_active" class="form-label">Trạng thái</label>
                                     <select id="is_active" name="is_active" class="form-control">
@@ -97,18 +101,9 @@
                                         <span class="text-danger">{{ $message }}</span>
                                     @enderror
                                 </div>
-                            </div>
+                            </div> --}}
                         </div>
                         <div class="row">
-                            <div class="col-lg-6">
-                                <div class="mb-3">
-                                    <label for="default_price" class="form-label">Giá mặc định</label>
-                                    <input type="number" id="default_price" name="default_price" class="form-control" value="{{ old('default_price') }}" placeholder="Giá mặc định (VNĐ)" step="0.01">
-                                    @error('default_price')
-                                        <span class="text-danger">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                            </div>
                             <div class="col-lg-6">
                                 <div class="mb-3">
                                     <label for="default_stock" class="form-label">Tồn kho mặc định</label>
@@ -131,6 +126,7 @@
                                     <tr>
                                         <th style="width: 40%">Thuộc tính</th>
                                         <th style="width: 50%">Giá trị thuộc tính</th>
+                                        <th style="width: 10%">Modifier</th>
                                         <th style="width: 10%"></th>
                                     </tr>
                                 </thead>
@@ -140,16 +136,25 @@
                                             <select class="form-control attribute-select" name="attributes[]" onchange="loadAttributeValues(this)">
                                                 <option value="">Chọn thuộc tính</option>
                                                 @foreach ($attributes as $attribute)
-                                                    <option value="{{ $attribute->id }}" data-values='@json($attribute->attributeValues->map(fn($value) => ['id' => $value->id, 'value' => $value->value]))'>
+                                                    <option value="{{ $attribute->id }}" data-name="{{ $attribute->name }}"
+                                                        data-values='@json($attribute->attributeValues->map(fn($value) => [
+                                                            'id' => $value->id,
+                                                            'value' => $value->value,
+                                                            'modifier' => floatval($value->price_mordifier ?? 1)
+                                                        ]))'>
                                                         {{ $attribute->name }}
                                                     </option>
                                                 @endforeach
                                             </select>
                                         </td>
                                         <td>
-                                            <select class="form-control value-select" multiple name="attribute_values[0][]" required>
+                                            <select class="form-control value-select" multiple name="attribute_values[0][]" required onchange="toggleModifierInput(this)">
                                                 <option value="">Chọn giá trị thuộc tính</option>
                                             </select>
+                                        </td>
+                                        <td>
+                                            {{-- Chỉ hiển thị input modifier nếu là thuộc tính size --}}
+                                            <input type="number" step="0.01" min="0" class="form-control modifier-input" name="price_modifiers[0][]" style="display:none;" placeholder="Modifier">
                                         </td>
                                         <td class="text-center">
                                             <button type="button" class="btn btn-outline-danger btn-sm btn-remove-attribute" style="display:none;" onclick="removeAttributeRow(this)">
@@ -216,17 +221,107 @@
         }
     }
 
+    function updateVariantsPreview() {
+        const variantsBody = document.getElementById('variants-preview-body');
+        variantsBody.innerHTML = '';
+
+        const attributeRows = document.querySelectorAll('.attribute-row');
+        const selectedValues = [];
+        let productSku = "{{ isset($selectedProduct) && $selectedProduct ? $selectedProduct->sku : 'PRODUCT' }}";
+        let basePrice = 0;
+        @if(isset($selectedProduct))
+            basePrice = {{ $selectedProduct->base_price ?? 0 }};
+        @endif
+
+        // Lấy thông tin modifier từ option data-modifier
+        attributeRows.forEach(row => {
+            const valueSelect = row.querySelector('.value-select');
+            const attributeSelect = row.querySelector('.attribute-select');
+            const attributeName = attributeSelect.selectedOptions[0]?.getAttribute('data-name') || 'Unknown';
+            const selectedOptions = Array.from(valueSelect.selectedOptions)
+                .filter(opt => opt.value)
+                .map((opt, idx) => ({
+                    id: opt.value,
+                    value: opt.text,
+                    attribute: attributeName,
+                    price_modifier: parseFloat(opt.getAttribute('data-modifier')) || 1
+                }));
+            if (selectedOptions.length > 0) {
+                selectedValues.push(selectedOptions);
+            }
+        });
+
+        // Tạo các tổ hợp biến thể
+        let combinations = [];
+        if (selectedValues.length > 0) {
+            const generateCombinations = (values, index = 0, current = []) => {
+                if (index === values.length) {
+                    combinations.push(current);
+                    return;
+                }
+                values[index].forEach(val => {
+                    generateCombinations(values, index + 1, [...current, val]);
+                });
+            };
+            generateCombinations(selectedValues);
+        }
+
+        const defaultStock = document.getElementById('default_stock').value || 0;
+
+        // Hiển thị các tổ hợp
+        combinations.forEach((combination, index) => {
+            if (combination.length !== selectedValues.length) return;
+
+            const skuParts = combination.map(val => val.value.replace(/\s+/g, '-').toLowerCase());
+            const sku = productSku + '-' + skuParts.join('-');
+            const attributesText = combination.map(val => `${val.attribute}: ${val.value}`).join(', ');
+
+            // Tính giá: base_price * tích các price_modifier
+            let priceModifier = 1;
+            combination.forEach(val => {
+                priceModifier *= val.price_modifier;
+            });
+            const price = Math.round(basePrice * priceModifier);
+
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${sku.toUpperCase()}</td>
+                <td>${attributesText}</td>
+                <td>
+                    <input type="number" name="variant_prices[${index}]" value="${price}" class="form-control" step="0.01" placeholder="Giá (VNĐ)" readonly>
+                </td>
+                <td>
+                    <input type="number" name="variant_stocks[${index}]" value="${defaultStock}" class="form-control" placeholder="Tồn kho">
+                </td>
+            `;
+            variantsBody.appendChild(row);
+
+            combination.forEach((val, attrIndex) => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = `attribute_values[${attrIndex}][${index}]`;
+                input.value = val.id;
+                variantsBody.appendChild(input);
+            });
+        });
+    }
+
     function loadAttributeValues(select) {
         const valueSelect = select.closest('.attribute-row').querySelector('.value-select');
         valueSelect.innerHTML = '<option value="">Chọn giá trị thuộc tính</option>';
         const selectedOption = select.options[select.selectedIndex];
         if (selectedOption && selectedOption.value) {
             try {
+                // Lấy giá trị modifier từ attributeValues
                 const values = JSON.parse(selectedOption.getAttribute('data-values') || '[]');
                 values.forEach(value => {
                     const option = document.createElement('option');
                     option.value = value.id;
                     option.text = value.value;
+                    // Nếu có trường modifier trong value, thêm vào data-modifier
+                    if (typeof value.modifier !== 'undefined') {
+                        option.setAttribute('data-modifier', value.modifier);
+                    }
                     valueSelect.appendChild(option);
                 });
             } catch (e) {
@@ -274,79 +369,17 @@
         });
     }
 
-    function updateVariantsPreview() {
-        const variantsBody = document.getElementById('variants-preview-body');
-        variantsBody.innerHTML = '';
-
-        // Lấy tất cả giá trị thuộc tính được chọn
-        const attributeRows = document.querySelectorAll('.attribute-row');
-        const selectedValues = [];
-        let productSku = "{{ $selectedProduct ? $selectedProduct->sku : 'PRODUCT' }}";
-
-        attributeRows.forEach(row => {
-            const valueSelect = row.querySelector('.value-select');
-            const attributeSelect = row.querySelector('.attribute-select');
-            const attributeName = attributeSelect.selectedOptions[0]?.text || 'Unknown';
-            const selectedOptions = Array.from(valueSelect.selectedOptions)
-                .filter(opt => opt.value)
-                .map(opt => ({
-                    id: opt.value,
-                    value: opt.text,
-                    attribute: attributeName
-                }));
-            if (selectedOptions.length > 0) {
-                selectedValues.push(selectedOptions);
-            }
-        });
-
-        // Tạo các tổ hợp biến thể
-        let combinations = [];
-        if (selectedValues.length > 0) {
-            const generateCombinations = (values, index = 0, current = []) => {
-                if (index === values.length) {
-                    combinations.push(current);
-                    return;
-                }
-                values[index].forEach(val => {
-                    generateCombinations(values, index + 1, [...current, val]);
-                });
-            };
-            generateCombinations(selectedValues);
+    function toggleModifierInput(select) {
+        // Hiển thị input modifier nếu là thuộc tính size
+        const attributeSelect = select.closest('.attribute-row').querySelector('.attribute-select');
+        const attributeName = attributeSelect.selectedOptions[0]?.getAttribute('data-name');
+        const modifierInput = select.closest('.attribute-row').querySelector('.modifier-input');
+        if (attributeName && attributeName.toLowerCase() === 'size') {
+            modifierInput.style.display = 'block';
+        } else {
+            modifierInput.style.display = 'none';
         }
-
-        // Lấy giá và tồn kho mặc định
-        const defaultPrice = document.getElementById('default_price').value || 0;
-        const defaultStock = document.getElementById('default_stock').value || 0;
-
-        // Hiển thị các tổ hợp
-        combinations.forEach((combination, index) => {
-            if (combination.length !== selectedValues.length) return;
-
-            const skuParts = combination.map(val => val.value.replace(/\s+/g, '-').toLowerCase());
-            const sku = productSku + '-' + skuParts.join('-');
-            const attributesText = combination.map(val => `${val.attribute}: ${val.value}`).join(', ');
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${sku.toUpperCase()}</td>
-                <td>${attributesText}</td>
-                <td>
-                    <input type="number" name="variant_prices[${index}]" value="${defaultPrice}" class="form-control" step="0.01" placeholder="Giá (VNĐ)">
-                </td>
-                <td>
-                    <input type="number" name="variant_stocks[${index}]" value="${defaultStock}" class="form-control" placeholder="Tồn kho">
-                </td>
-            `;
-            variantsBody.appendChild(row);
-
-            // Thêm các giá trị thuộc tính vào form
-            combination.forEach((val, attrIndex) => {
-                const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = `attribute_values[${attrIndex}][${index}]`;
-                input.value = val.id;
-                variantsBody.appendChild(input);
-            });
-        });
+        updateVariantsPreview();
     }
 
     document.addEventListener('DOMContentLoaded', function () {

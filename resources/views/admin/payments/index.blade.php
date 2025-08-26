@@ -64,7 +64,7 @@
         <!-- Payment List Section -->
         <div class="card">
             <div class="card-body">
-                <h2 class="card-title mb-4">Danh sách thanh toán</h2>
+                <h2 class="card-title mb-4">📖 Danh sách thanh toán</h2>
 
                 <!-- Filter Form -->
                 <form method="GET" class="mb-4 d-flex flex-wrap gap-2">
@@ -85,7 +85,9 @@
                         </select>
                     </div>
                     <div>
-                        <button type="submit" class="btn btn-primary">Lọc</button>
+                        <button type="submit" class="btn btn-sm btn-primary">
+                            <i class="bx bx-search"></i>
+                        </button>
                     </div>
                 </form>
 

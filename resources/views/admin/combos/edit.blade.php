@@ -8,10 +8,10 @@
             <div class="col-xl-3 col-lg-4">
                 <div class="card">
                     <div class="card-body">
-                        <img src="{{ $combo->image_url ? asset('storage/' . $combo->image_url) : asset('assets/images/default.png') }}"
+                        <img src="{{ $combo->combo_url ? asset('storage/' . $combo->combo_url) : asset('assets/images/default.png') }}"
                             alt="" class="img-fluid rounded bg-light" id="previewImage">
                         <div class="mt-3">
-                            <h4>{{ old('sku', $combo->sku) }}</h4>
+                            <h4>{{ $combo->name ?? 'Combo mới' }}</h4>
                         </div>
                     </div>
                     <div class="card-footer bg-light-subtle">
@@ -33,41 +33,34 @@
                     @method('PUT')
                     <div class="card">
                         <div class="card-header">
-                            <h4 class="card-title">Cập nhật ảnh combo</h4>
-                        </div>
-                        <div class="card-body">
-                            <div class="dropzone" id="myAwesomeDropzone" data-plugin="dropzone"
-                                data-previews-container="#file-previews"
-                                data-upload-preview-template="#uploadPreviewTemplate">
-                                <div class="fallback">
-                                    <input name="image" type="file" id="imageInput" onchange="previewImage(event)" />
-                                </div>
-                                <div class="dz-message needsclick">
-                                    <i class="bx bx-cloud-upload fs-48 text-primary"></i>
-                                    <h3 class="mt-4">Thả ảnh của bạn vào đây, hoặc <span class="text-primary">nhấn để duyệt</span></h3>
-                                    <span class="text-muted fs-13">
-                                        Kích thước đề xuất 1600 x 1200 (4:3). Cho phép các tệp PNG, JPG và GIF
-                                    </span>
-                                </div>
-                            </div>
-                            @error('image')
-                                <span class="text-danger">{{ $message }}</span>
-                            @enderror
-                        </div>
-                    </div>
-                    <div class="card">
-                        <div class="card-header">
                             <h4 class="card-title">Thông tin combo</h4>
                         </div>
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-lg-6">
                                     <div class="mb-3">
+                                        <label for="name" class="form-label">Tên combo</label>
+                                        <input type="text" class="form-control" id="name" name="name" value="{{ old('name', $combo->name) }}" maxlength="255" required>
+                                        @error('name')
+                                            <span class="text-danger">{{ $message }}</span>
+                                        @enderror
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="combo_url" class="form-label">Ảnh combo</label>
+                                        <input type="file" class="form-control" id="combo_url" name="combo_url" accept="image/*" onchange="previewComboImage(this)">
+                                        @error('combo_url')
+                                            <span class="text-danger">{{ $message }}</span>
+                                        @enderror
+                                        @if($combo->combo_url)
+                                            <small class="text-muted">Ảnh hiện tại: <a href="{{ asset('storage/' . $combo->combo_url) }}" target="_blank">Xem ảnh</a></small>
+                                        @endif
+                                    </div>
+                                    <div class="mb-3">
                                         <label for="product_id" class="form-label">Sản phẩm</label>
                                         <select class="form-control" id="product_id" name="product_id" onchange="loadVariants(this)" required>
                                             <option value="">Chọn sản phẩm</option>
                                             @foreach ($products as $product)
-                                                <option value="{{ $product->id }}" @selected(old('product_id', $combo->product_id) == $product->id)>
+                                                <option value="{{ $product->id }}" @selected(old('product_id', $combo->comboProductVariant->product_id ?? '') == $product->id)>
                                                     {{ $product->name }}
                                                 </option>
                                             @endforeach
@@ -76,19 +69,33 @@
                                             <span class="text-danger">{{ $message }}</span>
                                         @enderror
                                     </div>
-                                </div>
-                                <div class="col-lg-6">
                                     <div class="mb-3">
                                         <label for="combo_product_variant_id" class="form-label">Biến thể đại diện Combo</label>
                                         <select class="form-control" id="combo_product_variant_id" name="combo_product_variant_id" onchange="updatePreview()" required>
                                             <option value="">Chọn biến thể</option>
-                                            @foreach ($combo->product->productVariants ?? [] as $variant)
-                                                <option value="{{ $variant->id }}" @selected(old('combo_product_variant_id', $combo->id) == $variant->id)>
+                                            @foreach ($combo->comboProductVariant->product->productVariants ?? [] as $variant)
+                                                <option value="{{ $variant->id }}" @selected(old('combo_product_variant_id', $combo->combo_product_variant_id) == $variant->id)>
                                                     {{ $variant->sku }}
                                                 </option>
                                             @endforeach
                                         </select>
                                         @error('combo_product_variant_id')
+                                            <span class="text-danger">{{ $message }}</span>
+                                        @enderror
+                                    </div>
+                                </div>
+                                <div class="col-lg-6">
+                                    <div class="mb-3">
+                                        <label for="price" class="form-label">Giá combo</label>
+                                        <input type="number" class="form-control" id="price" name="price" value="{{ old('price', $combo->price) }}" min="0" step="0.01" required>
+                                        @error('price')
+                                            <span class="text-danger">{{ $message }}</span>
+                                        @enderror
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="stock_quantity" class="form-label">Tồn kho combo</label>
+                                        <input type="number" class="form-control" id="stock_quantity" name="stock_quantity" value="{{ old('stock_quantity', $combo->stock_quantity) }}" min="0" required>
+                                        @error('stock_quantity')
                                             <span class="text-danger">{{ $message }}</span>
                                         @enderror
                                     </div>
@@ -168,31 +175,21 @@
     </div>
 
     <script>
-        function previewImage(event) {
-            const file = event.target.files[0];
-            if (file) {
+        function previewComboImage(input) {
+            const previewImage = document.getElementById('previewImage');
+            if (input.files && input.files[0]) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    document.getElementById('previewImage').src = e.target.result;
+                    previewImage.src = e.target.result;
                 }
-                reader.readAsDataURL(file);
+                reader.readAsDataURL(input.files[0]);
             }
         }
 
         function submitForm() {
             const comboForm = document.getElementById('comboForm');
-
             if (comboForm.checkValidity()) {
-                if (typeof Dropzone !== 'undefined' && Dropzone.forElement('#myAwesomeDropzone')) {
-                    const dropzone = Dropzone.forElement('#myAwesomeDropzone');
-                    if (dropzone.getQueuedFiles().length > 0) {
-                        dropzone.processQueue();
-                    } else {
-                        comboForm.submit();
-                    }
-                } else {
-                    comboForm.submit();
-                }
+                comboForm.submit();
             } else {
                 comboForm.reportValidity();
             }
@@ -319,38 +316,7 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            if (typeof Dropzone !== 'undefined' && Dropzone.forElement('#myAwesomeDropzone')) {
-                Dropzone.options.myAwesomeDropzone = {
-                    autoProcessQueue: false,
-                    uploadMultiple: false,
-                    maxFiles: 1,
-                    acceptedFiles: '.jpg,.jpeg,.png,.gif',
-                    paramName: 'image',
-                    addRemoveLinks: true,
-                    init: function() {
-                        const thisDropzone = this;
-
-                        this.on('addedfile', function(file) {
-                            previewImage({ target: { files: [file] } });
-                        });
-
-                        this.on('success', function(file, response) {
-                            document.getElementById('comboForm').submit();
-                        });
-
-                        this.on('error', function(file, errorMessage) {
-                            alert('Lỗi tải ảnh: ' + errorMessage);
-                        });
-
-                        document.getElementById('comboForm').addEventListener('submit', function(e) {
-                            if (thisDropzone.getQueuedFiles().length > 0) {
-                                e.preventDefault();
-                                thisDropzone.processQueue();
-                            }
-                        });
-                    }
-                };
-            }
+            updateRemoveButtons();
         });
     </script>
 @endsection

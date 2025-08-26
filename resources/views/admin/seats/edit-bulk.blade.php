@@ -28,12 +28,6 @@
                 <div class="card-footer bg-light-subtle">
                     <div class="row g-2">
                         <div class="col-6">
-<<<<<<< Updated upstream
-                            <button type="submit" form="bulkSeatForm" class="btn btn-primary w-100" {{ $seats->isEmpty() ? 'disabled' : '' }}>Lưu</button>
-                        </div>
-                        <div class="col-6">
-                            <a href="{{ route('admin.seats.index') }}" class="btn btn-outline-secondary w-100">Hủy</a>
-=======
                             <button type="submit" form="bulkSeatForm" class="btn btn-primary w-100">
                                 <i class="fas fa-save"></i> Cập nhật
                             </button>
@@ -42,7 +36,6 @@
                             <a href="{{ route('admin.rooms.show', $room->id) }}" class="btn btn-outline-secondary w-100">
                                 <i class="fas fa-times"></i> Hủy
                             </a>
->>>>>>> Stashed changes
                         </div>
                     </div>
                 </div>
@@ -58,16 +51,16 @@
                     </h4>
                 </div>
                 <div class="card-body">
-                 
-
-<<<<<<< Updated upstream
-                    @if ($seats->isEmpty())
-                        <div class="alert alert-warning">
-                            Không có ghế nào được chọn để chỉnh sửa.
+                    @if ($errors->any())
+                        <div class="alert alert-danger">
+                            <ul class="mb-0">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
                         </div>
-                    @else
-                        <form id="bulkSeatForm" action="{{ route('admin.seats.bulkUpdate') }}" method="POST">
-=======
+                    @endif
+
                     @if ($finalSeats->isEmpty())
                         <div class="alert alert-warning">
                             <i class="fas fa-exclamation-triangle"></i>
@@ -75,9 +68,8 @@
                         </div>
                     @else
                         <form id="bulkSeatForm" action="{{ route('admin.seats.update-bulk') }}" method="POST">
->>>>>>> Stashed changes
                             @csrf
-                            @method('PUT')
+                            <input type="hidden" name="room_id" value="{{ $room->id }}">
 
                             <!-- Tùy chọn cập nhật -->
                             <div class="mb-4">
@@ -88,29 +80,6 @@
                                 <div class="row">
                                     <div class="col-md-12">
                                         <div class="mb-3">
-<<<<<<< Updated upstream
-                                            <label class="form-label">Loại ghế mới</label>
-                                            <select name="seat_type_id" class="form-control">
-                                                <option value="">-- Không thay đổi --</option>
-                                                @foreach ($seatTypes as $seatType)
-                                                    <option value="{{ $seatType->id }}">{{ $seatType->name }}</option>
-                                                @endforeach
-                                            </select>
-                                            @error('seat_type_id')
-                                                <span class="text-danger">{{ $message }}</span>
-                                            @enderror
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label class="form-label">Trạng thái mới</label>
-                                            <select name="status" class="form-control">
-                                                <option value="">-- Không thay đổi --</option>
-                                                <option value="available">Available</option>
-                                                <option value="booked">Booked</option>
-                                                <option value="sold">Sold</option>
-                                                <option value="broken">Broken</option>
-=======
                                             <label class="form-label">
                                                 <i class="fas fa-toggle-on"></i> Trạng thái mới
                                             </label>
@@ -128,7 +97,6 @@
                                                         @endif
                                                     </option>
                                                 @endforeach
->>>>>>> Stashed changes
                                             </select>
                                             @error('status')
                                                 <span class="text-danger">{{ $message }}</span>
@@ -140,22 +108,6 @@
 
                             <hr class="my-4">
 
-<<<<<<< Updated upstream
-                            <h5 class="text-dark fw-medium">Danh sách ghế được cập nhật</h5>
-                            <div class="row">
-                                @foreach ($seats as $index => $seat)
-                                    <input type="hidden" name="seat_ids[]" value="{{ $seat->id }}">
-                                    <div class="col-md-6 mb-3">
-                                        <div class="border rounded p-3">
-                                            <strong>{{ $seat->row_char }}{{ $seat->seat_number }}</strong><br>
-                                            Phòng: {{ $seat->room->name ?? 'N/A' }}<br>
-                                            Hiện tại: 
-                                            <span class="badge bg-info">{{ $seat->seatType->name ?? 'Không rõ' }}</span>, 
-                                            <span class="badge bg-secondary">{{ ucfirst($seat->status->value) }}</span>
-                                        </div>
-                                    </div>
-                                @endforeach
-=======
                             <!-- Danh sách ghế -->
                             <div class="mb-4">
                                 <h5 class="text-dark fw-semibold">
@@ -222,7 +174,6 @@
                                 <i class="fas fa-exclamation-triangle"></i>
                                 <strong>Cảnh báo:</strong> Thao tác này sẽ cập nhật tất cả {{ $finalSeats->count() }} ghế đã chọn. 
                                 Vui lòng kiểm tra kỹ trước khi thực hiện.
->>>>>>> Stashed changes
                             </div>
                         </form>
                     @endif

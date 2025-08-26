@@ -2,6 +2,8 @@
 
 @section('content')
     <div class="container-xxl">
+        @include('admin.partials.notifications')
+
         <div class="row">
             <div class="col-xl-12">
                 <div class="card">
@@ -68,6 +70,13 @@
                                                                 class="align-middle fs-18"></iconify-icon>
                                                         </a>
                                                     @endcan
+
+                                                    {{-- Thêm nút Chi tiết --}}
+                                                    <a href="{{ route('admin.product-categories.show', $category->id) }}"
+                                                        class="btn btn-soft-info btn-sm" title="Chi tiết">
+                                                        <iconify-icon icon="solar:info-circle-broken"
+                                                            class="align-middle fs-18"></iconify-icon>
+                                                    </a>
 
                                                     @can('delete product category')
                                                         <form

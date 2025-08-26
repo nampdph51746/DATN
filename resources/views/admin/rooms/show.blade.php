@@ -1,84 +1,146 @@
 @extends('layouts.admin.admin')
 
 @section('content')
-    <div class="container-xxl">
-        <div class="row">
-            <div class="col-12">
-                <div class="card">
-                    <div class="container-xxl py-4">
-                        <div class="row g-4">
-                            <div class="col-lg-4 col-md-12">
-                                <div class="card shadow-sm mb-4">
-                                    <div class="card-header bg-light">
-                                        <h5 class="mb-0">Thông tin phòng chiếu</h5>
-                                    </div>
-                                    <div class="card-body">
-                                        <p><strong>Tên phòng:</strong> {{ $room->name }}</p>
-                                        <p><strong>Rạp chiếu:</strong>
-                                            {{ $room->cinema ? $room->cinema->name : 'Chưa có thông tin rạp' }}</p>
-                                        <p><strong>Loại phòng:</strong>
-                                            {{ $room->roomType ? $room->roomType->name : 'Chưa có thông tin loại phòng' }}
-                                        </p>
-                                        <p><strong>Sức chứa:</strong> {{ $room->capacity }}</p>
-                                        <p><strong>Trạng thái:</strong>
-                                            @switch($room->status)
-                                                @case('active')
-                                                    <span class="badge bg-success">Hoạt động</span>
-                                                @break
+<div class="container-xxl py-4">
+    <div class="row g-4">
+        <div class="col-lg-4 col-md-12">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header" style="background: #ff6633; border-bottom: 1px solid #e55a2b;">
+                    <h5 class="mb-0" style="color: #333333; font-weight: 600;">Thông tin phòng chiếu</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Tên phòng:</strong> {{ $room->name }}</p>
+                    <p><strong>Rạp chiếu:</strong> {{ $room->cinema ? $room->cinema->name : 'Chưa có thông tin rạp' }}</p>
+                    <p><strong>Loại phòng:</strong> {{ $room->roomType ? $room->roomType->name : 'Chưa có thông tin loại phòng' }}</p>
+                    <p><strong>Sức chứa:</strong> 
+                        <span id="capacity-display">{{ $room->capacity }}</span>
+                        @if($seats->count() == 0)
+                            <button class="btn btn-sm btn-outline-primary ms-2" onclick="editCapacity()">
+                                <i class="fas fa-edit"></i> Sửa
+                            </button>
+                        @else
+                            <span class="ms-2 text-muted small">(Không thể sửa - đã có {{ $seats->count() }} ghế)</span>
+                        @endif
+                    </p>
+                    
+                    @if($seats->count() == 0)
+                    <form id="capacity-form" style="display: none;" onsubmit="updateCapacity(event)">
+                        @csrf
+                        @method('PUT')
+                        <div class="input-group">
+                            <input type="number" id="capacity-input" class="form-control" value="{{ $room->capacity }}" 
+                                   min="1" max="1000" onchange="validateCapacityChange(this.value)">
+                            <button type="submit" class="btn btn-success btn-sm">Lưu</button>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="cancelEditCapacity()">Hủy</button>
+                        </div>
+                    </form>
+                    
+                    <!-- Hiển thị đề xuất sức chứa -->
+                    <div id="capacityHelp" class="mt-2" style="display: none;">
+                        <div id="capacityHelpText"></div>
+                    </div>
+                    
+                    <!-- Đề xuất sức chứa phổ biến -->
+                    <div id="capacity-suggestions" class="mt-2" style="display: none;">
+                        <small class="text-muted">💡 Đề xuất sức chứa phổ biến:</small>
+                        <div class="mt-1">
+                            <button type="button" class="btn btn-sm btn-outline-primary me-1 mb-1" onclick="setCapacity(50)">50 ghế</button>
+                            <button type="button" class="btn btn-sm btn-outline-primary me-1 mb-1" onclick="setCapacity(80)">80 ghế</button>
+                            <button type="button" class="btn btn-sm btn-outline-primary me-1 mb-1" onclick="setCapacity(100)">100 ghế</button>
+                            <button type="button" class="btn btn-sm btn-outline-primary me-1 mb-1" onclick="setCapacity(120)">120 ghế</button>
+                            <button type="button" class="btn btn-sm btn-outline-primary me-1 mb-1" onclick="setCapacity(150)">150 ghế</button>
+                            <button type="button" class="btn btn-sm btn-outline-primary me-1 mb-1" onclick="setCapacity(200)">200 ghế</button>
+                        </div>
+                    </div>
+                    @endif
+                    <p><strong>Trạng thái:</strong>
+                        @switch($room->status)
+                            @case('active')
+                                <span class="badge bg-success">Hoạt động</span>
+                                @break
+                            @case('maintenance')
+                                <span class="badge bg-warning text-dark">Bảo trì</span>
+                                @break
+                            @case('inactive')
+                                <span class="badge bg-secondary">Không hoạt động</span>
+                                @break
+                            @default
+                                <span class="badge bg-danger">Không xác định</span>
+                        @endswitch
+                    </p>
+                </div>
+            </div>
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">Phân bổ loại ghế</h6>
+                    @if($seats->count() > 0)
+                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="updatePercentagesFromActual()" title="Cập nhật tỷ lệ dựa trên ghế hiện có">
+                            <i class="fas fa-calculator me-1"></i>Cập nhật % theo thực tế
+                        </button>
+                    @endif
+                </div>
+                <div class="card-body p-3">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Loại ghế</th>
+                                    <th>Tỷ lệ (%)</th>
+                                    <th>Đã có</th>
+                                    <th>Cần có</th>
+                                    <th>Còn lại</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($room->allowedSeatTypes() as $seatType)
+                                    @php
+                                        $existingCount = $existingSeatsByType[$seatType->id] ?? 0;
+                                        $totalSeats = $seats->count();
+                                        $actualPercentage = $totalSeats > 0 ? round(($existingCount / $totalSeats) * 100, 1) : 0;
+                                        $configPercentage = $seatPercentages[$seatType->id] ?? 0;
+                                    @endphp
+                                    <tr>
+                                        <td class="text-center">{{ $seatType->name }}</td>
+                                        <td class="text-center">
+                                            <span class="badge bg-info">{{ $actualPercentage }}%</span>
+                                            @if($configPercentage != $actualPercentage && $configPercentage > 0)
+                                                <small class="text-muted d-block">(Cấu hình: {{ $configPercentage }}%)</small>
+                                            @endif
+                                        </td>
+                                        <td class="text-center">{{ $existingCount }}</td>
+                                        <td class="text-center">{{ $requiredSeats[$seatType->id] ?? 0 }}</td>
+                                        <td class="text-center">{{ max(0, ($requiredSeats[$seatType->id] ?? 0) - ($existingSeatsByType[$seatType->id] ?? 0)) }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Nút quay lại danh sách phòng -->
+            <div class="d-grid">
+                <a href="{{ route('admin.rooms.index') }}" class="btn" style="background: #f86c2c; color: #fff; font-weight: 500; border-radius: 12px; font-size: 0.95rem; height: 40px; display: inline-flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-arrow-left me-2"></i>Quay lại danh sách phòng
+                </a>
+            </div>
+        </div>
+        <div class="col-lg-5 col-md-12 d-flex flex-column align-items-center">
+            <!-- Thêm dropdown chọn suất chiếu -->
+            <div class="mb-3 w-100">
+                <form method="GET" action="{{ route('admin.rooms.show', $room->id) }}">
+                    <!-- <label for="showtime_id" class="form-label">Chọn suất chiếu</label> -->
+                    <select name="showtime_id" id="showtime_id" class="form-control" onchange="this.form.submit()">
+                        <option value="">-- Chọn suất chiếu --</option>
+                        @foreach ($showtimes as $showtime)
+                            <option value="{{ $showtime->id }}" {{ $showtime_id == $showtime->id ? 'selected' : '' }}>
+                                {{ htmlspecialchars($showtime->movie->name, ENT_QUOTES, 'UTF-8') }} - {{ $showtime->start_time->format('d/m/Y H:i') }}
+                            </option>
+                        @endforeach
+                    </select>
+                </form>
+            </div>
 
-<<<<<<< Updated upstream
-                                                @case('maintenance')
-                                                    <span class="badge bg-warning text-dark">Bảo trì</span>
-                                                @break
-
-                                                @case('inactive')
-                                                    <span class="badge bg-secondary">Không hoạt động</span>
-                                                @break
-
-                                                @default
-                                                    <span class="badge bg-danger">Không xác định</span>
-                                            @endswitch
-                                        </p>
-                                    </div>
-                                </div>
-                                <div class="card shadow-sm mb-4">
-                                    <div class="card-header bg-light">
-                                        <h6 class="mb-0">Phân bổ loại ghế</h6>
-                                    </div>
-                                    <div class="card-body p-3">
-                                        <div class="table-responsive">
-                                            <table class="table table-bordered table-sm align-middle mb-0">
-                                                <thead class="table-light">
-                                                    <tr>
-                                                        <th>Loại ghế</th>
-                                                        <th>Tỷ lệ (%)</th>
-                                                        <th>Đã có</th>
-                                                        <th>Cần có</th>
-                                                        <th>Còn lại</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    @foreach ($room->allowedSeatTypes() as $seatType)
-                                                        <tr>
-                                                            <td class="text-center">{{ $seatType->name }}</td>
-                                                            <td class="text-center">
-                                                                {{ $seatPercentages[$seatType->id] ?? 0 }}</td>
-                                                            <td class="text-center">
-                                                                {{ $existingSeatsByType[$seatType->id] ?? 0 }}</td>
-                                                            <td class="text-center">{{ $requiredSeats[$seatType->id] ?? 0 }}
-                                                            </td>
-                                                            <td class="text-center">
-                                                                {{ max(0, ($requiredSeats[$seatType->id] ?? 0) - ($existingSeatsByType[$seatType->id] ?? 0)) }}
-                                                            </td>
-                                                        </tr>
-                                                    @endforeach
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!-- Nút quay lại đã được chuyển xuống dưới, xóa nút cũ này -->
-=======
             @if ($seats->count() > 0)
                 <form id="bulkEditForm" action="{{ route('admin.seats.edit-bulk') }}" method="POST">
                     @csrf
@@ -94,358 +156,87 @@
                             @php
                                 $seatNumber = str_pad($i, 2, '0', STR_PAD_LEFT);
                                 $seat = $seats->where('row_char', $row)->where('seat_number', $seatNumber)->first();
-                                if (!$seat) continue;
-                                $displayStatus = $showtime_id ? ($seat->showtimeSeatStates()->where('showtime_id', $showtime_id)->first()?->status?->value ?? $seat->status->value) : $seat->status->value;
-                                $seatTypeName = $seat->seatType->name ?? 'Chưa có loại';
-                                $backgroundColor = $seat->seatType->color_code ?? '#28a745';
-                                $textColor = (isset($seat->seatType->color_code) && strtolower($seat->seatType->color_code) == '#ffd700') ? 'black' : 'white';
-                                $isBooked = $displayStatus === 'booked';
-                                
-                                // Determine CSS classes
-                                $cssClasses = 'seat';
-                                if ($displayStatus == 'booked') {
-                                    $cssClasses .= ' seat-booked';
-                                } elseif ($displayStatus == 'reserved') {
-                                    $cssClasses .= ' seat-reserved';
-                                }
-                                
-                                // Determine inline styles
-                                $inlineStyles = 'cursor: ' . ($isBooked ? 'not-allowed' : 'pointer') . '; position: relative;';
-                                if ($displayStatus == 'available') {
-                                    $inlineStyles .= ' background-color: ' . $backgroundColor . '; color: ' . $textColor . ';';
-                                }
                             @endphp
-                            <div class="{{ $cssClasses }}"
-                                style="{{ $inlineStyles }}"
-                                data-seat-id="{{ $seat->id }}"
-                                data-row-char="{{ $row }}"
-                                data-seat-number="{{ $i }}"
-                                title="{{ $row }}{{ $seatNumber }} ({{ htmlspecialchars($seatTypeName, ENT_QUOTES, 'UTF-8') }}, {{ ucfirst($displayStatus) }})"
-                                data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true"
-                                data-bs-title="Ghế: {{ $row }}{{ $seatNumber }}<br>Loại: {{ htmlspecialchars($seatTypeName, ENT_QUOTES, 'UTF-8') }}<br>Trạng thái: {{ ucfirst($displayStatus) }}"
-                                @if ($isBooked) onclick="event.preventDefault(); return false;" @endif>
-                                <input type="checkbox" name="seat_ids[]" value="{{ $seat->id }}" class="seat-checkbox" style="position: absolute; top: 5px; left: 5px; z-index: 10;" @if ($isBooked) disabled @endif>
-                                {{ $row }}{{ $seatNumber }}
->>>>>>> Stashed changes
-                            </div>
-                            <div class="col-lg-5 col-md-12 d-flex flex-column align-items-center">
-                                @if ($seats->count() > 0)
-                                    <div class="seat-map mb-3"
-                                        style="display: grid; gap: 5px; grid-template-columns: repeat({{ $maxSeatsPerRow + 1 }}, 40px); max-width: {{ ($maxSeatsPerRow + 1) * 45 }}px;">
-                                        <div class="seat"></div>
-                                        @for ($i = 1; $i <= $maxSeatsPerRow; $i++)
-                                            <div class="seat seat-number-label">{{ str_pad($i, 2, '0', STR_PAD_LEFT) }}
-                                            </div>
-                                        @endfor
-                                        @foreach ($rows as $row)
-                                            <div class="seat seat-row-label">{{ $row }}</div>
-                                            @for ($i = 1; $i <= $maxSeatsPerRow; $i++)
-                                                @php
-                                                    $seatNumber = str_pad($i, 2, '0', STR_PAD_LEFT);
-                                                    $seat = $seats
-                                                        ->where('row_char', $row)
-                                                        ->where('seat_number', $seatNumber)
-                                                        ->first();
-                                                @endphp
-                                                @if ($seat)
-                                                    <div class="seat"
-                                                        style="background-color: {{ $seat->seatType->color_code ?? '#28a745' }}; color: {{ isset($seat->seatType->color_code) && strtolower($seat->seatType->color_code) == '#ffd700' ? 'black' : 'white' }};"
-                                                        data-seat-id="{{ $seat->id }}"
-                                                        title="{{ $seat->row_char }}{{ $seat->seat_number }} ({{ $seat->seatType->name }}, {{ ucfirst($seat->status->value) }})"
-                                                        data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true"
-                                                        data-bs-title="Ghế: {{ $seat->row_char }}{{ $seat->seat_number }}<br>Loại: {{ $seat->seatType->name }}<br>Trạng thái: {{ ucfirst($seat->status->value) }}">
-                                                        {{ $seat->row_char }}{{ $seat->seat_number }}
-                                                    </div>
-                                                @else
-                                                    <div class="seat seat-empty"></div>
-                                                @endif
-                                            @endfor
-                                        @endforeach
-                                    </div>
-                                    <p class="mt-2">Số ghế hiện có: {{ $seats->count() }} / {{ $room->capacity }} (Còn
-                                        lại: {{ $room->capacity - $seats->count() }})</p>
-                                @else
-                                    <p class="text-success">Phòng chưa có ghế nào. Số ghế có thể thêm:
-                                        {{ $room->capacity }}</p>
-                                @endif
-                            </div>
-                            <div class="col-lg-3 col-md-12">
-                                <div class="card shadow-sm mb-4">
-                                    <div class="card-header bg-light">
-                                        <h6 class="mb-0">Thêm ghế cho phòng: {{ $room->name }}</h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <form id="seatForm" action="{{ route('admin.seats.store') }}" method="POST">
-                                            @csrf
-                                            <input type="hidden" name="room_id" value="{{ $room->id }}">
-                                            <div class="mb-3">
-                                                <label class="form-label">Tỷ lệ loại ghế (%)</label>
-                                                @foreach ($allowedSeatTypes as $seatType)
-                                                    <div class="d-flex align-items-center mb-2 gap-2">
-                                                        <label for="seat_type_percentages_{{ $seatType->id }}"
-                                                            class="form-label mb-0"
-                                                            style="min-width:110px;">{{ $seatType->name }}</label>
-                                                        <input type="number"
-                                                            name="seat_type_percentages[{{ $seatType->id }}]"
-                                                            id="seat_type_percentages_{{ $seatType->id }}"
-                                                            class="form-control" min="0" max="100"
-                                                            value="{{ $seatPercentages[$seatType->id] ?? 0 }}"
-                                                            step="0.01" required
-                                                            style="width: 160px; text-align: center;">
-                                                        <span>%</span>
-                                                    </div>
-                                                @endforeach
-                                                @error('seat_type_percentages')
-                                                    <span class="text-danger">{{ $message }}</span>
-                                                @enderror
-                                                <p class="text-muted mt-2" id="percentageWarning"></p>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label for="seat_type_id" class="form-label">Loại ghế</label>
-                                                <select name="seat_type_id" id="seat_type_id" class="form-control" required
-                                                    disabled>
-                                                    @php
-                                                        $currentTypeId =
-                                                            $next_seat_type_id ?? ($seatTypesOrder[0] ?? null);
-                                                    @endphp
-                                                    @foreach ($room->allowedSeatTypes() as $seatType)
-                                                        <option value="{{ $seatType->id }}"
-                                                            @if ($seatType->id == $currentTypeId) selected @endif>
-                                                            {{ $seatType->name }} (Còn lại:
-                                                            {{ max(0, ($requiredSeats[$seatType->id] ?? 0) - ($existingSeatsByType[$seatType->id] ?? 0)) }}
-                                                            ghế)
-                                                        </option>
-                                                    @endforeach
-                                                </select>
-                                                <input type="hidden" name="seat_type_id" value="{{ $currentTypeId }}">
-                                                @error('seat_type_id')
-                                                    <span class="text-danger">{{ $message }}</span>
-                                                @enderror
-                                            </div>
-                                            <div class="mb-3">
-                                                <label for="seats_per_row" class="form-label">Số ghế mỗi hàng</label>
-                                                <input type="number" name="seats_per_row" id="seats_per_row"
-                                                    class="form-control" min="1"
-                                                    value="{{ $nextSuggestedSeatsPerRow ?? 1 }}" required>
-                                                <p class="text-info mt-2" id="seatsPerRowSuggestion">
-                                                    @if (isset($nextSuggestedSeatsPerRow) && $nextSuggestedSeatsPerRow)
-                                                        <span>Đề xuất số ghế mỗi hàng cho loại tiếp theo:
-                                                            <strong>{{ $nextSuggestedSeatsPerRow }}</strong></span>
-                                                    @endif
-                                                </p>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label for="min_seats_per_row" class="form-label">Số ghế tối thiểu mỗi
-                                                    hàng</label>
-                                                <input type="number" name="min_seats_per_row" id="min_seats_per_row"
-                                                    class="form-control" min="1" value="1" required>
-                                                <p class="text-info mt-2" id="minSeatsPerRowSuggestion"></p>
-                                            </div>
-                                            <div class="mb-3">
-                                                <p><strong>Sức chứa phòng:</strong> {{ $room->capacity }}</p>
-                                                <p><strong>Ghế hiện có:</strong> {{ $seats->count() }}</p>
-                                                <p><strong>Ghế còn lại:</strong> {{ $room->capacity - $seats->count() }}
-                                                </p>
-                                                <p id="remainingSeatsWarning" class="text-warning"></p>
-                                            </div>
-                                            <button type="submit" class="btn btn-primary w-100"
-                                                @if ($seats->count() >= $room->capacity) disabled @endif>Thêm ghế</button>
-                                        </form>
-                                        <hr>
-                                        <form action="{{ route('admin.seats.import') }}" method="POST"
-                                            enctype="multipart/form-data" class="mt-3">
-                                            @csrf
-                                            <input type="hidden" name="room_id" value="{{ $room->id }}">
-                                            <div class="mb-3">
-                                                <label for="excel_file" class="form-label">Import ghế từ file Excel
-                                                    (.xlsx, .xls) hoặc CSV (.csv)</label>
-                                                <input type="file" name="excel_file" id="excel_file"
-                                                    class="form-control" accept=".xlsx,.xls,.csv" required>
-                                            </div>
-                                            <button type="submit" class="btn btn-success w-100" id="importSeatsBtn"
-                                                @if ($seats->count() >= $room->capacity) disabled @endif>Import ghế từ
-                                                file</button>
-                                            @if (session('import_success'))
-                                                <div class="alert alert-success mt-2">{{ session('import_success') }}
-                                                </div>
-                                            @endif
-                                            @if (session('import_error'))
-                                                <div class="alert alert-danger mt-2">{{ session('import_error') }}</div>
-                                            @endif
-                                            @if ($errors->has('excel_file'))
-                                                <div class="alert alert-danger mt-2">{{ $errors->first('excel_file') }}
-                                                </div>
-                                            @endif
-                                        </form>
-                                    </div>
+                            
+                            @if ($seat)
+                                @php
+                                    $displayStatus = $showtime_id ? ($seat->showtimeSeatStates()->where('showtime_id', $showtime_id)->first()?->status?->value ?? $seat->status->value) : $seat->status->value;
+                                    $seatTypeName = $seat->seatType->name ?? 'Chưa có loại';
+                                    $backgroundColor = $seat->seatType->color_code ?? '#28a745';
+                                    $textColor = (isset($seat->seatType->color_code) && strtolower($seat->seatType->color_code) == '#ffd700') ? 'black' : 'white';
+                                    $isBooked = $displayStatus === 'booked';
+                                    
+                                    // Determine CSS classes
+                                    $cssClasses = 'seat';
+                                    if ($displayStatus == 'booked') {
+                                        $cssClasses .= ' seat-booked';
+                                    } elseif ($displayStatus == 'reserved') {
+                                        $cssClasses .= ' seat-reserved';
+                                    }
+                                    
+                                    // Determine inline styles
+                                    $inlineStyles = 'cursor: ' . ($isBooked ? 'not-allowed' : 'pointer') . '; position: relative;';
+                                    if ($displayStatus == 'available') {
+                                        $inlineStyles .= ' background-color: ' . $backgroundColor . '; color: ' . $textColor . ';';
+                                    }
+                                @endphp
+                                <div class="{{ $cssClasses }}"
+                                    style="{{ $inlineStyles }}"
+                                    data-seat-id="{{ $seat->id }}"
+                                    data-row-char="{{ $row }}"
+                                    data-seat-number="{{ $i }}"
+                                    title="{{ $row }}{{ $seatNumber }} ({{ htmlspecialchars($seatTypeName, ENT_QUOTES, 'UTF-8') }}, {{ ucfirst($displayStatus) }})"
+                                    data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true"
+                                    data-bs-title="Ghế: {{ $row }}{{ $seatNumber }}<br>Loại: {{ htmlspecialchars($seatTypeName, ENT_QUOTES, 'UTF-8') }}<br>Trạng thái: {{ ucfirst($displayStatus) }}"
+                                    @if ($isBooked) onclick="event.preventDefault(); return false;" @endif>
+                                    <input type="checkbox" name="seat_ids[]" value="{{ $seat->id }}" class="seat-checkbox" style="position: absolute; top: 5px; left: 5px; z-index: 10;" @if ($isBooked) disabled @endif>
+                                    {{ $row }}{{ $seatNumber }}
                                 </div>
-                                <!-- Xóa nút lớn hiện tại, thêm nút nhỏ bên dưới phân bổ ghế -->
-                            </div>
-                        </div>
-                        <a href="{{ route('admin.rooms.index') }}" class="btn mb-2"
-                            style="background: #f86c2c; color: #fff; font-weight: 500; border-radius: 12px; font-size: 0.95rem; height: 36px; min-width: 120px; display: inline-flex; align-items: center; justify-content: center;">Quay
-                            lại danh sách phòng</a>
-
-                        <!-- Modal xác nhận thêm ghế -->
-                        <div class="modal fade" id="addSeatsConfirmModal" tabindex="-1"
-                            aria-labelledby="addSeatsConfirmLabel" aria-hidden="true">
-                            <div class="modal-dialog modal-dialog-centered">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title" id="addSeatsConfirmLabel">Xác nhận thêm ghế</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                            aria-label="Close"></button>
-                                    </div>
-                                    <div class="modal-body" id="addSeatsPreview">
-                                        <!-- Preview ghế sẽ được render bằng JS -->
-                                        @if (isset($previewSeats) && count($previewSeats) > 0)
-                                            <div class="mb-2">Sơ đồ ghế chuẩn bị thêm:</div>
-                                            <div style="max-height:200px;overflow:auto;border:1px solid #eee;padding:8px;">
-                                                @php
-                                                    $grouped = collect($previewSeats)->groupBy('row_char');
-                                                @endphp
-                                                @foreach ($grouped as $rowChar => $seatsInRow)
-                                                    <div><strong>Hàng {{ $rowChar }}:</strong>
-                                                        @foreach ($seatsInRow as $seat)
-                                                            <span
-                                                                class="badge bg-primary mx-1">{{ $seat['row_char'] }}{{ $seat['seat_number'] }}</span>
-                                                        @endforeach
-                                                    </div>
-                                                @endforeach
-                                            </div>
-                                        @endif
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary"
-                                            data-bs-dismiss="modal">Hủy</button>
-                                        <button type="button" class="btn btn-primary" id="confirmAddSeatsBtn">Xác nhận
-                                            thêm</button>
-                                    </div>
+                            @else
+                                {{-- Empty cell để giữ grid alignment --}}
+                                <div class="seat seat-empty" style="background-color: transparent; border: 1px dashed #ccc; cursor: default;">
+                                    {{-- Ô trống --}}
                                 </div>
-                            </div>
-                        </div>
-
-                        <!-- Modal xác nhận import ghế -->
-                        <div class="modal fade" id="importSeatsConfirmModal" tabindex="-1"
-                            aria-labelledby="importSeatsConfirmLabel" aria-hidden="true">
-                            <div class="modal-dialog modal-dialog-centered">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title" id="importSeatsConfirmLabel">Xác nhận import ghế</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                            aria-label="Close"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        Bạn có chắc chắn muốn import ghế từ file? Nếu phòng đã đầy ghế, thao tác sẽ bị từ
-                                        chối.
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary"
-                                            data-bs-dismiss="modal">Hủy</button>
-                                        <button type="button" class="btn btn-success" id="confirmImportSeatsBtn">Xác
-                                            nhận import</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Modal thông báo thành công -->
-                        <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel"
-                            aria-hidden="true">
-                            <div class="modal-dialog modal-dialog-centered">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title" id="successModalLabel">Thành công</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                            aria-label="Close"></button>
-                                    </div>
-                                    <div class="modal-body" id="successModalBody">
-                                        Thao tác đã thực hiện thành công!
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-primary"
-                                            data-bs-dismiss="modal">Đóng</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
+                            @endif
+                            @endfor
+                        @endforeach
                     </div>
-<<<<<<< Updated upstream
-
-                    <style>
-                        .seat-map {
-                            display: grid;
-                            gap: 5px;
-                            max-width: {{ ($maxSeatsPerRow + 1) * 45 }}px;
-                        }
-
-                        .seat {
-                            width: 40px;
-                            height: 40px;
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                            background-color: #28a745;
-                            /* Regular (Thường) */
-                            border-radius: 4px;
-                            font-size: 12px;
-                            text-align: center;
-                            color: white;
-                            cursor: pointer;
-                            transition: transform 0.2s;
-                        }
-
-                        .seat:hover {
-                            transform: scale(1.1);
-                        }
-
-                        .seat-row-label {
-                            background-color: #6c757d;
-                            color: white;
-                        }
-
-                        .seat-number-label {
-                            background-color: #adb5bd;
-                            color: black;
-                        }
-
-                        .seat-empty {
-                            background-color: #e9ecef;
-                        }
-
-                        .seat-vip {
-                            background-color: #ffd700;
-                            color: black;
-                        }
-
-                        .seat-sweetbox {
-                            background-color: #ff69b4;
-                            color: black;
-                        }
-
-                        .seat-booked {
-                            background-color: #dc3545;
-                            color: white;
-                        }
-
-                        .seat-reserved {
-                            background-color: #ffc107;
-                            color: black;
-                        }
-                    </style>
-
-                    @push('scripts')
-                        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-                        <script>
-                            document.addEventListener('DOMContentLoaded', function() {
-                                var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-                                var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
-                                    return new bootstrap.Tooltip(tooltipTriggerEl);
-=======
                     <p class="mt-2">Số ghế hiện có: {{ $seats->count() }} / {{ $room->capacity }} (Còn lại: {{ $room->capacity - $seats->count() }})</p>
-                    <button type="submit" class="btn btn-warning mt-2" id="bulkEditBtn" disabled>Chỉnh sửa hàng loạt</button>
+                    
+                    @if($hasActiveShowtimes)
+                        <div class="alert alert-warning mt-2">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Không thể xóa ghế:</strong> Phòng này đang có suất chiếu hoạt động.
+                        </div>
+                    @endif
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-warning" id="bulkEditBtn" disabled>
+                            <i class="fas fa-edit"></i> Chỉnh sửa hàng loạt
+                        </button>
+                        <button type="button" class="btn btn-danger" id="bulkDeleteBtn" disabled onclick="confirmBulkDelete()" 
+                                @if($hasActiveShowtimes) title="Không thể xóa ghế khi phòng có suất chiếu đang hoạt động" @endif>
+                            <i class="fas fa-trash"></i> Xóa hàng loạt
+                            @if($hasActiveShowtimes)
+                                <small class="d-block">Phòng có suất chiếu</small>
+                            @endif
+                        </button>
+                    </div>
                 </form>
+
+                <!-- Form xóa hàng loạt (ẩn) -->
+                <form id="bulkDeleteForm" action="{{ route('admin.seats.deleteBulk') }}" method="POST" style="display: none;">
+                    @csrf
+                    @method('DELETE')
+                    <input type="hidden" name="room_id" value="{{ $room->id }}">
+                    <div id="delete-seat-ids"></div>
+                </form>
+
+                <!-- Debug: Hiển thị URL route -->
+                <script>
+                    console.log('Route URL for bulk delete:', '{{ route("admin.seats.deleteBulk") }}');
+                    console.log('Current page URL:', window.location.href);
+                </script>
 
                 @php
                     // Xử lý dữ liệu ghế đôi trước khi truyền vào JavaScript
@@ -510,11 +301,19 @@
                             
                             console.log('Couple pairs mapping:', couplePairs);
 
-                            // Cập nhật trạng thái nút "Chỉnh sửa hàng loạt"
+                            // Cập nhật trạng thái nút "Chỉnh sửa hàng loạt" và "Xóa hàng loạt"
                             function updateBulkEditButton() {
                                 const checkedCount = document.querySelectorAll('.seat-checkbox:checked').length;
                                 bulkEditBtn.disabled = checkedCount === 0;
-                                console.log('Checked seats:', checkedCount, 'Bulk edit button disabled:', bulkEditBtn.disabled);
+                                
+                                const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+                                if (bulkDeleteBtn) {
+                                    // Disable nếu không có ghế nào được chọn HOẶC phòng có suất chiếu đang hoạt động
+                                    const hasActiveShowtimes = {{ $hasActiveShowtimes ? 'true' : 'false' }};
+                                    bulkDeleteBtn.disabled = checkedCount === 0 || hasActiveShowtimes;
+                                }
+                                
+                                console.log('Checked seats:', checkedCount, 'Bulk buttons disabled:', bulkEditBtn.disabled);
                             }
 
                             // Xử lý chọn ghế đôi tự động
@@ -549,118 +348,29 @@
                                     handleCoupleSelection(this, this.checked);
                                     
                                     updateBulkEditButton();
->>>>>>> Stashed changes
                                 });
+                            });
 
-                                const seatForm = document.getElementById('seatForm');
-                                const percentageInputs = document.querySelectorAll('input[name^="seat_type_percentages"]');
-                                const seatsPerRowInput = document.getElementById('seats_per_row');
-                                const minSeatsPerRowInput = document.getElementById('min_seats_per_row');
-                                const percentageWarning = document.getElementById('percentageWarning');
-                                const seatsPerRowSuggestion = document.getElementById('seatsPerRowSuggestion');
-                                const minSeatsPerRowSuggestion = document.getElementById('minSeatsPerRowSuggestion');
-                                const remainingSeatsWarning = document.getElementById('remainingSeatsWarning');
-                                const seatTypeSelect = document.getElementById('seat_type_id');
-                                const roomCapacity = {{ $room->capacity }};
-                                const existingSeats = {{ $seats->count() }};
-                                const remainingCapacity = roomCapacity - existingSeats;
-                                const existingSeatsByType = {{ json_encode($existingSeatsByType) }};
-                                const maxSeatsPerRow = {{ $maxSeatsPerRow }};
-                                const maxRows = {{ $maxRows }};
-
-                                function updateCalculations() {
-                                    let totalPercentage = 0;
-                                    percentageInputs.forEach(input => {
-                                        totalPercentage += parseFloat(input.value) || 0;
+                            // Gắn sự kiện click cho ghế (chỉ redirect nếu không click vào checkbox)
+                            seats.forEach(seat => {
+                                if (seat.dataset.seatId) {
+                                    console.log('Attaching click event to seat with ID:', seat.dataset.seatId);
+                                    seat.addEventListener('click', function (e) {
+                                        const checkbox = this.querySelector('.seat-checkbox');
+                                        const isBooked = this.classList.contains('seat-booked');
+                                        if (e.target !== checkbox && !checkbox.checked && !isBooked) {
+                                            console.log('Seat clicked (not checkbox), ID:', this.dataset.seatId);
+                                            console.log('Redirecting to:', '/admin/seats/' + this.dataset.seatId + '/edit');
+                                            window.location.href = '/admin/seats/' + this.dataset.seatId + '/edit';
+                                        } else if (e.target === checkbox) {
+                                            console.log('Checkbox clicked directly, ID:', checkbox.value);
+                                        }
                                     });
-
-<<<<<<< Updated upstream
-                                    // Cảnh báo tổng % ghế
-                                    if (Math.abs(totalPercentage - 100) > 0.01) {
-                                        percentageWarning.innerHTML =
-                                            '<span class="text-danger">Tổng tỷ lệ phải bằng 100%. Hiện tại: ' + totalPercentage.toFixed(
-                                                2) + '%</span>';
-                                    } else {
-                                        percentageWarning.innerHTML = '<span class="text-success">Tổng tỷ lệ hợp lệ: ' + totalPercentage
-                                            .toFixed(2) + '%</span>';
-                                    }
-
-                                    // Lấy loại ghế được chọn
-                                    const seatTypeId = seatTypeSelect.value;
-                                    const percentageInput = document.getElementById('seat_type_percentages_' + seatTypeId);
-                                    if (!percentageInput) {
-                                        seatsPerRowSuggestion.innerHTML = '';
-                                        remainingSeatsWarning.innerHTML = '';
-                                        minSeatsPerRowSuggestion.innerHTML = '';
-                                        return;
-                                    }
-
-                                    const percentage = parseFloat(percentageInput.value) || 0;
-                                    const requiredSeats = Math.round((percentage / 100) * roomCapacity);
-                                    const currentTypeSeats = existingSeatsByType[seatTypeId] || 0;
-                                    const seatsToAdd = Math.min(requiredSeats - currentTypeSeats, remainingCapacity);
-
-                                    const seatsPerRow = parseInt(seatsPerRowInput.value) || 1;
-                                    const minSeatsPerRow = parseInt(minSeatsPerRowInput.value) || 1;
-                                    const rows = Math.ceil(seatsToAdd / seatsPerRow);
-                                    const totalSeatsProposed = rows * seatsPerRow;
-                                    const excessSeats = totalSeatsProposed - seatsToAdd;
-
-                                    // Cảnh báo dư ghế
-                                    if (excessSeats > 0) {
-                                        remainingSeatsWarning.innerHTML = '<span class="text-warning">Cảnh báo: Sẽ có ' + excessSeats +
-                                            ' ghế dư do không chia hết số hàng.</span>';
-                                    } else {
-                                        remainingSeatsWarning.innerHTML = '';
-                                    }
-
-                                    // Chỉ hiển thị gợi ý, KHÔNG tự động thay đổi số ghế mỗi hàng
-                                    if (seatsToAdd > 0) {
-                                        let optimalSeatsPerRow = seatsPerRow; // Giữ nguyên giá trị người dùng nhập
-                                        let found = false;
-                                        for (let i = minSeatsPerRow; i <= maxSeatsPerRow; i++) {
-                                            if (seatsToAdd % i === 0 && seatsToAdd / i <= maxRows) {
-                                                optimalSeatsPerRow = i;
-                                                found = true;
-                                                break;
-                                            }
-                                        }
-                                        if (found && optimalSeatsPerRow !== seatsPerRow) {
-                                            seatsPerRowSuggestion.innerHTML = 'Đề xuất số ghế mỗi hàng: ' + optimalSeatsPerRow +
-                                                ' (chia hết cho ' + seatsToAdd + ' ghế, tạo ' + Math.ceil(seatsToAdd /
-                                                    optimalSeatsPerRow) + ' hàng)';
-                                        } else {
-                                            seatsPerRowSuggestion.innerHTML = 'Bạn đã chọn số ghế mỗi hàng: ' + seatsPerRow +
-                                                ' (sẽ tạo ' + rows + ' hàng, có thể dư ghế nếu không chia hết)';
-                                        }
-                                    } else {
-                                        seatsPerRowSuggestion.innerHTML = 'Không cần thêm ghế cho loại này.';
-                                    }
-
-                                    // Cảnh báo nếu < số ghế tối thiểu mỗi hàng
-                                    if (seatsPerRow < minSeatsPerRow) {
-                                        minSeatsPerRowSuggestion.innerHTML =
-                                            '<span class="text-danger">Số ghế mỗi hàng phải ≥ số tối thiểu (' + minSeatsPerRow +
-                                            ').</span>';
-                                    } else {
-                                        minSeatsPerRowSuggestion.innerHTML = '';
-                                    }
+                                } else {
+                                    console.log('No seatId found for seat:', seat.outerHTML);
                                 }
+                            });
 
-                                // Gắn sự kiện
-                                percentageInputs.forEach(input => input.addEventListener('input', updateCalculations));
-                                seatsPerRowInput.addEventListener('input', updateCalculations);
-                                minSeatsPerRowInput.addEventListener('input', updateCalculations);
-                                seatTypeSelect.addEventListener('change', () => setTimeout(updateCalculations, 10));
-
-                                // Click ghế để chỉnh sửa
-                                document.querySelectorAll('.seat').forEach(seat => {
-                                    if (seat.dataset.seatId) {
-                                        seat.addEventListener('click', function() {
-                                            window.location.href = '{{ route('admin.seats.edit', ':id') }}'.replace(
-                                                ':id', this.dataset.seatId);
-                                        });
-=======
                             // Gắn sự kiện submit cho form
                             const bulkEditForm = document.getElementById('bulkEditForm');
                             if (bulkEditForm) {
@@ -686,118 +396,106 @@
                                     
                                     if (!confirm(message)) {
                                         e.preventDefault();
->>>>>>> Stashed changes
                                     }
                                 });
+                            } else {
+                                console.warn('bulkEditForm not found in DOM');
+                            }
 
-<<<<<<< Updated upstream
-                                // Modal xác nhận import ghế
-                                const importSeatsBtn = document.getElementById('importSeatsBtn');
-                                if (importSeatsBtn) {
-                                    importSeatsBtn.addEventListener('click', function(e) {
-                                        if (importSeatsBtn.disabled) {
-                                            e.preventDefault();
-                                            alert('Phòng đã đầy ghế, không thể import thêm!');
-                                            return false;
-                                        }
-                                        e.preventDefault();
-                                        var modal = new bootstrap.Modal(document.getElementById('importSeatsConfirmModal'));
-                                        modal.show();
-                                        document.getElementById('confirmImportSeatsBtn').onclick = function() {
-                                            modal.hide();
-                                            importSeatsBtn.form.submit();
-                                        };
-                                        return false;
-                                    });
-                                }
-
-                                // Modal xác nhận thêm ghế
-                                seatForm.addEventListener('submit', function(e) {
-                                    let totalPercentage = 0;
-                                    percentageInputs.forEach(input => {
-                                        totalPercentage += parseFloat(input.value) || 0;
-                                    });
-                                    if (Math.abs(totalPercentage - 100) > 0.01) {
-                                        e.preventDefault();
-                                        alert('Tổng tỷ lệ loại ghế phải bằng 100%.');
-                                        return;
-                                    }
-                                    // Lấy lại dữ liệu mới nhất từ input khi mở modal xác nhận
-                                    let seatTypeId = seatTypeSelect.value;
-                                    let percentageInput = document.getElementById('seat_type_percentages_' + seatTypeId);
-                                    let percentage = parseFloat(percentageInput.value) || 0;
-                                    let requiredSeats = Math.round((percentage / 100) * roomCapacity);
-                                    let currentTypeSeats = existingSeatsByType[seatTypeId] || 0;
-                                    let seatsToAdd = Math.min(requiredSeats - currentTypeSeats, remainingCapacity);
-                                    let seatsPerRow = parseInt(seatsPerRowInput.value) || 1;
-                                    let minSeatsPerRow = parseInt(minSeatsPerRowInput.value) || 1;
-                                    let rows = Math.ceil(seatsToAdd / seatsPerRow);
-                                    // Chỉ chặn nếu số ghế mỗi hàng < tối thiểu hoặc seatsToAdd <= 0
-                                    if (seatsPerRow < minSeatsPerRow) {
-                                        e.preventDefault();
-                                        alert('Số ghế mỗi hàng phải ≥ số tối thiểu (' + minSeatsPerRow + ').');
-                                        return;
-                                    }
-                                    if (seatsToAdd <= 0) {
-                                        e.preventDefault();
-                                        alert('Không còn ghế cần thêm cho loại này.');
-                                        return;
-                                    }
-                                    // Cho phép thêm với mọi số ghế/hàng hợp lệ, chỉ cảnh báo dư ghế
-                                    e.preventDefault();
-                                    let previewHtml = '<p>Số ghế sẽ thêm: <strong>' + seatsToAdd + '</strong></p>';
-                                    previewHtml += '<p>Số ghế mỗi hàng: <strong>' + seatsPerRow + '</strong></p>';
-                                    previewHtml += '<p>Số hàng: <strong>' + rows + '</strong></p>';
-                                    let excessSeats = (rows * seatsPerRow) - seatsToAdd;
-                                    if (excessSeats > 0) {
-                                        previewHtml += '<p class="text-warning">Cảnh báo: Sẽ có ' + excessSeats +
-                                            ' ghế dư do không chia hết số hàng.</p>';
-                                    }
-                                    previewHtml +=
-                                        '<div style="max-height:200px;overflow:auto;border:1px solid #eee;padding:8px;margin-top:8px;">';
-                                    for (let r = 1; r <= rows; r++) {
-                                        previewHtml += '<div>Hàng ' + r + ': ';
-                                        for (let s = 1; s <= seatsPerRow; s++) {
-                                            let seatNum = (r - 1) * seatsPerRow + s;
-                                            if (seatNum > seatsToAdd) break;
-                                            previewHtml += '<span class="badge bg-primary mx-1">' + seatNum + '</span>';
-                                        }
-                                        previewHtml += '</div>';
-                                    }
-                                    previewHtml += '</div>';
-                                    document.getElementById('addSeatsPreview').innerHTML = previewHtml;
-                                    var modal = new bootstrap.Modal(document.getElementById('addSeatsConfirmModal'));
-                                    modal.show();
-                                    document.getElementById('confirmAddSeatsBtn').onclick = function() {
-                                        modal.hide();
-                                        seatForm.submit();
-                                    };
-                                });
-
-                                // Hiển thị modal thành công nếu có session
-                                @if (session('import_success'))
-                                    setTimeout(function() {
-                                        document.getElementById('successModalBody').innerHTML =
-                                            '{{ session('import_success') }}';
-                                        var modal = new bootstrap.Modal(document.getElementById('successModal'));
-                                        modal.show();
-                                    }, 300);
-                                @endif
-                                @if (session('add_success'))
-                                    setTimeout(function() {
-                                        document.getElementById('successModalBody').innerHTML = '{{ session('add_success') }}';
-                                        var modal = new bootstrap.Modal(document.getElementById('successModal'));
-                                        modal.show();
-                                    }, 300);
-                                @endif
-                                // Khởi động tính toán ban đầu
-                                updateCalculations();
-=======
                             // Khởi tạo trạng thái nút
                             updateBulkEditButton();
                         });
                     } catch (error) {
                         console.error('Error in seat script:', error);
+                    }
+                </script>
+
+                <!-- JavaScript cho xóa hàng loạt -->
+                <script>
+                    // Hàm xác nhận xóa hàng loạt
+                    function confirmBulkDelete() {
+                        // Kiểm tra nếu phòng có suất chiếu đang hoạt động
+                        const hasActiveShowtimes = {{ $hasActiveShowtimes ? 'true' : 'false' }};
+                        if (hasActiveShowtimes) {
+                            alert('⚠️ KHÔNG THỂ XÓA GHẾ!\n\nPhòng chiếu này đang có suất chiếu hoạt động (scheduled hoặc ongoing).\nVui lòng hủy hoặc hoàn thành tất cả suất chiếu trước khi xóa ghế.');
+                            return;
+                        }
+
+                        const checkedSeats = document.querySelectorAll('.seat-checkbox:checked');
+                        if (checkedSeats.length === 0) {
+                            alert('Vui lòng chọn ít nhất một ghế để xóa.');
+                            return;
+                        }
+
+                        const selectedSeatIds = Array.from(checkedSeats).map(cb => parseInt(cb.value));
+                        const coupleSeatsInSelection = selectedSeatIds.filter(id => coupleSeatsData.includes(id));
+                        
+                        let seatNames = Array.from(checkedSeats).map(cb => {
+                            const seat = cb.closest('.seat');
+                            return seat.textContent.trim();
+                        });
+
+                        let message = `⚠️ BẠN ĐANG CHUẨN BỊ XÓA ${checkedSeats.length} GHẾ!\n\n`;
+                        message += `Ghế sẽ bị xóa: ${seatNames.join(', ')}\n\n`;
+                        
+                        if (coupleSeatsInSelection.length > 0) {
+                            message += `🔗 Lưu ý: Có ${coupleSeatsInSelection.length} ghế đôi trong lựa chọn.\n`;
+                            message += `Hệ thống sẽ tự động xóa cả cặp ghế đôi liên quan.\n\n`;
+                        }
+
+                        message += `🚨 CẢNH BÁO:\n`;
+                        message += `• Chỉ có thể xóa ghế CHƯA TỪNG có ai đặt\n`;
+                        message += `• Ghế đã từng được đặt sẽ KHÔNG thể xóa\n`;
+                        message += `• Thao tác này KHÔNG THỂ HOÀN TÁC\n\n`;
+                        message += `Bạn có chắc chắn muốn tiếp tục?`;
+
+                        if (confirm(message)) {
+                            performBulkDelete(selectedSeatIds);
+                        }
+                    }
+
+                    // Thực hiện xóa hàng loạt
+                    function performBulkDelete(seatIds) {
+                        const deleteForm = document.getElementById('bulkDeleteForm');
+                        const seatIdsContainer = document.getElementById('delete-seat-ids');
+                        
+                        // Debug: Log form information
+                        console.log('=== BULK DELETE DEBUG ===');
+                        console.log('Form action:', deleteForm.action);
+                        console.log('Form method:', deleteForm.method);
+                        console.log('Seat IDs to delete:', seatIds);
+                        
+                        // Xóa input cũ
+                        seatIdsContainer.innerHTML = '';
+                        
+                        // Thêm input cho mỗi seat ID
+                        seatIds.forEach(seatId => {
+                            const input = document.createElement('input');
+                            input.type = 'hidden';
+                            input.name = 'seat_ids[]';
+                            input.value = seatId;
+                            seatIdsContainer.appendChild(input);
+                        });
+
+                        // Debug: Log form data before submit
+                        const formData = new FormData(deleteForm);
+                        console.log('Form data before submit:');
+                        for (let [key, value] of formData.entries()) {
+                            console.log(key, value);
+                        }
+
+                        // Hiển thị loading
+                        const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+                        const originalText = bulkDeleteBtn.innerHTML;
+                        bulkDeleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xóa...';
+                        bulkDeleteBtn.disabled = true;
+
+                        // Debug: Final check before submit
+                        console.log('About to submit form to:', deleteForm.action);
+                        console.log('Form HTML:', deleteForm.outerHTML);
+
+                        // Submit form
+                        deleteForm.submit();
                     }
                 </script>
             @else
@@ -810,201 +508,314 @@
                     <h6 class="mb-0">Thêm ghế cho phòng: {{ $room->name }}</h6>
                 </div>
                 <div class="card-body">
-                    <form id="seatForm" action="{{ route('admin.seats.store') }}" method="POST">
-                        @csrf
-                        <input type="hidden" name="room_id" value="{{ $room->id }}">
-                        <div class="mb-3">
-                            <label class="form-label">Tỷ lệ loại ghế (%)</label>
-                            @foreach ($allowedSeatTypes as $seatType)
-                                <div class="d-flex align-items-center mb-2 gap-2">
-                                    <label for="seat_type_percentages_{{ $seatType->id }}" class="form-label mb-0" style="min-width:110px;">{{ $seatType->name }}</label>
-                                    <input type="number" name="seat_type_percentages[{{ $seatType->id }}]" id="seat_type_percentages_{{ $seatType->id }}" 
-                                           class="form-control" min="0" max="100" 
-                                           value="{{ $seatPercentages[$seatType->id] ?? 0 }}" step="0.01" required style="width: 160px; text-align: center;">
-                                    <span>%</span>
-                                </div>
-                            @endforeach
-                            @error('seat_type_percentages')
-                                <span class="text-danger">{{ $message }}</span>
-                            @enderror
-                            
-                            <!-- Checkbox bỏ qua ràng buộc -->
-                            <div class="form-check mt-3 mb-3">
-                                <input class="form-check-input" type="checkbox" id="ignoreConstraints" name="ignore_constraints" value="1">
-                                <label class="form-check-label" for="ignoreConstraints">
-                                    <i class="fas fa-unlock"></i> Bỏ qua ràng buộc hệ thống (cho phép tỷ lệ tùy chỉnh)
-                                </label>
-                                <small class="form-text text-muted d-block">
-                                    Chọn tùy chọn này nếu bạn muốn sử dụng tỷ lệ khác với đề xuất của hệ thống
-                                </small>
+                    <!-- Nav tabs -->
+                    <ul class="nav nav-pills nav-fill mb-3" id="seatTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="manual-tab" data-bs-toggle="pill" data-bs-target="#manual" type="button" role="tab" aria-controls="manual" aria-selected="true">
+                                <i class="fas fa-plus"></i> Tạo ghế thủ công
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="import-tab" data-bs-toggle="pill" data-bs-target="#import" type="button" role="tab" aria-controls="import" aria-selected="false">
+                                <i class="fas fa-file-excel"></i> Import từ Excel
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="single-tab" data-bs-toggle="pill" data-bs-target="#single" type="button" role="tab" aria-controls="single" aria-selected="false">
+                                <i class="fas fa-chair"></i> Thêm ghế đơn
+                            </button>
+                        </li>
+                    </ul>
+
+                    <!-- Tab panes -->
+                    <div class="tab-content" id="seatTabsContent">
+                        <!-- Tab tạo ghế thủ công -->
+                        <div class="tab-pane fade show active" id="manual" role="tabpanel" aria-labelledby="manual-tab">
+                            <!-- Bước 1: Thiết lập số hàng -->
+                            <div class="mb-3">
+                                <label for="total_rows" class="form-label">Số hàng muốn tạo</label>
+                                <input type="number" id="total_rows" class="form-control" min="1" max="26" value="1">
+                                <small class="text-muted" id="total_rows_help">Tối đa 26 hàng (A-Z)</small>
                             </div>
-                            
-                            <p class="text-muted mt-2" id="percentageWarning"></p>
-                            
-                            <!-- Nút cập nhật tỷ lệ -->
+
+                            <!-- Bước 2: Thiết lập số ghế mỗi hàng -->
+                            <div class="mb-3">
+                                <label for="seats_per_row" class="form-label">Số ghế mỗi hàng</label>
+                                <input type="number" id="seats_per_row" class="form-control" min="1" max="50" value="10">
+                                <small class="text-muted">Tối đa 50 ghế mỗi hàng</small>
+                            </div>
+
+                            <!-- Bước 3: Chọn loại ghế cho từng hàng -->
+                            <div class="mb-3">
+                                <label class="form-label">Phân loại ghế theo hàng</label>
+                                <div id="row-seat-types" class="border rounded p-3" style="max-height: 300px; overflow-y: auto;">
+                                    <!-- Sẽ được tạo động bằng JavaScript -->
+                                </div>
+                            </div>
+
+                            <!-- Bước 4: Preview và tạo -->
                             <div class="d-grid gap-2">
-                                <button type="button" class="btn btn-outline-primary btn-sm" id="updatePercentagesBtn">
-                                    <i class="fas fa-save"></i> Cập nhật tỷ lệ
+                                <button type="button" class="btn btn-outline-primary" onclick="createSeats()">
+                                    <i class="fas fa-eye"></i> Xem trước
+                                </button>
+                                <button type="button" class="btn btn-primary" onclick="createSeats()" id="create-seats-btn" disabled>
+                                    <i class="fas fa-plus"></i> Tạo ghế
                                 </button>
                             </div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="seat_type_id" class="form-label">Loại ghế</label>
-                            <select name="seat_type_id" id="seat_type_id" class="form-control" required disabled>
-                                @php
-                                    $currentTypeId = $next_seat_type_id ?? ($seatTypesOrder[0] ?? null);
-                                @endphp
-                                @foreach ($room->allowedSeatTypes() as $seatType)
-                                    <option value="{{ $seatType->id }}" @if($seatType->id == $currentTypeId) selected @endif>
-                                        {{ $seatType->name }} (Còn lại: {{ max(0, ($requiredSeats[$seatType->id] ?? 0) - ($existingSeatsByType[$seatType->id] ?? 0)) }} ghế)
-                                    </option>
-                                @endforeach
-                            </select>
-                            <input type="hidden" name="seat_type_id" value="{{ $currentTypeId }}">
-                            @error('seat_type_id')
-                                <span class="text-danger">{{ $message }}</span>
-                            @enderror
-                        </div>
-                        <div class="mb-3">
-                            <label for="seats_per_row" class="form-label">Số ghế mỗi hàng</label>
-                            <input type="number" name="seats_per_row" id="seats_per_row" class="form-control" min="1" value="{{ $nextSuggestedSeatsPerRow ?? 1 }}" required>
-                            <p class="text-info mt-2" id="seatsPerRowSuggestion">
-                                @if(isset($nextSuggestedSeatsPerRow) && $nextSuggestedSeatsPerRow)
-                                    <span>Đề xuất số ghế mỗi hàng cho loại tiếp theo: <strong>{{ $nextSuggestedSeatsPerRow }}</strong></span>
-                                @endif
-                            </p>
-                        </div>
-                        <div class="mb-3">
-                            <label for="min_seats_per_row" class="form-label">Số ghế tối thiểu mỗi hàng</label>
-                            <input type="number" name="min_seats_per_row" id="min_seats_per_row" class="form-control" min="1" value="1" required>
-                            <p class="text-info mt-2" id="minSeatsPerRowSuggestion"></p>
-                        </div>
-                        
-                        <!-- Checkbox bỏ qua ràng buộc cho việc tạo ghế -->
-                        <div class="form-check mb-3">
-                            <input class="form-check-input" type="checkbox" id="ignoreConstraintsCreate" name="ignore_constraints" value="1">
-                            <label class="form-check-label" for="ignoreConstraintsCreate">
-                                <i class="fas fa-unlock"></i> Bỏ qua ràng buộc khi tạo ghế
-                            </label>
-                            <small class="form-text text-muted d-block">
-                                Cho phép tạo ghế với tỷ lệ tùy chỉnh (không theo constraints của hệ thống)
-                            </small>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <p><strong>Sức chứa phòng:</strong> {{ $room->capacity }}</p>
-                            <p><strong>Ghế hiện có:</strong> {{ $seats->count() }}</p>
-                            <p><strong>Ghế còn lại:</strong> {{ $room->capacity - $seats->count() }}</p>
-                            <p id="remainingSeatsWarning" class="text-warning"></p>
-                        </div>
-                        <button type="submit" class="btn btn-primary w-100" @if($seats->count() >= $room->capacity) disabled @endif>Thêm ghế</button>
-                    </form>
-                    
-                    {{-- Layout Optimization Suggestions --}}
-                    @if(isset($layoutSuggestions))
-                    <div class="mt-3 p-3 bg-info-subtle rounded">
-                        <h6 class="text-primary mb-2">
-                            <i class="fas fa-lightbulb"></i> Gợi ý bố trí tối ưu
-                        </h6>
-                        
-                        <div class="small mb-2">
-                            <strong>{{ $layoutSuggestions['room_info']['type'] }}</strong> - {{ $layoutSuggestions['room_info']['capacity'] }} ghế
-                        </div>
-                        
-                        <div class="small mb-2">
-                            <strong>Loại ghế được phép:</strong><br>
-                            @foreach($layoutSuggestions['room_info']['allowed_seat_types'] as $seatTypeName)
-                                <span class="badge bg-secondary me-1">{{ $seatTypeName }}</span>
-                            @endforeach
-                        </div>
-                        
-                        @if(!empty($layoutSuggestions['recommended_percentages']))
-                        <div class="small mb-2">
-                            <strong>💡 Tỷ lệ đề xuất:</strong><br>
-                            @foreach($allowedSeatTypes as $seatType)
-                                @if(isset($layoutSuggestions['recommended_percentages'][$seatType->id]))
-                                    • {{ $seatType->name }}: {{ $layoutSuggestions['recommended_percentages'][$seatType->id] }}%<br>
-                                @endif
-                            @endforeach
-                        </div>
-                        @endif
-                        
-                        <div class="small mb-2">
-                            📊 <strong>Layout tổng thể:</strong><br>
-                            • Số hàng: {{ $layoutSuggestions['optimal_layout']['optimal_rows'] }} hàng<br>
-                            • Ghế/hàng: {{ $layoutSuggestions['optimal_layout']['seats_per_row_range']['optimal'] }} ghế
-                            ({{ $layoutSuggestions['optimal_layout']['seats_per_row_range']['min'] }}-{{ $layoutSuggestions['optimal_layout']['seats_per_row_range']['max'] }})
-                        </div>
-                        
-                        @if(!empty($layoutSuggestions['individual_seat_layouts']))
-                        <div class="small mb-2">
-                            <strong>🎯 Đề xuất chi tiết từng loại:</strong><br>
-                            @foreach($layoutSuggestions['individual_seat_layouts'] as $seatLayout)
-                                <div class="border-start border-primary ps-2 mb-2">
-                                    <strong>{{ $seatLayout['seat_type_name'] }}</strong> ({{ $seatLayout['seat_count'] }} ghế):<br>
-                                    • Layout: {{ $seatLayout['layout_suggestion'] }}<br>
-                                    • Vị trí: {{ $seatLayout['position_recommendation'] }}
+
+                            <!-- Thông tin tóm tắt -->
+                            <div class="mt-3 p-2 bg-light rounded">
+                                <div class="d-flex justify-content-between">
+                                    <span>Sức chứa phòng:</span>
+                                    <span id="room-capacity">{{ $room->capacity }}</span>
                                 </div>
-                            @endforeach
+                                <div class="d-flex justify-content-between">
+                                    <span>Ghế hiện có:</span>
+                                    <span>{{ $seats->count() }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <span>Sẽ thêm:</span>
+                                    <span id="seats-to-add">0</span>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <span>Tổng sau khi thêm:</span>
+                                    <span id="total-after-add">{{ $seats->count() }}</span>
+                                </div>
+                                
+                                <!-- Cảnh báo và đề xuất -->
+                                <div id="capacity-warning" class="mt-2" style="display: none;">
+                                    <!-- Nội dung cảnh báo -->
+                                </div>
+                                <div id="suggestions" class="mt-2">
+                                    <!-- Các nút đề xuất sẽ được thêm vào đây -->
+                                </div>
+                            </div>
                         </div>
-                        @endif
-                        
-                        @if(!$layoutSuggestions['has_configuration'])
-                        <div class="small text-warning mt-2">
-                            <i class="fas fa-exclamation-triangle"></i>
-                            <strong>Lưu ý:</strong> Chưa có cấu hình tỷ lệ ghế. Hãy nhập tỷ lệ phù hợp trước khi tạo ghế.
+
+                        <!-- Tab import từ Excel -->
+                        <div class="tab-pane fade" id="import" role="tabpanel" aria-labelledby="import-tab">
+                            <form action="{{ route('admin.seats.import') }}" method="POST" enctype="multipart/form-data">
+                                @csrf
+                                <input type="hidden" name="room_id" value="{{ $room->id }}">
+                                
+                                <div class="mb-3">
+                                    <label for="excel_file" class="form-label">
+                                        <i class="fas fa-file-excel text-success me-2"></i>
+                                        Chọn file Excel hoặc CSV
+                                    </label>
+                                    <input type="file" name="excel_file" id="excel_file" class="form-control" 
+                                           accept=".xlsx,.xls,.csv" required>
+                                    <div class="form-text">
+                                        <small>Hỗ trợ các định dạng: .xlsx, .xls, .csv</small>
+                                    </div>
+                                </div>
+
+                                <button type="submit" class="btn btn-success w-100" id="importSeatsBtn" 
+                                        @if($seats->count() >= $room->capacity) disabled @endif>
+                                    <i class="fas fa-upload me-2"></i>Import ghế từ file
+                                </button>
+
+                                @if(session('import_success'))
+                                    <div class="alert alert-success mt-3">
+                                        <i class="fas fa-check-circle me-2"></i>{{ session('import_success') }}
+                                    </div>
+                                @endif
+                                @if(session('import_error'))
+                                    <div class="alert alert-danger mt-3">
+                                        <i class="fas fa-exclamation-circle me-2"></i>{{ session('import_error') }}
+                                    </div>
+                                @endif
+                                @if($errors->has('excel_file'))
+                                    <div class="alert alert-danger mt-3">
+                                        <i class="fas fa-exclamation-circle me-2"></i>{{ $errors->first('excel_file') }}
+                                    </div>
+                                @endif
+                            </form>
+
+                            <!-- Hướng dẫn định dạng file -->
+                            <div class="mt-4">
+                                <h6 class="fw-bold">
+                                    <i class="fas fa-info-circle text-info me-2"></i>Định dạng file Excel/CSV:
+                                </h6>
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-bordered">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>room_id</th>
+                                                <th>seat_type_id</th>
+                                                <th>row_char</th>
+                                                <th>seat_number</th>
+                                                <th>status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>{{ $room->id }}</td>
+                                                <td>7</td>
+                                                <td>A</td>
+                                                <td>1</td>
+                                                <td>available</td>
+                                            </tr>
+                                            <tr>
+                                                <td>{{ $room->id }}</td>
+                                                <td>7</td>
+                                                <td>A</td>
+                                                <td>2</td>
+                                                <td>available</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <small class="text-muted">
+                                    <strong>Lưu ý:</strong> room_id phải là {{ $room->id }}, seat_type_id tham khảo bảng loại ghế, 
+                                    status có thể là: available, maintenance, reserved, booked
+                                </small>
+                            </div>
                         </div>
-                        @endif
+
+                        <!-- Tab thêm ghế đơn -->
+                        <div class="tab-pane fade" id="single" role="tabpanel" aria-labelledby="single-tab">
+                            <form id="addSingleSeatForm">
+                                @csrf
+                                <input type="hidden" name="room_id" value="{{ $room->id }}">
+                                
+                                <div class="row">
+                                    <div class="col-6">
+                                        <div class="mb-3">
+                                            <label for="single_row_char" class="form-label">Hàng <span class="text-danger">*</span></label>
+                                            <select name="row_char" id="single_row_char" class="form-control" required>
+                                                <option value="">Chọn hàng</option>
+                                                @for ($i = 1; $i <= 26; $i++)
+                                                    <option value="{{ chr(64 + $i) }}">{{ chr(64 + $i) }}</option>
+                                                @endfor
+                                            </select>
+                                            <div class="form-text" id="rowCharHelp">Dropdown sẽ được cập nhật tự động...</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="mb-3">
+                                            <label for="single_seat_number" class="form-label">Số ghế <span class="text-danger">*</span></label>
+                                            <input type="number" name="seat_number" id="single_seat_number" class="form-control" min="1" max="50" required>
+                                            <div class="form-text">Ví dụ: 1, 2, 3...</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="single_seat_type" class="form-label">Loại ghế <span class="text-danger">*</span></label>
+                                    <select name="seat_type_id" id="single_seat_type" class="form-control" required>
+                                        <option value="">Chọn loại ghế</option>
+                                        @foreach ($room->allowedSeatTypes() as $seatType)
+                                            <option value="{{ $seatType->id }}" data-is-couple="{{ str_contains(strtolower($seatType->name), 'couple') || str_contains(strtolower($seatType->name), 'sweetbox') || str_contains(strtolower($seatType->name), 'bed') || str_contains(strtolower($seatType->name), 'sofa') ? 'true' : 'false' }}">
+                                                {{ $seatType->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <div id="seatTypeHelp" class="form-text"></div>
+                                </div>
+                                
+                                <div class="alert alert-info">
+                                    <h6><i class="fas fa-info-circle me-2"></i>Lưu ý khi thêm ghế:</h6>
+                                    <ul class="mb-0 mt-2">
+                                        <li><strong>Ghế đơn:</strong> Thêm 1 ghế tại vị trí đã chọn</li>
+                                        <li><strong>Ghế đôi:</strong> Tự động tạo cả 2 ghế (số lẻ và chẵn kế tiếp)</li>
+                                        <li><strong>Ví dụ:</strong> Chọn H8 với ghế đôi → sẽ tạo H8 và H9</li>
+                                        <li><strong>Điều kiện:</strong> Vị trí ghế chưa tồn tại và không vượt sức chứa</li>
+                                    </ul>
+                                </div>
+
+                                <!-- Thông báo khi phòng đầy -->
+                                <div id="roomFullWarning" class="alert alert-warning" style="display: none;">
+                                    <h6><i class="fas fa-exclamation-triangle me-2"></i>Phòng đã đầy ghế!</h6>
+                                    <p class="mb-2">Phòng hiện tại đã có <strong><span id="currentSeatsCount">{{ $seats->count() }}</span></strong> ghế, đạt tối đa sức chứa.</p>
+                                    <p class="mb-0">
+                                        <strong>Để thêm ghế mới:</strong> Hãy xóa một số ghế hiện có hoặc 
+                                        <a href="javascript:void(0)" onclick="editCapacity()" class="alert-link">tăng sức chứa phòng</a>.
+                                    </p>
+                                </div>
+
+                                <button type="submit" class="btn btn-success w-100">
+                                    <i class="fas fa-plus me-2"></i> Thêm ghế
+                                </button>
+                            </form>
+
+                            <!-- Ghế hiện có -->
+                            <div class="mt-4">
+                                <h6 class="fw-bold">
+                                    <i class="fas fa-chair text-primary me-2"></i>Thống kê ghế hiện có:
+                                </h6>
+                                <div class="row text-center">
+                                    <div class="col-4">
+                                        <div class="bg-light p-2 rounded">
+                                            <div class="fw-bold text-primary" id="existingSeatsDisplay">{{ $seats->count() }}</div>
+                                            <small>Đã có</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="bg-light p-2 rounded">
+                                            <div class="fw-bold text-success" id="remainingSeatsDisplay">{{ $room->capacity - $seats->count() }}</div>
+                                            <small>Còn lại</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="bg-light p-2 rounded">
+                                            <div class="fw-bold text-info" id="totalCapacityDisplay">{{ $room->capacity }}</div>
+                                            <small>Tổng cộng</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    @endif
-                    
-                    <hr>
-                    <form action="{{ route('admin.seats.import') }}" method="POST" enctype="multipart/form-data" class="mt-3">
-                        @csrf
-                        <input type="hidden" name="room_id" value="{{ $room->id }}">
-                        <div class="mb-3">
-                            <label for="excel_file" class="form-label">Import ghế từ file Excel (.xlsx, .xls) hoặc CSV (.csv)</label>
-                            <input type="file" name="excel_file" id="excel_file" class="form-control" accept=".xlsx,.xls,.csv" required>
-                        </div>
-                        <button type="submit" class="btn btn-success w-100" id="importSeatsBtn" @if($seats->count() >= $room->capacity) disabled @endif>Import ghế từ file</button>
-                        @if(session('import_success'))
-                            <div class="alert alert-success mt-2">{{ session('import_success') }}</div>
-                        @endif
-                        @if(session('import_error'))
-                            <div class="alert alert-danger mt-2">{{ session('import_error') }}</div>
-                        @endif
-                        @if($errors->has('excel_file'))
-                            <div class="alert alert-danger mt-2">{{ $errors->first('excel_file') }}</div>
-                        @endif
-                    </form>
                 </div>
             </div>
-            <!-- Xóa nút lớn hiện tại, thêm nút nhỏ bên dưới phân bổ ghế -->
-                </div>
+        </div>
+        
+    </div>
+</div>
+
+<!-- Modal Preview ghế -->
+<div class="modal fade" id="previewSeatsModal" tabindex="-1" aria-labelledby="previewSeatsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="previewSeatsModalLabel">Xem trước sơ đồ ghế</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-md-8">
+            <h6>Sơ đồ ghế chuẩn bị tạo:</h6>
+            <div id="preview-seat-map" class="border rounded p-3" style="max-height: 400px; overflow: auto;">
+              <!-- Sơ đồ ghế sẽ được render bằng JavaScript -->
             </div>
-            <a href="{{ route('admin.rooms.index') }}" class="btn mb-2" style="background: #f86c2c; color: #fff; font-weight: 500; border-radius: 12px; font-size: 0.95rem; height: 36px; min-width: 120px; display: inline-flex; align-items: center; justify-content: center;">Quay lại danh sách phòng</a>
->>>>>>> Stashed changes
+          </div>
+          <div class="col-md-4">
+            <h6>Thông tin tóm tắt:</h6>
+            <div class="table-responsive">
+              <table class="table table-sm">
+                <tbody id="preview-summary">
+                  <!-- Tóm tắt sẽ được render bằng JavaScript -->
+                </tbody>
+              </table>
+            </div>
+            <div class="mt-3">
+              <h6>Lưu ý về ghế đôi:</h6>
+              <ul class="list-unstyled small text-muted" id="couple-seat-notes">
+                <!-- Ghi chú về ghế đôi sẽ được render bằng JavaScript -->
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+        <button type="button" class="btn btn-primary" onclick="confirmCreateSeats()">Xác nhận tạo ghế</button>
+      </div>
+    </div>
+  </div>
+</div>
 
-                                // Khi modal thành công đóng lại, luôn gọi lại updateCalculations để cập nhật đề xuất cho loại ghế tiếp theo
-                                var successModalEl = document.getElementById('successModal');
-                                if (successModalEl) {
-                                    successModalEl.addEventListener('hidden.bs.modal', function() {
-                                        setTimeout(function() {
-                                            try {
-                                                updateCalculations();
-                                            } catch (e) {
-                                                console.error('Lỗi updateCalculations:', e);
-                                            }
-                                        }, 10);
-                                    });
-                                }
-                            });
-                        </script>
-                    @endpush
-
-<<<<<<< Updated upstream
-                @endsection
-=======
 <!-- Modal xác nhận import ghế -->
 <div class="modal fade" id="importSeatsConfirmModal" tabindex="-1" aria-labelledby="importSeatsConfirmLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
@@ -1066,6 +877,8 @@
       </div>
     </div>
   </div>
+</div>
+
 </div>
 
 </div>
@@ -1144,389 +957,2201 @@
         outline: 2px solid #007bff;
         outline-offset: 2px;
     }
+    
+    /* CSS cho nút xóa hàng loạt */
+    #bulkDeleteBtn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    
+    #bulkDeleteBtn:not(:disabled):hover {
+        background-color: #c82333;
+        border-color: #bd2130;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    .btn-danger {
+        transition: all 0.2s ease;
+    }
+    
+    /* Styling for smart row dropdown */
+    #single_row_char option[data-existing="false"] {
+        background-color: #d4edda !important;
+        font-weight: bold;
+    }
+    
+    #single_row_char option[data-existing="true"] {
+        background-color: #e7f3ff !important;
+    }
+    
+    #rowCharHelp .fas {
+        margin-right: 5px;
+    }
+    
+    /* Animation cho cập nhật phần trăm */
+    .table-success {
+        background-color: #d1edff !important;
+        transition: background-color 0.3s ease;
+    }
+    
+    .badge {
+        transition: all 0.3s ease;
+    }
 </style>
 
-@push('scripts')
 <script>
-    console.log('Form script loaded');
-    try {
-        document.addEventListener('DOMContentLoaded', function () {
-            console.log('DOM fully loaded - Form script');
-
-            // Kiểm tra các phần tử DOM
-            const seatForm = document.getElementById('seatForm');
-            if (!seatForm) {
-                console.warn('seatForm not found in DOM');
-                return;
-            }
-            const percentageInputs = document.querySelectorAll('input[name^="seat_type_percentages"]');
-            if (percentageInputs.length === 0) {
-                console.warn('No percentageInputs found in DOM');
-                return;
-            }
-            const seatsPerRowInput = document.getElementById('seats_per_row');
-            if (!seatsPerRowInput) {
-                console.warn('seatsPerRowInput not found in DOM');
-                return;
-            }
-            const minSeatsPerRowInput = document.getElementById('min_seats_per_row');
-            if (!minSeatsPerRowInput) {
-                console.warn('minSeatsPerRowInput not found in DOM');
-                return;
-            }
-            const percentageWarning = document.getElementById('percentageWarning');
-            if (!percentageWarning) {
-                console.warn('percentageWarning not found in DOM');
-                return;
-            }
-            const seatsPerRowSuggestion = document.getElementById('seatsPerRowSuggestion');
-            if (!seatsPerRowSuggestion) {
-                console.warn('seatsPerRowSuggestion not found in DOM');
-                return;
-            }
-            const minSeatsPerRowSuggestion = document.getElementById('minSeatsPerRowSuggestion');
-            if (!minSeatsPerRowSuggestion) {
-                console.warn('minSeatsPerRowSuggestion not found in DOM');
-                return;
-            }
-            const remainingSeatsWarning = document.getElementById('remainingSeatsWarning');
-            if (!remainingSeatsWarning) {
-                console.warn('remainingSeatsWarning not found in DOM');
-                return;
-            }
-            const seatTypeHidden = document.querySelector('input[name="seat_type_id"]');
-            if (!seatTypeHidden) {
-                console.warn('seatTypeHidden (input[name="seat_type_id"]) not found in DOM');
-                return;
-            }
-
-            const roomCapacity = {{ json_encode($room->capacity, JSON_HEX_AMP) }};
-            const existingSeats = {{ json_encode($seats->count(), JSON_HEX_AMP) }};
-            const remainingCapacity = roomCapacity - existingSeats;
-            const existingSeatsByType = {{ json_encode($existingSeatsByType, JSON_HEX_AMP) }};
-            const maxSeatsPerRow = {{ json_encode($maxSeatsPerRow, JSON_HEX_AMP) }};
-            const maxRows = {{ json_encode($maxRows, JSON_HEX_AMP) }};
-
-            function updateCalculations() {
-                console.log('Running updateCalculations');
-                let totalPercentage = 0;
-                percentageInputs.forEach(input => {
-                    totalPercentage += parseFloat(input.value) || 0;
-                });
-
-                if (Math.abs(totalPercentage - 100) > 0.01) {
-                    percentageWarning.innerHTML = '<span class="text-danger">Tổng tỷ lệ phải bằng 100%. Hiện tại: ' + totalPercentage.toFixed(2) + '%</span>';
-                } else {
-                    percentageWarning.innerHTML = '<span class="text-success">Tổng tỷ lệ hợp lệ: ' + totalPercentage.toFixed(2) + '%</span>';
-                }
-
-                const seatTypeId = seatTypeHidden.value;
-                console.log('seatTypeId from hidden input:', seatTypeId);
-                const percentageInput = document.getElementById('seat_type_percentages_' + seatTypeId);
-                if (!percentageInput) {
-                    console.warn('percentageInput not found for seatTypeId:', seatTypeId);
-                    seatsPerRowSuggestion.innerHTML = '';
-                    remainingSeatsWarning.innerHTML = '';
-                    minSeatsPerRowSuggestion.innerHTML = '';
-                    return;
-                }
-
-                const percentage = parseFloat(percentageInput.value) || 0;
-                const requiredSeats = Math.round((percentage / 100) * roomCapacity);
-                const currentTypeSeats = existingSeatsByType[seatTypeId] || 0;
-                const seatsToAdd = Math.min(requiredSeats - currentTypeSeats, remainingCapacity);
-
-                const seatsPerRow = parseInt(seatsPerRowInput.value) || 1;
-                const minSeatsPerRow = parseInt(minSeatsPerRowInput.value) || 1;
-                const rows = Math.ceil(seatsToAdd / seatsPerRow);
-                const totalSeatsProposed = rows * seatsPerRow;
-                const excessSeats = totalSeatsProposed - seatsToAdd;
-
-                if (excessSeats > 0) {
-                    remainingSeatsWarning.innerHTML = '<span class="text-warning">Cảnh báo: Sẽ có ' + excessSeats + ' ghế dư do không chia hết số hàng.</span>';
-                } else {
-                    remainingSeatsWarning.innerHTML = '';
-                }
-
-                if (seatsToAdd > 0) {
-                    let optimalSeatsPerRow = seatsPerRow;
-                    let found = false;
-                    for (let i = minSeatsPerRow; i <= maxSeatsPerRow; i++) {
-                        if (seatsToAdd % i === 0 && seatsToAdd / i <= maxRows) {
-                            optimalSeatsPerRow = i;
-                            found = true;
-                            break;
-                        }
-                    }
-                    if (found && optimalSeatsPerRow !== seatsPerRow) {
-                        seatsPerRowSuggestion.innerHTML = 'Đề xuất số ghế mỗi hàng: ' + optimalSeatsPerRow + ' (chia hết cho ' + seatsToAdd + ' ghế, tạo ' + Math.ceil(seatsToAdd / optimalSeatsPerRow) + ' hàng)';
-                    } else {
-                        seatsPerRowSuggestion.innerHTML = 'Bạn đã chọn số ghế mỗi hàng: ' + seatsPerRow + ' (sẽ tạo ' + rows + ' hàng, có thể dư ghế nếu không chia hết)';
-                    }
-                } else {
-                    seatsPerRowSuggestion.innerHTML = 'Không cần thêm ghế cho loại này.';
-                }
-
-                if (seatsPerRow < minSeatsPerRow) {
-                    minSeatsPerRowSuggestion.innerHTML = '<span class="text-danger">Số ghế mỗi hàng phải ≥ số tối thiểu (' + minSeatsPerRow + ').</span>';
-                } else {
-                    minSeatsPerRowSuggestion.innerHTML = '';
-                }
-            }
-
-            // Gắn sự kiện cho inputs
-            percentageInputs.forEach(input => {
-                input.addEventListener('input', () => {
-                    console.log('Percentage input changed:', input.id, input.value);
-                    updateCalculations();
-                });
-            });
-            seatsPerRowInput.addEventListener('input', () => {
-                console.log('seatsPerRowInput changed:', seatsPerRowInput.value);
-                updateCalculations();
-            });
-            minSeatsPerRowInput.addEventListener('input', () => {
-                console.log('minSeatsPerRowInput changed:', minSeatsPerRowInput.value);
-                updateCalculations();
-            });
-
-            const importSeatsBtn = document.getElementById('importSeatsBtn');
-            if (importSeatsBtn) {
-                importSeatsBtn.addEventListener('click', function(e) {
-                    if (importSeatsBtn.disabled) {
-                        e.preventDefault();
-                        console.log('Import button disabled, showing alert');
-                        alert('Phòng đã đầy ghế, không thể import thêm!');
-                        return false;
-                    }
-                    e.preventDefault();
-                    console.log('Opening importSeatsConfirmModal');
-                    var modal = new bootstrap.Modal(document.getElementById('importSeatsConfirmModal'));
-                    modal.show();
-                    document.getElementById('confirmImportSeatsBtn').onclick = function() {
-                        console.log('Confirm import clicked');
-                        modal.hide();
-                        importSeatsBtn.form.submit();
-                    };
-                    return false;
-                });
-            } else {
-                console.warn('importSeatsBtn not found in DOM');
-            }
-
-            // Xử lý nút cập nhật tỷ lệ
-            const updatePercentagesBtn = document.getElementById('updatePercentagesBtn');
-            console.log('updatePercentagesBtn found:', updatePercentagesBtn);
-            console.log('percentageInputs found:', percentageInputs.length);
-            
-            if (updatePercentagesBtn) {
-                updatePercentagesBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    console.log('Update percentages button clicked');
-                    
-                    // Kiểm tra tổng tỷ lệ
-                    let totalPercentage = 0;
-                    const percentages = {};
-                    const seatTypeNames = {};
-                    
-                    console.log('Processing percentage inputs:', percentageInputs.length);
-                    
-                    percentageInputs.forEach(input => {
-                        console.log('Processing input:', input.name, input.value);
-                        const value = parseFloat(input.value) || 0;
-                        totalPercentage += value;
-                        const seatTypeId = input.name.match(/\[(\d+)\]/)[1];
-                        percentages[seatTypeId] = value;
-                        const label = document.querySelector(`label[for="${input.id}"]`);
-                        seatTypeNames[seatTypeId] = label ? label.textContent.trim() : 'Unknown';
-                    });
-                    
-                    console.log('Total percentage:', totalPercentage);
-                    console.log('Percentages:', percentages);
-                    
-                    if (Math.abs(totalPercentage - 100) > 0.01) {
-                        alert('Tổng tỷ lệ phải bằng 100%. Hiện tại: ' + totalPercentage.toFixed(2) + '%');
-                        return;
-                    }
-                    
-                    // Tạo preview tỷ lệ
-                    let previewHtml = '<h6>Tỷ lệ mới:</h6><ul>';
-                    for (const seatTypeId in percentages) {
-                        previewHtml += '<li><strong>' + seatTypeNames[seatTypeId] + ':</strong> ' + percentages[seatTypeId] + '%</li>';
-                    }
-                    previewHtml += '</ul>';
-                    
-                    document.getElementById('percentagePreview').innerHTML = previewHtml;
-                    
-                    // Hiển thị modal xác nhận
-                    var modal = new bootstrap.Modal(document.getElementById('updatePercentagesModal'));
-                    modal.show();
-                    
-                    document.getElementById('confirmUpdatePercentagesBtn').onclick = function() {
-                        console.log('Confirm update percentages clicked');
-                        modal.hide();
-                        
-                        // Tìm form hoặc tạo form mới nếu cần
-                        let form = document.getElementById('updatePercentagesForm');
-                        if (!form) {
-                            console.log('Creating new form');
-                            form = document.createElement('form');
-                            form.method = 'POST';
-                            form.action = '{{ route('admin.rooms.update-seat-percentages', $room->id) }}';
-                            
-                            // Thêm CSRF token
-                            const csrfInput = document.createElement('input');
-                            csrfInput.type = 'hidden';
-                            csrfInput.name = '_token';
-                            csrfInput.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-                            form.appendChild(csrfInput);
-                            
-                            document.body.appendChild(form);
-                        }
-                        
-                        // Xóa các input cũ (nếu có)
-                        const oldInputs = form.querySelectorAll('input[name^="percentages"]');
-                        oldInputs.forEach(input => input.remove());
-                        
-                        // Thêm percentages
-                        for (const seatTypeId in percentages) {
-                            const input = document.createElement('input');
-                            input.type = 'hidden';
-                            input.name = `percentages[${seatTypeId}]`;
-                            input.value = percentages[seatTypeId];
-                            form.appendChild(input);
-                        }
-                        
-                        // Thêm ignore constraints
-                        const ignoreConstraints = document.getElementById('ignoreConstraints').checked;
-                        const ignoreInput = form.querySelector('input[name="ignore_constraints"]');
-                        if (ignoreInput) {
-                            ignoreInput.value = ignoreConstraints ? '1' : '0';
-                        } else {
-                            const newIgnoreInput = document.createElement('input');
-                            newIgnoreInput.type = 'hidden';
-                            newIgnoreInput.name = 'ignore_constraints';
-                            newIgnoreInput.value = ignoreConstraints ? '1' : '0';
-                            form.appendChild(newIgnoreInput);
-                        }
-                        
-                        console.log('Submitting form with data:', {
-                            percentages: percentages,
-                            ignore_constraints: ignoreConstraints
-                        });
-                        
-                        // Submit form
-                        form.submit();
-                    };
-                });
-            } else {
-                console.warn('updatePercentagesBtn not found in DOM');
-            }
-
-            seatForm.addEventListener('submit', function(e) {
-                console.log('seatForm submitted');
-                let totalPercentage = 0;
-                percentageInputs.forEach(input => {
-                    totalPercentage += parseFloat(input.value) || 0;
-                });
-                if (Math.abs(totalPercentage - 100) > 0.01) {
-                    e.preventDefault();
-                    console.log('Invalid total percentage:', totalPercentage);
-                    alert('Tổng tỷ lệ loại ghế phải bằng 100%.');
-                    return;
-                }
-                let seatTypeId = seatTypeHidden.value;
-                let percentageInput = document.getElementById('seat_type_percentages_' + seatTypeId);
-                let percentage = parseFloat(percentageInput.value) || 0;
-                let requiredSeats = Math.round((percentage / 100) * roomCapacity);
-                let currentTypeSeats = existingSeatsByType[seatTypeId] || 0;
-                let seatsToAdd = Math.min(requiredSeats - currentTypeSeats, remainingCapacity);
-                let seatsPerRow = parseInt(seatsPerRowInput.value) || 1;
-                let minSeatsPerRow = parseInt(minSeatsPerRowInput.value) || 1;
-                let rows = Math.ceil(seatsToAdd / seatsPerRow);
-                if (seatsPerRow < minSeatsPerRow) {
-                    e.preventDefault();
-                    console.log('seatsPerRow < minSeatsPerRow:', seatsPerRow, minSeatsPerRow);
-                    alert('Số ghế mỗi hàng phải ≥ số tối thiểu (' + minSeatsPerRow + ').');
-                    return;
-                }
-                if (seatsToAdd <= 0) {
-                    e.preventDefault();
-                    console.log('No seats to add:', seatsToAdd);
-                    alert('Không còn ghế cần thêm cho loại này.');
-                    return;
-                }
-                e.preventDefault();
-                let previewHtml = '<p>Số ghế sẽ thêm: <strong>' + seatsToAdd + '</strong></p>';
-                previewHtml += '<p>Số ghế mỗi hàng: <strong>' + seatsPerRow + '</strong></p>';
-                previewHtml += '<p>Số hàng: <strong>' + rows + '</strong></p>';
-                let excessSeats = (rows * seatsPerRow) - seatsToAdd;
-                if (excessSeats > 0) {
-                    previewHtml += '<p class="text-warning">Cảnh báo: Sẽ có ' + excessSeats + ' ghế dư do không chia hết số hàng.</p>';
-                }
-                previewHtml += '<div style="max-height:200px;overflow:auto;border:1px solid #eee;padding:8px;margin-top:8px;">';
-                for (let r = 1; r <= rows; r++) {
-                    previewHtml += '<div>Hàng ' + r + ': ';
-                    for (let s = 1; s <= seatsPerRow; s++) {
-                        let seatNum = (r - 1) * seatsPerRow + s;
-                        if (seatNum > seatsToAdd) break;
-                        previewHtml += '<span class="badge bg-primary mx-1">' + seatNum + '</span>';
-                    }
-                    previewHtml += '</div>';
-                }
-                previewHtml += '</div>';
-                document.getElementById('addSeatsPreview').innerHTML = previewHtml;
-                console.log('Opening addSeatsConfirmModal');
-                var modal = new bootstrap.Modal(document.getElementById('addSeatsConfirmModal'));
-                modal.show();
-                document.getElementById('confirmAddSeatsBtn').onclick = function() {
-                    console.log('Confirm add seats clicked');
-                    modal.hide();
-                    seatForm.submit();
-                };
-            });
-
-            @if(session('import_success'))
-            setTimeout(function() {
-                console.log('Showing import_success modal');
-                document.getElementById('successModalBody').innerHTML = '{{ addslashes(session('import_success')) }}';
-                var modal = new bootstrap.Modal(document.getElementById('successModal'));
-                modal.show();
-            }, 300);
-            @endif
-            @if(session('add_success'))
-            setTimeout(function() {
-                console.log('Showing add_success modal');
-                document.getElementById('successModalBody').innerHTML = '{{ addslashes(session('add_success')) }}';
-                var modal = new bootstrap.Modal(document.getElementById('successModal'));
-                modal.show();
-            }, 300);
-            @endif
-
-            var successModalEl = document.getElementById('successModal');
-            if (successModalEl) {
-                successModalEl.addEventListener('hidden.bs.modal', function () {
-                    console.log('successModal hidden, running updateCalculations');
-                    setTimeout(function() {
-                        try {
-                            updateCalculations();
-                        } catch (e) {
-                            console.error('Lỗi updateCalculations:', e);
-                        }
-                    }, 10);
-                });
-            } else {
-                console.warn('successModal not found in DOM');
-            }
-
-            console.log('Calling initial updateCalculations');
-            updateCalculations();
-        });
-    } catch (error) {
-        console.error('Error in form script:', error);
+// Dữ liệu từ server
+const roomData = {
+    id: {{ $room->id }},
+    capacity: {{ $room->capacity }},
+    existingSeats: {{ $seats->count() }},
+    apiUrl: '{{ route('admin.rooms.seat-distribution', $room->id) }}',
+    roomType: {
+        id: {{ $room->room_type_id }},
+        name: '{{ $room->roomType->name }}',
+        hasCoupleSeats: {{ $room->allowedSeatTypes()->filter(function($type) {
+            $name = strtolower($type->name);
+            return str_contains($name, 'couple') || str_contains($name, 'sweetbox') || 
+                   str_contains($name, 'bed') || str_contains($name, 'sofa');
+        })->count() > 0 ? 'true' : 'false' }},
+        coupleSeatsNames: {!! json_encode($room->allowedSeatTypes()->filter(function($type) {
+            $name = strtolower($type->name);
+            return str_contains($name, 'couple') || str_contains($name, 'sweetbox') || 
+                   str_contains($name, 'bed') || str_contains($name, 'sofa');
+        })->pluck('name')->toArray()) !!}
     }
-</script>
-@endpush
+};
 
+const allowedSeatTypes = {!! json_encode($room->allowedSeatTypes()->map(function($type) {
+    return [
+        'id' => $type->id,
+        'name' => $type->name,
+        'color_code' => $type->color_code ?? '#007bff',
+        'is_couple' => str_contains(strtolower($type->name), 'couple') || str_contains(strtolower($type->name), 'bed') || str_contains(strtolower($type->name), 'sofa')
+    ];
+})) !!};
+
+// Dữ liệu về các hàng ghế hiện có
+const existingRowsData = {!! json_encode($seats->groupBy('row_char')->map(function($rowSeats, $rowChar) {
+    return [
+        'row_char' => $rowChar,
+        'seat_count' => $rowSeats->count(),
+        'seat_numbers' => $rowSeats->pluck('seat_number')->sort()->values()->toArray(),
+        'max_seat_number' => $rowSeats->max('seat_number'),
+        'seat_types' => $rowSeats->groupBy('seat_type_id')->map(function($typeSeats, $typeId) {
+            $seatType = $typeSeats->first()->seatType;
+            return [
+                'type_id' => $typeId,
+                'type_name' => $seatType->name,
+                'count' => $typeSeats->count()
+            ];
+        })->values()->toArray()
+    ];
+})->values()) !!};
+
+let seatConfiguration = []; // Lưu cấu hình ghế theo hàng
+let isUpdatingDistribution = false; // Flag để tránh gọi API nhiều lần
+let isConfiguringSeatLayout = false; // Flag để tránh cập nhật % khi đang cấu hình
+
+// Đồng bộ dữ liệu roomData với DOM thực tế
+function syncDataWithDOM() {
+    // Đếm số ghế thực tế từ DOM
+    const actualSeatsCount = document.querySelectorAll('.seat[data-seat-id]').length;
+    
+    // Cập nhật roomData.existingSeats nếu khác với dữ liệu từ server
+    if (actualSeatsCount !== roomData.existingSeats) {
+        console.log('Syncing seat count:', {
+            serverCount: roomData.existingSeats,
+            actualCount: actualSeatsCount
+        });
+        roomData.existingSeats = actualSeatsCount;
+    }
+    
+    // Đồng bộ dữ liệu hàng ghế từ DOM
+    syncExistingRowsData();
+    
+    // Chỉ cập nhật bảng phân bổ khi cần thiết (debounce) và không đang cấu hình
+    clearTimeout(window.updateDistributionTimeout);
+    window.updateDistributionTimeout = setTimeout(() => {
+        if (!isConfiguringSeatLayout) {
+            updateSeatTypeDistribution();
+        }
+    }, 500); // Delay 500ms để tránh gọi nhiều lần
+}
+
+// Đồng bộ dữ liệu các hàng ghế từ DOM
+function syncExistingRowsData() {
+    const seats = document.querySelectorAll('.seat[data-seat-id]');
+    const rowsMap = new Map();
+    
+    seats.forEach(seatElement => {
+        const rowChar = seatElement.getAttribute('data-row-char');
+        const seatNumber = parseInt(seatElement.getAttribute('data-seat-number'));
+        
+        if (rowChar && seatNumber) {
+            if (!rowsMap.has(rowChar)) {
+                rowsMap.set(rowChar, {
+                    row_char: rowChar,
+                    seat_count: 0,
+                    seat_numbers: [],
+                    max_seat_number: 0,
+                    seat_types: []
+                });
+            }
+            
+            const rowData = rowsMap.get(rowChar);
+            rowData.seat_count++;
+            rowData.seat_numbers.push(seatNumber);
+            rowData.max_seat_number = Math.max(rowData.max_seat_number, seatNumber);
+        }
+    });
+    
+    // Sắp xếp seat_numbers và cập nhật existingRowsData
+    const newExistingRowsData = Array.from(rowsMap.values()).map(row => {
+        row.seat_numbers.sort((a, b) => a - b);
+        return row;
+    });
+    
+    // Cập nhật global variable
+    existingRowsData.length = 0;
+    existingRowsData.push(...newExistingRowsData);
+    
+    console.log('Synced existing rows data:', existingRowsData);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Đồng bộ dữ liệu với DOM để đảm bảo chính xác
+    syncDataWithDOM();
+    
+    // Đồng bộ hiển thị sức chứa
+    syncCapacityDisplay();
+    
+    // Khởi tạo interface
+    updateRowSeatTypes();
+    
+    // Kiểm tra và cập nhật trạng thái các button thêm ghế
+    updateAddSeatButtonsState();
+    
+    // Cập nhật dropdown hàng ghế cho thêm ghế đơn
+    updateRowCharDropdown();
+    
+    // Cập nhật help text cho input số hàng
+    updateTotalRowsHelp();
+    
+    // Event listeners
+    document.getElementById('total_rows').addEventListener('input', function() {
+        updateRowSeatTypes();
+        updateTotalRowsHelp();
+    });
+    document.getElementById('seats_per_row').addEventListener('input', updateRowSeatTypes);
+    
+    // Reset flag khi chuyển tab
+    document.querySelectorAll('button[data-bs-toggle="tab"]').forEach(tab => {
+        tab.addEventListener('click', function() {
+            isConfiguringSeatLayout = false;
+        });
+    });
+});
+
+// Đồng bộ tất cả các hiển thị sức chứa
+function syncCapacityDisplay() {
+    const capacity = roomData.capacity;
+    const capacityDisplay = document.getElementById('capacity-display');
+    const roomCapacityElement = document.getElementById('room-capacity');
+    const totalCapacityDisplay = document.getElementById('totalCapacityDisplay');
+    
+    if (capacityDisplay) {
+        capacityDisplay.textContent = capacity;
+    }
+    if (roomCapacityElement) {
+        roomCapacityElement.textContent = capacity;
+    }
+    if (totalCapacityDisplay) {
+        totalCapacityDisplay.textContent = capacity;
+    }
+}
+
+// Kiểm tra và cập nhật trạng thái các button thêm ghế
+function updateAddSeatButtonsState() {
+    const currentSeats = roomData.existingSeats;
+    const capacity = roomData.capacity;
+    const hasSpace = currentSeats < capacity;
+    
+    console.log('Updating add seat buttons state:', {
+        currentSeats,
+        capacity,
+        hasSpace
+    });
+    
+    // Cập nhật button Import ghế
+    const importBtn = document.getElementById('importSeatsBtn');
+    if (importBtn) {
+        importBtn.disabled = !hasSpace;
+        if (hasSpace) {
+            importBtn.title = '';
+        } else {
+            importBtn.title = 'Phòng đã đầy ghế, không thể import thêm';
+        }
+    }
+    
+    // Cập nhật button thêm ghế đơn
+    const addSingleForm = document.getElementById('addSingleSeatForm');
+    if (addSingleForm) {
+        const submitBtn = addSingleForm.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.disabled = !hasSpace;
+            if (hasSpace) {
+                submitBtn.innerHTML = '<i class="fas fa-plus me-2"></i> Thêm ghế';
+                submitBtn.className = 'btn btn-success w-100';
+                submitBtn.title = '';
+            } else {
+                submitBtn.innerHTML = '<i class="fas fa-ban me-2"></i> Phòng đã đầy';
+                submitBtn.className = 'btn btn-secondary w-100';
+                submitBtn.title = 'Phòng đã đầy ghế, không thể thêm ghế mới';
+            }
+        }
+    }
+    
+    // Hiển thị/ẩn thông báo phòng đầy
+    const roomFullWarning = document.getElementById('roomFullWarning');
+    const currentSeatsCountSpan = document.getElementById('currentSeatsCount');
+    if (roomFullWarning && currentSeatsCountSpan) {
+        if (!hasSpace) {
+            currentSeatsCountSpan.textContent = currentSeats;
+            roomFullWarning.style.display = 'block';
+        } else {
+            roomFullWarning.style.display = 'none';
+        }
+    }
+    
+    // Cập nhật thông tin số ghế còn lại và các thống kê
+    const remaining = capacity - currentSeats;
+    
+    // Cập nhật phần thống kê ghế hiện có
+    const existingSeatsDisplay = document.getElementById('existingSeatsDisplay');
+    const remainingSeatsDisplay = document.getElementById('remainingSeatsDisplay');
+    const totalCapacityDisplay = document.getElementById('totalCapacityDisplay');
+    
+    if (existingSeatsDisplay) {
+        existingSeatsDisplay.textContent = currentSeats;
+    }
+    
+    if (remainingSeatsDisplay) {
+        remainingSeatsDisplay.textContent = remaining;
+        // Thay đổi màu nếu hết chỗ
+        if (remaining <= 0) {
+            remainingSeatsDisplay.className = 'fw-bold text-danger';
+        } else {
+            remainingSeatsDisplay.className = 'fw-bold text-success';
+        }
+    }
+    
+    if (totalCapacityDisplay) {
+        totalCapacityDisplay.textContent = capacity;
+    }
+    
+    // Cập nhật dropdown hàng ghế khi có thay đổi
+    updateRowCharDropdown();
+    
+    // Cập nhật help text cho input số hàng
+    updateTotalRowsHelp();
+    
+    // Cập nhật bảng phân bổ loại ghế (debounced) - chỉ khi không đang cấu hình
+    clearTimeout(window.updateDistributionTimeout);
+    window.updateDistributionTimeout = setTimeout(() => {
+        if (!isConfiguringSeatLayout) {
+            updateSeatTypeDistribution();
+        }
+    }, 300);
+    
+    // Cập nhật thông tin số ghế còn lại trong selector cũ (fallback)
+    const remainingElement = document.querySelector('.fw-bold.text-success');
+    if (remainingElement && !remainingSeatsDisplay) {
+        remainingElement.textContent = remaining;
+        
+        // Thay đổi màu nếu hết chỗ
+        if (remaining <= 0) {
+            remainingElement.className = 'fw-bold text-danger';
+        } else {
+            remainingElement.className = 'fw-bold text-success';
+        }
+    }
+}
+
+// Cập nhật dropdown hàng ghế thông minh
+function updateRowCharDropdown() {
+    const dropdown = document.getElementById('single_row_char');
+    const helpText = document.getElementById('rowCharHelp');
+    if (!dropdown) return;
+    
+    // Lấy danh sách các hàng đã có ghế
+    const existingRows = existingRowsData.map(row => row.row_char).sort();
+    const lastExistingRow = existingRows.length > 0 ? existingRows[existingRows.length - 1] : null;
+    
+    // Tìm hàng tiếp theo có thể thêm (hàng tiếp theo sau hàng cuối)
+    let nextAvailableRow = null;
+    if (lastExistingRow) {
+        const nextRowCode = lastExistingRow.charCodeAt(0) + 1;
+        if (nextRowCode <= 90) { // Z = 90
+            nextAvailableRow = String.fromCharCode(nextRowCode);
+        }
+    } else {
+        nextAvailableRow = 'A'; // Nếu chưa có hàng nào
+    }
+    
+    // Clear dropdown
+    dropdown.innerHTML = '<option value="">Chọn hàng</option>';
+    
+    // Thêm các hàng đã có ghế (có thể thêm ghế vào)
+    existingRows.forEach(rowChar => {
+        const rowData = existingRowsData.find(r => r.row_char === rowChar);
+        const option = document.createElement('option');
+        option.value = rowChar;
+        option.textContent = `${rowChar} (${rowData.seat_count} ghế hiện có)`;
+        option.setAttribute('data-existing', 'true');
+        option.setAttribute('data-seat-count', rowData.seat_count);
+        option.setAttribute('data-max-seat', rowData.max_seat_number);
+        dropdown.appendChild(option);
+    });
+    
+    // Thêm hàng tiếp theo (hàng mới)
+    if (nextAvailableRow) {
+        const option = document.createElement('option');
+        option.value = nextAvailableRow;
+        option.textContent = `${nextAvailableRow} (hàng mới)`;
+        option.setAttribute('data-existing', 'false');
+        option.setAttribute('data-seat-count', '0');
+        option.setAttribute('data-max-seat', '0');
+        option.style.fontWeight = 'bold';
+        option.style.color = '#28a745';
+        dropdown.appendChild(option);
+    }
+    
+    // Cập nhật help text
+    if (helpText) {
+        if (existingRows.length > 0) {
+            helpText.innerHTML = `
+                <i class="fas fa-info-circle text-info"></i> 
+                Hàng có ghế: <strong>${existingRows.join(', ')}</strong>
+                ${nextAvailableRow ? ` | Hàng mới: <strong class="text-success">${nextAvailableRow}</strong>` : ''}
+            `;
+        } else {
+            helpText.innerHTML = `
+                <i class="fas fa-plus-circle text-success"></i> 
+                Phòng chưa có ghế. Bắt đầu với hàng <strong>A</strong>.
+            `;
+        }
+    }
+    
+    // Thêm event listener để cập nhật gợi ý số ghế (chỉ thêm một lần)
+    dropdown.removeEventListener('change', updateSeatNumberSuggestion);
+    dropdown.addEventListener('change', updateSeatNumberSuggestion);
+}
+
+// Cập nhật gợi ý số ghế dựa trên hàng đã chọn
+function updateSeatNumberSuggestion() {
+    const rowDropdown = document.getElementById('single_row_char');
+    const seatNumberInput = document.getElementById('single_seat_number');
+    const seatNumberFormText = seatNumberInput.nextElementSibling;
+    
+    if (!rowDropdown.value) {
+        seatNumberFormText.textContent = 'Ví dụ: 1, 2, 3...';
+        seatNumberInput.placeholder = '';
+        return;
+    }
+    
+    const selectedOption = rowDropdown.selectedOptions[0];
+    const isExisting = selectedOption.getAttribute('data-existing') === 'true';
+    const seatCount = parseInt(selectedOption.getAttribute('data-seat-count'));
+    const maxSeat = parseInt(selectedOption.getAttribute('data-max-seat'));
+    
+    if (isExisting) {
+        // Hàng đã có ghế - gợi ý số ghế tiếp theo
+        const rowData = existingRowsData.find(r => r.row_char === rowDropdown.value);
+        const existingNumbers = rowData.seat_numbers;
+        
+        // Tìm số ghế tiếp theo có thể thêm
+        let suggestedNumber = maxSeat + 1;
+        
+        // Tìm gaps trong dãy số ghế hiện có
+        const gaps = [];
+        for (let i = 1; i < maxSeat; i++) {
+            if (!existingNumbers.includes(i)) {
+                gaps.push(i);
+            }
+        }
+        
+        if (gaps.length > 0) {
+            seatNumberFormText.innerHTML = `
+                <strong>Gợi ý:</strong> 
+                <span class="text-success">${suggestedNumber}</span> (ghế mới) hoặc 
+                <span class="text-info">${gaps.slice(0, 3).join(', ')}</span> (lấp chỗ trống)
+                ${gaps.length > 3 ? '...' : ''}
+            `;
+        } else {
+            seatNumberFormText.innerHTML = `
+                <strong>Gợi ý:</strong> 
+                <span class="text-success">${suggestedNumber}</span> (ghế tiếp theo)
+            `;
+        }
+        
+        seatNumberInput.placeholder = suggestedNumber.toString();
+    } else {
+        // Hàng mới - bắt đầu từ số 1
+        seatNumberFormText.innerHTML = `
+            <strong>Hàng mới:</strong> 
+            <span class="text-success">Bắt đầu từ số 1</span>
+        `;
+        seatNumberInput.placeholder = '1';
+    }
+}
+
+// Cập nhật phần trăm dựa trên ghế hiện có
+function updatePercentagesFromActual() {
+    const currentSeats = roomData.existingSeats;
+    
+    if (currentSeats === 0) {
+        alert('Phòng chưa có ghế nào để tính toán tỷ lệ!');
+        return;
+    }
+    
+    // Lấy dữ liệu ghế hiện có theo loại từ DOM
+    const seatsByType = {};
+    let totalSeatsFound = 0;
+    
+    // Đếm ghế theo loại từ DOM
+    const seatElements = document.querySelectorAll('.seat[data-seat-id]');
+    seatElements.forEach(seatElement => {
+        // Lấy thông tin loại ghế từ các attribute hoặc class
+        const seatTitle = seatElement.getAttribute('title') || seatElement.getAttribute('data-bs-title') || '';
+        
+        // Parse loại ghế từ title (format: "A01 (Couple Sofa, Available)")
+        const typeMatch = seatTitle.match(/\(([^,]+),/);
+        if (typeMatch) {
+            const seatTypeName = typeMatch[1].trim();
+            seatsByType[seatTypeName] = (seatsByType[seatTypeName] || 0) + 1;
+            totalSeatsFound++;
+        }
+    });
+    
+    console.log('Seats by type found:', seatsByType);
+    console.log('Total seats found:', totalSeatsFound);
+    
+    if (totalSeatsFound === 0) {
+        alert('Không thể đọc được thông tin loại ghế từ sơ đồ!');
+        return;
+    }
+    
+    // Tính toán phần trăm
+    const calculatedPercentages = {};
+    let totalCalculatedPercentage = 0;
+    
+    Object.keys(seatsByType).forEach(seatTypeName => {
+        const count = seatsByType[seatTypeName];
+        const percentage = Math.round((count / totalSeatsFound) * 100);
+        calculatedPercentages[seatTypeName] = {
+            count: count,
+            percentage: percentage
+        };
+        totalCalculatedPercentage += percentage;
+    });
+    
+    // Điều chỉnh để tổng = 100%
+    if (totalCalculatedPercentage !== 100) {
+        const adjustment = 100 - totalCalculatedPercentage;
+        const largestType = Object.keys(calculatedPercentages).reduce((a, b) => 
+            calculatedPercentages[a].count > calculatedPercentages[b].count ? a : b
+        );
+        calculatedPercentages[largestType].percentage += adjustment;
+    }
+    
+    // Hiển thị preview
+    let previewHtml = '<h6>Tỷ lệ mới được tính từ ghế hiện có:</h6>';
+    previewHtml += '<div class="table-responsive">';
+    previewHtml += '<table class="table table-sm">';
+    previewHtml += '<thead><tr><th>Loại ghế</th><th>Số ghế</th><th>% hiện tại</th><th>% mới</th></tr></thead>';
+    previewHtml += '<tbody>';
+    
+    Object.keys(calculatedPercentages).forEach(seatTypeName => {
+        const data = calculatedPercentages[seatTypeName];
+        previewHtml += `<tr>
+            <td>${seatTypeName}</td>
+            <td>${data.count}</td>
+            <td class="text-muted">-</td>
+            <td class="text-primary fw-bold">${data.percentage}%</td>
+        </tr>`;
+    });
+    
+    previewHtml += '</tbody></table></div>';
+    
+    // Hiển thị modal xác nhận
+    document.getElementById('percentagePreview').innerHTML = previewHtml;
+    
+    // Lưu dữ liệu để gửi
+    window.calculatedPercentagesData = calculatedPercentages;
+    
+    const modal = new bootstrap.Modal(document.getElementById('updatePercentagesModal'));
+    modal.show();
+}
+
+// Xác nhận cập nhật phần trăm
+function confirmUpdatePercentages() {
+    if (!window.calculatedPercentagesData) {
+        alert('Không có dữ liệu để cập nhật!');
+        return;
+    }
+    
+    // Tạo object để gửi lên server
+    const percentagesToUpdate = {};
+    
+    // Map tên loại ghế thành ID
+    Object.keys(window.calculatedPercentagesData).forEach(seatTypeName => {
+        // Tìm ID loại ghế từ allowedSeatTypes
+        const seatType = allowedSeatTypes.find(type => type.name === seatTypeName);
+        if (seatType) {
+            percentagesToUpdate[seatType.id] = window.calculatedPercentagesData[seatTypeName].percentage;
+        }
+    });
+    
+    console.log('Sending percentages to server:', percentagesToUpdate);
+    
+    // Gửi request cập nhật
+    const formData = new FormData();
+    formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+    formData.append('_method', 'POST');
+    
+    Object.keys(percentagesToUpdate).forEach(seatTypeId => {
+        formData.append(`percentages[${seatTypeId}]`, percentagesToUpdate[seatTypeId]);
+    });
+    
+    fetch(`/admin/rooms/${roomData.id}/update-seat-percentages`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Đóng modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('updatePercentagesModal'));
+            modal.hide();
+            
+            // Hiển thị thông báo thành công
+            document.getElementById('successModalBody').textContent = 'Đã cập nhật tỷ lệ loại ghế thành công!';
+            const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+            successModal.show();
+            
+            // Reload trang sau 2 giây
+            setTimeout(() => {
+                window.location.reload();
+            }, 2000);
+        } else {
+            alert('Lỗi: ' + (data.message || 'Không thể cập nhật tỷ lệ'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Có lỗi xảy ra khi cập nhật tỷ lệ!');
+    });
+}
+
+// Cập nhật help text cho input số hàng
+function updateTotalRowsHelp() {
+    const helpElement = document.getElementById('total_rows_help');
+    const totalRowsInput = document.getElementById('total_rows');
+    
+    if (!helpElement || !totalRowsInput) return;
+    
+    const existingRows = existingRowsData.map(row => row.row_char).sort();
+    const currentValue = parseInt(totalRowsInput.value) || 0;
+    
+    if (existingRows.length > 0) {
+        const lastRow = existingRows[existingRows.length - 1];
+        const startRowCode = lastRow.charCodeAt(0) + 1;
+        const maxPossible = 90 - startRowCode + 1; // Z = 90
+        
+        if (maxPossible <= 0) {
+            helpElement.innerHTML = `
+                <span class="text-danger">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Không thể tạo thêm hàng (đã đến hàng Z)
+                </span>
+            `;
+            totalRowsInput.max = 0;
+        } else {
+            const nextRow = String.fromCharCode(startRowCode);
+            const maxRow = 'Z';
+            
+            helpElement.innerHTML = `
+                <span class="text-info">
+                    <i class="fas fa-info-circle"></i>
+                    Có thể tạo ${maxPossible} hàng nữa (${nextRow} - ${maxRow})
+                </span>
+            `;
+            totalRowsInput.max = maxPossible;
+            
+            // Validate current value
+            if (currentValue > maxPossible) {
+                totalRowsInput.value = maxPossible;
+                helpElement.innerHTML += `
+                    <br><span class="text-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Đã điều chỉnh về ${maxPossible} hàng
+                    </span>
+                `;
+            }
+        }
+    } else {
+        helpElement.innerHTML = `
+            <span class="text-success">
+                <i class="fas fa-plus-circle"></i>
+                Có thể tạo tối đa 26 hàng (A-Z)
+            </span>
+        `;
+        totalRowsInput.max = 26;
+    }
+}
+
+// Cập nhật bảng phân bổ loại ghế
+function updateSeatTypeDistribution() {
+    // Tránh gọi API nhiều lần cùng lúc
+    if (isUpdatingDistribution) {
+        console.log('Distribution update already in progress, skipping...');
+        return;
+    }
+    
+    const totalSeats = roomData.existingSeats;
+    
+    if (totalSeats === 0) {
+        // Nếu không có ghế, hiển thị 0% cho tất cả
+        allowedSeatTypes.forEach(type => {
+            updateSeatTypeRow(type.name, 0, 0);
+        });
+        return;
+    }
+    
+    isUpdatingDistribution = true;
+    console.log('Starting distribution update from API...');
+    console.log('Room ID:', roomData.id);
+    
+    const apiUrl = roomData.apiUrl;
+    console.log('API URL:', apiUrl);
+    console.log('Expected URL format: /admin/rooms/71/seat-distribution');
+    
+    // Gọi API để lấy dữ liệu phân bổ thực tế
+    fetch(apiUrl)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log('API response:', data); // Debug log
+                // Cập nhật từng loại ghế
+                allowedSeatTypes.forEach(type => {
+                    const seatCount = data.distribution[type.id] || 0;
+                    const percentage = data.percentages[type.id] || 0;
+                    updateSeatTypeRow(type.name, percentage, seatCount);
+                });
+                console.log('Updated seat type distribution from API'); // Debug log
+            } else {
+                console.error('API returned error:', data.message);
+                updateSeatTypeDistributionFromDOM();
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching seat distribution:', error);
+            // Fallback: cập nhật từ dữ liệu có sẵn
+            updateSeatTypeDistributionFromDOM();
+        })
+        .finally(() => {
+            isUpdatingDistribution = false;
+            console.log('Distribution update completed');
+        });
+}
+
+// Cập nhật một hàng trong bảng phân bổ loại ghế
+function updateSeatTypeRow(typeName, percentage, existingCount) {
+    console.log(`Updating seat type: ${typeName}, ${percentage}%, ${existingCount} seats`);
+    
+    const tableRows = document.querySelectorAll('tbody tr');
+    let updated = false;
+    
+    tableRows.forEach(row => {
+        const typeNameCell = row.cells[0];
+        if (typeNameCell && typeNameCell.textContent.trim() === typeName) {
+            // Cập nhật tỷ lệ % với animation
+            const percentageCell = row.cells[1];
+            if (percentageCell) {
+                const formattedPercentage = Number(percentage).toFixed(1);
+                const newContent = `<span class="badge bg-info">${formattedPercentage}%</span>`;
+                
+                if (percentageCell.innerHTML !== newContent) {
+                    percentageCell.innerHTML = newContent;
+                    console.log(`Updated ${typeName} percentage to ${formattedPercentage}%`);
+                    
+                    // Thêm class để highlight thay đổi
+                    percentageCell.classList.add('table-success');
+                    setTimeout(() => {
+                        percentageCell.classList.remove('table-success');
+                    }, 1000);
+                }
+            }
+            
+            // Cập nhật số đã có
+            const existingCell = row.cells[2];
+            if (existingCell) {
+                if (existingCell.textContent != existingCount) {
+                    existingCell.textContent = existingCount;
+                    console.log(`Updated ${typeName} count to ${existingCount}`);
+                    
+                    // Thêm class để highlight thay đổi
+                    existingCell.classList.add('table-success');
+                    setTimeout(() => {
+                        existingCell.classList.remove('table-success');
+                    }, 1000);
+                }
+            }
+            
+            updated = true;
+        }
+    });
+    
+    if (!updated) {
+        console.warn(`Could not find row for seat type: ${typeName}`);
+    }
+}
+
+// Fallback: cập nhật từ DOM khi không có API (chỉ dùng khi thật sự cần)
+function updateSeatTypeDistributionFromDOM() {
+    console.log('Using DOM fallback for seat distribution...');
+    
+    // Chỉ dùng fallback khi không có ghế nào
+    const totalSeats = roomData.existingSeats;
+    if (totalSeats === 0) {
+        allowedSeatTypes.forEach(type => {
+            updateSeatTypeRow(type.name, 0, 0);
+        });
+        return;
+    }
+    
+    // Đếm trực tiếp từ DOM seats
+    const seatsByType = {};
+    allowedSeatTypes.forEach(type => {
+        seatsByType[type.id] = 0;
+    });
+    
+    // Đếm từ các seat elements trong DOM
+    const seatElements = document.querySelectorAll('.seat[data-seat-id]');
+    seatElements.forEach(seatElement => {
+        const seatTypeId = seatElement.getAttribute('data-seat-type-id');
+        if (seatTypeId && seatsByType.hasOwnProperty(seatTypeId)) {
+            seatsByType[seatTypeId]++;
+        }
+    });
+    
+    // Cập nhật hiển thị
+    allowedSeatTypes.forEach(type => {
+        const seatCount = seatsByType[type.id] || 0;
+        const percentage = totalSeats > 0 ? Math.round((seatCount / totalSeats) * 100 * 10) / 10 : 0;
+        updateSeatTypeRow(type.name, percentage, seatCount);
+    });
+    
+    console.log('DOM fallback completed:', seatsByType);
+}
+
+// Cập nhật interface chọn loại ghế cho từng hàng
+function updateRowSeatTypes() {
+    isConfiguringSeatLayout = true; // Đánh dấu đang cấu hình
+    
+    const totalRows = parseInt(document.getElementById('total_rows').value) || 0;
+    const seatsPerRow = parseInt(document.getElementById('seats_per_row').value) || 0;
+    const container = document.getElementById('row-seat-types');
+    
+    container.innerHTML = '';
+    seatConfiguration = [];
+    
+    if (totalRows === 0 || seatsPerRow === 0) {
+        updateSummary();
+        isConfiguringSeatLayout = false; // Reset flag
+        return;
+    }
+    
+    // Tìm hàng bắt đầu thông minh
+    const existingRows = existingRowsData.map(row => row.row_char).sort();
+    let startRowCode = 65; // Mặc định bắt đầu từ A
+    
+    if (existingRows.length > 0) {
+        // Nếu đã có ghế, bắt đầu từ hàng tiếp theo sau hàng cuối
+        const lastRow = existingRows[existingRows.length - 1];
+        startRowCode = lastRow.charCodeAt(0) + 1;
+    }
+    
+    // Kiểm tra không vượt quá Z (90 là mã ASCII của Z)
+    if (startRowCode + totalRows - 1 > 90) {
+        const maxRowsCanCreate = 90 - startRowCode + 1;
+        container.innerHTML = `
+            <div class="alert alert-danger p-2">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Không thể tạo ${totalRows} hàng!</strong><br>
+                Chỉ có thể tạo tối đa <strong>${maxRowsCanCreate}</strong> hàng nữa 
+                (từ hàng <strong>${String.fromCharCode(startRowCode)}</strong> đến hàng <strong>Z</strong>)
+            </div>
+        `;
+        updateSummary();
+        isConfiguringSeatLayout = false; // Reset flag
+        return;
+    }
+    
+    // Hiển thị thông tin hàng bắt đầu
+    const startRowChar = String.fromCharCode(startRowCode);
+    const endRowChar = String.fromCharCode(startRowCode + totalRows - 1);
+    
+    // Thêm thông báo về hàng sẽ tạo
+    if (existingRows.length > 0) {
+        container.innerHTML = `
+            <div class="alert alert-info p-2 mb-3">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>Hàng hiện có:</strong> ${existingRows.join(', ')} | 
+                <strong>Hàng mới sẽ tạo:</strong> ${startRowChar}${totalRows > 1 ? ` - ${endRowChar}` : ''}
+            </div>
+        `;
+    } else {
+        container.innerHTML = `
+            <div class="alert alert-success p-2 mb-3">
+                <i class="fas fa-plus-circle me-2"></i>
+                <strong>Phòng chưa có ghế.</strong> Sẽ tạo hàng ${startRowChar}${totalRows > 1 ? ` - ${endRowChar}` : ''}
+            </div>
+        `;
+    }
+    
+    for (let i = 0; i < totalRows; i++) {
+        const rowChar = String.fromCharCode(startRowCode + i);
+        const rowConfig = {
+            row: rowChar,
+            seatType: allowedSeatTypes[0]?.id || null,
+            seatsCount: seatsPerRow
+        };
+        seatConfiguration.push(rowConfig);
+        
+        const rowDiv = document.createElement('div');
+        rowDiv.className = 'row-config mb-2 p-2 border rounded';
+        rowDiv.innerHTML = `
+            <div class="d-flex align-items-center justify-content-between">
+                <strong>Hàng ${rowChar}:</strong>
+                <select class="form-select form-select-sm" style="width: auto;" onchange="updateRowSeatType(${i}, this.value)">
+                    ${allowedSeatTypes.map(type => 
+                        `<option value="${type.id}">${type.name}</option>`
+                    ).join('')}
+                </select>
+            </div>
+            <div class="small text-muted mt-1" id="row-${i}-info">
+                ${seatsPerRow} ghế - ${allowedSeatTypes[0]?.name || 'Chưa chọn'}
+            </div>
+        `;
+        container.appendChild(rowDiv);
+    }
+    
+    updateSummary();
+    isConfiguringSeatLayout = false; // Reset flag sau khi hoàn thành
+}
+
+// Cập nhật loại ghế cho hàng
+function updateRowSeatType(rowIndex, seatTypeId) {
+    if (seatConfiguration[rowIndex]) {
+        seatConfiguration[rowIndex].seatType = parseInt(seatTypeId);
+        const seatType = allowedSeatTypes.find(type => type.id == seatTypeId);
+        const seatsPerRow = seatConfiguration[rowIndex].seatsCount;
+        
+        // Cập nhật thông tin hàng
+        const infoElement = document.getElementById(`row-${rowIndex}-info`);
+        if (infoElement) {
+            infoElement.textContent = `${seatsPerRow} ghế - ${seatType?.name || 'Chưa chọn'}`;
+        }
+        
+        updateSummary();
+    }
+}
+
+// Cập nhật lại hiển thị cấu hình hàng ghế
+function updateRowConfiguration() {
+    // Sử dụng container đúng tồn tại trong DOM
+    const container = document.getElementById('row-seat-types');
+    if (!container) {
+        console.error('Container row-seat-types not found!');
+        return;
+    }
+    
+    container.innerHTML = '';
+    
+    seatConfiguration.forEach((rowConfig, index) => {
+        const rowDiv = document.createElement('div');
+        rowDiv.className = 'row-config mb-2 p-2 border rounded';
+        rowDiv.innerHTML = `
+            <div class="d-flex align-items-center justify-content-between">
+                <strong>Hàng ${rowConfig.row}:</strong>
+                <div class="d-flex align-items-center gap-2">
+                    <select class="form-select form-select-sm" style="width: auto;" onchange="updateRowSeatType(${index}, this.value)">
+                        ${allowedSeatTypes.map(type => 
+                            `<option value="${type.id}" ${type.id == rowConfig.seatType ? 'selected' : ''}>${type.name}</option>`
+                        ).join('')}
+                    </select>
+                    <input type="number" class="form-control form-control-sm" style="width: 80px;" 
+                           value="${rowConfig.seatsCount}" min="1" max="20" 
+                           onchange="updateRowSeatsCount(${index}, this.value)">
+                    <button class="btn btn-outline-danger btn-sm" onclick="removeRowConfiguration(${index})" title="Xóa hàng">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="small text-muted mt-1" id="row-${index}-info">
+                ${rowConfig.seatsCount} ghế - ${allowedSeatTypes.find(t => t.id == rowConfig.seatType)?.name || 'Chưa chọn'}
+            </div>
+        `;
+        container.appendChild(rowDiv);
+    });
+}
+
+// Cập nhật số ghế của hàng
+function updateRowSeatsCount(rowIndex, newCount) {
+    const count = parseInt(newCount);
+    if (count > 0 && count <= 20) {
+        seatConfiguration[rowIndex].seatsCount = count;
+        
+        // Cập nhật thông tin hiển thị
+        const seatType = allowedSeatTypes.find(t => t.id == seatConfiguration[rowIndex].seatType);
+        document.getElementById(`row-${rowIndex}-info`).textContent = 
+            `${count} ghế - ${seatType?.name || 'Chưa chọn'}`;
+        
+        updateSummary();
+        renderPreviewMap();
+    }
+}
+
+// Cập nhật thông tin tóm tắt
+function updateSummary() {
+    const totalSeats = seatConfiguration.reduce((sum, row) => sum + row.seatsCount, 0);
+    const currentSeats = roomData.existingSeats;
+    const afterAdd = currentSeats + totalSeats;
+    
+    document.getElementById('seats-to-add').textContent = totalSeats;
+    document.getElementById('total-after-add').textContent = afterAdd;
+    
+    // Kiểm tra capacity mismatch và hiển thị đề xuất
+    checkCapacityAndSuggest(totalSeats, currentSeats, afterAdd);
+    
+    // Enable/disable nút tạo ghế
+    const createBtn = document.getElementById('create-seats-btn');
+    createBtn.disabled = totalSeats === 0 || afterAdd > roomData.capacity;
+    
+    if (afterAdd > roomData.capacity) {
+        createBtn.textContent = `Vượt quá sức chứa (${roomData.capacity})`;
+        createBtn.className = 'btn btn-danger';
+    } else {
+        createBtn.textContent = 'Tạo ghế';
+        createBtn.className = 'btn btn-primary';
+    }
+    
+    // Cập nhật trạng thái các button thêm ghế khác
+    updateAddSeatButtonsState();
+}
+
+// Kiểm tra capacity và đưa ra đề xuất
+function checkCapacityAndSuggest(totalSeats, currentSeats, afterAdd) {
+    console.log('checkCapacityAndSuggest called:', {totalSeats, currentSeats, afterAdd, capacity: roomData.capacity});
+    
+    const capacityWarning = document.getElementById('capacity-warning');
+    const suggestions = document.getElementById('suggestions');
+    
+    if (!capacityWarning || !suggestions) {
+        console.error('Warning elements not found:', {capacityWarning, suggestions});
+        return;
+    }
+    
+    // Reset hiển thị
+    capacityWarning.style.display = 'none';
+    suggestions.innerHTML = '';
+    
+    // Kiểm tra các trường hợp
+    if (totalSeats === 0) {
+        return; // Không có ghế nào được cấu hình
+    }
+    
+    const remainingCapacity = roomData.capacity - currentSeats;
+    console.log('Remaining capacity:', remainingCapacity);
+    
+    if (totalSeats !== remainingCapacity && currentSeats === 0) {
+        // Trường hợp phòng trống, có mismatch với capacity
+        console.log('Capacity mismatch detected for empty room');
+        capacityWarning.style.display = 'block';
+        
+        let suggestionsHTML = '<h6>💡 Đề xuất điều chỉnh:</h6>';
+        
+        if (totalSeats < remainingCapacity) {
+            // Thiếu ghế
+            const deficit = remainingCapacity - totalSeats;
+            suggestionsHTML += `
+                <div class="alert alert-info p-2 mb-2">
+                    <strong>Thiếu ${deficit} ghế</strong> so với sức chứa phòng (${roomData.capacity})
+                </div>
+                <div class="suggestion-options">
+                    <button class="btn btn-sm btn-outline-primary me-2" onclick="suggestAddSeats(${deficit})">
+                        📝 Đề xuất thêm ghế
+                    </button>
+                    <button class="btn btn-sm btn-outline-warning" onclick="suggestUpdateCapacity(${totalSeats})">
+                        🔧 Cập nhật sức chứa thành ${totalSeats}
+                    </button>
+                    <button class="btn btn-sm btn-outline-info" onclick="suggestOptimalLayout(${remainingCapacity})">
+                        🎯 Tạo layout tối ưu ${remainingCapacity} ghế
+                    </button>
+                </div>`;
+        } else if (totalSeats > remainingCapacity) {
+            // Thừa ghế
+            const excess = totalSeats - remainingCapacity;
+            suggestionsHTML += `
+                <div class="alert alert-warning p-2 mb-2">
+                    <strong>Thừa ${excess} ghế</strong> so với sức chứa phòng (${roomData.capacity})
+                </div>
+                <div class="suggestion-options">
+                    <button class="btn btn-sm btn-outline-danger me-2" onclick="suggestRemoveSeats(${excess})">
+                        ✂️ Đề xuất bớt ghế
+                    </button>
+                    <button class="btn btn-sm btn-outline-success" onclick="suggestUpdateCapacity(${totalSeats})">
+                        📈 Tăng sức chứa thành ${totalSeats}
+                    </button>
+                    <button class="btn btn-sm btn-outline-info" onclick="suggestOptimalLayout(${remainingCapacity})">
+                        🎯 Tạo layout tối ưu ${remainingCapacity} ghế
+                    </button>
+                </div>`;
+        }
+        
+        suggestions.innerHTML = suggestionsHTML;
+    } else if (totalSeats > remainingCapacity && currentSeats > 0) {
+        // Phòng đã có ghế, không đủ chỗ
+        capacityWarning.style.display = 'block';
+        suggestions.innerHTML = `
+            <div class="alert alert-danger p-2 mb-2">
+                <strong>Không đủ chỗ!</strong> Chỉ còn ${remainingCapacity} vị trí trống
+            </div>
+            <div class="suggestion-options">
+                <button class="btn btn-sm btn-outline-warning" onclick="suggestAdjustToFit(${remainingCapacity})">
+                    🔧 Điều chỉnh về ${remainingCapacity} ghế
+                </button>
+            </div>`;
+    }
+}
+
+// Các function đề xuất điều chỉnh
+function suggestAddSeats(deficit) {
+    if (seatConfiguration.length === 0) {
+        alert('Vui lòng thêm ít nhất 1 hàng ghế trước');
+        return;
+    }
+    
+    // Tạo bản sao để không ảnh hưởng đến cấu hình gốc
+    const originalConfig = JSON.parse(JSON.stringify(seatConfiguration));
+    
+    // Thuật toán phân bổ thông minh: ưu tiên hàng giữa, phân bổ đều
+    const rowsCount = seatConfiguration.length;
+    let remaining = deficit;
+    let message = `Đề xuất thêm ${deficit} ghế để tạo layout cân đối:\n`;
+    
+    // Sắp xếp các hàng theo thứ tự ưu tiên: giữa -> ngoài
+    const priorityOrder = [];
+    const mid = Math.floor(rowsCount / 2);
+    
+    // Thêm hàng giữa trước
+    priorityOrder.push(mid);
+    
+    // Thêm các hàng xung quanh hàng giữa
+    for (let i = 1; i <= mid; i++) {
+        if (mid - i >= 0) priorityOrder.push(mid - i);
+        if (mid + i < rowsCount) priorityOrder.push(mid + i);
+    }
+    
+    // Phân bổ ghế theo thứ tự ưu tiên
+    while (remaining > 0) {
+        let distributed = false;
+        
+        for (let rowIndex of priorityOrder) {
+            if (remaining <= 0) break;
+            
+            // Thêm tối đa 2 ghế mỗi lượt để tránh mất cân đối
+            const toAdd = Math.min(remaining, 2);
+            seatConfiguration[rowIndex].seatsCount += toAdd;
+            remaining -= toAdd;
+            distributed = true;
+            
+            if (remaining <= 0) break;
+        }
+        
+        // Tránh vòng lặp vô hạn
+        if (!distributed) break;
+    }
+    
+    // Tạo thông báo chi tiết
+    seatConfiguration.forEach((row, index) => {
+        const diff = row.seatsCount - originalConfig[index].seatsCount;
+        if (diff > 0) {
+            message += `• Hàng ${row.row}: +${diff} ghế (${originalConfig[index].seatsCount} → ${row.seatsCount})\n`;
+        }
+    });
+    
+    if (remaining > 0) {
+        message += `\n⚠️ Không thể phân bổ đủ ${remaining} ghế còn lại`;
+    }
+    
+    message += '\n💡 Tip: Ghế được thêm ưu tiên vào hàng giữa để tạo layout cân đối';
+    
+    if (confirm(message + '\n\nÁp dụng thay đổi này?')) {
+        updateRowConfiguration();
+        updateSummary();
+        renderPreviewMap();
+    } else {
+        // Khôi phục cấu hình gốc nếu user hủy
+        seatConfiguration.forEach((row, index) => {
+            row.seatsCount = originalConfig[index].seatsCount;
+        });
+    }
+}
+
+function suggestRemoveSeats(excess) {
+    if (seatConfiguration.length === 0) {
+        alert('Không có hàng ghế nào để bớt');
+        return;
+    }
+    
+    // Tạo bản sao để không ảnh hưởng đến cấu hình gốc
+    const originalConfig = JSON.parse(JSON.stringify(seatConfiguration));
+    
+    let remaining = excess;
+    let message = `Đề xuất bớt ${excess} ghế để tạo layout cân đối:\n`;
+    
+    // Thuật toán bớt ghế thông minh: bớt từ đầu và cuối để giữ tính đối xứng
+    const rowsCount = seatConfiguration.length;
+    
+    // Tạo danh sách các hàng với thông tin vị trí (đầu/cuối/giữa)
+    const rowsWithPosition = seatConfiguration.map((row, index) => ({
+        index,
+        row,
+        isEdge: index === 0 || index === rowsCount - 1,
+        seatsCount: row.seatsCount,
+        originalSeatsCount: row.seatsCount
+    }));
+    
+    // Sắp xếp ưu tiên: hàng đầu/cuối trước, sau đó theo số ghế nhiều nhất
+    rowsWithPosition.sort((a, b) => {
+        if (a.isEdge && !b.isEdge) return -1;
+        if (!a.isEdge && b.isEdge) return 1;
+        return b.seatsCount - a.seatsCount;
+    });
+    
+    // Lưu thông tin chi tiết cách bớt ghế cho mỗi hàng
+    const detailChanges = [];
+    
+    // Bớt ghế theo chiến lược cân đối
+    while (remaining > 0) {
+        let distributed = false;
+        
+        for (let rowInfo of rowsWithPosition) {
+            if (remaining <= 0) break;
+            
+            const row = rowInfo.row;
+            const maxRemovable = Math.max(0, row.seatsCount - 1); // Giữ ít nhất 1 ghế
+            
+            if (maxRemovable > 0) {
+                // Bớt tối đa 2 ghế mỗi lượt để tránh mất cân đối
+                const toRemove = Math.min(remaining, Math.min(maxRemovable, 2));
+                
+                // Xác định cách bớt ghế: từ hai đầu để cân đối
+                let removeMethod = '';
+                if (toRemove === 1) {
+                    // Bớt 1 ghế: ưu tiên bớt từ cuối nếu hàng có số ghế lẻ, từ đầu nếu chẵn
+                    removeMethod = row.seatsCount % 2 === 1 ? 'cuối' : 'đầu';
+                } else if (toRemove === 2) {
+                    // Bớt 2 ghế: bớt 1 đầu + 1 cuối để giữ tính đối xứng
+                    removeMethod = 'đầu + cuối';
+                }
+                
+                // Ghi lại thay đổi chi tiết
+                const existingChange = detailChanges.find(c => c.row === row.row);
+                if (existingChange) {
+                    existingChange.removed += toRemove;
+                    existingChange.methods.push(removeMethod);
+                } else {
+                    detailChanges.push({
+                        row: row.row,
+                        index: rowInfo.index,
+                        originalCount: rowInfo.originalSeatsCount,
+                        removed: toRemove,
+                        methods: [removeMethod]
+                    });
+                }
+                
+                row.seatsCount -= toRemove;
+                remaining -= toRemove;
+                distributed = true;
+            }
+            
+            if (remaining <= 0) break;
+        }
+        
+        // Tránh vòng lặp vô hạn
+        if (!distributed) break;
+    }
+    
+    // Tạo thông báo chi tiết với cách bớt ghế cụ thể
+    detailChanges.forEach(change => {
+        const position = change.index === 0 ? ' (hàng đầu)' : 
+                        change.index === rowsCount - 1 ? ' (hàng cuối)' : 
+                        ' (hàng giữa)';
+        
+        const newCount = change.originalCount - change.removed;
+        message += `• Hàng ${change.row}: ${change.originalCount} → ${newCount} ghế${position}\n`;
+        
+        // Thêm chi tiết cách bớt
+        const methodText = change.methods.join(', ').replace('đầu + cuối', 'bớt 1 ghế đầu + 1 ghế cuối');
+        message += `  └─ Bớt từ: ${methodText}\n`;
+    });
+    
+    if (remaining > 0) {
+        message += `\n⚠️ Không thể bớt đủ ${remaining} ghế (mỗi hàng cần ít nhất 1 ghế)`;
+    }
+    
+    message += '\n💡 Tip: Ghế được bớt từ đầu và cuối hàng để giữ tính đối xứng và thẩm mỹ';
+    message += '\n   Ví dụ: Hàng A có 12 ghế (A01-A12), bớt 2 ghế → còn A02-A11';
+    
+    if (confirm(message + '\n\nÁp dụng thay đổi này?')) {
+        updateRowConfiguration();
+        updateSummary();
+        renderPreviewMap();
+    } else {
+        // Khôi phục cấu hình gốc nếu user hủy
+        seatConfiguration.forEach((row, index) => {
+            row.seatsCount = originalConfig[index].seatsCount;
+        });
+    }
+}
+
+function suggestUpdateCapacity(newCapacity) {
+    if (confirm(`Cập nhật sức chứa phòng từ ${roomData.capacity} thành ${newCapacity}?`)) {
+        updateRoomCapacity(newCapacity);
+    }
+}
+
+function suggestAdjustToFit(maxSeats) {
+    if (seatConfiguration.length === 0) {
+        alert('Không có hàng ghế nào để điều chỉnh');
+        return;
+    }
+    
+    const totalCurrent = seatConfiguration.reduce((sum, row) => sum + row.seatsCount, 0);
+    const toRemove = totalCurrent - maxSeats;
+    
+    if (toRemove <= 0) {
+        alert('Cấu hình hiện tại đã phù hợp');
+        return;
+    }
+    
+    // Tạo bản sao để không ảnh hưởng đến cấu hình gốc
+    const originalConfig = JSON.parse(JSON.stringify(seatConfiguration));
+    
+    let message = `Điều chỉnh để vừa ${maxSeats} ghế (bớt ${toRemove} ghế):\n`;
+    
+    // Sử dụng thuật toán cân đối như suggestRemoveSeats
+    const rowsCount = seatConfiguration.length;
+    let remaining = toRemove;
+    
+    // Tạo danh sách các hàng với thông tin vị trí
+    const rowsWithPosition = seatConfiguration.map((row, index) => ({
+        index,
+        row,
+        isEdge: index === 0 || index === rowsCount - 1,
+        seatsCount: row.seatsCount,
+        originalSeatsCount: row.seatsCount
+    }));
+    
+    // Sắp xếp ưu tiên: hàng đầu/cuối trước, sau đó theo số ghế nhiều nhất
+    rowsWithPosition.sort((a, b) => {
+        if (a.isEdge && !b.isEdge) return -1;
+        if (!a.isEdge && b.isEdge) return 1;
+        return b.seatsCount - a.seatsCount;
+    });
+    
+    // Lưu thông tin chi tiết cách bớt ghế cho mỗi hàng
+    const detailChanges = [];
+    
+    // Bớt ghế theo chiến lược cân đối
+    while (remaining > 0) {
+        let distributed = false;
+        
+        for (let rowInfo of rowsWithPosition) {
+            if (remaining <= 0) break;
+            
+            const row = rowInfo.row;
+            const maxRemovable = Math.max(0, row.seatsCount - 1); // Giữ ít nhất 1 ghế
+            
+            if (maxRemovable > 0) {
+                // Bớt tối đa 2 ghế mỗi lượt để tránh mất cân đối
+                const toRemoveFromRow = Math.min(remaining, Math.min(maxRemovable, 2));
+                
+                // Xác định cách bớt ghế: từ hai đầu để cân đối
+                let removeMethod = '';
+                if (toRemoveFromRow === 1) {
+                    // Bớt 1 ghế: ưu tiên bớt từ cuối nếu hàng có số ghế lẻ, từ đầu nếu chẵn
+                    removeMethod = row.seatsCount % 2 === 1 ? 'cuối' : 'đầu';
+                } else if (toRemoveFromRow === 2) {
+                    // Bớt 2 ghế: bớt 1 đầu + 1 cuối để giữ tính đối xứng
+                    removeMethod = 'đầu + cuối';
+                }
+                
+                // Ghi lại thay đổi chi tiết
+                const existingChange = detailChanges.find(c => c.row === row.row);
+                if (existingChange) {
+                    existingChange.removed += toRemoveFromRow;
+                    existingChange.methods.push(removeMethod);
+                } else {
+                    detailChanges.push({
+                        row: row.row,
+                        index: rowInfo.index,
+                        originalCount: rowInfo.originalSeatsCount,
+                        removed: toRemoveFromRow,
+                        methods: [removeMethod]
+                    });
+                }
+                
+                row.seatsCount -= toRemoveFromRow;
+                remaining -= toRemoveFromRow;
+                distributed = true;
+            }
+            
+            if (remaining <= 0) break;
+        }
+        
+        // Tránh vòng lặp vô hạn
+        if (!distributed) break;
+    }
+    
+    // Tạo thông báo chi tiết với cách bớt ghế cụ thể
+    detailChanges.forEach(change => {
+        const position = change.index === 0 ? ' (hàng đầu)' : 
+                        change.index === rowsCount - 1 ? ' (hàng cuối)' : 
+                        ' (hàng giữa)';
+        
+        const newCount = change.originalCount - change.removed;
+        message += `• Hàng ${change.row}: ${change.originalCount} → ${newCount} ghế${position}\n`;
+        
+        // Thêm chi tiết cách bớt
+        const methodText = change.methods.join(', ').replace('đầu + cuối', 'bớt 1 ghế đầu + 1 ghế cuối');
+        message += `  └─ Bớt từ: ${methodText}\n`;
+    });
+    
+    if (remaining > 0) {
+        message += `\n⚠️ Không thể bớt đủ ${remaining} ghế còn lại (mỗi hàng cần ít nhất 1 ghế)`;
+    }
+    
+    message += '\n💡 Layout được tối ưu để cân đối và thẩm mỹ';
+    message += '\n   Ghế được bớt từ đầu và cuối hàng để giữ tính đối xứng';
+    
+    if (confirm(message + '\n\nÁp dụng điều chỉnh này?')) {
+        updateRowConfiguration();
+        updateSummary();
+        renderPreviewMap();
+    } else {
+        // Khôi phục cấu hình gốc nếu user hủy
+        seatConfiguration.forEach((row, index) => {
+            row.seatsCount = originalConfig[index].seatsCount;
+        });
+    }
+}
+
+// Đề xuất layout tối ưu từ đầu
+function suggestOptimalLayout(targetSeats) {
+    if (seatConfiguration.length === 0) {
+        alert('Vui lòng thiết lập số hàng trước');
+        return;
+    }
+    
+    const rowsCount = seatConfiguration.length;
+    
+    // Tính toán layout tối ưu
+    const baseSeatsPerRow = Math.floor(targetSeats / rowsCount);
+    const extraSeats = targetSeats % rowsCount;
+    
+    // Tạo layout cân đối: phân bổ ghế thừa vào các hàng giữa
+    const optimalConfig = [];
+    const midIndex = Math.floor(rowsCount / 2);
+    
+    for (let i = 0; i < rowsCount; i++) {
+        const row = seatConfiguration[i];
+        let seatsForThisRow = baseSeatsPerRow;
+        
+        // Phân bổ ghế thừa ưu tiên cho hàng giữa
+        if (extraSeats > 0) {
+            const distanceFromCenter = Math.abs(i - midIndex);
+            const priority = rowsCount - distanceFromCenter;
+            
+            // Các hàng gần giữa sẽ được ưu tiên
+            const rowsNeedingExtra = [];
+            for (let j = 0; j < rowsCount; j++) {
+                const dist = Math.abs(j - midIndex);
+                rowsNeedingExtra.push({ index: j, distance: dist });
+            }
+            
+            // Sắp xếp theo khoảng cách từ giữa
+            rowsNeedingExtra.sort((a, b) => a.distance - b.distance);
+            
+            // Kiểm tra xem hàng hiện tại có trong top extraSeats không
+            const currentRowRank = rowsNeedingExtra.findIndex(r => r.index === i);
+            if (currentRowRank < extraSeats) {
+                seatsForThisRow += 1;
+            }
+        }
+        
+        optimalConfig.push({
+            row: row.row,
+            oldSeats: row.seatsCount,
+            newSeats: seatsForThisRow,
+            seatType: row.seatType
+        });
+    }
+    
+    // Tạo thông báo
+    let message = `🎯 Layout tối ưu cho ${targetSeats} ghế (${rowsCount} hàng):\n\n`;
+    
+    optimalConfig.forEach((config, index) => {
+        const change = config.newSeats - config.oldSeats;
+        const changeStr = change > 0 ? `+${change}` : change < 0 ? `${change}` : '=';
+        const position = index === 0 ? ' (đầu)' : 
+                        index === rowsCount - 1 ? ' (cuối)' : 
+                        index === Math.floor(rowsCount / 2) ? ' (giữa)' : '';
+        
+        message += `• Hàng ${config.row}: ${config.oldSeats} → ${config.newSeats} (${changeStr})${position}\n`;
+    });
+    
+    message += '\n💡 Layout được tối ưu hóa:\n';
+    message += '  - Hàng giữa có nhiều ghế nhất\n';
+    message += '  - Giảm dần về phía đầu và cuối\n';
+    message += '  - Tạo hình dạng cân đối và thẩm mỹ';
+    
+    if (confirm(message + '\n\nÁp dụng layout tối ưu này?')) {
+        // Áp dụng cấu hình mới
+        seatConfiguration.forEach((row, index) => {
+            row.seatsCount = optimalConfig[index].newSeats;
+        });
+        
+        updateRowConfiguration();
+        updateSummary();
+        renderPreviewMap();
+    }
+}
+
+// Function cập nhật sức chứa phòng qua AJAX
+function updateRoomCapacity(newCapacity) {
+    fetch(`{{ route('admin.rooms.update-capacity', $room->id) }}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify({
+            capacity: newCapacity
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            roomData.capacity = newCapacity;
+            // Cập nhật tất cả các element hiển thị sức chứa
+            document.getElementById('room-capacity').textContent = newCapacity;
+            const capacityDisplay = document.getElementById('capacity-display');
+            if (capacityDisplay) {
+                capacityDisplay.textContent = newCapacity;
+            }
+            updateSummary();
+            alert('Đã cập nhật sức chứa phòng thành công!');
+        } else {
+            alert('Lỗi: ' + (data.message || 'Không thể cập nhật sức chứa'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Có lỗi xảy ra khi cập nhật sức chứa');
+    });
+}
+
+// Render sơ đồ ghế preview
+function renderPreviewMap() {
+    const container = document.getElementById('preview-seat-map');
+    if (seatConfiguration.length === 0) {
+        container.innerHTML = '<p class="text-muted">Chưa có cấu hình ghế nào</p>';
+        return;
+    }
+    
+    // DEBUG: Log dữ liệu để kiểm tra
+    console.log('=== DEBUGGING PREVIEW MAP ===');
+    console.log('seatConfiguration:', seatConfiguration);
+    seatConfiguration.forEach((row, index) => {
+        console.log(`Row ${row.row} (index ${index}): ${row.seatsCount} seats`);
+    });
+    
+    // Tìm số ghế tối đa trong tất cả các hàng
+    const maxSeatsPerRow = Math.max(...seatConfiguration.map(row => row.seatsCount));
+    console.log('Max seats per row:', maxSeatsPerRow);
+    
+    // Tính toán grid columns: 1 cột cho label hàng + maxSeatsPerRow cột cho ghế
+    const totalColumns = maxSeatsPerRow + 1;
+    console.log('Total columns will be:', totalColumns);
+    
+    // Reset container hoàn toàn và sử dụng CSS Grid trực tiếp
+    container.innerHTML = '';
+    container.style.cssText = 'padding: 10px; background: #f8f9fa; border-radius: 5px;';
+    
+    // Tạo HTML string với CSS Grid đơn giản và rõ ràng
+    let htmlContent = `
+        <div style="
+            display: grid !important;
+            grid-template-columns: repeat(${totalColumns}, 30px) !important;
+            gap: 3px !important;
+            justify-content: center !important;
+            align-items: center !important;
+            font-family: monospace !important;
+            background: white !important;
+            padding: 10px !important;
+            border: 2px solid #007bff !important;
+            border-radius: 5px !important;
+        ">
+    `;
+    
+    // Header row - cell trống cho label
+    htmlContent += `
+        <div style="
+            background: #6c757d !important;
+            color: white !important;
+            width: 30px !important;
+            height: 26px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            border-radius: 3px !important;
+            font-size: 10px !important;
+            font-weight: bold !important;
+            border: 1px solid #333 !important;
+        "></div>
+    `;
+    
+    // Header cells cho số ghế (01, 02, 03, ...)
+    for (let i = 1; i <= maxSeatsPerRow; i++) {
+        htmlContent += `
+            <div style="
+                background: #adb5bd !important;
+                color: black !important;
+                width: 30px !important;
+                height: 26px !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                border-radius: 3px !important;
+                font-size: 10px !important;
+                font-weight: bold !important;
+                border: 1px solid #333 !important;
+            ">${String(i).padStart(2, '0')}</div>
+        `;
+    }
+    
+    // Tạo các hàng ghế
+    seatConfiguration.forEach((rowConfig, rowIndex) => {
+        const seatType = allowedSeatTypes.find(type => type.id == rowConfig.seatType);
+        const isCouple = seatType?.is_couple || false;
+        
+        console.log(`Rendering row ${rowConfig.row}: ${rowConfig.seatsCount} seats`);
+        
+        // Label hàng (A, B, C, ...)
+        htmlContent += `
+            <div style="
+                background: #6c757d !important;
+                color: white !important;
+                width: 30px !important;
+                height: 26px !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                border-radius: 3px !important;
+                font-size: 10px !important;
+                font-weight: bold !important;
+                border: 1px solid #333 !important;
+            ">${rowConfig.row}</div>
+        `;
+        
+        // Tạo ĐỦ maxSeatsPerRow cells cho hàng này
+        for (let seatIndex = 1; seatIndex <= maxSeatsPerRow; seatIndex++) {
+            if (seatIndex <= rowConfig.seatsCount) {
+                // Có ghế thực tế
+                let seatContent = `${rowConfig.row}${String(seatIndex).padStart(2, '0')}`;
+                let backgroundColor = seatType?.color_code || '#28a745';
+                let textColor = 'white';
+                
+                // Xử lý màu text cho ghế vàng
+                if (backgroundColor && backgroundColor.toLowerCase() === '#ffd700') {
+                    textColor = 'black';
+                }
+                
+                if (isCouple && seatIndex % 2 === 0) {
+                    seatContent = '❤️';
+                }
+                
+                htmlContent += `
+                    <div style="
+                        background: ${backgroundColor} !important;
+                        color: ${textColor} !important;
+                        width: 30px !important;
+                        height: 26px !important;
+                        display: flex !important;
+                        align-items: center !important;
+                        justify-content: center !important;
+                        border-radius: 3px !important;
+                        font-size: 8px !important;
+                        font-weight: bold !important;
+                        border: 1px solid #333 !important;
+                    " title="${seatType?.name || 'Ghế'} - ${rowConfig.row}${String(seatIndex).padStart(2, '0')}">${seatContent}</div>
+                `;
+            } else {
+                // Ô trống - QUAN TRỌNG: phải có để grid không bị lệch
+                htmlContent += `
+                    <div style="
+                        background: transparent !important;
+                        width: 30px !important;
+                        height: 26px !important;
+                        border: 1px dashed #ccc !important;
+                    "></div>
+                `;
+                console.log(`  -> Empty cell at position ${seatIndex}`);
+            }
+        }
+    });
+    
+    htmlContent += '</div>';
+    
+    container.innerHTML = htmlContent;
+    console.log('=== PREVIEW MAP RENDERED ===');
+    console.log(`Grid with ${totalColumns} columns (1 label + ${maxSeatsPerRow} seats)`);
+}
+
+// Render tóm tắt preview
+function renderPreviewSummary() {
+    const container = document.getElementById('preview-summary');
+    const summary = {};
+    let totalSeats = 0;
+    let coupleSeats = 0;
+    
+    seatConfiguration.forEach(rowConfig => {
+        const seatType = allowedSeatTypes.find(type => type.id == rowConfig.seatType);
+        const typeName = seatType?.name || 'Unknown';
+        
+        if (!summary[typeName]) {
+            summary[typeName] = { count: 0, rows: [] };
+        }
+        
+        summary[typeName].count += rowConfig.seatsCount;
+        summary[typeName].rows.push(rowConfig.row);
+        totalSeats += rowConfig.seatsCount;
+        
+        if (seatType?.is_couple) {
+            coupleSeats += Math.floor(rowConfig.seatsCount / 2);
+        }
+    });
+    
+    let html = '';
+    Object.entries(summary).forEach(([typeName, data]) => {
+        html += `
+            <tr>
+                <td>${typeName}</td>
+                <td>${data.count} ghế</td>
+            </tr>
+            <tr>
+                <td class="text-muted small">Hàng:</td>
+                <td class="text-muted small">${data.rows.join(', ')}</td>
+            </tr>
+        `;
+    });
+    
+    html += `
+        <tr class="table-info">
+            <td><strong>Tổng ghế:</strong></td>
+            <td><strong>${totalSeats}</strong></td>
+        </tr>
+    `;
+    
+    if (coupleSeats > 0) {
+        html += `
+            <tr class="table-warning">
+                <td><strong>Ghế đôi:</strong></td>
+                <td><strong>${coupleSeats} cặp</strong></td>
+            </tr>
+        `;
+    }
+    
+    container.innerHTML = html;
+}
+
+// Render ghi chú về ghế đôi
+function renderCoupleNotes() {
+    const container = document.getElementById('couple-seat-notes');
+    const coupleRows = seatConfiguration.filter(row => {
+        const seatType = allowedSeatTypes.find(type => type.id == row.seatType);
+        return seatType?.is_couple;
+    });
+    
+    if (coupleRows.length === 0) {
+        container.innerHTML = '<li>Không có ghế đôi trong cấu hình này.</li>';
+        return;
+    }
+    
+    let html = '<li>Ghế đôi sẽ được tạo tự động:</li>';
+    coupleRows.forEach(row => {
+        const oddSeats = row.seatsCount % 2;
+        const couples = Math.floor(row.seatsCount / 2);
+        html += `<li>Hàng ${row.row}: ${couples} cặp ghế đôi`;
+        if (oddSeats > 0) {
+            html += ` + ${oddSeats} ghế đơn`;
+        }
+        html += '</li>';
+    });
+    
+    container.innerHTML = html;
+}
+
+// Xác nhận tạo ghế
+// Tạo ghế mới
+function createSeats() {
+    if (seatConfiguration.length === 0) {
+        alert('Vui lòng thiết lập cấu hình ghế trước!');
+        return;
+    }
+    
+    // Render preview sơ đồ
+    renderPreviewMap();
+    renderPreviewSummary();
+    renderCoupleNotes();
+    
+    // Hiển thị modal
+    const modal = new bootstrap.Modal(document.getElementById('previewSeatsModal'));
+    modal.show();
+}
+
+function confirmCreateSeats() {
+    if (seatConfiguration.length === 0) {
+        alert('Không có cấu hình ghế để tạo!');
+        return;
+    }
+    
+    // Đóng modal preview
+    const previewModal = bootstrap.Modal.getInstance(document.getElementById('previewSeatsModal'));
+    previewModal.hide();
+    
+    // Gửi request tạo ghế
+    createSeatsRequest();
+}
+
+// Gửi request tạo ghế
+function createSeatsRequest() {
+    console.log('createSeatsRequest called');
+    console.log('seatConfiguration:', seatConfiguration);
+    
+    if (seatConfiguration.length === 0) {
+        alert('Không có cấu hình ghế để tạo!');
+        return;
+    }
+    
+    // Gửi request tạo ghế
+    const formData = new FormData();
+    
+    // Lấy CSRF token từ form có sẵn hoặc tạo mới
+    let csrfToken = '';
+    const existingTokenInput = document.querySelector('input[name="_token"]');
+    if (existingTokenInput) {
+        csrfToken = existingTokenInput.value;
+    } else {
+        csrfToken = '{{ csrf_token() }}';
+    }
+    
+    formData.append('_token', csrfToken);
+    formData.append('room_id', roomData.id);
+    
+    // Chuyển đổi seatConfiguration thành format phù hợp với backend
+    const seatConfigData = seatConfiguration.map((config, index) => ({
+        row: index + 1,  // Gửi số thứ tự hàng: 1, 2, 3, 4, 5
+        seats_per_row: config.seatsCount,
+        seat_type_id: config.seatType
+    }));
+    
+    formData.append('seat_config', JSON.stringify(seatConfigData));
+    
+    console.log('Sending data:', {
+        room_id: roomData.id,
+        seat_config: seatConfigData,
+        csrf_token: csrfToken
+    });
+    
+    fetch('{{ route("admin.seats.store-new") }}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => {
+        console.log('Response status:', response.status);
+        return response.json();
+    })
+    .then(data => {
+        console.log('Response data:', data);
+        if (data.success) {
+            alert('Tạo ghế thành công!');
+            location.reload();
+        } else {
+            alert('Lỗi: ' + (data.message || 'Không thể tạo ghế'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Có lỗi xảy ra khi tạo ghế!');
+    });
+}
+
+// Hàm chỉnh sửa sức chứa
+function editCapacity() {
+    document.getElementById('capacity-display').style.display = 'none';
+    document.getElementById('capacity-form').style.display = 'block';
+    document.getElementById('capacity-input').focus();
+}
+
+function cancelEditCapacity() {
+    document.getElementById('capacity-display').style.display = 'inline';
+    document.getElementById('capacity-form').style.display = 'none';
+}
+
+// Functions cho capacity editing
+function editCapacity() {
+    document.getElementById('capacity-form').style.display = 'block';
+    document.getElementById('capacity-suggestions').style.display = 'block';
+    document.getElementById('capacity-input').focus();
+}
+
+function cancelEditCapacity() {
+    document.getElementById('capacity-form').style.display = 'none';
+    document.getElementById('capacity-suggestions').style.display = 'none';
+    document.getElementById('capacityHelp').style.display = 'none';
+    document.getElementById('capacity-input').value = roomData.capacity;
+}
+
+function setCapacity(capacity) {
+    document.getElementById('capacity-input').value = capacity;
+    validateCapacityChange(capacity);
+}
+
+function validateCapacityChange(capacity) {
+    const capacityHelp = document.getElementById('capacityHelp');
+    const helpText = document.getElementById('capacityHelpText');
+    
+    if (roomData.roomType.hasCoupleSeats) {
+        const capacityNum = parseInt(capacity);
+        const coupleSeatsStr = roomData.roomType.coupleSeatsNames.join(', ');
+        
+        if (capacityNum % 2 !== 0) {
+            helpText.innerHTML = `⚠️ Phòng "${roomData.roomType.name}" có ghế đôi (${coupleSeatsStr}), sức chứa phải là số chẵn. Đề xuất: ${capacityNum + 1} ghế.`;
+            capacityHelp.className = 'mt-2 alert alert-warning py-2';
+            helpText.className = 'text-warning fw-bold';
+        } else {
+            helpText.innerHTML = `✓ Sức chứa phù hợp cho phòng có ghế đôi (${coupleSeatsStr}).`;
+            capacityHelp.className = 'mt-2 alert alert-success py-2';
+            helpText.className = 'text-success fw-bold';
+        }
+        capacityHelp.style.display = 'block';
+    } else {
+        capacityHelp.style.display = 'none';
+    }
+}
+
+function updateCapacity(event) {
+    event.preventDefault();
+    
+    const newCapacity = document.getElementById('capacity-input').value;
+    console.log('updateCapacity called with capacity:', newCapacity);
+    
+    // Validate capacity cho ghế đôi
+    if (roomData.roomType.hasCoupleSeats && parseInt(newCapacity) % 2 !== 0) {
+        alert(`❌ Không thể cập nhật sức chứa!\n\nPhòng "${roomData.roomType.name}" có chứa ghế đôi (${roomData.roomType.coupleSeatsNames.join(', ')}) nên sức chứa phải là số chẵn.\n\nVui lòng đổi sức chứa thành ${parseInt(newCapacity) + 1} ghế.`);
+        document.getElementById('capacity-input').focus();
+        document.getElementById('capacity-input').select();
+        return;
+    }
+    
+    // Lấy CSRF token từ form có sẵn hoặc tạo mới
+    let csrfToken = '';
+    const existingTokenInput = document.querySelector('input[name="_token"]');
+    if (existingTokenInput) {
+        csrfToken = existingTokenInput.value;
+    } else {
+        csrfToken = '{{ csrf_token() }}';
+    }
+    
+    const formData = new FormData();
+    formData.append('_token', csrfToken);
+    formData.append('capacity', newCapacity);
+    
+    console.log('Sending request to:', '{{ route("admin.rooms.update-capacity", $room->id) }}');
+    console.log('FormData:', Array.from(formData.entries()));
+    
+    fetch('{{ route("admin.rooms.update-capacity", $room->id) }}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => {
+        console.log('Response status:', response.status);
+        return response.json();
+    })
+    .then(data => {
+        console.log('Response data:', data);
+        if (data.success) {
+            // Cập nhật tất cả các element hiển thị sức chứa
+            document.getElementById('capacity-display').textContent = newCapacity;
+            const roomCapacityElement = document.getElementById('room-capacity');
+            if (roomCapacityElement) {
+                roomCapacityElement.textContent = newCapacity;
+            }
+            roomData.capacity = parseInt(newCapacity);
+            cancelEditCapacity();
+            updateSummary(); // Cập nhật lại tóm tắt
+            updateAddSeatButtonsState(); // Cập nhật trạng thái button thêm ghế
+            alert('Cập nhật sức chứa thành công!');
+        } else {
+            alert('Lỗi: ' + (data.message || 'Không thể cập nhật sức chứa'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Có lỗi xảy ra khi cập nhật sức chứa!');
+    });
+}
+
+// JavaScript cho thêm ghế đơn
+// Xử lý thay đổi loại ghế để hiển thị thông tin
+document.addEventListener('DOMContentLoaded', function() {
+    const seatTypeSelect = document.getElementById('single_seat_type');
+    const seatTypeHelp = document.getElementById('seatTypeHelp');
+    
+    if (seatTypeSelect && seatTypeHelp) {
+        seatTypeSelect.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            const isCouple = selectedOption.getAttribute('data-is-couple') === 'true';
+            
+            if (isCouple) {
+                seatTypeHelp.innerHTML = '<span class="text-warning"><i class="fas fa-heart"></i> Loại ghế đôi - Sẽ tạo 2 ghế liên tiếp</span>';
+            } else {
+                seatTypeHelp.innerHTML = '<span class="text-info"><i class="fas fa-chair"></i> Loại ghế đơn</span>';
+            }
+        });
+    }
+    
+    // Xử lý submit form thêm ghế đơn
+    const addSingleSeatForm = document.getElementById('addSingleSeatForm');
+    if (addSingleSeatForm) {
+        addSingleSeatForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            
+            // Disable button và hiển thị loading
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang thêm...';
+            
+            fetch('{{ route("admin.seats.add-single") }}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Reset form
+                    addSingleSeatForm.reset();
+                    document.getElementById('seatTypeHelp').innerHTML = '';
+                    
+                    // Hiển thị thông báo thành công
+                    alert(data.message);
+                    
+                    // Reload trang để cập nhật sơ đồ ghế
+                    window.location.reload();
+                } else {
+                    alert('Lỗi: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Có lỗi xảy ra khi thêm ghế!');
+            })
+            .finally(() => {
+                // Restore button
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            });
+        });
+    }
+    
+    // Event listener cho button xác nhận cập nhật phần trăm
+    const confirmUpdatePercentagesBtn = document.getElementById('confirmUpdatePercentagesBtn');
+    if (confirmUpdatePercentagesBtn) {
+        confirmUpdatePercentagesBtn.addEventListener('click', confirmUpdatePercentages);
+    }
+});
+</script>
+
+<style>
+.seat-preview {
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    font-size: 8px;
+    border: 1px solid #ccc;
+}
+
+.couple-seat {
+    border: 2px solid #ff6b6b !important;
+}
+
+.seat-header, .row-label {
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 10px;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+}
+
+.row-config {
+    background-color: #f8f9fa;
+}
+
+.row-config:hover {
+    background-color: #e9ecef;
+}
+
+/* Capacity warning and suggestions styling */
+#capacity-warning {
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+    border: 1px solid #ffc107;
+    border-radius: 8px;
+    padding: 15px;
+    margin-top: 15px;
+}
+
+#suggestions {
+    margin-top: 10px;
+}
+
+.suggestion-options {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+}
+
+.suggestion-options .btn {
+    border-radius: 6px;
+    font-size: 0.875rem;
+    padding: 6px 12px;
+    transition: all 0.2s ease;
+}
+
+.suggestion-options .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+#suggestions .alert {
+    border-radius: 6px;
+    border-left: 4px solid;
+}
+
+#suggestions .alert-info {
+    border-left-color: #0dcaf0;
+    background-color: #e7f3ff;
+}
+
+#suggestions .alert-warning {
+    border-left-color: #ffc107;
+    background-color: #fff8e1;
+}
+
+#suggestions .alert-danger {
+    border-left-color: #dc3545;
+    background-color: #ffebee;
+}
+
+/* Preview seat map styling */
+.seat-preview-grid {
+    font-family: 'Courier New', monospace;
+    display: grid !important;
+    gap: 3px;
+    justify-content: start;
+    align-items: center;
+    width: fit-content;
+}
+
+.seat-preview, .seat-header, .row-label {
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px;
+    min-height: 30px;
+    max-width: 30px;
+    max-height: 30px;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-weight: bold;
+    user-select: none;
+    transition: transform 0.1s ease;
+    box-sizing: border-box !important;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+}
+
+.seat-preview:hover {
+    transform: scale(1.05);
+    z-index: 1;
+    position: relative;
+}
+
+.couple-seat {
+    font-size: 12px !important;
+    border: 2px solid #ff6b6b !important;
+}
+
+/* Đảm bảo grid layout không bị lệch */
+.seat-preview-grid > div {
+    box-sizing: border-box !important;
+    width: 30px !important;
+    height: 30px !important;
+}
+
+/* Empty cells để duy trì grid structure */
+.seat-preview-grid > div:empty {
+    min-height: 30px !important;
+    min-width: 30px !important;
+}
+</style>
 @endsection
->>>>>>> Stashed changes

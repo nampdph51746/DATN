@@ -8,15 +8,10 @@ use App\Models\Cinema;
 use App\Models\RoomType;
 use App\Models\SeatType;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use App\Models\RoomSeatConfiguration;
 use App\Http\Requests\StoreRoomRequest;
 use App\Http\Requests\UpdateRoomRequest;
-
-use App\Models\Notification;
-use App\Enums\NotificationType;
-use Illuminate\Support\Facades\Auth;
 
 class AdminRoomController extends Controller
 {
@@ -47,52 +42,130 @@ class AdminRoomController extends Controller
     }
 
     // Lưu phòng chiếu mới
-    public function store(StoreRoomRequest $request)
-    {
-        $room = Room::create($request->all());
+public function store(StoreRoomRequest $request)
+{
+    $data = $request->all();  // Không lấy capacity
+    if (!isset($data['capacity'])) {
+    $data['capacity'] = 0;
+}
+    Room::create($data);
 
-        // Tạo thông báo khi thêm mới phòng chiếu
-        Notification::create([
-            'user_id' => Auth::id(),
-            'entity_type' => 'room',
-            'entity_id' => $room->id,
-            'title' => 'Thêm mới phòng chiếu',
-            'message' => 'Phòng chiếu "' . $room->name . '" đã được thêm mới.',
-            'type' => NotificationType::System,
-            'priority' => 'medium',
-            'old_status' => null,
-            'new_status' => null,
-            'event_details' => json_encode(['action' => 'create', 'room_id' => $room->id]),
-        ]);
-
-        return redirect()->route('admin.rooms.index')->with('success', 'Tạo phòng chiếu thành công');
-    }
-
+    return redirect()->route('admin.rooms.index')->with('success', 'Tạo phòng chiếu thành công');
+}
     // Xem chi tiết phòng chiếu
-    public function show($id)
+    public function show(Request $request, $id)
     {
         // Load room với relationships
         $room = Room::with(['cinema', 'roomType'])->findOrFail($id);
-        // ...existing code...
+        \Log::info('Room data:', [
+            'room_id' => $room->id,
+            'cinema_id' => $room->cinema_id,
+            'room_type_id' => $room->room_type_id,
+            'cinema' => $room->cinema ? $room->cinema->toArray() : null,
+            'roomType' => $room->roomType ? $room->roomType->toArray() : null
+        ]);
 
-        // Chỉ lấy các loại ghế được phép cho phòng này
-        $allowedSeatTypes = $room->allowedSeatTypes(); // Collection of SeatType
+        // Lấy showtime_id từ request (nếu có) hoặc lấy suất chiếu gần nhất
+        $showtime_id = $request->input('showtime_id');
+        if (!$showtime_id) {
+            $showtime = \App\Models\Showtime::where('room_id', $room->id)
+                ->where('start_time', '>=', now())
+                ->orderBy('start_time', 'asc')
+                ->first();
+            $showtime_id = $showtime ? $showtime->id : null;
+        }
+        \Log::info('Selected showtime_id:', ['showtime_id' => $showtime_id]);
+
+        // Lấy danh sách ghế với trạng thái từ showtime_seat_states
         $seats = Seat::with('seatType')
             ->where('room_id', $room->id)
             ->orderBy('row_char')
             ->orderBy('seat_number')
-            ->get();
+            ->get()
+            ->map(function ($seat) use ($showtime_id) {
+                if ($showtime_id) {
+                    $seatState = $seat->showtimeSeatStates()->where('showtime_id', $showtime_id)->first();
+                    $seat->display_status = $seatState ? $seatState->status->value : $seat->status->value;
+                } else {
+                    $seat->display_status = $seat->status->value;
+                }
+                if ($seat->seatType) {
+                    $seat->seatType->name = htmlspecialchars($seat->seatType->name, ENT_QUOTES, 'UTF-8');
+                }
+                return $seat;
+            });
+        \Log::info('Seats:', $seats->map(function ($seat) {
+            return [
+                'id' => $seat->id,
+                'room_id' => $seat->room_id,
+                'seat_type_id' => $seat->seat_type_id,
+                'row_char' => $seat->row_char,
+                'seat_number' => $seat->seat_number,
+                'display_status' => $seat->display_status,
+                'seat_type_name' => $seat->seatType ? $seat->seatType->name : null
+            ];
+        })->toArray());
+
+        // Lấy danh sách suất chiếu và escape movie name
+        $showtimes = \App\Models\Showtime::where('room_id', $room->id)
+            ->with('movie')
+            ->where('start_time', '>=', now())
+            ->orderBy('start_time', 'asc')
+            ->get()
+            ->map(function ($showtime) {
+                if ($showtime->movie) {
+                    $showtime->movie->name = htmlspecialchars($showtime->movie->name, ENT_QUOTES, 'UTF-8');
+                }
+                return $showtime;
+            });
+        \Log::info('Showtimes:', $showtimes->map(function ($showtime) {
+            return [
+                'id' => $showtime->id,
+                'movie_id' => $showtime->movie_id,
+                'movie_name' => $showtime->movie ? $showtime->movie->name : null,
+                'start_time' => $showtime->start_time->toDateTimeString()
+            ];
+        })->toArray());
+
+        // Lấy danh sách loại ghế được phép
+        $allowedSeatTypes = $room->allowedSeatTypes()->map(function ($seatType) {
+            if ($seatType) {
+                $seatType->name = htmlspecialchars($seatType->name, ENT_QUOTES, 'UTF-8');
+            }
+            return $seatType;
+        });
+        \Log::info('Allowed Seat Types:', $allowedSeatTypes->map(function ($seatType) {
+            return [
+                'id' => $seatType->id,
+                'name' => $seatType->name
+            ];
+        })->toArray());
+
         $rows = $seats->pluck('row_char')->unique()->sort()->values();
-        $maxSeatsPerRow = $seats->isEmpty() ? 50 : $seats->groupBy('row_char')->map(function($group) { return $group->count(); })->max();
+        // Fix: Tính maxSeatsPerRow theo seat_number cao nhất, không phải số lượng ghế trong hàng
+        $maxSeatsPerRow = $seats->isEmpty() ? 50 : $seats->max(function($seat) {
+            // Handle both "01" and "1" formats
+            return (int) ltrim($seat->seat_number, '0') ?: (int) $seat->seat_number;
+        });
         $maxRows = 26;
+        \Log::info('Rows and Layout:', [
+            'rows' => $rows->toArray(),
+            'maxSeatsPerRow' => $maxSeatsPerRow,
+            'maxRows' => $maxRows
+        ]);
 
         // Lấy tỷ lệ tùy chỉnh từ room_seat_configurations
         $seatPercentages = RoomSeatConfiguration::where('room_id', $room->id)
             ->with('seatType')
             ->get()
+            ->map(function ($config) {
+                if ($config->seatType) {
+                    $config->seatType->name = htmlspecialchars($config->seatType->name, ENT_QUOTES, 'UTF-8');
+                }
+                return $config;
+            })
             ->pluck('percentage', 'seat_type_id')
             ->toArray();
-        // Nếu chưa có cấu hình tùy chỉnh, sử dụng tỷ lệ mặc định
         if (empty($seatPercentages)) {
             $seatPercentages = [];
             foreach ($allowedSeatTypes as $seatType) {
@@ -119,7 +192,6 @@ class AdminRoomController extends Controller
                 $currentTypeIndex = 0;
             }
         }
-        // Tìm loại ghế tiếp theo còn ghế cần thêm
         for ($i = $currentTypeIndex; $i < count($seatTypesOrder); $i++) {
             $typeId = $seatTypesOrder[$i];
             $remaining = ($requiredSeats[$typeId] ?? 0) - ($existingSeatsByType[$typeId] ?? 0);
@@ -128,12 +200,12 @@ class AdminRoomController extends Controller
                 break;
             }
         }
-        // Nếu không còn loại nào cần thêm thì lấy null
 
+        \Log::info('Seat Percentages:', $seatPercentages);
+        \Log::info('Existing Seats by Type:', $existingSeatsByType);
+        \Log::info('Required Seats:', $requiredSeats);
+        \Log::info('Next seat type id:', [$next_seat_type_id]);
 
-<<<<<<< Updated upstream
-        return view('admin.rooms.show', compact('room', 'allowedSeatTypes', 'seats', 'rows', 'maxSeatsPerRow', 'maxRows', 'seatPercentages', 'existingSeatsByType', 'requiredSeats', 'next_seat_type_id', 'seatTypesOrder'));
-=======
         // Get layout suggestions
         $layoutOptimizer = new \App\Services\SeatLayoutOptimizer();
         $layoutSuggestions = $layoutOptimizer->getLayoutSuggestions($room);
@@ -148,15 +220,37 @@ class AdminRoomController extends Controller
             'allowed_seat_types_names' => $allowedSeatTypes->pluck('name')->toArray()
         ]);
 
+        // Kiểm tra xem phòng có suất chiếu đang hoạt động không
+        $hasActiveShowtimes = \App\Models\Showtime::where('room_id', $room->id)
+            ->whereIn('status', ['scheduled', 'ongoing'])
+            ->exists();
+
         return view('admin.rooms.show', compact(
             'room', 'allowedSeatTypes', 'seats', 'rows', 'maxSeatsPerRow', 'maxRows',
             'seatPercentages', 'existingSeatsByType', 'requiredSeats', 'next_seat_type_id',
-            'seatTypesOrder', 'showtimes', 'showtime_id', 'layoutSuggestions'
+            'seatTypesOrder', 'showtimes', 'showtime_id', 'layoutSuggestions', 'hasActiveShowtimes'
         ));
->>>>>>> Stashed changes
     }
 
     // Hiển thị form chỉnh sửa
+
+    public function editStatus($id)
+{
+    $room = Room::findOrFail($id);
+return view('admin.rooms.edit_status', compact('room'));
+}
+
+public function updateStatus(Request $request, $id)
+{
+    $room = Room::findOrFail($id);
+    $request->validate([
+        'status' => 'required|string|max:20',
+    ]);
+    $room->status = $request->status;
+    $room->save();
+
+    return redirect()->route('admin.rooms.index')->with('success', 'Cập nhật trạng thái phòng thành công');
+}
     public function edit($id)
     {
         $room = Room::with(['cinema', 'roomType'])->findOrFail($id);
@@ -169,29 +263,11 @@ class AdminRoomController extends Controller
     public function update(UpdateRoomRequest $request, $id)
     {
         $room = Room::findOrFail($id);
-        $oldData = $room->getOriginal();
         $room->update($request->all());
-
-        // Tạo thông báo khi cập nhật phòng chiếu
-        Notification::create([
-            'user_id' => Auth::id(),
-            'entity_type' => 'room',
-            'entity_id' => $room->id,
-            'title' => 'Cập nhật phòng chiếu',
-            'message' => 'Phòng chiếu "' . $room->name . '" đã được cập nhật.',
-            'type' => NotificationType::System,
-            'priority' => 'medium',
-            'old_status' => json_encode($oldData),
-            'new_status' => json_encode($room->getAttributes()),
-            'event_details' => json_encode(['action' => 'update', 'room_id' => $room->id]),
-        ]);
 
         return redirect()->route('admin.rooms.index')->with('success', 'Cập nhật phòng chiếu thành công');
     }
 
-<<<<<<< Updated upstream
-
-=======
     // Cập nhật tỷ lệ loại ghế cho phòng
     public function updateSeatPercentages(Request $request, $id)
     {
@@ -383,5 +459,110 @@ class AdminRoomController extends Controller
                str_contains($typeName, 'bed') ||
                str_contains($typeName, 'sofa');
     }
->>>>>>> Stashed changes
+
+    /**
+     * Cập nhật sức chứa phòng
+     */
+    public function updateCapacity(Request $request, $room)
+    {
+        $room = Room::findOrFail($room);
+        
+        \Log::info('updateCapacity called', [
+            'room_id' => $room->id,
+            'request_data' => $request->all(),
+            'method' => $request->method()
+        ]);
+
+        $request->validate([
+            'capacity' => 'required|integer|min:1|max:1000'
+        ]);
+
+        $newCapacity = $request->capacity;
+        $currentSeats = $room->seats()->count();
+
+        \Log::info('Capacity update details', [
+            'room_id' => $room->id,
+            'current_capacity' => $room->capacity,
+            'new_capacity' => $newCapacity,
+            'current_seats' => $currentSeats
+        ]);
+
+        // Kiểm tra nếu sức chứa mới nhỏ hơn số ghế hiện tại
+        if ($newCapacity < $currentSeats) {
+            \Log::warning('Capacity update failed - too many seats', [
+                'new_capacity' => $newCapacity,
+                'current_seats' => $currentSeats
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => "Không thể giảm sức chứa xuống {$newCapacity} vì phòng hiện có {$currentSeats} ghế. Vui lòng xóa ghế trước."
+            ], 400);
+        }
+
+        $room->update(['capacity' => $newCapacity]);
+
+        \Log::info('Capacity updated successfully', [
+            'room_id' => $room->id,
+            'old_capacity' => $room->getOriginal('capacity'),
+            'new_capacity' => $room->capacity,
+            'room_fresh' => $room->fresh()->capacity
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => "Đã cập nhật sức chứa phòng thành {$newCapacity}",
+            'new_capacity' => $newCapacity,
+            'available_seats' => $newCapacity - $currentSeats
+        ]);
+    }
+
+    // API lấy phân bổ loại ghế hiện tại
+    public function getSeatDistribution($roomId)
+    {
+        try {
+            \Log::info("Getting seat distribution for room ID: " . $roomId);
+            
+            $room = Room::findOrFail($roomId);
+            \Log::info("Room found: " . json_encode($room->toArray()));
+            
+            $seats = Seat::where('room_id', $room->id)->with('seatType')->get();
+            \Log::info("Found seats count: " . $seats->count());
+            \Log::info("Sample seats: " . $seats->take(3)->toJson());
+            
+            $distribution = [];
+            $totalSeats = $seats->count();
+            
+            // Đếm số ghế theo từng loại
+            foreach ($seats as $seat) {
+                $typeId = $seat->seat_type_id;
+                $distribution[$typeId] = ($distribution[$typeId] ?? 0) + 1;
+            }
+            
+            \Log::info("Distribution data: " . json_encode($distribution));
+            
+            // Tính phần trăm
+            $percentages = [];
+            foreach ($distribution as $typeId => $count) {
+                $percentages[$typeId] = $totalSeats > 0 ? round(($count / $totalSeats) * 100, 1) : 0;
+            }
+            
+            \Log::info("Percentages data: " . json_encode($percentages));
+            
+            return response()->json([
+                'success' => true,
+                'distribution' => $distribution,
+                'percentages' => $percentages,
+                'total_seats' => $totalSeats
+            ]);
+        } catch (\Exception $e) {
+            \Log::error("Error in getSeatDistribution: " . $e->getMessage());
+            \Log::error("Stack trace: " . $e->getTraceAsString());
+            return response()->json([
+                'success' => false,
+                'message' => 'Không thể lấy dữ liệu phân bổ ghế',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

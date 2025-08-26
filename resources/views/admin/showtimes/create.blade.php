@@ -2,6 +2,7 @@
 
 @section('content')
 <div class="container-fluid py-4">
+    @include('admin.partials.notifications')
     
     <div class="row">
         <!-- Sidebar thông tin -->

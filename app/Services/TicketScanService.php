@@ -75,24 +75,32 @@ class TicketScanService
                 ];
             }
 
-            // Kiểm tra xem có vé nào đã được sử dụng chưa
+            // Kiểm tra xem có vé nào đã được quét chưa
+            $checkedTickets = $tickets->where('status', TicketStatus::Checked);
             $usedTickets = $tickets->where('status', TicketStatus::Used);
+            
             if ($usedTickets->isNotEmpty()) {
                 return [
                     'success' => false,
                     'message' => 'Vé đã được sử dụng trước đó vào lúc: ' . $usedTickets->first()->used_at
                 ];
             }
+            
+            if ($checkedTickets->isNotEmpty()) {
+                return [
+                    'success' => false,
+                    'message' => 'Vé đã được kiểm tra trước đó. Hãy quét từng vé để sử dụng.'
+                ];
+            }
 
-            // Cập nhật trạng thái tất cả vé thành "used"
+            // Cập nhật trạng thái tất cả vé thành "checked"
             $updatedTickets = [];
             foreach ($tickets as $ticket) {
                 $ticket->update([
-                    'status' => TicketStatus::Used,
-                    'used_at' => now(),
+                    'status' => TicketStatus::Checked,
                     'scanned_by' => Auth::user()->id ?? null // Nếu có hệ thống auth cho nhân viên
                 ]);
-                
+
                 // Reload ticket với relationships để hiển thị trong response
                 $ticket->load('seat');
                 $updatedTickets[] = $ticket;
@@ -103,19 +111,18 @@ class TicketScanService
             return [
                 'success' => true,
                 'message' => 'Quét vé thành công! Đã cập nhật ' . count($updatedTickets) . ' vé.',
-                 'booking' => [
-        'booking_code' => $booking->booking_code,
-        'customer_name' => $booking->customer_name ?? ($booking->user->name ?? 'N/A'),
-        'customer_phone' => $booking->customer_phone ?? ($booking->user->phone_number ?? 'N/A'),
-        'total_amount' => $booking->total_amount ?? 0,
-        // thêm các trường khác nếu cần
-    ],
+                'booking' => [
+                    'booking_code' => $booking->booking_code,
+                    'customer_name' => $booking->customer_name ?? ($booking->user->name ?? 'N/A'),
+                    'customer_phone' => $booking->customer_phone ?? ($booking->user->phone_number ?? 'N/A'),
+                    'total_amount' => $booking->total_amount ?? 0,
+                    // thêm các trường khác nếu cần
+                ],
                 'updated_tickets' => $updatedTickets
             ];
-
         } catch (\Exception $e) {
             DB::rollback();
-            
+
             return [
                 'success' => false,
                 'message' => 'Có lỗi xảy ra khi quét vé: ' . $e->getMessage()
@@ -143,7 +150,7 @@ class TicketScanService
             // Lấy thông tin vé
             $tickets = $booking->tickets;
 
-            $ticketInfo = $tickets->map(function($ticket) {
+            $ticketInfo = $tickets->map(function ($ticket) {
                 return [
                     'id' => $ticket->id,
                     'seat_name' => $ticket->seat ? ($ticket->seat->row_char . $ticket->seat->seat_number) : 'N/A',
@@ -174,11 +181,97 @@ class TicketScanService
                     'tickets' => $ticketInfo
                 ]
             ];
-
-        } catch (\Exception $e) {            
+        } catch (\Exception $e) {
             return [
                 'success' => false,
                 'message' => 'Có lỗi xảy ra khi lấy thông tin vé'
+            ];
+        }
+    }
+
+    /**
+     * Quét vé theo ticket_code và cập nhật trạng thái
+     */
+    public function scanTicketByCode(string $ticketCode): array
+    {
+        try {
+            DB::beginTransaction();
+
+            $ticket = \App\Models\Ticket::with(['showtime.movie', 'showtime.cinema', 'seat', 'booking'])
+                ->where('ticket_code', $ticketCode)
+                ->first();
+
+            if (!$ticket) {
+                return [
+                    'success' => false,
+                    'message' => 'Không tìm thấy vé với mã: ' . $ticketCode
+                ];
+            }
+
+            // Kiểm tra trạng thái booking
+            if ($ticket->booking->status !== BookingStatus::Confirmed) {
+                return [
+                    'success' => false,
+                    'message' => 'Đơn hàng chưa được xác nhận hoặc đã bị hủy'
+                ];
+            }
+
+            // Kiểm tra trạng thái vé
+            $currentStatus = is_object($ticket->status) ? $ticket->status->value : $ticket->status;
+            
+            if ($currentStatus === 'valid') {
+                // Nếu trạng thái là valid -> chuyển sang checked
+                $ticket->update([
+                    'status' => TicketStatus::Checked,
+                    'scanned_by' => Auth::user()->id ?? null
+                ]);
+                $message = 'Quét vé thành công! Vé đã được kiểm tra.';
+            } elseif ($currentStatus === 'checked') {
+                // Nếu trạng thái là checked -> chuyển sang used
+                $ticket->update([
+                    'status' => TicketStatus::Used,
+                    'used_at' => now(),
+                    'scanned_by' => Auth::user()->id ?? null
+                ]);
+                $message = 'Quét vé thành công! Vé đã được sử dụng.';
+            } elseif ($currentStatus === 'used') {
+                return [
+                    'success' => false,
+                    'message' => 'Vé đã được sử dụng trước đó vào lúc: ' . $ticket->used_at
+                ];
+            } else {
+                return [
+                    'success' => false,
+                    'message' => 'Trạng thái vé không hợp lệ.'
+                ];
+            }
+            $ticket->refresh();
+
+            DB::commit();
+
+            return [
+                'success' => true,
+                'message' => $message,
+                'data' => [
+                    'ticket_id' => $ticket->id,
+                    'ticket_code' => $ticket->ticket_code,
+                    'seat_name' => $ticket->seat ? ($ticket->seat->row_char . $ticket->seat->seat_number) : 'N/A',
+                    'status' => $ticket->status,
+                    'used_at' => $ticket->used_at,
+                    'showtime' => $ticket->showtime ? [
+                        'movie_name' => $ticket->showtime->movie->name ?? '',
+                        'cinema_name' => $ticket->showtime->cinema->name ?? '',
+                        'start_time' => $ticket->showtime->start_time ?? '',
+                    ] : null,
+                    'booking_code' => $ticket->booking->booking_code ?? '',
+                    'customer_name' => $ticket->booking->customer_name ?? ($ticket->booking->user->name ?? 'N/A'),
+                ]
+            ];
+        } catch (\Exception $e) {
+            DB::rollback();
+            return [
+                'success' => false,
+                'message' => 'Có lỗi xảy ra khi quét vé: ' . $e->getMessage()
             ];
         }
     }

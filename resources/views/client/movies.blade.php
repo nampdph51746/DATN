@@ -1,5 +1,7 @@
 @extends('layouts.client.client')
-<style>
+
+@section('content')
+    <style>
         .button-center {
             display: flex;
             justify-content: center;
@@ -90,34 +92,129 @@
             background-color: #f1c40f;
             color: #fff;
         }
-</style>
-@section('content')
-    <!-- Breadcrumbs -->
-    <div class="w3l-breadcrumbs">
-        <nav id="breadcrumbs" class="breadcrumbs">
-            <div class="container page-wrapper">
-                <a href="{{ route('client.home') }}">Home</a> » <span class="breadcrumb_last"
-                    aria-current="page">Movies</span>
-            </div>
-        </nav>
-    </div>
+        .movie-card {
+            background-color: transparent !important;
+        }
+    </style>
 
-    <!-- Phim đang chiếu -->
+    <!-- Thêm CDN SweetAlert2 -->
+
+    <section class="w3l-main-slider position-relative" id="home">
+        <div class="companies20-content">
+            <div class="owl-one owl-carousel owl-theme">
+                <div class="item">
+                    <li>
+                        <div class="slider-info banner-view bg bg2">
+                            <div class="banner-info">
+                                <h3>Latest Movie Trailers</h3>
+                                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit.<span class="over-para">
+                                        Consequuntur hic odio
+                                        voluptatem tenetur consequatur.</span></p>
+                                <a href="#small-dialog1" class="popup-with-zoom-anim play-view1">
+                                    <span class="video-play-icon">
+                                        <span class="fa fa-play"></span>
+                                    </span>
+                                    <h6>Watch Trailer</h6>
+                                </a>
+                                <div id="small-dialog1" class="zoom-anim-dialog mfp-hide">
+                                    <iframe src="https://player.vimeo.com/video/358205676" allow="autoplay; fullscreen"
+                                        allowfullscreen=""></iframe>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                </div>
+                <div class="item">
+                    <li>
+                        <div class="slider-info  banner-view banner-top1 bg bg2">
+                            <div class="banner-info">
+                                <h3>Latest Online Movies</h3>
+                                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit.<span class="over-para">
+                                        Consequuntur hic odio
+                                        voluptatem tenetur consequatur.</span></p>
+                                <a href="#small-dialog2" class="popup-with-zoom-anim play-view1">
+                                    <span class="video-play-icon">
+                                        <span class="fa fa-play"></span>
+                                    </span>
+                                    <h6>Watch Trailer</h6>
+                                </a>
+                                <div id="small-dialog2" class="zoom-anim-dialog mfp-hide">
+                                    <iframe src="https://player.vimeo.com/video/395376850" allow="autoplay; fullscreen"
+                                        allowfullscreen=""></iframe>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                </div>
+                <div class="item">
+                    <li>
+                        <div class="slider-info banner-view banner-top2 bg bg2">
+                            <div class="banner-info">
+                                <h3>Latest Movie Trailers</h3>
+                                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit.<span class="over-para">
+                                        Consequuntur hic odio
+                                        voluptatem tenetur consequatur.</span></p>
+                                <a href="#small-dialog3" class="popup-with-zoom-anim play-view1">
+                                    <span class="video-play-icon">
+                                        <span class="fa fa-play"></span>
+                                    </span>
+                                    <h6>Watch Trailer</h6>
+                                </a>
+                                <div id="small-dialog3" class="zoom-anim-dialog mfp-hide">
+                                    <iframe src="https://player.vimeo.com/video/389969665" allow="autoplay; fullscreen"
+                                        allowfullscreen=""></iframe>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                </div>
+                <div class="item">
+                    <li>
+                        <div class="slider-info banner-view banner-top3 bg bg2">
+                            <div class="banner-info">
+                                <h3>Latest Online Movies</h3>
+                                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit.<span class="over-para">
+                                        Consequuntur hic odio
+                                        voluptatem tenetur consequatur.</span></p>
+                                <a href="#small-dialog4" class="popup-with-zoom-anim play-view1">
+                                    <span class="video-play-icon">
+                                        <span class="fa fa-play"></span>
+                                    </span>
+                                    <h6>Watch Trailer</h6>
+                                </a>
+                                <div id="small-dialog4" class="zoom-anim-dialog mfp-hide">
+                                    <iframe src="https://player.vimeo.com/video/323491174" allow="autoplay; fullscreen"
+                                        allowfullscreen=""></iframe>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!--grids-sec1-->
     <section class="w3l-grids">
         <div class="grids-main py-5">
-            <div class="container py-lg-4">
+            <div class="container py-lg-3">
                 <div class="headerhny-title">
                     <div class="w3l-title-grids">
                         <div class="headerhny-left">
-                            <h3 class="hny-title">Phim đang chiếu</h3>
+                            <h3 class="hny-title">Phim Đang Chiếu</h3>
                         </div>
                         <div class="headerhny-right text-lg-right">
-                            <h4><a class="show-title" href="{{ route('client.movies') }}">Show all</a></h4>
+                            <h4><a class="show-title" href="{{ route('movies.show', ['id' => $showingMovies->first()->id ?? 1]) }}">Xem tất cả</a></h4>
                         </div>
                     </div>
                 </div>
-                <div class="w3l-populohny-grids">
-                    @forelse ($showingMovies as $movie)
+                <div class="w3l-populohny-grids" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;">
+                    @if(isset($query) && $showingMovies->isEmpty())
+                        <div class="col-12">
+                            <p>Không tìm thấy phim nào phù hợp với từ khóa "<strong>{{ $query }}</strong>".</p>
+                        </div>
+                    @endif
+                    @foreach($showingMovies->unique('id') as $movie)
                         <div class="item vhny-grid">
                             <div class="box16">
                                 <a href="{{ route('movies.show', ['id' => $movie->id]) }}">
@@ -129,7 +226,7 @@
                                     <div class="box-content">
                                         <h3 class="title">{{ $movie->name }}</h3>
                                         <h4>
-                                            <span class="post"><span class="fa fa-clock-o"></span> {{ $movie->duration_minutes }} min</span>
+                                            <span class="post"><span class="fa fa-clock-o"></span> {{ $movie->duration_minutes }} phút</span>
                                             <span class="post fa fa-heart text-right"></span>
                                         </h4>
                                     </div>
@@ -142,148 +239,157 @@
                                 @endforeach
                             </div>
                             <div class="text-center mt-3">
-                                <a href="{{ route('client.movies.ticketBooking', ['id' => $movie->id]) }}" class="ticket-btn">
-                                    <i class="fa fa-ticket" aria-hidden="true"></i> Đặt vé
-                                </a>
+                                @auth
+                                    <a href="{{ route('client.movies.ticketBooking', ['id' => $movie->id]) }}" class="ticket-btn">
+                                        <i class="fa fa-shopping-cart" aria-hidden="true"></i> Đặt vé
+                                    </a>
+                                @else
+                                    <a href="#" class="ticket-btn" onclick="showLoginPrompt(event, '{{ route('client.movies.ticketBooking', ['id' => $movie->id]) }}')">
+                                        <i class="fa fa-shopping-cart" aria-hidden="true"></i> Đặt vé
+                                    </a>
+                                @endauth
                             </div>
                         </div>
-                    @empty
-                        <div class="item vhny-grid">
-                            <p>No movies currently showing.</p>
-                        </div>
-                    @endforelse
-                </div>
-                <div class="button-center text-center mt-3">
-                    <a href="{{ route('client.movies') }}" class="btn view-button">View all <span
-                            class="fa fa-angle-double-right ml-2" aria-hidden="true"></span></a>
-                </div>
-            </div>
-    </section>
-
-    <!-- Tabs: Recent, Popular, Trend -->
-<section class="w3l-albums py-5" id="projects">
-    <div class="container py-lg-4">
-        <div class="row">
-            <div class="col-lg-12 mx-auto">
-                <!-- Horizontal Tab -->
-                <div id="parentHorizontalTab">
-                    <ul class="resp-tabs-list hor_1">
-                        <li>Recent Movies</li>
-                        <li>Popular Movies</li>
-                        <li>Trend Movies</li>
-                        <div class="clear"></div>
-                    </ul>
-                    <div class="resp-tabs-container hor_1">
-                        <!-- Recent Movies -->
-                        <div class="albums-content">
-                            <div class="row">
-                                @forelse ($recentMovies as $movie)
-                                    <div class="col-lg-4 new-relise-gd mt-lg-0 mt-4">
-                                        <div class="slider-info">
-                                            <div class="img-circle">
-                                                <a href="{{ route('movies.show', ['id' => $movie->id]) }}">
-                                                    <img src="{{ $movie->image_path ? Storage::url($movie->image_path) : ($movie->poster_url ?? asset('client_assets/assets/images/movie-placeholder.png')) }}"
-                                                         class="img-fluid movie-img" alt="{{ $movie->name }}">
-                                                    <div class="overlay-icon">
-                                                        <span class="fa fa-play video-icon" aria-hidden="true"></span>
-                                                    </div>
-                                                </a>
-                                            </div>
-                                            <div class="message">
-                                                <p>{{ $movie->language ?? 'N/A' }}</p>
-                                                <a class="author-book-title"
-                                                   href="{{ route('movies.show', ['id' => $movie->id]) }}">{{ $movie->name }}</a>
-                                                <h4>
-                                                    <span class="post"><span class="fa fa-clock-o"></span>
-                                                        {{ $movie->duration_minutes }} min</span>
-                                                    <span class="post fa fa-heart text-right"></span>
-                                                </h4>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @empty
-                                    <div class="col-lg-12">
-                                        <p>No recent movies available.</p>
-                                    </div>
-                                @endforelse
-                            </div>
-                        </div>
-
-                        <!-- Popular Movies -->
-                        <div class="albums-content">
-                            <div class="row">
-                                @forelse ($popularMovies as $movie)
-                                    <div class="col-lg-4 new-relise-gd mt-lg-0 mt-4">
-                                        <div class="slider-info">
-                                            <div class="img-circle">
-                                                <a href="{{ route('movies.show', ['id' => $movie->id]) }}">
-                                                    <img src="{{ $movie->image_path ? Storage::url($movie->image_path) : ($movie->poster_url ?? asset('client_assets/assets/images/movie-placeholder.png')) }}"
-                                                         class="img-fluid movie-img" alt="{{ $movie->name }}">
-                                                    <div class="overlay-icon">
-                                                        <span class="fa fa-play video-icon" aria-hidden="true"></span>
-                                                    </div>
-                                                </a>
-                                            </div>
-                                            <div class="message">
-                                                <p>{{ $movie->language ?? 'N/A' }}</p>
-                                                <a class="author-book-title"
-                                                   href="{{ route('movies.show', ['id' => $movie->id]) }}">{{ $movie->name }}</a>
-                                                <h4>
-                                                    <span class="post"><span class="fa fa-clock-o"></span>
-                                                        {{ $movie->duration_minutes }} min</span>
-                                                    <span class="post fa fa-heart text-right"></span>
-                                                </h4>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @empty
-                                    <div class="col-lg-12">
-                                        <p>No popular movies available.</p>
-                                    </div>
-                                @endforelse
-                            </div>
-                        </div>
-
-                        <!-- Trend Movies -->
-                        <div class="albums-content">
-                            <div class="row">
-                                @forelse ($trendMovies as $movie)
-                                    <div class="col-lg-4 new-relise-gd mt-lg-0 mt-4">
-                                        <div class="slider-info">
-                                            <div class="img-circle">
-                                                <a href="{{ route('movies.show', ['id' => $movie->id]) }}">
-                                                    <img src="{{ $movie->image_path ? Storage::url($movie->image_path) : ($movie->poster_url ?? asset('client_assets/assets/images/movie-placeholder.png')) }}"
-                                                         class="img-fluid movie-img" alt="{{ $movie->name }}">
-                                                    <div class="overlay-icon">
-                                                        <span class="fa fa-play video-icon" aria-hidden="true"></span>
-                                                    </div>
-                                                </a>
-                                            </div>
-                                            <div class="message">
-                                                <p>{{ $movie->language ?? 'N/A' }}</p>
-                                                <a class="author-book-title"
-                                                   href="{{ route('movies.show', ['id' => $movie->id]) }}">{{ $movie->name }}</a>
-                                                <h4>
-                                                    <span class="post"><span class="fa fa-clock-o"></span>
-                                                        {{ $movie->duration_minutes }} min</span>
-                                                    <span class="post fa fa-heart text-right"></span>
-                                                </h4>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @empty
-                                    <div class="col-lg-12">
-                                        <p>No trending movies available.</p>
-                                    </div>
-                                @endforelse
-                            </div>
-                        </div>
-                    </div>
+                    @endforeach
                 </div>
             </div>
         </div>
-    </div>
-</section>
+    </section>
 
+    <section class="w3l-grids">
+        <div class="grids-main py-5">
+            <div class="container py-lg-3">
+                <div class="headerhny-title">
+                    <div class="w3l-title-grids">
+                        <div class="headerhny-left">
+                            <h3 class="hny-title">Phim Sắp Chiếu</h3>
+                        </div>
+                        <div class="headerhny-right text-lg-right">
+                            <h4><a class="show-title" href="{{ route('movies.show', ['id' => $upcomingMovies->first()->id ?? 1]) }}">Xem tất cả</a></h4>
+                        </div>
+                    </div>
+                </div>
+                <div class="w3l-populohny-grids" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;">
+                    @foreach($upcomingMovies->unique('id') as $movie)
+                        <div class="item vhny-grid">
+                            <div class="box16">
+                                <a href="{{ route('movies.show', ['id' => $movie->id]) }}">
+                                    <figure>
+                                        <img class="movie-img"
+                                             src="{{ $movie->image_path ? Storage::url($movie->image_path) : ($movie->poster_url ?? asset('client_assets/assets/images/default-movie.jpg')) }}"
+                                             alt="{{ $movie->name }}">
+                                    </figure>
+                                    <div class="box-content">
+                                        <h3 class="title">{{ $movie->name }}</h3>
+                                        <h4>
+                                            <span class="post"><span class="fa fa-clock-o"></span> {{ $movie->duration_minutes }} phút</span>
+                                            <span class="post fa fa-heart text-right"></span>
+                                        </h4>
+                                    </div>
+                                    <span class="fa fa-play video-icon" aria-hidden="true"></span>
+                                </a>
+                            </div>
+                            <div class="genres-container">
+                                @foreach($movie->genres->take(3) as $genre)
+                                    <span class="genre-badge">{{ $genre->name }}</span>
+                                @endforeach
+                            </div>
+                            <div class="text-center mt-3">
+                                @auth
+                                    <a href="{{ route('client.movies.ticketBooking', ['id' => $movie->id]) }}" class="ticket-btn">
+                                        <i class="fa fa-shopping-cart" aria-hidden="true"></i> Đặt vé
+                                    </a>
+                                @else
+                                    <a href="#" class="ticket-btn" onclick="showLoginPrompt(event, '{{ route('client.movies.ticketBooking', ['id' => $movie->id]) }}')">
+                                        <i class="fa fa-shopping-cart" aria-hidden="true"></i> Đặt vé
+                                    </a>
+                                @endauth
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!--grids-sec2-->
+    <section class="w3l-mid-slider position-relative">
+        <div class="companies20-content">
+            <div class="owl-mid owl-carousel owl-theme">
+                <div class="item">
+                    <li>
+                        <div class="slider-info mid-view bg bg2">
+                            <div class="container">
+                                <div class="mid-info">
+                                    <span class="sub-text">Hài</span>
+                                    <h3>Jumanji: The Next Level</h3>
+                                    <p>2019 ‧ Hài/Hành động ‧ 2h 3m</p>
+                                    <a class="watch" href="movies.html"><span class="fa fa-play"
+                                            aria-hidden="true"></span>
+                                        Xem Trailer</a>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                </div>
+                <div class="item">
+                    <li>
+                        <div class="slider-info mid-view mid-top1 bg bg2">
+                            <div class="container">
+                                <div class="mid-info">
+                                    <span class="sub-text">Phiêu lưu</span>
+                                    <h3>Dolittle</h3>
+                                    <p>2020 ‧ Gia đình/Phiêu lưu ‧ 1h 41m</p>
+                                    <a class="watch" href="movies.html"><span class="fa fa-play"
+                                            aria-hidden="true"></span>
+                                        Xem Trailer</a>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                </div>
+                <div class="item">
+                    <li>
+                        <div class="slider-info mid-view mid-top2 bg bg2">
+                            <div class="container">
+                                <div class="mid-info">
+                                    <span class="sub-text">Hành động</span>
+                                    <h3>Bad Boys for Life</h3>
+                                    <p>2020 ‧ Hài/Hành động ‧ 2h 4m</p>
+                                    <a class="watch" href="movies.html"><span class="fa fa-play"
+                                            aria-hidden="true"></span>
+                                        Xem Trailer</a>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                </div>
+            </div>
+        </div>
+    </section>
     @include('client.footer.footer')
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+    function showLoginPrompt(event, url) {
+        event.preventDefault();
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                title: 'Bạn cần đăng nhập',
+                text: 'Vui lòng đăng nhập để đặt vé.',
+                icon: 'info',
+                showCancelButton: true,
+                confirmButtonText: 'Đăng nhập',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = "{{ route('login') }}";
+                }
+            });
+        } else {
+            alert('Vui lòng đăng nhập để đặt vé.');
+            window.location.href = "{{ route('login') }}";
+        }
+    }
+    </script>
 @endsection

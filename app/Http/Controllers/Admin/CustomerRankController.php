@@ -6,9 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\CustomerRank\StoreCustomerRankRequest;
 use App\Http\Requests\Admin\CustomerRank\UpdateCustomerRankRequest;
 use App\Models\CustomerRank;
-use App\Models\Notification;
-use App\Enums\NotificationType;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 
 class CustomerRankController extends Controller
@@ -46,18 +43,7 @@ class CustomerRankController extends Controller
     public function store(StoreCustomerRankRequest $request)
     {
         $data = $request->validated();
-        $customerRank = CustomerRank::create($data);
-        // Notification for create
-        Notification::create([
-            'user_id' => Auth::id(),
-            'entity_type' => 'customer_rank',
-            'entity_id' => $customerRank->id,
-            'title' => 'Tạo hạng khách hàng mới',
-            'message' => 'Hạng khách hàng "' . $customerRank->name . '" đã được tạo.',
-            'type' => NotificationType::System,
-            'priority' => 'medium',
-            'event_details' => json_encode(['action' => 'create', 'data' => $data]),
-        ]);
+        CustomerRank::create($data);
         return redirect()->route('customers-rank.index')->with('success', 'Customer Rank created successfully.');
     }
 
@@ -75,40 +61,17 @@ class CustomerRankController extends Controller
 
     public function update(UpdateCustomerRankRequest $request, string $id)
     {
+        
         $data = $request->validated();
         $customerRank = CustomerRank::find($id);
-        $oldData = $customerRank->getOriginal();
         $customerRank->update($data);
-        // Notification for update
-        Notification::create([
-            'user_id' => Auth::id(),
-            'entity_type' => 'customer_rank',
-            'entity_id' => $customerRank->id,
-            'title' => 'Cập nhật hạng khách hàng',
-            'message' => 'Hạng khách hàng "' . $customerRank->name . '" đã được cập nhật.',
-            'type' => NotificationType::System,
-            'priority' => 'medium',
-            'event_details' => json_encode(['action' => 'update', 'old' => $oldData, 'new' => $data]),
-        ]);
         return redirect()->route('customers-rank.index')->with('success', 'Customer Rank updated successfully.');
     }
 
     public function forceDelete(string $id)
     {
         $customerRank = CustomerRank::withTrashed()->findOrFail($id);
-        $oldData = $customerRank->toArray();
         $customerRank->forceDelete();
-        // Notification for force delete
-        Notification::create([
-            'user_id' => Auth::id(),
-            'entity_type' => 'customer_rank',
-            'entity_id' => $id,
-            'title' => 'Xóa vĩnh viễn hạng khách hàng',
-            'message' => 'Hạng khách hàng "' . $oldData['name'] . '" đã bị xóa vĩnh viễn.',
-            'type' => NotificationType::System,
-            'priority' => 'medium',
-            'event_details' => json_encode(['action' => 'forceDelete', 'old' => $oldData]),
-        ]);
         return redirect()->route('customers-rank.index')->with('success', 'Customer Rank deleted permanently.');
     }
 
@@ -117,19 +80,7 @@ class CustomerRankController extends Controller
         if($customerRank->users()->count() > 0) {
             return redirect()->route('customers-rank.index')->with('error', 'Cannot delete this rank as it is assigned to customers.');
         }
-        $oldData = $customerRank->toArray();
         $customerRank->delete();
-        // Notification for soft delete
-        Notification::create([
-            'user_id' => Auth::id(),
-            'entity_type' => 'customer_rank',
-            'entity_id' => $customerRank->id,
-            'title' => 'Xóa hạng khách hàng',
-            'message' => 'Hạng khách hàng "' . $oldData['name'] . '" đã bị xóa.',
-            'type' => NotificationType::System,
-            'priority' => 'medium',
-            'event_details' => json_encode(['action' => 'softDelete', 'old' => $oldData]),
-        ]);
         return redirect()->route('customers-rank.index')->with('success', 'Customer Rank deleted successfully.');
     }
 
@@ -155,19 +106,7 @@ class CustomerRankController extends Controller
     public function restore($id)
     {
         $customerRank = CustomerRank::withTrashed()->findOrFail($id);
-        $oldData = $customerRank->toArray();
         $customerRank->restore();
-        // Notification for restore
-        Notification::create([
-            'user_id' => Auth::id(),
-            'entity_type' => 'customer_rank',
-            'entity_id' => $customerRank->id,
-            'title' => 'Khôi phục hạng khách hàng',
-            'message' => 'Hạng khách hàng "' . $oldData['name'] . '" đã được khôi phục.',
-            'type' => NotificationType::System,
-            'priority' => 'medium',
-            'event_details' => json_encode(['action' => 'restore', 'old' => $oldData]),
-        ]);
         return redirect()->route('customers-rank.deleted')->with('success', 'Customer Rank restored successfully.');
     }
 }

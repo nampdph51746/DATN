@@ -7,7 +7,7 @@
                 <div class="card">
                     <div class="d-flex card-header justify-content-between align-items-center">
                         <div>
-                            <h4 class="card-title">Danh sách tất cả khách hàng</h4>
+                            <h4 class="card-title">👤 Danh sách tất cả khách hàng</h4>
                         </div>
                         <form method="GET" action="{{ route('users.index') }}" class="mb-3">
                             <div class="row g-2 align-items-end">
@@ -51,7 +51,9 @@
                                 </div>
 
                                 <div class="col-md-3 d-flex gap-2">
-                                    <button type="submit" class="btn btn-primary w-100">Lọc</button>
+                                    <button type="submit" class="btn btn-sm btn-primary">
+                                        <i class="bx bx-search"></i>
+                                    </button>
                                     <a href="{{ route('users.index') }}" class="btn btn-secondary w-100">Đặt lại</a>
                                 </div>
                             </div>

@@ -27,7 +27,7 @@
         </div>
 
         <div class="col-xl-9 col-lg-8">
-            <form action="{{ route('admin.combos.store') }}" method="POST" id="comboForm">
+            <form action="{{ route('admin.combos.store') }}" method="POST" enctype="multipart/form-data" id="comboForm">
                 @csrf
                 <div class="card">
                     <div class="card-header">
@@ -40,6 +40,13 @@
                                     <label for="name" class="form-label">Tên combo</label>
                                     <input type="text" class="form-control" id="name" name="name" value="{{ old('name') }}" maxlength="255" required>
                                     @error('name')
+                                        <span class="text-danger">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                                <div class="mb-3">
+                                    <label for="combo_url" class="form-label">Ảnh combo</label>
+                                    <input type="file" class="form-control" id="combo_url" name="combo_url" accept="image/*" onchange="previewComboImage(this)">
+                                    @error('combo_url')
                                         <span class="text-danger">{{ $message }}</span>
                                     @enderror
                                 </div>
@@ -71,13 +78,13 @@
                                 </div>
                             </div>
                             <div class="col-lg-6">
-                                <div class="mb-3">
+                                <!-- <div class="mb-3">
                                     <label for="price" class="form-label">Giá combo</label>
                                     <input type="number" class="form-control" id="price" name="price" value="{{ old('price') }}" min="0" step="0.01" required>
                                     @error('price')
                                         <span class="text-danger">{{ $message }}</span>
                                     @enderror
-                                </div>
+                                </div> -->
                                 <div class="mb-3">
                                     <label for="stock_quantity" class="form-label">Tồn kho combo</label>
                                     <input type="number" class="form-control" id="stock_quantity" name="stock_quantity" value="{{ old('stock_quantity', 1) }}" min="0" required>
@@ -372,6 +379,17 @@
                 .catch(error => console.error('Error loading preview:', error));
             } else {
                 previewImage.src = `{{ asset('assets/images/default.png') }}`;
+            }
+        }
+
+        function previewComboImage(input) {
+            const previewImage = document.getElementById('previewImage');
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImage.src = e.target.result;
+                }
+                reader.readAsDataURL(input.files[0]);
             }
         }
 

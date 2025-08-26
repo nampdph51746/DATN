@@ -44,4 +44,20 @@ class Room extends Model
             return $seatType !== null;
         })->values();
     }
+
+    // Kiểm tra xem phòng có suất chiếu đang hoạt động không
+    public function hasActiveShowtimes()
+    {
+        return $this->showtimes()
+            ->whereIn('status', ['scheduled', 'ongoing'])
+            ->whereDate('start_time', '>=', now()->toDateString())
+            ->exists();
+    }
+
+    // Kiểm tra xem phòng có thể chỉnh sửa không
+    public function canBeEdited()
+    {
+        // Không thể chỉnh sửa nếu phòng có suất chiếu đang hoạt động
+        return !$this->hasActiveShowtimes();
+    }
 }

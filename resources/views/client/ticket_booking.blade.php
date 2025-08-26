@@ -263,6 +263,49 @@
             .poster-image {
                 width: 100px;
             }
+
+            .category-tabs {
+                flex-direction: column;
+                gap: 6px;
+            }
+
+            .category-tab {
+                padding: 8px 16px;
+                font-size: 13px;
+                text-align: center;
+            }
+
+            .products-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .snack-select-div {
+                flex-direction: column !important;
+            }
+
+            .basis-\[70\%\] {
+                flex-basis: 100% !important;
+            }
+
+            .basis-\[30\%\] {
+                flex-basis: 100% !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .category-tab {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+
+            .products-grid {
+                gap: 8px;
+            }
+
+            .snack-info h4 {
+                font-size: 14px;
+            }
         }
 
         /* Custom classes */
@@ -921,6 +964,212 @@
             border: 1px solid rgba(245, 158, 11, 0.3);
             color: #f59e0b;
         }
+
+        /* Room Type Filter Styles */
+        .room-type-dropdown {
+            transition: all 0.3s ease;
+            border: 2px solid #e5006e !important;
+            background: #1c1c1c !important;
+            color: #ffffff !important;
+            padding: 12px 16px !important;
+            border-radius: 8px !important;
+            cursor: pointer !important;
+            font-size: 0.95em !important;
+            font-weight: 500;
+            outline: none !important;
+            appearance: none !important;
+            -webkit-appearance: none !important;
+            -moz-appearance: none !important;
+        }
+
+        .room-type-dropdown:hover {
+            background: rgba(229, 0, 110, 0.1) !important;
+            border-color: #ff1a7a !important;
+            box-shadow: 0 4px 8px rgba(229, 0, 110, 0.2);
+        }
+
+        .room-type-dropdown:focus {
+            border-color: #ff1a7a !important;
+            box-shadow: 0 0 0 3px rgba(229, 0, 110, 0.2);
+        }
+
+        .room-type-dropdown option {
+            background: #1c1c1c !important;
+            color: #ffffff !important;
+            padding: 8px 12px;
+        }
+
+        .room-type-dropdown option:hover {
+            background: #e5006e !important;
+        }
+
+        .room-type-filter-container {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            border: 1px solid rgba(229, 0, 110, 0.2);
+        }
+
+        /* Category tabs styling */
+        .category-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 20px;
+            padding: 0;
+        }
+
+        .category-tab {
+            padding: 10px 20px;
+            background: #333333;
+            color: #ffffff;
+            border: 2px solid #555555;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .category-tab:hover {
+            background: #444444;
+            border-color: #e5006e;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(229, 0, 110, 0.2);
+        }
+
+        .category-tab.active {
+            background: linear-gradient(135deg, #e5006e, #c4005c);
+            border-color: #e5006e;
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(229, 0, 110, 0.4);
+            transform: translateY(-1px);
+        }
+
+        /* Special styling for combo tab */
+        .category-tab[data-category="combo"] {
+            background: linear-gradient(135deg, #f97316, #ea580c);
+            border-color: #f97316;
+        }
+
+        .category-tab[data-category="combo"]:hover {
+            background: linear-gradient(135deg, #ea580c, #dc2626);
+            border-color: #ea580c;
+        }
+
+        .category-tab[data-category="combo"].active {
+            background: linear-gradient(135deg, #f97316, #ea580c);
+            border-color: #f97316;
+            box-shadow: 0 0 15px rgba(249, 115, 22, 0.5);
+        }
+
+        .category-tab::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .category-tab:hover::before {
+            left: 100%;
+        }
+
+        .category-count {
+            background: rgba(255,255,255,0.2);
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .category-tab.active .category-count {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .category-content {
+            display: none;
+        }
+
+        .category-content.active {
+            display: block;
+        }
+
+        .category-title {
+            color: #e5006e;
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #e5006e;
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+        }
+
+        /* Combo specific styling */
+        .combo-item {
+            border: 2px solid #f97316;
+            box-shadow: 0 4px 8px rgba(249, 115, 22, 0.1);
+            position: relative;
+        }
+
+        .combo-item::before {
+            content: "🍿";
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: #f97316;
+            color: white;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            z-index: 1;
+        }
+
+        .combo-items {
+            max-height: 80px;
+            overflow-y: auto;
+            border: 1px solid #e5e7eb;
+            border-radius: 4px;
+            padding: 4px;
+            background: #f9fafb;
+        }
+
+        .combo-items::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .combo-items::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 2px;
+        }
+
+        .combo-items::-webkit-scrollbar-thumb {
+            background: #f97316;
+            border-radius: 2px;
+        }
+
+        .room-type-dropdown-wrapper {
+            position: relative;
+            max-width: 250px;
+        }
     </style>
 
     @extends('layouts.client.client')
@@ -955,6 +1204,30 @@
                                                 </div>
                                             @endforeach
                                         </div>
+
+                                        <!-- Room Type Filter -->
+                                        <div class="room-type-filter-container" style="margin-bottom: 20px;">
+                                            <h4 style="color: #ffffff; margin-bottom: 10px; font-size: 1.1em;">Lọc theo loại phòng:</h4>
+                                            <div class="room-type-dropdown-wrapper" style="position: relative; max-width: 250px;">
+                                                <select id="room-type-select" class="room-type-dropdown" onchange="handleRoomTypeFilter(this.value)"
+                                                        style="width: 100%; padding: 12px 16px; background: #1c1c1c; border: 2px solid #e5006e; border-radius: 8px; color: #ffffff; font-size: 0.95em; cursor: pointer; outline: none; appearance: none;">
+                                                    <option value="all">🎬 Tất cả loại phòng</option>
+                                                    @foreach ($roomTypes as $roomType)
+                                                        <option value="{{ $roomType->id }}">
+                                                            {{ $roomType->name }}
+                                                            @if($roomType->description)
+                                                                - {{ $roomType->description }}
+                                                            @endif
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                                <!-- Custom dropdown arrow -->
+                                                <div style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); pointer-events: none; color: #e5006e; font-size: 1.2em;">
+                                                    ▼
+                                                </div>
+                                            </div>
+                                        </div>
+
                                         <ul class="time-ul" id="time-ul">
                                             <!-- Danh sách phòng chiếu và thời gian sẽ được cập nhật động qua JavaScript -->
                                         </ul>
@@ -982,55 +1255,192 @@
                             <fieldset>
                                 <div id="snack-select-div" class="flex gap-4 p-4">
                                     <div class="basis-[70%] bg-[#121212] rounded-lg shadow-md p-4">
-                                        <h2 class="text-lg text-white font-semibold mb-3 border-b border-fuchsia pb-1">Snack
-                                            Selection</h2>
-                                        <div class="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-4">
-                                            @foreach ($products as $product)
-                                                <div class="flex flex-col items-center bg-white p-3 rounded-lg text-center">
-                                                    <img src="{{ asset('storage/' . $product->image_url) }}"
-                                                        alt="{{ $product->name }}"
-                                                        class="mb-2 w-24 h-24 object-cover rounded" />
-                                                    <div class="snack-info">
-                                                        <h4 class="text-base">{{ $product->name }}</h4>
-                                                        @if ($product->productVariants->isNotEmpty())
-                                                            <select
-                                                                class="variant-select form-select mt-2 p-1.5 rounded-md border text-sm"
-                                                                data-product-id="{{ $product->id }}"
-                                                                onchange="updateVariant('{{ $product->id }}')"
-                                                                style="max-width: 220px; white-space: normal; word-break: break-word;">
-                                                                @foreach ($product->productVariants as $variant)
-                                                                    @if ($variant->stock_quantity > 0)
-                                                                        <option value="{{ $variant->id }}"
-                                                                            data-variant-id="{{ $variant->id }}"
-                                                                            data-price="{{ $variant->price }}"
-                                                                            data-sku="{{ $variant->sku }}"
-                                                                            data-stock="{{ $variant->stock_quantity }}"
-                                                                            style="white-space: normal; word-break: break-word;">
-                                                                            {{ $variant->productVariantOptions->map(fn($option) => $option->attributeValue->value)->join(' - ') }}
-                                                                            ({{ number_format($variant->price) }} VNĐ - Còn
-                                                                            {{ $variant->stock_quantity }})
-                                                                        </option>
-                                                                    @endif
-                                                                @endforeach
-                                                            </select>
-                                                        @else
-                                                            <p class="text-sm">No variants available</p>
-                                                        @endif
-                                                    </div>
-                                                    <div class="snack-quantity flex items-center gap-2 mt-2"
-                                                        data-product-id="{{ $product->id }}">
-                                                        <button onclick="updateQuantity('{{ $product->id }}', -1)"
-                                                            class="p-1.5 bg-red-500 text-white border-none rounded-md text-sm">-</button>
-                                                        <input type="number" id="quantity-{{ $product->id }}"
-                                                            value="0" min="0"
-                                                            class="w-12 text-center border border-gray-300 rounded-md p-1 text-sm"
-                                                            readonly />
-                                                        <button onclick="updateQuantity('{{ $product->id }}', 1)"
-                                                            class="p-1.5 bg-red-500 text-white border-none rounded-md text-sm">+</button>
-                                                    </div>
-                                                </div>
+                                        <h2 class="text-lg text-white font-semibold mb-3 border-b border-fuchsia pb-1">Lựa chọn đồ ăn & nước uống</h2>
+                                        
+                                        <!-- Category Tabs -->
+                                        <div class="category-tabs" id="category-tabs">
+                                            @php $firstCategory = true; @endphp
+                                            
+                                            <!-- Combo Tab -->
+                                            @if($combos->isNotEmpty())
+                                                <button class="category-tab {{ $firstCategory ? 'active' : '' }}" 
+                                                        onclick="showCategory('combo')"
+                                                        data-category="combo">
+                                                    🍿 Combo
+                                                    <span class="category-count">
+                                                        {{ $combos->count() }}
+                                                    </span>
+                                                </button>
+                                                @php $firstCategory = false; @endphp
+                                            @endif
+                                            
+                                            <!-- Product Category Tabs -->
+                                            @foreach ($products as $categoryName => $categoryProducts)
+                                                <button class="category-tab {{ $firstCategory ? 'active' : '' }}" 
+                                                        onclick="showCategory('{{ Str::slug($categoryName) }}')"
+                                                        data-category="{{ Str::slug($categoryName) }}">
+                                                    {{ $categoryName ?: 'Khác' }}
+                                                    <span class="category-count">
+                                                        {{ count($categoryProducts) }}
+                                                    </span>
+                                                </button>
+                                                @php $firstCategory = false; @endphp
                                             @endforeach
                                         </div>
+
+                                        <!-- Category Content -->
+                                        @php $firstCategoryContent = true; @endphp
+                                        
+                                        <!-- Combo Content -->
+                                        @if($combos->isNotEmpty())
+                                            <div class="category-content {{ $firstCategoryContent ? 'active' : '' }}" 
+                                                 id="category-combo">
+                                                <div class="category-title">
+                                                    🍿 Combo Package
+                                                    <small style="color: #aaa; font-size: 0.8em; font-weight: 400;">
+                                                        ({{ $combos->count() }} combo)
+                                                    </small>
+                                                </div>
+                                                
+                                                <div class="products-grid">
+                                                    @foreach ($combos as $combo)
+                                                        @if($combo->comboProductVariant && $combo->comboProductVariant->stock_quantity > 0)
+                                                            <div class="flex flex-col items-center bg-white p-3 rounded-lg text-center combo-item">
+                                                                <!-- Combo Image -->
+                                                                @if($combo->combo_url)
+                                                                    <img src="{{ asset('storage/' . $combo->combo_url) }}"
+                                                                        alt="{{ $combo->name }}"
+                                                                        class="mb-2 w-24 h-24 object-cover rounded-lg border-2 border-orange-200" />
+                                                                @else
+                                                                    <div class="mb-2 w-24 h-24 bg-gradient-to-br from-orange-200 to-orange-300 rounded-lg border-2 border-orange-200 flex items-center justify-center">
+                                                                        <span class="text-2xl">🍿</span>
+                                                                    </div>
+                                                                @endif
+                                                                
+                                                                <div class="snack-info">
+                                                                    <h4 class="text-base font-semibold text-orange-600">{{ $combo->name }}</h4>
+                                                                    
+                                                                    <!-- Combo Items List -->
+                                                                    <div class="combo-items text-xs text-gray-600 mt-1">
+                                                                        <p class="font-medium">Bao gồm:</p>
+                                                                        @foreach ($combo->comboPackageItems as $item)
+                                                                            @if($item->itemProductVariant && $item->itemProductVariant->product)
+                                                                                <p class="text-xs">
+                                                                                    • {{ $item->quantity }}x {{ $item->itemProductVariant->product->name }}
+                                                                                    @if($item->itemProductVariant->productVariantOptions->isNotEmpty())
+                                                                                        ({{ $item->itemProductVariant->productVariantOptions->map(fn($option) => $option->attributeValue->value)->join(' - ') }})
+                                                                                    @endif
+                                                                                </p>
+                                                                            @endif
+                                                                        @endforeach
+                                                                    </div>
+                                                                    
+                                                                    <!-- Combo Price -->
+                                                                    <p class="text-sm font-semibold text-green-600 mt-2">
+                                                                        {{ number_format($combo->price) }} VNĐ
+                                                                        <span class="text-xs text-gray-500">(Còn {{ $combo->stock_quantity }})</span>
+                                                                    </p>
+                                                                    
+                                                                    <!-- Hidden data for combo -->
+                                                                    <input type="hidden" 
+                                                                           class="combo-variant-id" 
+                                                                           value="{{ $combo->comboProductVariant->id }}"
+                                                                           data-combo-id="{{ $combo->id }}"
+                                                                           data-price="{{ $combo->price }}"
+                                                                           data-stock="{{ $combo->stock_quantity }}"
+                                                                           data-name="{{ $combo->name }}">
+                                                                </div>
+                                                                
+                                                                <div class="snack-quantity flex items-center gap-2 mt-2"
+                                                                    data-product-id="combo-{{ $combo->id }}" 
+                                                                    data-is-combo="true">
+                                                                    <button onclick="updateComboQuantity('{{ $combo->id }}', -1)"
+                                                                        class="p-1.5 bg-orange-500 text-white border-none rounded-md text-sm hover:bg-orange-600 transition-colors">-</button>
+                                                                    <input type="number" id="quantity-combo-{{ $combo->id }}"
+                                                                        value="0" min="0" max="{{ $combo->stock_quantity }}"
+                                                                        class="w-12 text-center border border-gray-300 rounded-md p-1 text-sm"
+                                                                        readonly />
+                                                                    <button onclick="updateComboQuantity('{{ $combo->id }}', 1)"
+                                                                        class="p-1.5 bg-orange-500 text-white border-none rounded-md text-sm hover:bg-orange-600 transition-colors">+</button>
+                                                                </div>
+                                                            </div>
+                                                        @endif
+                                                    @endforeach
+                                                </div>
+                                            </div>
+                                            @php $firstCategoryContent = false; @endphp
+                                        @endif
+                                        
+                                        <!-- Product Category Content -->
+                                        @foreach ($products as $categoryName => $categoryProducts)
+                                            <div class="category-content {{ $firstCategoryContent ? 'active' : '' }}" 
+                                                 id="category-{{ Str::slug($categoryName) }}">
+                                                <div class="category-title">
+                                                    {{ $categoryName ?: 'Sản phẩm khác' }}
+                                                    <small style="color: #aaa; font-size: 0.8em; font-weight: 400;">
+                                                        ({{ count($categoryProducts) }} sản phẩm)
+                                                    </small>
+                                                </div>
+                                                
+                                                <div class="products-grid">
+                                                    @foreach ($categoryProducts as $product)
+                                                        <div class="flex flex-col items-center bg-white p-3 rounded-lg text-center">
+                                                            <img src="{{ asset('storage/' . $product->image_url) }}"
+                                                                alt="{{ $product->name }}"
+                                                                class="mb-2 w-24 h-24 object-cover rounded" />
+                                                            <div class="snack-info">
+                                                                <h4 class="text-base">{{ $product->name }}</h4>
+                                                                @if ($product->description)
+                                                                    <p class="text-xs text-gray-600 mt-1">{{ Str::limit($product->description, 60) }}</p>
+                                                                @endif
+                                                                @if ($product->productVariants->isNotEmpty())
+                                                                    <select
+                                                                        class="variant-select form-select mt-2 p-1.5 rounded-md border text-sm"
+                                                                        data-product-id="{{ $product->id }}"
+                                                                        onchange="updateVariant('{{ $product->id }}')"
+                                                                        style="max-width: 220px; white-space: normal; word-break: break-word;">
+                                                                        @foreach ($product->productVariants as $variant)
+                                                                            @if ($variant->stock_quantity > 0)
+                                                                                <option value="{{ $variant->id }}"
+                                                                                    data-variant-id="{{ $variant->id }}"
+                                                                                    data-price="{{ $variant->price }}"
+                                                                                    data-sku="{{ $variant->sku }}"
+                                                                                    data-stock="{{ $variant->stock_quantity }}"
+                                                                                    style="white-space: normal; word-break: break-word;">
+                                                                                    {{ $variant->productVariantOptions->map(fn($option) => $option->attributeValue->value)->join(' - ') }}
+                                                                                    ({{ number_format($variant->price) }} VNĐ - Còn
+                                                                                    {{ $variant->stock_quantity }})
+                                                                                </option>
+                                                                            @endif
+                                                                        @endforeach
+                                                                    </select>
+                                                                @else
+                                                                    <p class="text-sm text-gray-500">Không có phiên bản</p>
+                                                                @endif
+                                                            </div>
+                                                            <div class="snack-quantity flex items-center gap-2 mt-2"
+                                                                data-product-id="{{ $product->id }}">
+                                                                <button onclick="updateQuantity('{{ $product->id }}', -1)"
+                                                                    class="p-1.5 bg-red-500 text-white border-none rounded-md text-sm hover:bg-red-600 transition-colors">-</button>
+                                                                <input type="number" id="quantity-{{ $product->id }}"
+                                                                    value="0" min="0"
+                                                                    class="w-12 text-center border border-gray-300 rounded-md p-1 text-sm"
+                                                                    readonly />
+                                                                <button onclick="updateQuantity('{{ $product->id }}', 1)"
+                                                                    class="p-1.5 bg-red-500 text-white border-none rounded-md text-sm hover:bg-red-600 transition-colors">+</button>
+                                                            </div>
+                                                        </div>
+                                                    @endforeach
+                                                </div>
+                                            </div>
+                                            @php $firstCategoryContent = false; @endphp
+                                        @endforeach
+                                        
+                                        @if($products->isEmpty())
+                                            <div style="text-align: center; padding: 40px; color: #aaa;">
+                                                <p>Không có sản phẩm nào khả dụng</p>
+                                            </div>
+                                        @endif
                                     </div>
                                     <div class="basis-[30%] summary-section">
                                         <h3 class="summary-title">Thông tin đặt vé</h3>
@@ -1260,10 +1670,18 @@
                                             <h4 style="color: #e5006e; font-size: 1.1em; margin-bottom: 8px;">Điểm thưởng
                                             </h4>
 
-                                            <div>
-                                                <strong>Điểm khả dụng:</strong> <span id="available-points"
-                                                    style="color:#e5006e">{{ $userPoints }}</span>
+                                            <div style="margin-bottom: 8px;">
+                                                <strong>Tổng điểm:</strong> <span style="color:#e5006e">{{ $userPoints }} điểm</span>
                                             </div>
+                                            
+                                            <div style="margin-bottom: 8px;">
+                                                <strong>Điểm có thể sử dụng cho đơn hàng này:</strong> 
+                                                <span id="max-usable-points" style="color:#e5006e">0 điểm</span>
+                                                <small style="color: #aaa; display: block; margin-top: 2px;">
+                                                    (Tối đa {{ $maxDiscountPercentage ?? 30 }}% giá trị đơn hàng)
+                                                </small>
+                                            </div>
+                                            
                                             <div style="display: flex; align-items: center; gap: 10px;">
                                                 <input type="number" id="points-input"
                                                     placeholder="Nhập số điểm sử dụng" min="0"
@@ -1363,6 +1781,7 @@
                                             <input type="hidden" name="cinema_name" id="input-cinema-name">
                                             <input type="hidden" name="room_name" id="input-room-name">
                                             <input type="hidden" name="showtime" id="input-showtime">
+                                            <input type="hidden" name="showtime_id" id="input-showtime-id">
                                             <input type="hidden" name="snack_items" id="input-snack-items">
 
                                             <input type="hidden" name="total_amount_before_discount"
@@ -1537,11 +1956,13 @@
         let cinemaName = 'N/A';
         const showtimesData = @json($showtimesData);
         const roomsData = @json($roomsData);
+        const roomTypes = @json($roomTypes);
         const movieTitle = @json($movie->name ?? 'N/A');
         let variantData = {};
         let selectedSnacks = [];
         let countdownInterval = null;
         let countdownEndTime = null;
+        let selectedRoomTypeId = 'all'; // Room type filter
 
         // Nhận timer từ iframe seat_selection
         window.receiveTimer = function(data) {
@@ -1720,24 +2141,40 @@
         function updateShowtimes(date) {
             console.log('Date:', date);
             console.log('Showtimes Data:', showtimesData);
+            console.log('Selected Room Type ID:', selectedRoomTypeId);
             const timeUl = document.getElementById('time-ul');
             timeUl.innerHTML = '';
-            const rooms = showtimesData[date] || [];
+            let rooms = showtimesData[date] || [];
+            
+            console.log('All rooms before filtering:', rooms);
+            
+            // Filter rooms by selected room type
+            if (selectedRoomTypeId !== 'all') {
+                rooms = rooms.filter(room => {
+                    console.log('Room:', room.room_name, 'Type ID:', room.room_type_id, 'Expected:', selectedRoomTypeId);
+                    return room.room_type_id == selectedRoomTypeId;
+                });
+                console.log('Rooms after filtering:', rooms);
+            }
+            
             if (rooms.length === 0) {
-                timeUl.innerHTML =
-                    '<li class="time-li">Không có suất chiếu nào cho ngày này. Vui lòng kiểm tra lại dữ liệu hoặc chọn ngày khác.</li>';
-                console.warn('No showtimes available for date:', date);
+                const message = selectedRoomTypeId === 'all' ? 
+                    'Không có suất chiếu nào cho ngày này. Vui lòng kiểm tra lại dữ liệu hoặc chọn ngày khác.' :
+                    'Không có suất chiếu nào cho loại phòng đã chọn trong ngày này.';
+                timeUl.innerHTML = `<li class="time-li">${message}</li>`;
+                console.warn('No showtimes available for date:', date, 'and room type:', selectedRoomTypeId);
                 return;
             }
+            
             // Hiển thị từng phòng chiếu với các khung giờ riêng của phòng đó
             rooms.forEach(room => {
                 if (!room.times || !Array.isArray(room.times)) return;
                 const li = document.createElement('li');
                 li.className = 'time-li';
-                // Tên phòng chiếu
+                // Tên phòng chiếu với loại phòng
                 const roomDiv = document.createElement('div');
                 roomDiv.className = 'screens';
-                roomDiv.textContent = room.room_name;
+                roomDiv.innerHTML = `${room.room_name} <span style="color: #e5006e; font-size: 0.8em;">(${room.room_type_name})</span>`;
                 li.appendChild(roomDiv);
 
                 // Danh sách khung giờ của phòng
@@ -1811,6 +2248,61 @@
             }
         }
 
+        // Room Type Filter Function
+        function handleRoomTypeFilter(roomTypeId) {
+            console.log('handleRoomTypeFilter called with roomTypeId:', roomTypeId);
+            selectedRoomTypeId = roomTypeId;
+            
+            // Update showtimes for current selected date
+            console.log('Current selectedDate:', selectedDate);
+            if (selectedDate) {
+                updateShowtimes(selectedDate);
+            }
+            
+            // Reset selected showtime since rooms might have changed
+            selectedTime = null;
+            selectedShowtimeId = null;
+            selectedSeats = [];
+            document.getElementById("screen-next-btn").disabled = true;
+            
+            // Hide seat map
+            const iframe = document.getElementById('seat-map-iframe');
+            const placeholder = document.getElementById('seat-map-placeholder');
+            if (iframe) iframe.style.display = 'none';
+            if (placeholder) placeholder.style.display = 'block';
+            
+            updateOrderSummary();
+        }
+
+        // Hàm hiển thị category sản phẩm
+        function showCategory(categorySlug) {
+            console.log('Switching to category:', categorySlug);
+            
+            // Hide all category contents
+            const categoryContents = document.querySelectorAll('.category-content');
+            categoryContents.forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remove active class from all tabs
+            const categoryTabs = document.querySelectorAll('.category-tab');
+            categoryTabs.forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected category content
+            const selectedContent = document.getElementById(`category-${categorySlug}`);
+            if (selectedContent) {
+                selectedContent.classList.add('active');
+            }
+            
+            // Add active class to selected tab
+            const selectedTab = document.querySelector(`[data-category="${categorySlug}"]`);
+            if (selectedTab) {
+                selectedTab.classList.add('active');
+            }
+        }
+
         // Hàm cập nhật biến thể sản phẩm
         function updateVariant(productId) {
             const select = document.querySelector(`.variant-select[data-product-id="${productId}"]`);
@@ -1852,8 +2344,10 @@
             const productName = select.closest('.flex.flex-col.items-center').querySelector('h4').textContent;
             const variantKey = `${productId}-${variantName}`;
 
-            // Cập nhật selectedSnacks
-            const snackIndex = selectedSnacks.findIndex(item => item.product_variant_id == variantId);
+            // Cập nhật selectedSnacks - chỉ tìm sản phẩm thường (không phải combo)
+            const snackIndex = selectedSnacks.findIndex(item => 
+                item.product_variant_id == variantId && !item.is_combo
+            );
             if (newQuantity > 0) {
                 if (snackIndex > -1) {
                     selectedSnacks[snackIndex].quantity = newQuantity;
@@ -1862,7 +2356,8 @@
                     selectedSnacks.push({
                         product_variant_id: variantId,
                         quantity: newQuantity,
-                        price_at_purchase: price
+                        price_at_purchase: price,
+                        is_combo: false
                     });
                 }
             } else if (snackIndex > -1) {
@@ -1905,6 +2400,67 @@
                 snackSubtotal += parseFloat(priceText) || 0;
             });
             return snackSubtotal;
+        }
+
+        // Hàm cập nhật số lượng combo
+        function updateComboQuantity(comboId, change) {
+            const quantityInput = document.getElementById(`quantity-combo-${comboId}`);
+            let currentQuantity = parseInt(quantityInput.value) || 0;
+
+            const comboData = document.querySelector(`[data-combo-id="${comboId}"]`);
+            if (!comboData) {
+                console.error('Combo data not found for ID:', comboId);
+                return;
+            }
+            
+            const maxStock = parseInt(comboData.getAttribute('data-stock')) || 0;
+            const variantId = comboData.value;
+            const price = parseFloat(comboData.getAttribute('data-price')) || 0;
+            const comboName = comboData.getAttribute('data-name');
+
+            let newQuantity = Math.max(0, Math.min(currentQuantity + change, maxStock));
+            quantityInput.value = newQuantity;
+
+            // Disable nút + nếu đạt max
+            const plusBtn = quantityInput.parentElement.querySelector('button:last-child');
+            if (plusBtn) plusBtn.disabled = (newQuantity >= maxStock);
+
+            const variantKey = `combo-${comboId}`;
+
+            // Cập nhật selectedSnacks với combo - sử dụng combo_id để phân biệt
+            const snackIndex = selectedSnacks.findIndex(item => 
+                item.is_combo && item.combo_id == comboId
+            );
+            if (newQuantity > 0) {
+                if (snackIndex > -1) {
+                    selectedSnacks[snackIndex].quantity = newQuantity;
+                    selectedSnacks[snackIndex].price_at_purchase = price;
+                } else {
+                    selectedSnacks.push({
+                        product_variant_id: variantId,
+                        quantity: newQuantity,
+                        price_at_purchase: price,
+                        is_combo: true,
+                        combo_id: comboId,
+                        combo_name: comboName
+                    });
+                }
+                console.log('Added combo to selectedSnacks:', {
+                    combo_id: comboId,
+                    variant_id: variantId,
+                    quantity: newQuantity,
+                    price: price,
+                    combo_name: comboName
+                });
+                console.log('Current selectedSnacks after combo update:', selectedSnacks);
+            } else if (snackIndex > -1) {
+                selectedSnacks.splice(snackIndex, 1);
+                console.log('Removed combo from selectedSnacks:', comboId);
+            }
+
+            snackTotal += (newQuantity - currentQuantity) * price;
+            updateSummaryTable(variantKey, '🍿 ' + comboName, 'Combo Package', newQuantity, price);
+            updateOrderSummary();
         }
 
 
@@ -2882,12 +3438,16 @@
                     checkMinimumOrderAmount();
                 }, 100);
             }
-            // Lưu dữ liệu vào form để gửi đi
+            
+            // Cập nhật điểm có thể sử dụng cho đơn hàng
+            updateUsablePoints(subtotal);
+            
             // Lưu dữ liệu vào form để gửi đi
             document.getElementById('input-movie-title').value = movieTitle || 'N/A';
             document.getElementById('input-cinema-name').value = cinemaName || 'N/A';
             document.getElementById('input-room-name').value = roomName || 'N/A';
             document.getElementById('input-showtime').value = selectedDate + ' ' + (selectedTime || 'N/A');
+            document.getElementById('input-showtime-id').value = selectedShowtimeId || '';
 
             document.getElementById('input-total-before').value = ticketTotal + (snackTotal || 0);
             document.getElementById('input-discount').value = validDiscount;
@@ -4131,6 +4691,12 @@
 
             // Khởi tạo nút đổi điểm (đảm bảo DOM đã load)
             initApplyPointsButton();
+            
+            // Cập nhật điểm có thể sử dụng ban đầu
+            updateUsablePoints(0);
+
+            // Room type filter buttons are now handled by onclick attributes
+            console.log('Room type filter buttons initialized with onclick handlers');
         };
 
         // Hàm khởi tạo nút đổi điểm riêng
@@ -4158,8 +4724,11 @@
                 }
 
                 const points = parseInt(pointsInputEl.value) || 0;
-                const availablePointsEl = document.getElementById('available-points');
-                let availablePoints = parseInt(availablePointsEl.textContent) || 0;
+                // Lấy tổng điểm từ backend variable thay vì DOM element đã bị xóa
+                const availablePoints = {{ $userPoints ?? 0 }};
+                const maxUsablePointsEl = document.getElementById('max-usable-points');
+                // Sử dụng điểm có thể sử dụng cho đơn hàng thay vì tổng điểm
+                let maxUsablePoints = parseInt(maxUsablePointsEl.textContent.replace(/[^\d]/g, '')) || 0;
                 const subtotalEl = document.getElementById('subtotalDisplay');
                 const subtotal = parseInt(subtotalEl.textContent.replace(/[^\d]/g, '')) || 0;
                 const currentDiscount = promotionDiscount + pointsDiscount; // Tổng giảm giá hiện tại
@@ -4171,6 +4740,7 @@
                     pointsDiscount: pointsDiscount,
                     currentTotalDiscount: currentDiscount,
                     availablePoints: availablePoints,
+                    maxUsablePoints: maxUsablePoints,
                     pointsInputValue: pointsInputEl.value,
                     subtotalText: subtotalEl.textContent
                 });
@@ -4186,11 +4756,23 @@
                     return;
                 }
 
+                // Kiểm tra không vượt quá điểm có thể sử dụng cho đơn hàng
+                if (points > maxUsablePoints) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Vượt quá điểm có thể sử dụng',
+                        text: `Bạn chỉ có thể sử dụng tối đa ${maxUsablePoints} điểm cho đơn hàng này (tối đa ${(window.userRankDiscountPercentage || 30)}% giá trị đơn hàng).`,
+                        confirmButtonText: 'Đóng',
+                    });
+                    applyPointsBtn.disabled = false;
+                    return;
+                }
+
                 if (points > availablePoints || isNaN(availablePoints)) {
                     Swal.fire({
                         icon: 'warning',
                         title: 'Không đủ điểm',
-                        text: `Bạn chỉ có ${availablePoints} điểm khả dụng.`,
+                        text: `Bạn chỉ có ${availablePoints} điểm trong tài khoản.`,
                         confirmButtonText: 'Đóng',
                     });
                     applyPointsBtn.disabled = false;
@@ -4259,8 +4841,7 @@
                                 pointsUsed: points
                             });
 
-                            // Cập nhật giao diện điểm
-                            availablePointsEl.textContent = availablePoints - points;
+                            // Cập nhật giao diện điểm - không cần cập nhật available-points vì đã xóa
                             document.getElementById('points-used-line').textContent = points;
 
                             // Cập nhật tất cả các element hiển thị discount
@@ -4378,7 +4959,113 @@
         const checkoutForm = document.getElementById('checkoutForm');
         if (checkoutForm) {
             checkoutForm.addEventListener('submit', function(e) {
-                updateOrderSummary(); // Cập nhật dữ liệu vào form trước khi gửi đi
+                // Ngăn form submit tạm thời
+                e.preventDefault();
+                
+                // Đánh dấu form đang được submit
+                checkoutForm.classList.add('submitting');
+                
+                // Gọi API để set session checkout trước khi submit
+                fetch('{{ route("checkout.setSession") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        is_checkout: true
+                    })
+                })
+                .then(response => {
+                    if (response.ok) {
+                        console.log('Checkout session set successfully');
+                        
+                        // Thông báo cho iframe để disable cleanup
+                        const iframe = document.getElementById('seat-map-iframe');
+                        if (iframe && iframe.contentWindow) {
+                            try {
+                                iframe.contentWindow.postMessage({
+                                    type: 'DISABLE_CLEANUP',
+                                    message: 'Starting checkout process'
+                                }, '*');
+                                console.log('Sent disable cleanup message to iframe');
+                            } catch (error) {
+                                console.warn('Could not send message to iframe:', error);
+                            }
+                        }
+                        
+                        // Thêm delay để đảm bảo message được xử lý
+                        setTimeout(() => {
+                            updateOrderSummary(); // Cập nhật dữ liệu vào form
+                            
+                            // Submit form thực sự bằng cách tạo form mới để tránh vòng lặp event
+                            const newForm = document.createElement('form');
+                            newForm.method = 'POST';
+                            newForm.action = checkoutForm.action;
+                            
+                            // Copy tất cả input từ form gốc
+                            Array.from(checkoutForm.elements).forEach(element => {
+                                if (element.name && element.value !== undefined) {
+                                    const input = document.createElement('input');
+                                    input.type = 'hidden';
+                                    input.name = element.name;
+                                    input.value = element.value;
+                                    newForm.appendChild(input);
+                                }
+                            });
+                            
+                            document.body.appendChild(newForm);
+                            newForm.submit();
+                        }, 100);
+                    } else {
+                        console.error('Failed to set checkout session');
+                        checkoutForm.classList.remove('submitting');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error setting checkout session:', error);
+                    checkoutForm.classList.remove('submitting');
+                });
+            });
+        }
+        
+        // Hàm cập nhật điểm có thể sử dụng cho đơn hàng
+        function updateUsablePoints(subtotal) {
+            const maxUsablePointsElement = document.getElementById('max-usable-points');
+            if (!maxUsablePointsElement) return;
+            
+            // Lấy phần trăm giảm giá tối đa theo hạng từ biến PHP (nếu có), mặc định 30%
+            let maxDiscountPercent = 30;
+            if (typeof window.userRankDiscountPercentage !== 'undefined' && !isNaN(window.userRankDiscountPercentage)) {
+                maxDiscountPercent = window.userRankDiscountPercentage;
+            }
+            
+            // Tính toán điểm có thể sử dụng tối đa cho đơn hàng này
+            const maxDiscountAmount = subtotal * (maxDiscountPercent / 100);
+            const maxUsablePoints = Math.floor(maxDiscountAmount / 1000); // 1 điểm = 1000₫
+            
+            // Lấy tổng điểm của user
+            const userPoints = {{ $userPoints ?? 0 }};
+            
+            // Điểm thực tế có thể sử dụng là số nhỏ hơn giữa điểm của user và điểm tối đa cho đơn hàng
+            const actualUsablePoints = Math.min(userPoints, maxUsablePoints);
+            
+            // Cập nhật hiển thị
+            maxUsablePointsElement.textContent = `${actualUsablePoints} điểm`;
+            
+            // Cập nhật max attribute của input điểm
+            const pointsInput = document.getElementById('points-input');
+            if (pointsInput) {
+                pointsInput.setAttribute('max', actualUsablePoints);
+            }
+            
+            console.log('Updated usable points:', {
+                subtotal: subtotal,
+                maxDiscountPercent: maxDiscountPercent,
+                maxDiscountAmount: maxDiscountAmount,
+                maxUsablePoints: maxUsablePoints,
+                userPoints: userPoints,
+                actualUsablePoints: actualUsablePoints
             });
         }
     </script>

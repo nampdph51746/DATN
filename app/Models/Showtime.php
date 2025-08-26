@@ -55,6 +55,40 @@ class Showtime extends Model
     }
 
     /**
+     * Kiểm tra xem suất chiếu có vé đã được đặt hay không
+     */
+    public function hasBookedTickets()
+    {
+        return $this->tickets()
+            ->whereNotNull('booking_id')
+            ->exists();
+    }
+
+    /**
+     * Kiểm tra xem suất chiếu có thể chỉnh sửa hay không
+     */
+    public function canBeEdited()
+    {
+        // Không thể chỉnh sửa nếu đã có vé được đặt
+        if ($this->hasBookedTickets()) {
+            return false;
+        }
+
+        // Không thể chỉnh sửa nếu trạng thái là completed hoặc cancelled
+        $statusValue = is_object($this->status) ? $this->status->value : $this->status;
+        if (in_array($statusValue, ['completed', 'cancelled'])) {
+            return false;
+        }
+
+        // Không thể chỉnh sửa nếu suất chiếu đã bắt đầu (ongoing)
+        if ($statusValue === 'ongoing') {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
      * Get cinema through room
      */
     public function cinema()

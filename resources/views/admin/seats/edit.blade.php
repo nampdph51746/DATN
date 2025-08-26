@@ -31,7 +31,15 @@
                     <h4 class="card-title">Thông tin ghế</h4>
                 </div>
                 <div class="card-body">
-                   
+                    @if ($errors->any())
+                        <div class="alert alert-danger">
+                            <ul>
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
                     <form id="seatEditForm" action="{{ route('admin.seats.update', $seat->id) }}" method="POST">
                         @csrf
                         @method('PUT')
@@ -40,20 +48,12 @@
                                 <div class="mb-3">
                                     <label class="form-label">Phòng chiếu</label>
                                     <input type="text" class="form-control" value="{{ $seat->room->name }}" readonly disabled>
-                                    {{-- <p class="form-control-static">{{ $seat->room->name }}</p> --}}
                                 </div>
                             </div>
                             <div class="col-lg-6">
                                 <div class="mb-3">
-                                    <label for="seat_type_id" class="form-label">Loại ghế</label>
-                                    <select name="seat_type_id" id="seat_type_id" class="form-control" required>
-                                        @foreach ($seatTypes as $seatType)
-                                            <option value="{{ $seatType->id }}" {{ $seat->seat_type_id == $seatType->id ? 'selected' : '' }}>{{ $seatType->name }}</option>
-                                        @endforeach
-                                    </select>
-                                    @error('seat_type_id')
-                                        <span class="text-danger">{{ $message }}</span>
-                                    @enderror
+                                    <label class="form-label">Loại ghế</label>
+                                    <input type="text" class="form-control" value="{{ $seat->seatType->name }}" readonly disabled>
                                 </div>
                             </div>
                         </div>
@@ -76,14 +76,22 @@
                                 <div class="mb-3">
                                     <label for="status" class="form-label">Trạng thái</label>
                                     <select name="status" id="status" class="form-control" required>
-                                        <option value="available" @selected(old('status', $seat->status->value ?? $seat->status) == 'available')>Có sẵn</option>
-                                        <option value="reserved" @selected(old('status', $seat->status->value ?? $seat->status) == 'reserved')>Đã đặt</option>
-                                        <option value="booked" @selected(old('status', $seat->status->value ?? $seat->status) == 'booked')>Đã bán</option>
+                                        @foreach (\App\Enums\SeatStatus::cases() as $status)
+                                            <option value="{{ $status->value }}" {{ $seat->status->value === $status->value ? 'selected' : '' }}>
+                                                {{ ucfirst($status->value) }}
+                                            </option>
+                                        @endforeach
                                     </select>
                                     @error('status')
                                         <span class="text-danger">{{ $message }}</span>
                                     @enderror
                                 </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-lg-6">
+                                <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                                <a href="{{ route('admin.rooms.show', $seat->room_id) }}" class="btn btn-secondary ms-2">Quay lại</a>
                             </div>
                         </div>
                     </form>
