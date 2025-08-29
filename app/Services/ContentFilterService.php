@@ -18,8 +18,13 @@ class ContentFilterService
 
     public function __construct()
     {
-        // Get sensitive words from database instead of config
-        $this->sensitiveWords = SensitiveWord::active()->pluck('word')->toArray();
+        try {
+            // Get sensitive words from database instead of config
+            $this->sensitiveWords = SensitiveWord::active()->pluck('word')->toArray();
+        } catch (\Exception $e) {
+            // If table doesn't exist (during migration), use empty array
+            $this->sensitiveWords = [];
+        }
         $this->regexPatterns = Config::get('content_filter.regex_patterns', []);
         $this->autoApproveConfig = Config::get('content_filter.auto_approve', []);
         $this->userTrustConfig = Config::get('content_filter.user_trust_score', []);

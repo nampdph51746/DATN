@@ -47,6 +47,11 @@ class Movie extends Model
             ->withTimestamps();
     }
 
+    public function reviews()
+    {
+        return $this->hasMany(Review::class);
+    }
+
     public function ageLimit()
     {
         return $this->belongsTo(\App\Models\AgeLimit::class, 'age_limit_id');
