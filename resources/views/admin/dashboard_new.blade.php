@@ -476,10 +476,10 @@
                 },
                 series: [{
                     name: 'Số lượng bán',
-                    data: @json($topProducts->pluck('quantity'))
+                    data: @json(array_column($topProducts, 'quantity'))
                 }],
                 xaxis: {
-                    categories: @json($topProducts->pluck('name')),
+                    categories: @json(array_column($topProducts, 'name')),
                     labels: {
                         style: {
                             fontSize: '12px'

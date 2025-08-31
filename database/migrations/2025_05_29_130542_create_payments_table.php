@@ -15,7 +15,7 @@ return new class extends Migration
             $table->foreignId('payment_method_id')->nullable()->constrained('payment_methods')->comment('ID phương thức thanh toán');
             $table->decimal('amount', 12, 2)->comment('Số tiền thanh toán');
             $table->string('transaction_id_gateway', 255)->unique()->nullable()->comment('ID giao dịch từ cổng thanh toán');
-            $table->enum('status', array_column(PaymentStatus::cases(), 'value'))->comment('Trạng thái thanh toán');
+            $table->enum('status', ['pending', 'completed', 'failed'])->comment('Trạng thái thanh toán');
             $table->text('payment_details')->nullable()->comment('Chi tiết thanh toán (JSON)');
             $table->timestamp('paid_at')->nullable()->comment('Thời gian thanh toán');
             $table->timestamp('created_at')->nullable()->comment('Thời gian tạo');

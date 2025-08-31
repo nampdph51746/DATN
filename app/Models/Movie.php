@@ -23,6 +23,19 @@ class Movie extends Model
         'status' => MovieStatus::class
     ];
 
+    protected $hidden = [
+        'pivot',
+        'created_at',
+        'updated_at',
+        'deleted_at',
+        'image_path',
+        'trailer_url',
+        'description',
+        'age_limit_id',
+        'country_id',
+        'director_id'
+    ];
+
 
          /**
      * Accessor status động theo ngày thực tế
