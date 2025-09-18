@@ -15,7 +15,6 @@ class BookingObserver
         // Chỉ kiểm tra khi booking chuyển sang confirmed
         if ($booking->status === BookingStatus::Confirmed) {
             if ($booking->user) {
-                \Log::info("BookingObserver: Booking {$booking->id} confirmed, checking rank for user {$booking->user_id}");
                 $booking->user->updateRankByTotalSpent();
             }
         }
@@ -27,7 +26,6 @@ class BookingObserver
     public function created(Booking $booking)
     {
         if ($booking->status === BookingStatus::Confirmed && $booking->user) {
-            \Log::info("BookingObserver: Booking {$booking->id} created with confirmed status, checking rank for user {$booking->user_id}");
             $booking->user->updateRankByTotalSpent();
         }
     }

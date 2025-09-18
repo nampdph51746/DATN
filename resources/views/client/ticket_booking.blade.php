@@ -1052,6 +1052,23 @@
             transform: translateY(-1px);
         }
 
+        /* Special styling for combo tab */
+        .category-tab[data-category="combo"] {
+            background: linear-gradient(135deg, #f97316, #ea580c);
+            border-color: #f97316;
+        }
+
+        .category-tab[data-category="combo"]:hover {
+            background: linear-gradient(135deg, #ea580c, #dc2626);
+            border-color: #ea580c;
+        }
+
+        .category-tab[data-category="combo"].active {
+            background: linear-gradient(135deg, #f97316, #ea580c);
+            border-color: #f97316;
+            box-shadow: 0 0 15px rgba(249, 115, 22, 0.5);
+        }
+
         .category-tab::before {
             content: '';
             position: absolute;
@@ -1100,6 +1117,53 @@
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
             gap: 16px;
+        }
+
+        /* Combo specific styling */
+        .combo-item {
+            border: 2px solid #f97316;
+            box-shadow: 0 4px 8px rgba(249, 115, 22, 0.1);
+            position: relative;
+        }
+
+        .combo-item::before {
+            content: "🍿";
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: #f97316;
+            color: white;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            z-index: 1;
+        }
+
+        .combo-items {
+            max-height: 80px;
+            overflow-y: auto;
+            border: 1px solid #e5e7eb;
+            border-radius: 4px;
+            padding: 4px;
+            background: #f9fafb;
+        }
+
+        .combo-items::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .combo-items::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 2px;
+        }
+
+        .combo-items::-webkit-scrollbar-thumb {
+            background: #f97316;
+            border-radius: 2px;
         }
 
         .room-type-dropdown-wrapper {
@@ -1196,6 +1260,21 @@
                                         <!-- Category Tabs -->
                                         <div class="category-tabs" id="category-tabs">
                                             @php $firstCategory = true; @endphp
+                                            
+                                            <!-- Combo Tab -->
+                                            @if($combos->isNotEmpty())
+                                                <button class="category-tab {{ $firstCategory ? 'active' : '' }}" 
+                                                        onclick="showCategory('combo')"
+                                                        data-category="combo">
+                                                    🍿 Combo
+                                                    <span class="category-count">
+                                                        {{ $combos->count() }}
+                                                    </span>
+                                                </button>
+                                                @php $firstCategory = false; @endphp
+                                            @endif
+                                            
+                                            <!-- Product Category Tabs -->
                                             @foreach ($products as $categoryName => $categoryProducts)
                                                 <button class="category-tab {{ $firstCategory ? 'active' : '' }}" 
                                                         onclick="showCategory('{{ Str::slug($categoryName) }}')"
@@ -1209,8 +1288,91 @@
                                             @endforeach
                                         </div>
 
+                                        
                                         <!-- Category Content -->
                                         @php $firstCategoryContent = true; @endphp
+                                        
+                                        <!-- Combo Content -->
+                                        @if($combos->isNotEmpty())
+                                            <div class="category-content {{ $firstCategoryContent ? 'active' : '' }}" 
+                                                 id="category-combo">
+                                                <div class="category-title">
+                                                    🍿 Combo Package
+                                                    <small style="color: #aaa; font-size: 0.8em; font-weight: 400;">
+                                                        ({{ $combos->count() }} combo)
+                                                    </small>
+                                                </div>
+                                                
+                                                <div class="products-grid">
+                                                    @foreach ($combos as $combo)
+                                                        @if($combo->comboProductVariant && $combo->comboProductVariant->stock_quantity > 0)
+                                                            <div class="flex flex-col items-center bg-white p-3 rounded-lg text-center combo-item">
+                                                                <!-- Combo Image -->
+                                                                @if($combo->combo_url)
+                                                                    <img src="{{ asset('storage/' . $combo->combo_url) }}"
+                                                                        alt="{{ $combo->name }}"
+                                                                        class="mb-2 w-24 h-24 object-cover rounded-lg border-2 border-orange-200" />
+                                                                @else
+                                                                    <div class="mb-2 w-24 h-24 bg-gradient-to-br from-orange-200 to-orange-300 rounded-lg border-2 border-orange-200 flex items-center justify-center">
+                                                                        <span class="text-2xl">🍿</span>
+                                                                    </div>
+                                                                @endif
+                                                                
+                                                                <div class="snack-info">
+                                                                    <h4 class="text-base font-semibold text-orange-600">{{ $combo->name }}</h4>
+                                                                    
+                                                                    <!-- Combo Items List -->
+                                                                    <div class="combo-items text-xs text-gray-600 mt-1">
+                                                                        <p class="font-medium">Bao gồm:</p>
+                                                                        @foreach ($combo->comboPackageItems as $item)
+                                                                            @if($item->itemProductVariant && $item->itemProductVariant->product)
+                                                                                <p class="text-xs">
+                                                                                    • {{ $item->quantity }}x {{ $item->itemProductVariant->product->name }}
+                                                                                    @if($item->itemProductVariant->productVariantOptions->isNotEmpty())
+                                                                                        ({{ $item->itemProductVariant->productVariantOptions->map(fn($option) => $option->attributeValue->value)->join(' - ') }})
+                                                                                    @endif
+                                                                                </p>
+                                                                            @endif
+                                                                        @endforeach
+                                                                    </div>
+                                                                    
+                                                                    <!-- Combo Price -->
+                                                                    <p class="text-sm font-semibold text-green-600 mt-2">
+                                                                        {{ number_format($combo->price) }} VNĐ
+                                                                        <span class="text-xs text-gray-500">(Còn {{ $combo->stock_quantity }})</span>
+                                                                    </p>
+                                                                    
+                                                                    <!-- Hidden data for combo -->
+                                                                    <input type="hidden" 
+                                                                           class="combo-variant-id" 
+                                                                           value="{{ $combo->comboProductVariant->id }}"
+                                                                           data-combo-id="{{ $combo->id }}"
+                                                                           data-price="{{ $combo->price }}"
+                                                                           data-stock="{{ $combo->stock_quantity }}"
+                                                                           data-name="{{ $combo->name }}">
+                                                                </div>
+                                                                
+                                                                <div class="snack-quantity flex items-center gap-2 mt-2"
+                                                                    data-product-id="combo-{{ $combo->id }}" 
+                                                                    data-is-combo="true">
+                                                                    <button onclick="updateComboQuantity('{{ $combo->id }}', -1)"
+                                                                        class="p-1.5 bg-orange-500 text-white border-none rounded-md text-sm hover:bg-orange-600 transition-colors">-</button>
+                                                                    <input type="number" id="quantity-combo-{{ $combo->id }}"
+                                                                        value="0" min="0" max="{{ $combo->stock_quantity }}"
+                                                                        class="w-12 text-center border border-gray-300 rounded-md p-1 text-sm"
+                                                                        readonly />
+                                                                    <button onclick="updateComboQuantity('{{ $combo->id }}', 1)"
+                                                                        class="p-1.5 bg-orange-500 text-white border-none rounded-md text-sm hover:bg-orange-600 transition-colors">+</button>
+                                                                </div>
+                                                            </div>
+                                                        @endif
+                                                    @endforeach
+                                                </div>
+                                            </div>
+                                            @php $firstCategoryContent = false; @endphp
+                                        @endif
+                                        
+                                        <!-- Product Category Content -->
                                         @foreach ($products as $categoryName => $categoryProducts)
                                             <div class="category-content {{ $firstCategoryContent ? 'active' : '' }}" 
                                                  id="category-{{ Str::slug($categoryName) }}">
@@ -2236,6 +2398,63 @@
                 snackSubtotal += parseFloat(priceText) || 0;
             });
             return snackSubtotal;
+        }
+
+        // Hàm cập nhật số lượng combo
+        function updateComboQuantity(comboId, change) {
+            const quantityInput = document.getElementById(`quantity-combo-${comboId}`);
+            let currentQuantity = parseInt(quantityInput.value) || 0;
+
+            const comboData = document.querySelector(`[data-combo-id="${comboId}"]`);
+            if (!comboData) {
+                console.error('Combo data not found for ID:', comboId);
+                return;
+            }
+            
+            const maxStock = parseInt(comboData.getAttribute('data-stock')) || 0;
+            const variantId = comboData.value;
+            const price = parseFloat(comboData.getAttribute('data-price')) || 0;
+            const comboName = comboData.getAttribute('data-name');
+
+            let newQuantity = Math.max(0, Math.min(currentQuantity + change, maxStock));
+            quantityInput.value = newQuantity;
+
+            // Disable nút + nếu đạt max
+            const plusBtn = quantityInput.parentElement.querySelector('button:last-child');
+            if (plusBtn) plusBtn.disabled = (newQuantity >= maxStock);
+
+            const variantKey = `combo-${comboId}`;
+
+            // Cập nhật selectedSnacks với combo
+            const snackIndex = selectedSnacks.findIndex(item => item.product_variant_id == variantId);
+            if (newQuantity > 0) {
+                if (snackIndex > -1) {
+                    selectedSnacks[snackIndex].quantity = newQuantity;
+                    selectedSnacks[snackIndex].price_at_purchase = price;
+                } else {
+                    selectedSnacks.push({
+                        product_variant_id: variantId,
+                        quantity: newQuantity,
+                        price_at_purchase: price,
+                        is_combo: true,
+                        combo_id: comboId,
+                        combo_name: comboName
+                    });
+                }
+                console.log('Added combo to selectedSnacks:', {
+                    combo_id: comboId,
+                    variant_id: variantId,
+                    quantity: newQuantity,
+                    price: price
+                });
+            } else if (snackIndex > -1) {
+                selectedSnacks.splice(snackIndex, 1);
+                console.log('Removed combo from selectedSnacks:', comboId);
+            }
+
+            snackTotal += (newQuantity - currentQuantity) * price;
+            updateSummaryTable(variantKey, '🍿 ' + comboName, 'Combo Package', newQuantity, price);
+            updateOrderSummary();
         }
 
 

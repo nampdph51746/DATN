@@ -6,10 +6,10 @@
 <head>
     <!-- Title Meta -->
     <meta charset="utf-8" />
-    <title>Dashboard | Larkon - Responsive Admin Dashboard Template</title>
+    <title>Dashboard | CineVN - Hệ thống quản lý rạp chiếu phim</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="A fully responsive premium admin dashboard template" />
-    <meta name="author" content="Techzaa" />
+    <meta name="description" content="Hệ thống quản lý rạp chiếu phim CineVN" />
+    <meta name="author" content="CineVN" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
@@ -118,6 +118,9 @@
                                     class="fs-24 align-middle"></iconify-icon>
                             </button>
                         </div>
+                        
+                        <!-- Back to Client Site Button -->
+                       
 
                         <!-- Menu Toggle Button -->
                         <div class="topbar-item">
@@ -569,13 +572,23 @@
         <div class="main-nav">
             <!-- Sidebar Logo -->
             <div class="logo-box">
-                <a href="" class="logo-dark">
-                    <img src="{{ asset('assets/images/logo-sm.png') }}" class="logo-sm" alt="logo nhỏ">
-                    <img src="{{ asset('assets/images/logo-dark.png') }}" class="logo-lg" alt="logo tối">
+                <a href="{{ route('client.home') }}" class="logo-dark">
+                    <span class="logo-sm">
+                        <i class="fas fa-play icon-log" style="font-size: 24px;"></i>
+                    </span>
+                    <span class="logo-lg">
+                        <i class="fas fa-play icon-log" style="font-size: 24px; margin-right: 8px;"></i>
+                        <span style="font-size: 20px; font-weight: bold;">CineVN</span>
+                    </span>
                 </a>
-                <a href="" class="logo-light">
-                    <img src="{{ asset('assets/images/logo-sm.png') }}" class="logo-sm" alt="logo nhỏ">
-                    <img src="{{ asset('assets/images/logo-light.png') }}" class="logo-lg" alt="logo sáng">
+                <a href="{{ route('client.home') }}" class="logo-light">
+                    <span class="logo-sm">
+                        <i class="fas fa-play icon-log" style="font-size: 24px; color: #fff;"></i>
+                    </span>
+                    <span class="logo-lg">
+                        <i class="fas fa-play icon-log" style="font-size: 24px; margin-right: 8px; color: #fff;"></i>
+                        <span style="font-size: 20px; font-weight: bold; color: #fff;">CineVN</span>
+                    </span>
                 </a>
             </div>
 

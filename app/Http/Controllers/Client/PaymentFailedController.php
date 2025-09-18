@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Booking;
 use App\Models\ShowtimeSeatState;
+use App\Models\Combo;
 use App\Enums\BookingStatus;
 use App\Enums\SeatStatus;
 use Illuminate\Support\Facades\Auth;

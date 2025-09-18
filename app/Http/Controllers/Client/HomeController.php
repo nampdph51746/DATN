@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Client;
 use App\Models\Room;
 use App\Models\Movie;
 use App\Models\Product;
+use App\Models\Combo;
 use App\Models\SeatType;
 use App\Models\Showtime;
 use App\Models\Review;
@@ -337,16 +338,34 @@ class HomeController extends Controller
         }
 
         $seatTypes = SeatType::all();
+        
+        // Load products (food & drinks) grouped by category
         $products = Product::where('is_active', true)
+            ->whereIn('product_type', ['food', 'drink']) // Exclude combo products
             ->with([
                 'category',
                 'productVariants' => function ($query) {
                     $query->where('is_active', true)
+                        ->where('stock_quantity', '>', 0)
                         ->with(['productVariantOptions.attributeValue.attribute']);
                 }
             ])
             ->get()
             ->groupBy('category.name'); // Group by category name
+            
+        // Load combos with their items
+        $combos = Combo::with([
+            'comboProductVariant' => function ($query) {
+                $query->where('is_active', true)
+                    ->where('stock_quantity', '>', 0)
+                    ->with(['product', 'productVariantOptions.attributeValue.attribute']);
+            },
+            'comboPackageItems.itemProductVariant' => function ($query) {
+                $query->with(['product', 'productVariantOptions.attributeValue.attribute']);
+            }
+        ])
+        ->where('stock_quantity', '>', 0)
+        ->get();
         $roomIds = $showtimes->pluck('room_id')->unique()->toArray();
         $roomsData = Room::query()
             ->with(['cinema' => function ($query) {
@@ -419,6 +438,7 @@ class HomeController extends Controller
             'showtimeId',
             'seatTypes',
             'products',
+            'combos',
             'showtime',
             'roomsData',
             'cinemas',

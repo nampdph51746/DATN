@@ -17,6 +17,7 @@ class BookingItem extends Model
         'price_at_purchase',
         'ticket_status',
         'product_status',
+        'combo_id',
         'used_at',
         'scanned_by'
     ];
@@ -43,8 +44,34 @@ class BookingItem extends Model
         return $this->belongsTo(User::class, 'scanned_by');
     }
 
+    public function combo()
+    {
+        return $this->belongsTo(Combo::class);
+    }
+
     public function product()
-{
-    return $this->belongsTo(Product::class);
-}
+    {
+        return $this->hasOneThrough(Product::class, ProductVariant::class, 'id', 'id', 'product_variant_id', 'product_id');
+    }
+
+    // Helper methods để phân biệt rõ ràng
+    public function isCombo()
+    {
+        return !is_null($this->combo_id);
+    }
+
+    public function isRegularProduct()
+    {
+        return is_null($this->combo_id);
+    }
+
+    public function getItemName()
+    {
+        return $this->isCombo() ? $this->combo->name : $this->product->name;
+    }
+
+    public function getItemPrice()
+    {
+        return $this->isCombo() ? $this->combo->price : $this->productVariant->price;
+    }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Models\Point;
 use App\Models\Booking;
+use App\Models\Combo;
 use App\Enums\BookingStatus;
 use App\Models\Notification;
 use App\Models\PointHistory;
@@ -27,7 +28,7 @@ class BookingController extends Controller
             'tickets.seat.seatType',
             'bookingItems.product'
         ])
-        ->where('user_id', auth()->id())
+        ->where('user_id', Auth::id())
         ->latest()
         ->paginate(10);
 
@@ -85,9 +86,11 @@ class BookingController extends Controller
             'tickets.showtime.room',
             'tickets.seat',
             'bookingItems.productVariant.product',
+            'bookingItems.productVariant.productVariantOptions.attributeValue',
+            'bookingItems.combo.comboPackageItems.itemProductVariant.product',
+            'bookingItems.combo.comboPackageItems.itemProductVariant.productVariantOptions.attributeValue',
             'payments.paymentMethod',
             'promotion'
-            // Thêm eager load cho sản phẩm
         ])->findOrFail($id);
 
         return view('admin.bookings.show', compact('booking'));
